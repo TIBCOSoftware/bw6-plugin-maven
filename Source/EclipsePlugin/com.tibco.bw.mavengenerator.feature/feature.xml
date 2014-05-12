@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.tibco.bw.mavengenerator.feature"
+      label="Feature"
+      version="1.0.0.qualifier">
+
+
+   <plugin
+         id="com.tibco.bw.mavengenerator"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

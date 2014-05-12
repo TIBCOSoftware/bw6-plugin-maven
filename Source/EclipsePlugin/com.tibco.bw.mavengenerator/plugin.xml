@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="mavenutils.objectContribution1"
+            objectClass="org.eclipse.core.resources.IProject">
+         <filter
+               name="projectNature"
+               value="com.tibco.zion.dc.ApplicationNature">
+         </filter>
+         <action
+               class="com.tibco.bw.maven.action.MavenPOMGenerator"
+               id="mavenutils.action1"
+               label="Generate POM"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+   </plugin>
+   
