@@ -44,8 +44,8 @@
             <fail message="Tibco Home is not a valid directory."  unless="dir.exists"/>
 
 
-            <condition property="bw60.install">
-                <available file="${tibco.home}/bw/6.0" type="dir"/>
+            <condition property="bw62.install">
+                <available file="${tibco.home}/bw/6.2" type="dir"/>
             </condition>
 
             <condition property="bw61.install">
@@ -63,7 +63,7 @@
     </target>
 
 
-    <target name="setup" depends="getTibcoHome, setupMacros, bw61.maven.install, bw60.maven.install , vbuild.p2.install , devbuild.p2.install ">
+    <target name="setup" depends="getTibcoHome, setupMacros, bw61.maven.install, bw62.maven.install , vbuild.p2.install , devbuild.p2.install ">
 
 
     </target>
@@ -93,8 +93,8 @@
     </target>
 
 
-    <target name="bw60.maven.install" if="bw60.install">
-        <property name="bw.home" value="bw/6.0" />
+    <target name="bw62.maven.install" if="bw62.install">
+        <property name="bw.home" value="bw/6.2" />
         <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
         
         <antcall target="maven-install"/>
