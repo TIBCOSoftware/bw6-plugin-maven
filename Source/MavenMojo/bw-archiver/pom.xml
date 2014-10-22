@@ -45,7 +45,16 @@
 			<artifactId>commons-io</artifactId>
 			<version>1.3.2</version>
 		</dependency>
-            		
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-client</artifactId>
+			<version>1.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>1.8.5</version>
+		</dependency>            		
 	</dependencies>
 <build>
 <plugins>
@@ -53,7 +62,7 @@
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-plugin-plugin</artifactId>
     <configuration>
-      <goalPrefix>bw.packager</goalPrefix>
+      <goalPrefix>bw-archiver</goalPrefix>
     </configuration>
     <executions>
       <execution>

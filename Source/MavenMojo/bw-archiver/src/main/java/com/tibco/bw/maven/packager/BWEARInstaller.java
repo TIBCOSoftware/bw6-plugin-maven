@@ -290,6 +290,8 @@ public class BWEARInstaller  extends AbstractMojo
 		list.add( bwAdminHome + adminExec); 	
 		list.add("create");
 		
+		list.add("-lax");
+		
 		if(domainDesc != null && !"".equals(domainDesc.trim()))
 		{
 			list.add("-descr");
@@ -313,6 +315,9 @@ public class BWEARInstaller  extends AbstractMojo
         
 		list.add( bwAdminHome + adminExec);
 		list.add("create");
+		
+		list.add("-lax");
+		
 		list.add("-domain");
 		list.add( domain );
 
