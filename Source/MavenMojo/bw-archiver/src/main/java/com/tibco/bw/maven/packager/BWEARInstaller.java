@@ -219,6 +219,9 @@ public class BWEARInstaller  extends AbstractMojo
 		
 		//Check if AppNode exists else then create new AppNode.
 		boolean appNodeExists = appSpaceExists ? appNodeExists() : false;
+		
+		
+		
 		if( !appNodeExists )
 		{
 			createAppNode();
@@ -559,7 +562,15 @@ public class BWEARInstaller  extends AbstractMojo
 		
 		String appnodes = executeCommand(list );
 		
-		if(appnodes.indexOf(appnode) != -1)
+		boolean appNodeOnPort = appnodes.indexOf( httpport ) != -1;
+		
+		String appNodeTrimmedName = appnode;
+		if ( appnode.length() > 10 )
+		{
+			appNodeTrimmedName = appnode.substring( 0 , 10 );
+		}
+		 
+		if(appNodeOnPort || appnodes.indexOf(appNodeTrimmedName) != -1)
 		{
 			appNodeExists = true;
 		}
