@@ -3,6 +3,8 @@ Prerequisites
 1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the Path.
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
 
+2. The system should be able to connect to the Maven Repository.
+
 Installation
 
 a. Go to the <TibcoHome>/bw/6.2/bin

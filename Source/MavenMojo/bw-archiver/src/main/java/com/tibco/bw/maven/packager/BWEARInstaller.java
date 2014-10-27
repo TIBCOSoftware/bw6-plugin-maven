@@ -605,37 +605,45 @@ public class BWEARInstaller  extends AbstractMojo
 	{
 		boolean applicationExists = false;
 		
-		List<String> list = new ArrayList<String>();
-        
-		list.add( bwAdminHome + adminExec);
-		
-		list.add("show");
-		
-		list.add("-domain");
-		list.add(domain);
-		
-		list.add("-appspace");
-		list.add(appspace);
-		
-		list.add("applications");
-		
-		String applications = executeCommand(list);
-
-		if(applications.indexOf(applicationName) != -1)
-		{
-
-			applicationExists = true;
-
-			//Calculates the Existing Application Version. The Application version is between the Application name and Appspace.
-			int versionPrevIndex = applications.indexOf(applicationName);
-			int versionNextIndex = applications.indexOf(appspace);
+		try{
+			List<String> list = new ArrayList<String>();
+	        
+			list.add( bwAdminHome + adminExec);
 			
-			applicationVersion = applications.substring(versionPrevIndex + applicationName.length() + 1 , versionNextIndex -1 ).trim();
+			list.add("show");
+			
+			list.add("-domain");
+			list.add(domain);
+			
+			list.add("-appspace");
+			list.add(appspace);
+			
+			list.add("applications");
+			
+			String applications = executeCommand(list);
+
+			if(applications.indexOf(applicationName) != -1)
+			{
+
+				applicationExists = true;
+
+				//Calculates the Existing Application Version. The Application version is between the Application name and Appspace.
+				int versionPrevIndex = applications.indexOf(applicationName);
+				String restofString = applications.substring( versionPrevIndex + applicationName.length(),  applications.length() -1 );
+				int versionNextIndex = applications.lastIndexOf(appspace.substring(0,10));
+				
+				applicationVersion = applications.substring(versionPrevIndex + applicationName.length() + 1 , versionNextIndex -1 ).trim();
+				
+			}
+			else
+			{
+				applicationExists = false;
+			}
 			
 		}
-		else
+		catch(Exception e )
 		{
-			applicationExists = false;
+			getLog().error("Failed to find Application");
 		}
 		
 		return applicationExists;
