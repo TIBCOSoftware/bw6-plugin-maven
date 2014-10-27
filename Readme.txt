@@ -1,36 +1,41 @@
 Prerequisites
-
-1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the PATH environment variable.
-This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
+=============
+1. Maven must be installed on the Machine. Configure M2_HOME environment variable and update
+   PATH environment variable to have access to Maven executables. 
+   
+   This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
 
 2. Your machine needs to have Internet access.  During the installation, the install script connects to the Maven Repository.
 
 Installation
+============
+1. From a Terminal command window, cd to <TIBCO_HOME>/bw/6.2/bin
 
-a. Go to the <TibcoHome>/bw/6.2/bin
-b. Open the Terminal and run command 
+2. Run command 
 
     bwinstall bw6-plugin-maven
 
 This will install the Maven Plugin to your TIBCO_HOME. 
 
-First Steps
 
-a. Open the Studio.
+Using Maven BW6 Plugin from BusinessStudio
+==========================================
 
-b. Right-Click on the Application project.
+1. Open the Studio.
 
-c. The Context Menu will show the option "Generate POM"
+2. Right-Click on the Application project.
 
-d. Clicking it will launch the POM Generation UI.
+3. The Context Menu will show the option "Generate POM"
 
-e. Enter the details here and Click Finish.
+4. Clicking it will launch the POM Generation UI.
 
-f. The Project will be converted to Maven nature. Note The Workspace will index on clicking for the first time and may take some time.
+5. Enter the details here and Click Finish.
 
-f. Right click on the Application Project, Go to Run options and Click "mvn build"
+6. The Project will be converted to Maven nature. Note The Workspace will index on clicking for the first time and may take some time.
 
-g. Select the goal as "package" for creating the EAR file.
+7. Right click on the Application Project, Go to Run options and Click "mvn build"
 
-h. Select te goal as "install" for creating the EAR file and installing it to the bwadmin.
+8. Select the goal as "package" for creating the EAR file.
+
+9. Select te goal as "install" for creating the EAR file and installing it to the bwadmin.
 
