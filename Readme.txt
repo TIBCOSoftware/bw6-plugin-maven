@@ -3,39 +3,37 @@ Prerequisites
 1. Maven must be installed on the Machine. Configure M2_HOME environment variable and update
    PATH environment variable to have access to Maven executables. 
    
-   This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
+   You can verify this by running the command mvn -version from a terminal/command prompt.
 
-2. Your machine needs to have Internet access.  During the installation, the install script connects to the Maven Repository.
+2. Your machine must have Internet access.  During installation, the install script connects to the Maven Repository.
 
 Installation
 ============
 1. From a Terminal command window, cd to <TIBCO_HOME>/bw/6.2/bin
 
-2. Run command 
+2. Run the following command to install the Maven plugin to your TIBCO_HOME:
 
     bwinstall bw6-plugin-maven
+   
+3. To verify that the Maven plugin is installed, check the following location:
 
-This will install the Maven Plugin to your TIBCO_HOME. 
+    <UserHome>\.m2\repository\com\tibco\bw\bw-archiver\1.0.0
 
+Using Maven BW6 Plugin from TIBCO Business Studio
+=================================================
 
-Using Maven BW6 Plugin from BusinessStudio
-==========================================
+1. Open TIBCO Business Studio.
 
-1. Open the Studio.
+2. In the Project Explorer, right-click the application project and select 'Generate POM' from the context menu.
+   The POM Generation UI is launched.
+   
+3. Enter the details on the UI and click 'Finish'. 
 
-2. Right-Click on the Application project.
+4. The project is converted to Maven nature. 
+   Note: The Workspace is indexed when you convert the project to Maven nature for the first time, and this may take some time.
 
-3. The Context Menu will show the option "Generate POM"
+5. Right-click on the application project amd select Run > mvn build. 
 
-4. Clicking it will launch the POM Generation UI.
+6. Select the goal as "package" to create an EAR file.
 
-5. Enter the details here and Click Finish.
-
-6. The Project will be converted to Maven nature. Note The Workspace will index on clicking for the first time and may take some time.
-
-7. Right click on the Application Project, Go to Run options and Click "mvn build"
-
-8. Select the goal as "package" for creating the EAR file.
-
-9. Select te goal as "install" for creating the EAR file and installing it to the bwadmin.
-
+7. Select the goal as "install" to create an EAR file and install it to the bwadmin specified in Step 3.
