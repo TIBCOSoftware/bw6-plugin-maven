@@ -66,7 +66,7 @@ public class BWOSGiModulePOMGenerator extends BWPOMGenerator
 	protected void writeProperties()
 	{
 		super.addProperties();
-		model.addProperty("tycho-version", "0.20.0");
+		model.addProperty("tycho-version", "0.22.0");
 		model.addProperty("main.p2.repo", "${tibco.home}/bw/${bw.version}/maven/p2repo");
 		
 

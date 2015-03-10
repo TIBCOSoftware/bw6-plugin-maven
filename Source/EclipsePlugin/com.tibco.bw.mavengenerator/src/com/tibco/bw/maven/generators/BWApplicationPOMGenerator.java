@@ -17,15 +17,17 @@
 
 package com.tibco.bw.maven.generators;
 
-import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 import org.apache.maven.model.Build;
-import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
-import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.core.runtime.IStatus;
 
@@ -33,10 +35,11 @@ import com.tibco.bw.maven.Activator;
 import com.tibco.bw.maven.utils.BWAppModuleInfo;
 import com.tibco.bw.maven.utils.BWApplicationInfo;
 import com.tibco.bw.maven.utils.BWOSGiModuleInfo;
-import com.tibco.bw.maven.utils.BWSharedModuleInfo;
 
 public class BWApplicationPOMGenerator extends BWPOMGenerator
 {
+
+	public ArrayList<String> resolved = new ArrayList<String>();
 
 	private BWApplicationInfo appInfo;
 	
@@ -65,6 +68,34 @@ public class BWApplicationPOMGenerator extends BWPOMGenerator
 		}
 		
 	}
+
+	private void resolveDependency(Map<String, List<String>> map, String start) 
+	{
+		Queue<String> queue = new LinkedList<String>();
+		
+		if(map.get(start)==null)
+		{
+			resolved.add(start);
+			return;
+		}
+
+		queue.addAll(map.get(start));
+		
+		while(!queue.isEmpty())
+		{
+			String newStart = (String) queue.remove();
+			
+
+			if(!resolved.contains(newStart)) 
+			{
+				resolveDependency(map, newStart);			
+			}
+			
+		}
+		resolved.add(start);
+	}	
+	
+	
 	
 
 	/**
@@ -80,16 +111,82 @@ public class BWApplicationPOMGenerator extends BWPOMGenerator
 			modules.add( "../"+info.getName());
 		}
 
-		for(BWSharedModuleInfo info : appInfo.getSharedModules() )
+		resolveDependency( appInfo.getDependencies(),  appInfo.getAppModules().get(0).getName() );
+		
+		for( String info : resolved )
 		{
-			modules.add( "../"+info.getName());
+			modules.add( "../"+info );
 		}
 		
-		for( BWAppModuleInfo info : appInfo.getAppModules() )
-		{
-			modules.add( "../"+info.getName());
-		}
+//		for( BWAppModuleInfo info : appInfo.getAppModules() )
+//		{
+//			modules.add( "../"+info.getName());
+//		}
 		model.setModules(modules);
+	}
+	
+	
+	
+	private List<String> sortSharedModuleDeps()
+	{
+		Map<String,List<String>> map = appInfo.getDependencies();
+		Map<String,List<String>> mapcopy = new HashMap<String,List<String>>(map);
+	
+		List<String> depList = new LinkedList<String>();
+		
+		List<String> noDeplist = new ArrayList<String>();
+		
+		Set<String> set = map.keySet();
+		
+		depList.addAll( mapcopy.keySet() );
+		
+		
+		while( depList.size() != 0 )
+		{
+			for( String str : set )
+			{
+				if ( mapcopy.get( str).size() != 0 && hasDependency(mapcopy, str ))
+				{
+					continue;
+				}
+				else
+				{
+					noDeplist.add(str );
+					depList.remove( str );
+					for(  String str1 : set )
+					{
+						mapcopy.get(str1).remove( str );
+					}
+					mapcopy.remove(str);
+
+				}
+			}
+			
+		}
+		
+		
+		
+		
+		return noDeplist;
+	}
+	
+
+	private boolean hasDependency( Map<String,List<String>> map , String module )
+	{
+
+		Set<String> set = map.keySet();
+		
+		for( String str : set )
+		{
+			if( map.get( str).contains( module ))
+			{
+				return true;
+			}
+			
+		}
+
+		
+		return false;
 	}
 	
 	

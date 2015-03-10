@@ -30,6 +30,7 @@ import org.apache.maven.model.Repository;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
+import com.tibco.bw.maven.utils.BWModuleInfo;
 import com.tibco.bw.maven.utils.BWSharedModuleInfo;
 
 public class BWSharedModulePOMGenerator extends BWPOMGenerator
@@ -37,10 +38,14 @@ public class BWSharedModulePOMGenerator extends BWPOMGenerator
 
 	private BWSharedModuleInfo bwinfo;
 	
-	public BWSharedModulePOMGenerator(BWSharedModuleInfo bwinfo)
+	private List<BWSharedModuleInfo> shared;
+
+	
+	public BWSharedModulePOMGenerator(BWSharedModuleInfo bwinfo , List<BWSharedModuleInfo> shared )
 	{
 		super(bwinfo);
 		this.bwinfo = bwinfo;	
+		this.shared = shared;
 	}
 	
 	public void generate()
@@ -64,7 +69,7 @@ public class BWSharedModulePOMGenerator extends BWPOMGenerator
 	protected void addProperties()
 	{
 		super.addProperties();
-		model.addProperty("tycho-version", "0.20.0");
+		model.addProperty("tycho-version", "0.22.0");
 		model.addProperty("main.p2.repo", "${tibco.home}/bw/${bw.version}/maven/p2repo");
 		model.addProperty("shared.p2.repo", "${tibco.home}/bw/${bw.version}/maven/sharedmodulerepo");
 		
@@ -137,6 +142,18 @@ public class BWSharedModulePOMGenerator extends BWPOMGenerator
 			Xpp3Dom req = addRequirement( str ) ;
 			extraReq.addChild(req);
 		}
+		
+		if( bwinfo.getDepSharedModules() != null )
+		{
+			for( String str : bwinfo.getDepSharedModules() )
+			{
+				Xpp3Dom req = addRequirement( str , getVersion(str) ) ;
+				extraReq.addChild(req);
+				
+			}
+			
+		}
+		
 		depRes.addChild(extraReq);
 
 		Xpp3Dom envs = addEnvironments();
@@ -151,4 +168,16 @@ public class BWSharedModulePOMGenerator extends BWPOMGenerator
 
 	}
 
+	
+	private String getVersion( String module )
+	{
+		for ( BWModuleInfo info : shared )
+		{
+			if( info.getName().equals(module) )
+			{
+				return info.getVersion().substring( 0 , (info.getVersion().lastIndexOf("-") ) ) ;
+			}
+		}
+		return "1.0.0";
+	}
 }

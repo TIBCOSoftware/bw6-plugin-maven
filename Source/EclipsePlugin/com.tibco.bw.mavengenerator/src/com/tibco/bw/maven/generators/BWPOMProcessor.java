@@ -60,7 +60,7 @@ public class BWPOMProcessor implements IBWPOMProcessor
 		
 		for(BWSharedModuleInfo module : projectInfo.getAppInfo().getSharedModules())
 		{
-			IBWPOMGenerator moduleGen = new BWSharedModulePOMGenerator( module );
+			IBWPOMGenerator moduleGen = new BWSharedModulePOMGenerator( module , projectInfo.getAppInfo().getSharedModules() );
 			moduleGen.generate();
 		}
 

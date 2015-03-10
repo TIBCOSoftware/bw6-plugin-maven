@@ -17,6 +17,10 @@
 
 package com.tibco.bw.maven.utils;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 public class BWProjectInfo implements IBWProjectInfo
 {
@@ -24,6 +28,7 @@ public class BWProjectInfo implements IBWProjectInfo
 	private String tibcoHome;
 	
 	private BWApplicationInfo appInfo;
+	
 	
 	
 	public String getTibcoHome() 
@@ -47,5 +52,8 @@ public class BWProjectInfo implements IBWProjectInfo
 		this.appInfo = appInfo;
 	}
 
+
+
+	
 
 }

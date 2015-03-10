@@ -17,7 +17,9 @@
 
 package com.tibco.bw.maven.utils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BWApplicationInfo extends BWModuleInfo
 {
@@ -29,6 +31,9 @@ public class BWApplicationInfo extends BWModuleInfo
 	private List<BWOSGiModuleInfo> osgiModules;
 	
 	private BWDeploymentInfo deploymentInfo = new BWDeploymentInfo();
+	
+	private Map<String, List<String>> dependencies = new HashMap<String, List<String>>();
+
 
 	public List<BWAppModuleInfo> getAppModules() 
 	{
@@ -69,6 +74,17 @@ public class BWApplicationInfo extends BWModuleInfo
 	{
 		this.deploymentInfo = deploymentInfo;
 	}
+	
+	public Map<String, List<String>> getDependencies() 
+	{
+		return dependencies;
+	}
+
+	public void setDependencies(Map<String, List<String>> dependencies)
+	{
+		this.dependencies = dependencies;
+	}
+
 
 	
 }

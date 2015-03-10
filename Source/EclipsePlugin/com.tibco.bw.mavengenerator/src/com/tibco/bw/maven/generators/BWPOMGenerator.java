@@ -234,7 +234,7 @@ public abstract class BWPOMGenerator implements IBWPOMGenerator
 		artifactId1.setValue("tycho-compiler-plugin");
 		
 		Xpp3Dom version1 = new Xpp3Dom("versionRange");
-		version1.setValue("[0.20.0,)");
+		version1.setValue("[0.22.0,)");
 		
 		Xpp3Dom goals1 = new Xpp3Dom("goals");
 		

@@ -73,7 +73,7 @@ public class BWAppModulePOMGenerator extends BWPOMGenerator
 	protected void addProperties()
 	{
 		super.addProperties();
-		model.addProperty("tycho-version", "0.20.0");
+		model.addProperty("tycho-version", "0.22.0");
 		model.addProperty("main.p2.repo", "${tibco.home}/bw/${bw.version}/maven/p2repo");
 		model.addProperty("shared.p2.repo", "${tibco.home}/bw/${bw.version}/maven/sharedmodulerepo");
 		

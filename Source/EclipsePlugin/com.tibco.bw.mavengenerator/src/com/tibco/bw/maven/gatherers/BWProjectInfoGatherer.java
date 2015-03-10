@@ -19,9 +19,7 @@ package com.tibco.bw.maven.gatherers;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,13 +32,16 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.project.PDEProject;
-import org.osgi.framework.BundleException;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import com.tibco.bw.maven.Activator;
 import com.tibco.bw.maven.utils.BWAppModuleInfo;
 import com.tibco.bw.maven.utils.BWApplicationInfo;
 import com.tibco.bw.maven.utils.BWMavenConstants;
@@ -74,6 +75,8 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 	
 	private String bwVersion;
 	
+	private Map<String, List<String>> dependencies = new HashMap<String, List<String>>();
+
 	
 	public BWProjectInfoGatherer( IProject project )
 	{
@@ -92,7 +95,10 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 		
 		BWApplicationInfo appInfo = gatherApplicationinfo();
 		info.setAppInfo(appInfo);
-		appInfo.setProject(project);
+		appInfo.setProject(project);		
+		
+		appInfo.setDependencies(dependencies);
+		
 		
 		info.setTibcoHome( tibcoHome);
 		
@@ -115,6 +121,10 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 		IFile file = project.getFile("META-INF/TIBCO.xml");
 
 		IFile manifest = PDEProject.getManifest(project);
+//		BundleContext context = IDEWorkbenchPlugin.getDefault().getBundle().getBundleContext();
+//		Bundle bundle = context.getBundle();
+//		bundle.ge
+		
 		Map<String,String> headers = new HashMap<String,String>(); 
 		ManifestElement.parseBundleManifest(new FileInputStream( manifest.getLocation().toFile()), headers);
 		
@@ -207,10 +217,12 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 		 
 		Map<String,String> headers = new HashMap<String,String>(); 
 		ManifestElement.parseBundleManifest(new FileInputStream( manifest.getLocation().toFile()), headers);
-		
-		info.setCapabilities( processCapabilites( headers.get("Require-Capability")));
 
 		gatherCommonInfo(project, info, headers );
+
+		info.setCapabilities( processCapabilites( headers.get("Require-Capability") , info));
+
+		info.setDepSharedModules(dependencies.get(info.getName()));
 
 		return info;
 	}
@@ -233,10 +245,14 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 		 
 		Map<String,String> headers = new HashMap<String,String>(); 
 		ManifestElement.parseBundleManifest(new FileInputStream( manifest.getLocation().toFile()), headers);
-		
-		info.setCapabilities( processCapabilites( headers.get("Require-Capability")));
 
 		gatherCommonInfo(project, info, headers );
+
+		info.setCapabilities( processCapabilites( headers.get("Require-Capability") , info ));
+
+		
+		info.setDepSharedModules(dependencies.get(info.getName()));
+
 
 		return info;
 	}
@@ -255,12 +271,18 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 		BWSharedModuleInfo info = new BWSharedModuleInfo();
 
 		IFile manifest = PDEProject.getManifest(project);
-		 
+
+		
 		Map<String,String> headers = new HashMap<String,String>(); 
 		ManifestElement.parseBundleManifest(new FileInputStream( manifest.getLocation().toFile()), headers);
-		info.setCapabilities( processCapabilites( headers.get("Require-Capability")));
-
+		
 		gatherCommonInfo(project, info, headers );
+
+		info.setCapabilities( processCapabilites( headers.get("Require-Capability") , info ));
+
+		
+		info.setDepSharedModules(dependencies.get(info.getName()));
+
 		
 		return info;
 	}
@@ -316,7 +338,7 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 	 * 
 	 * @return the List of plugins providing the capability.
 	 */
-	private List<String> processCapabilites( String caps )
+	private List<String> processCapabilites( String caps , BWModuleInfo info )
 	{
 		List<String> list = new ArrayList<String>();
 	
@@ -328,11 +350,21 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 		for( String cap : capArray )
 		{
 			cap = cap.trim();
-			String plugin = BWMavenConstants.capabilities.get(cap );
-			if(plugin == null || plugin.equals(""))
+			
+			if( cap.contains("com.tibco.bw.module") )
 			{
+				processSharedModuleCaps(cap , info );
 				continue;
 			}
+					
+			String plugin = BWMavenConstants.capabilities.get(cap );
+		
+			if(plugin == null || plugin.equals("")  )
+			{
+				Activator.log("Failed to find module for capability => " + cap , IStatus.WARNING );
+				continue;
+			}			
+			
 			list.add(plugin);
 		}
 		
@@ -340,6 +372,34 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 		
 		return list;
 	}
+	
+	private void  processSharedModuleCaps( String cap , BWModuleInfo info )
+	{
+		List<String> list ;
+		
+		if (dependencies.containsKey( info.getName() ) )
+		{
+			dependencies.get( info.getName());
+		}
+		else
+		{
+			list = new ArrayList<String>();
+			dependencies.put(info.getName(), list );
+		}
+
+		if(cap.contains("com.tibco.bw.module"))
+		{
+			int nameIndex = cap.indexOf("name=");
+			int endIndex = cap.indexOf(")" , nameIndex);
+			String pluginName = cap.substring( nameIndex + 5, endIndex);
+		
+			dependencies.get( info.getName()).add( pluginName );	
+			
+		}
+		
+
+	}
+	
 	
 	/**
 	 * Gets the Tibco Home. 

@@ -67,7 +67,6 @@ public class BWMavenConstants
 		capabilities.put("com.tibco.bw.sharedresource.model; filter:=\"(name=bw.userid)\"", "com.tibco.bw.sharedresource.trinity.identity.subject.model");
 		capabilities.put("com.tibco.bw.sharedresource.model; filter:=\"(name=bw.sslclient)\"", "com.tibco.bw.sharedresource.trinity.ssl.client.model");
 		capabilities.put("com.tibco.bw.sharedresource.model; filter:=\"(name=bw.sslserver)\"", "com.tibco.bw.sharedresource.trinity.ssl.server.model");
-		capabilities.put("com.tibco.bw.sharedresource.model; filter:=\"(name=bw.userid)\"", "com.tibco.bw.sharedresource.trinity.useridentity.model");
 		capabilities.put("com.tibco.bw.binding.model; filter:=\"(name=bw.soap)\"", "com.tibco.bw.binding.soap.axis2.model");
 		
 		capabilities.put("com.tibco.bw.sharedresource.model; filter:=\"(name=bw.miserver)\"", "com.tibco.bw.sharedresource.mi.model");

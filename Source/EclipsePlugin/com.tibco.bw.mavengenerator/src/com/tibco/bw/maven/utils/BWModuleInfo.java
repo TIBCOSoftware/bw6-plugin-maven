@@ -38,6 +38,8 @@ public abstract class BWModuleInfo
 	protected File pomfileLocation;
 	
 	protected List<String> capabilities;
+	
+	protected List<String> depSharedModules;
 
 	
 	public String getName() 
@@ -127,5 +129,17 @@ public abstract class BWModuleInfo
 	{
 		this.groupId = groupId;
 	}
+
+	public List<String> getDepSharedModules() 
+	{
+		return depSharedModules;
+	}
+
+	public void setDepSharedModules(List<String> depSharedModules) 
+	{
+		this.depSharedModules = depSharedModules;
+	}
+
+
 
 }
