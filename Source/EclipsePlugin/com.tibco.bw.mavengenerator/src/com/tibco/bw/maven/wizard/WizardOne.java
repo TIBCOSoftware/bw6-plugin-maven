@@ -37,7 +37,9 @@ import org.eclipse.swt.widgets.Text;
 import com.tibco.bw.maven.utils.BWAppModuleInfo;
 import com.tibco.bw.maven.utils.BWApplicationInfo;
 import com.tibco.bw.maven.utils.BWDeploymentInfo;
+import com.tibco.bw.maven.utils.BWOSGiModuleInfo;
 import com.tibco.bw.maven.utils.BWProjectInfo;
+import com.tibco.bw.maven.utils.BWSharedModuleInfo;
 
 public class WizardOne extends WizardPage 
 {
@@ -424,6 +426,16 @@ public class WizardOne extends WizardPage
 		setDeploymentInfo();
 		
 		for(BWAppModuleInfo module : info.getAppModules() )
+		{
+			module.setTibcoHome(tibcoHome.getText());
+		}
+		
+		for(BWSharedModuleInfo module : info.getSharedModules() )
+		{
+			module.setTibcoHome(tibcoHome.getText());
+		}
+
+		for(BWOSGiModuleInfo module : info.getOsgiModules() )
 		{
 			module.setTibcoHome(tibcoHome.getText());
 		}

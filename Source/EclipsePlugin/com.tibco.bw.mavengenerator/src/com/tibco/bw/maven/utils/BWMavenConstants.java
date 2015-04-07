@@ -30,7 +30,7 @@ public class BWMavenConstants
 		capabilities.put("com.tibco.bw.model; filter:=\"(name=bw.file)\"", "com.tibco.bw.palette.file.model");
 		capabilities.put("com.tibco.bw.binding.model; filter:=\"(name=bw.rest)\"", "com.tibco.bw.binding.rest.model");
 		capabilities.put("com.tibco.bw.palette; filter:=\"(name=bw.xml)\"", "com.tibco.bw.palette.xml.design");
-		capabilities.put("com.tibco.bw.palette; filter:=\"(name=bw.ftp)\"", "com.tibco.bw.palette.ftp.model");
+		capabilities.put("com.tibco.bw.palette; filter:=\"(name=bw.ftp)\"", "com.tibco.bw.palette.ftp.runtime");
 		capabilities.put("com.tibco.bw.model; filter:=\"(name=bw.general)\"", "com.tibco.bw.palette.generalactivities.model");
 		capabilities.put("com.tibco.bw.palette; filter:=\"(name=bw.http)\"", "com.tibco.bw.palette.http.model");
 		capabilities.put("com.tibco.bw.model; filter:=\"(name=bw.java)\"", "com.tibco.bw.palette.java.model");
