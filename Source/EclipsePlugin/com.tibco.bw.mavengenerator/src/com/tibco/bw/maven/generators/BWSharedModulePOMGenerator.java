@@ -32,6 +32,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import com.tibco.bw.maven.utils.BWModuleInfo;
 import com.tibco.bw.maven.utils.BWSharedModuleInfo;
+import com.tibco.bw.maven.utils.Capability;
 
 public class BWSharedModulePOMGenerator extends BWPOMGenerator
 {
@@ -137,9 +138,9 @@ public class BWSharedModulePOMGenerator extends BWPOMGenerator
 		Xpp3Dom depRes = new Xpp3Dom("dependency-resolution");
 		Xpp3Dom extraReq = new Xpp3Dom("extraRequirements");
 
-		for( String str : bwinfo.getCapabilities())
+		for( Capability str : bwinfo.getCapabilities())
 		{
-			Xpp3Dom req = addRequirement( str ) ;
+			Xpp3Dom req = addRequirement( str.getName() , str.getVersion() ) ;
 			extraReq.addChild(req);
 		}
 		

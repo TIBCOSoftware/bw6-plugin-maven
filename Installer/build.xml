@@ -3,6 +3,30 @@
 
     <dirname property="project.dir" file="${ant.file.main}"/>
 
+    <target name="install-plugin" depends="getTibcoHome, getPlugin, setupMacros, bw63.maven.plugin.install,bw62.maven.plugin.install, vbuild.p2.plugin.install, devbuild.p2.plugin.install ">
+    </target>
+
+
+    <target name="getPlugin">
+
+         <input addproperty="pluginid">
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+                Input the plugin ID     
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            </input>
+
+         <input addproperty="pluginversion">
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+                Input the plugin version X.X   
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            </input>
+
+    </target>
+
     <target name="getTibcoHome">
             <input addproperty="input.tibco.home">
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -48,8 +72,8 @@
                 <available file="${tibco.home}/bw/6.2" type="dir"/>
             </condition>
 
-            <condition property="bw61.install">
-                <available file="${tibco.home}/bw/6.1" type="dir"/>
+            <condition property="bw63.install">
+                <available file="${tibco.home}/bw/6.3" type="dir"/>
             </condition>
 
             <condition property="vbuild">
@@ -63,10 +87,68 @@
     </target>
 
 
-    <target name="setup" depends="getTibcoHome, setupMacros, bw61.maven.install, bw62.maven.install , vbuild.p2.install , devbuild.p2.install ">
+    <target name="setup" depends="getTibcoHome, setupMacros, bw63.maven.install, bw62.maven.install , vbuild.p2.install , devbuild.p2.install ">
 
 
     </target>
+
+
+    <target name="vbuild.p2.plugin.install" if="vbuild">
+        <property name="launcher.jar" location="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
+        <antcall target="publish-plugin-all"/>
+    </target>
+
+
+    <target name="devbuild.p2.plugin.install" if="devbuild">
+        <property name="launcher.jar" location="${tibco.home}/studio/3.6/eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
+        <antcall target="publish-plugin-all"/>
+
+    </target>
+
+
+    <target name="publish-plugin-all" depends="copy-plugin, cleanup">
+
+    </target>
+
+
+    <target name="bw63.maven.plugin.install" if="bw63.install">
+        <property name="bw.home" value="bw/6.3" />
+        <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
+
+    </target>
+
+
+    <target name="bw62.maven.plugin.install" if="bw62.install">
+        <property name="bw.home" value="bw/6.2" />
+        <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
+    </target>
+
+
+    <target name="copy-plugin">
+
+        <property name="maven.p2.repo" location="${tibco.maven.home}/p2repo"/>
+        <property name="temprepo" value="${project.dir}/p2temp"/>
+        <property name="temprepoplugins" value="${temprepo}/plugins"/>
+        <property name="shared.p2.repo" location="${tibco.maven.home}/sharedmodulerepo"/>
+        <property name="shared.repo.temp" location="${tibco.maven.home}/temp"/>
+
+
+        <mkdir dir="${maven.p2.repo}" />        
+        <mkdir dir="${temprepoplugins}" />
+
+        <copy todir="${temprepoplugins}" overwrite="on">
+            <fileset dir="${tibco.home}/bw/palettes/${pluginid}/${pluginversion}/runtime/plugins">
+                <include name="*/**"/>
+            </fileset>
+        </copy>
+
+
+        <echo message="Publishing the Plugin RUs to Maven Repository"/>
+        <p2.publish repo="${maven.p2.repo}" source="${temprepo}"/>
+
+
+    </target>
+
 
     <target name="vbuild.p2.install" if="vbuild">
         <property name="launcher.jar" location="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
@@ -85,8 +167,8 @@
     </target>
 
 
-    <target name="bw61.maven.install" if="bw61.install">
-        <property name="bw.home" value="bw/6.1" />
+    <target name="bw63.maven.install" if="bw63.install">
+        <property name="bw.home" value="bw/6.3" />
         <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
 
         <antcall target="maven-install"/>
@@ -146,12 +228,12 @@
         <property name="temprepo" value="${project.dir}/p2temp"/>
         <property name="temprepoplugins" value="${temprepo}/plugins"/>
         <property name="shared.p2.repo" location="${tibco.maven.home}/sharedmodulerepo"/>
-		<property name="shared.repo.temp" location="${tibco.maven.home}/temp"/>
+        <property name="shared.repo.temp" location="${tibco.maven.home}/temp"/>
 
         <mkdir dir="${maven.p2.repo}" />        
         <mkdir dir="${temprepoplugins}" />
         <mkdir dir="${shared.p2.repo}" />
-		<mkdir dir="${shared.repo.temp}" />
+        <mkdir dir="${shared.repo.temp}" />
 
         <copy todir="${temprepoplugins}" overwrite="on">
             <fileset dir="${tibco.home}/${bw.home}/system/lib">
@@ -173,7 +255,7 @@
 
         <unzip src="${project.dir}/config/shared.repo.sample.zip" dest="${shared.repo.temp}"/>
 
-		<p2.publish repo="${shared.p2.repo}" source="${shared.repo.temp}"/>
+        <p2.publish repo="${shared.p2.repo}" source="${shared.repo.temp}"/>
 
     </target>
 

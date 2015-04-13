@@ -22,21 +22,27 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.project.PDEProject;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
+import org.osgi.framework.CapabilityPermission;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -49,6 +55,7 @@ import com.tibco.bw.maven.utils.BWModuleInfo;
 import com.tibco.bw.maven.utils.BWOSGiModuleInfo;
 import com.tibco.bw.maven.utils.BWProjectInfo;
 import com.tibco.bw.maven.utils.BWSharedModuleInfo;
+import com.tibco.bw.maven.utils.Capability;
 
 /**
  * 
@@ -338,9 +345,9 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 	 * 
 	 * @return the List of plugins providing the capability.
 	 */
-	private List<String> processCapabilites( String caps , BWModuleInfo info )
+	private List<Capability> processCapabilites( String caps , BWModuleInfo info )
 	{
-		List<String> list = new ArrayList<String>();
+		List<Capability> list = new ArrayList<Capability>();
 	
 		if( caps == null || caps.equals("") )
 		{
@@ -358,20 +365,97 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 			}
 					
 			String plugin = BWMavenConstants.capabilities.get(cap );
-		
+			String version = "6.0.0";
+			
 			if(plugin == null || plugin.equals("")  )
 			{
-				Activator.log("Failed to find module for capability => " + cap , IStatus.WARNING );
+				checkFromPlugins(info);
+				plugin = BWMavenConstants.capabilities.get(cap );
+				version = BWMavenConstants.capabilitiesVersion.get(cap );
+			}			
+
+			
+			if(plugin == null || plugin.equals("")  )
+			{
+				Activator.log("Failed to find module for capability => " + cap , IStatus.ERROR );
 				continue;
 			}			
-			
-			list.add(plugin);
+
+			list.add( new Capability( plugin, version ));
 		}
 		
 
 		
 		return list;
 	}
+	
+	private void  checkFromPlugins( BWModuleInfo info )
+	{
+		File file = new File  ( info.getTibcoHome() + "/bw/palettes/" );
+		if ( ! file.exists() )
+		{
+			return;
+		}
+	
+		Collection<File> files = FileUtils.listFiles(  file ,  new RegexFileFilter("^(.*?)"),  DirectoryFileFilter.DIRECTORY);
+		
+		for( File fileName : files )
+		{
+			if ( fileName.getAbsolutePath().indexOf(".jar") != -1 )
+			{
+				loadPluginBundles(fileName);	
+			}
+			
+		}
+	}
+	
+	
+	public void loadPluginBundles( File jarFile ) 
+
+	{
+		
+		try
+		{
+			JarInputStream jarStream = new JarInputStream( new FileInputStream( jarFile ));
+			Manifest moduleManifest = jarStream.getManifest();
+			jarStream.close();
+			
+			if (moduleManifest != null && moduleManifest.getMainAttributes().containsKey( new Attributes.Name("Provide-Capability")) )
+			{
+				String capability = moduleManifest.getMainAttributes().getValue("Provide-Capability");
+				String bundleId = moduleManifest.getMainAttributes().getValue("Bundle-SymbolicName").split(";")[0];
+				String version = moduleManifest.getMainAttributes().getValue("Bundle-Version").split(";")[0];
+				
+				//com.tibco.bw.palette; name=bw.mq
+				String type = capability.split(";")[0].trim();
+				String module  = capability.split(";")[1].trim();
+				
+				String finalString = type + ";" + " filter:=\"(" + module + ")\"";
+				
+				BWMavenConstants.capabilities.put(finalString, bundleId );
+				
+				BWMavenConstants.capabilitiesVersion.put(finalString, version);
+			
+			}
+		}
+		catch(Exception e )
+		{
+			
+		}
+	
+	}
+	
+	
+	public String getModuleVersion( File jarFile ) throws Exception
+	{
+		JarInputStream jarStream = new JarInputStream( new FileInputStream( jarFile ));
+		Manifest moduleManifest = jarStream.getManifest();
+		jarStream.close();
+		
+		return moduleManifest.getMainAttributes().getValue("Bundle-Version");
+
+	}
+
 	
 	private void  processSharedModuleCaps( String cap , BWModuleInfo info )
 	{

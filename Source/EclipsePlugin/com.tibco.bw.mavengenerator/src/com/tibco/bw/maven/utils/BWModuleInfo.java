@@ -37,7 +37,7 @@ public abstract class BWModuleInfo
 	
 	protected File pomfileLocation;
 	
-	protected List<String> capabilities;
+	protected List<Capability> capabilities;
 	
 	protected List<String> depSharedModules;
 
@@ -60,12 +60,12 @@ public abstract class BWModuleInfo
 		this.version = version;
 	}
 	
-	public List<String> getCapabilities() 
+	public List<Capability> getCapabilities() 
 	{
 		return capabilities;
 	}
 	
-	public void setCapabilities(List<String> capabilities) 
+	public void setCapabilities(List<Capability> capabilities) 
 	{
 		this.capabilities = capabilities;
 	}
@@ -140,6 +140,9 @@ public abstract class BWModuleInfo
 		this.depSharedModules = depSharedModules;
 	}
 
+	
 
 
 }
+
+

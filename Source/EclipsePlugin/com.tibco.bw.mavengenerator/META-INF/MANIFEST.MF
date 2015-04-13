@@ -12,4 +12,5 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: lib/maven-model-3.0.5.jar,
  lib/plexus-utils-3.0.10.jar,
- .
+ .,
+ lib/commons-io-2.4.jar

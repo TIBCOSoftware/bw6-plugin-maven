@@ -31,6 +31,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import com.tibco.bw.maven.utils.BWOSGiModuleInfo;
+import com.tibco.bw.maven.utils.Capability;
 
 public class BWOSGiModulePOMGenerator extends BWPOMGenerator
 {
@@ -127,9 +128,9 @@ public class BWOSGiModulePOMGenerator extends BWPOMGenerator
 		Xpp3Dom depRes = new Xpp3Dom("dependency-resolution");
 		Xpp3Dom extraReq = new Xpp3Dom("extraRequirements");
 
-		for( String str : bwinfo.getCapabilities())
+		for( Capability str : bwinfo.getCapabilities())
 		{
-			Xpp3Dom req = addRequirement( str ) ;
+			Xpp3Dom req = addRequirement( str.getName() , str.getVersion() ) ;
 			extraReq.addChild(req);
 		}
 		depRes.addChild(extraReq);

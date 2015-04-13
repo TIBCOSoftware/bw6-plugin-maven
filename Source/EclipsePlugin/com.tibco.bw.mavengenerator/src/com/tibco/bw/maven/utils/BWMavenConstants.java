@@ -25,6 +25,9 @@ public class BWMavenConstants
 
 	public static Map<String,String> capabilities = new HashMap<String,String>();
 	
+	public static Map<String,String> capabilitiesVersion = new HashMap<String,String>();
+
+	
 	static
 	{
 		capabilities.put("com.tibco.bw.model; filter:=\"(name=bw.file)\"", "com.tibco.bw.palette.file.model");
@@ -74,6 +77,7 @@ public class BWMavenConstants
 		capabilities.put("com.tibco.bw.palette; filter:=\"(name=bw.mi)\"", "com.tibco.bw.palette.mi.runtime");
 		capabilities.put("com.tibco.bw.palette; filter:=\"(name=bw.restjson)\"", "com.tibco.bw.palette.restjson.runtime");
 
+		
 		
 		
 	}

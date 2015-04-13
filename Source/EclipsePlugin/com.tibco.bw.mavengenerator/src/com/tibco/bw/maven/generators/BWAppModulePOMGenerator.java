@@ -35,6 +35,7 @@ import com.tibco.bw.maven.Activator;
 import com.tibco.bw.maven.utils.BWAppModuleInfo;
 import com.tibco.bw.maven.utils.BWOSGiModuleInfo;
 import com.tibco.bw.maven.utils.BWSharedModuleInfo;
+import com.tibco.bw.maven.utils.Capability;
 
 public class BWAppModulePOMGenerator extends BWPOMGenerator
 {
@@ -146,9 +147,9 @@ public class BWAppModulePOMGenerator extends BWPOMGenerator
 		Xpp3Dom depRes = new Xpp3Dom("dependency-resolution");
 		Xpp3Dom extraReq = new Xpp3Dom("extraRequirements");
 
-		for( String str : bwinfo.getCapabilities())
+		for( Capability str : bwinfo.getCapabilities())
 		{
-			Xpp3Dom req = addRequirement( str ) ;
+			Xpp3Dom req = addRequirement( str.getName() , str.getVersion() ) ;
 			extraReq.addChild(req);
 		}
 		
