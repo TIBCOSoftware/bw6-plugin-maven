@@ -20,8 +20,11 @@ package com.tibco.bw.maven.action;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -74,6 +77,8 @@ public class MavenPOMGenerator implements IObjectActionDelegate {
 		try 
 		{
 
+			IExtensionRegistry registry = Platform.getExtensionRegistry();
+			IExtensionPoint point = registry.getExtensionPoint("com.tibco.bw.design.Palette");
 			selectedProject = getCurrentSelectedProject();
 			bwProjectInfo = readBWProjectInfo();
 

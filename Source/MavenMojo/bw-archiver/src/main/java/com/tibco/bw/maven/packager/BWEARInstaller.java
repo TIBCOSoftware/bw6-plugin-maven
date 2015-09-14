@@ -21,10 +21,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.artifact.installer.ArtifactInstaller;
-import org.apache.maven.artifact.repository.ArtifactRepositoryFactory;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
@@ -85,8 +83,8 @@ public class BWEARInstaller  extends AbstractMojo
     @Component
     protected ArtifactInstaller installer;
     
-    @Parameter( property = "localRepository", required = true, readonly = true )
-    protected ArtifactRepository localRepository;
+//    @Parameter( property = "localRepository", required = true, readonly = true )
+//    protected ArtifactRepository localRepository;
     
 	
 	@Parameter (property="tibcohome")
@@ -258,9 +256,9 @@ public class BWEARInstaller  extends AbstractMojo
 	 */
 	private void installToRepo( File file ) throws Exception
 	{
-		File artifactPath = new File ( new File ( localRepository.getBasedir()) ,  localRepository.pathOf( project.getArtifact()));
-		FileUtils.copyFile( file , new File (artifactPath.getParentFile() , file.getName()));
-		installer.install(file, project.getArtifact() , localRepository);
+//		//File artifactPath = new File ( new File ( localRepository.getBasedir()) ,  localRepository.pathOf( project.getArtifact()));
+//		FileUtils.copyFile( file , new File (artifactPath.getParentFile() , file.getName()));
+//		installer.install(file, project.getArtifact() , localRepository);
 
 	}
 	

@@ -7,7 +7,7 @@ Bundle-Activator: com.tibco.bw.maven.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
- org.eclipse.pde.core;bundle-version="3.7.1"
+ org.eclipse.pde.core;bundle-version="[3.7.1,4.0.0)" 
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: lib/maven-model-3.0.5.jar,

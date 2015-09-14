@@ -42,7 +42,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.project.PDEProject;
-import org.osgi.framework.CapabilityPermission;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -495,11 +494,21 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 	 */
 	private String getTibcoHome()
 	{
+		
+//		IMavenProjectRegistry registry = MavenPlugin.getMavenProjectRegistry();
+//		IMavenProjectFacade [] projects = registry.getProjects();
+		
+		
 		String tibcoHome = "";
 	
 		//Check if the Eclipse Launcher contains the Studio property. 
 		//That means that it is launched from the Studio.
 		String launcher = System.getProperty("eclipse.launcher");
+		
+		for ( Object str : System.getProperties().keySet() )
+		{
+			System.out.println(  str + "   :    " + System.getProperty ( str.toString() ) );
+		}
 		if(launcher.indexOf("studio") > 0 )
 		{
 			tibcoHome = launcher.substring(0 , launcher.indexOf("studio") - 1);
@@ -507,7 +516,7 @@ public class BWProjectInfoGatherer implements IBWProjectInfoGatherer
 		// If not then its launched from the Dev Build.
 		else if(launcher.indexOf("eclipse.exe") > 0 )			
 		{
-			tibcoHome = launcher.substring(0 , launcher.indexOf("eclipse") - 1) + "/tibco.home";
+			tibcoHome = launcher.substring(0 , launcher.indexOf("tibco.home") - 1) + "/tibco.home";
 		}
 		
 		if(tibcoHome == null || tibcoHome.equals("" ))
