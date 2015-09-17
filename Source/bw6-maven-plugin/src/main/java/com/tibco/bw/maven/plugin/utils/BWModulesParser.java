@@ -83,7 +83,7 @@ public class BWModulesParser
 	
 	private Artifact getArtifactForModule( String module )
 	{
-		List<MavenProject> projects = session.getAllProjects();
+		List<MavenProject> projects = session.getProjects();
 		for( MavenProject project : projects )
 		{
 			if( project.getArtifactId().equals(module) )

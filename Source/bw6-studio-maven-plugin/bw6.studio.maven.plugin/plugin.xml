@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+	<extension point="org.eclipse.ui.popupMenus">
+   
+		<objectContribution adaptable="true" id="genpom.popupmenu" objectClass="org.eclipse.core.resources.IProject">
+ 			<filter name="projectNature" value="com.tibco.zion.dc.ApplicationNature"/>
+ 			<action class="com.tibco.bw.studio.maven.action.MavenPOMProcessor" id="bw6.genpom" label="Generate POM" menubarPath="additions"/>
+  		</objectContribution>
+		<objectContribution adaptable="true" id="genmf.popupmenu" objectClass="org.eclipse.core.resources.IProject">
+ 			<filter name="projectNature" value="com.tibco.zion.dc.ApplicationNature"/>
+ 			<action class="com.tibco.bw.studio.maven.action.ManifestProcessor" id="bw6.genmf" label="Update Manifest" menubarPath="additions"/>
+  		</objectContribution>   
+   </extension>
+
+</plugin>

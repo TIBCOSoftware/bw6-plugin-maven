@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="bw6.studio.maven.feature" label="BW6 Studio Feature for Maven" version="1.0.0.qualifier" provider-name="Tibco Software Inc">
+
+   <description url="http://www.example.com/description">
+		Feature Project for BW6 Maven Studio Plugin
+   </description>
+
+   <plugin id="bw6.studio.maven.plugin" download-size="0" install-size="0" version="1.0.0.qualifier" unpack="false"/>
+
+</feature>

@@ -100,6 +100,8 @@ public class BWModulePackageMojo  extends AbstractMojo
             
             updateManifestVersion();
             
+            removeExternals();
+            
             File pluginFile = getPluginJAR();                       
                         
             FileSet set = getFileSet();
@@ -234,6 +236,35 @@ public class BWModulePackageMojo  extends AbstractMojo
     	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
     	manifest.getMainAttributes().putValue("Bundle-Version", qualifierVersion );
     	
+    }
+    
+    private void removeExternals()
+    {
+    	String bundlePath = manifest.getMainAttributes().getValue("Bundle-ClassPath");
+    	if( bundlePath != null )
+    	{
+        	String [] entries = bundlePath.split(",");
+        	
+        	StringBuffer buffer = new StringBuffer();
+        	int start = 0;
+        	for( String entry : entries )
+        	{
+        		if( entry.indexOf( "external") == -1 )
+        		{
+            		if ( start != 0 )
+            		{
+            			buffer.append( "," );
+            		}
+
+        			buffer.append( entry );	
+        		}
+    			start++;	
+        		
+        	}
+        	
+        	manifest.getMainAttributes().putValue("Bundle-ClassPath", buffer.toString() );
+    		
+    	}
     }
 
 }
