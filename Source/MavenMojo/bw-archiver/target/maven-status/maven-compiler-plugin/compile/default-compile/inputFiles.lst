@@ -1,9 +1,0 @@
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\utils\BWProjectUtils.java
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\utils\Constants.java
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\BWEARInstaller.java
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\utils\BWP2Publisher.java
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\BWSharedRepoPublisher.java
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\utils\ProcessExecutor.java
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\BWAppModuleValidator.java
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\BWEarPackager.java
-D:\Codebase\Github\Tibco\BWMavenPlugin\bw6-plugin-maven\Source\MavenMojo\bw-archiver\src\main\java\com\tibco\bw\maven\packager\utils\BWFileUtils.java
