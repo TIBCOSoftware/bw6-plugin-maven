@@ -16,6 +16,7 @@
  */
 package com.tibco.bw.studio.maven.action;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -204,8 +205,9 @@ public class MavenPOMProcessor implements IObjectActionDelegate
 			List<ICommand> commandList = Arrays.asList( commands );
 			ICommand build = new BuildCommand();
 			build.setBuilderName("org.eclipse.m2e.core.maven2Builder");
-			commandList.add( build );
-			desc.setBuildSpec( commandList.toArray(new ICommand[]{}));
+			List<ICommand> modList = new ArrayList<>( commandList );
+			modList.add( build );
+			desc.setBuildSpec( modList.toArray(new ICommand[]{}));
 		}
 		catch(Exception e)
 		{

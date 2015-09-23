@@ -12,5 +12,11 @@
  			<action class="com.tibco.bw.studio.maven.action.ManifestProcessor" id="bw6.genmf" label="Update Manifest" menubarPath="additions"/>
   		</objectContribution>   
    </extension>
+ <extension
+       point="com.tibco.bw.debug.launch">
+    <Name
+          class="com.tibco.bw.studio.maven.extension.MavenDebugLauncher">
+    </Name>
+ </extension>
 
 </plugin>

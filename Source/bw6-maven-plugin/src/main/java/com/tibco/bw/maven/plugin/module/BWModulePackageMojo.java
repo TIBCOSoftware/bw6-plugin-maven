@@ -158,6 +158,10 @@ public class BWModulePackageMojo  extends AbstractMojo
 		
 		for( Artifact artifact : artifacts )
 		{
+			if( artifact.getFile().getName().indexOf("com.tibco.bw.palette.shared") != -1  || artifact.getFile().getName().indexOf("com.tibco.xml.cxf.common") != -1 )
+			{
+				continue;
+			}
 			jarArchiver.addFile( artifact.getFile(), "lib/" + artifact.getFile().getName() );
 			buffer.append(",lib/" + artifact.getFile().getName());
 		}
@@ -189,7 +193,15 @@ public class BWModulePackageMojo  extends AbstractMojo
 	private File getPluginJAR() 
 	{
 		String qualifierVersion  = manifest.getMainAttributes().getValue("Bundle-Version" );
-		File pluginFile = new File(outputDirectory,  manifest.getMainAttributes().getValue("Bundle-SymbolicName") +  "_" + qualifierVersion + ".jar");
+		String name = manifest.getMainAttributes().getValue("Bundle-SymbolicName");
+		
+		getLog().info( "File name for Plugin = " + name );
+		if( name.indexOf(";") != -1 )
+		{
+			name = name.substring(0 , ( name.indexOf(";") -1 ) );
+		}
+		
+		File pluginFile = new File(outputDirectory,  name +  "_" + qualifierVersion + ".jar");
 		if (pluginFile.exists()) 
 		{
 		    pluginFile.delete();

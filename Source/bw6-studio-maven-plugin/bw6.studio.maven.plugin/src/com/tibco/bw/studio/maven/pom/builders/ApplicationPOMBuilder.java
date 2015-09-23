@@ -13,9 +13,13 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 	@Override
 	public void build(BWProject project, BWModule module) throws Exception
 	{
+		if( !module.isOverridePOM() )
+		{
+			return;
+		}
 		this.project = project;
 		this.module = module;
-		this.model = new Model();
+		initializeModel();
 		
 		addPrimaryTags();
 		addParent( ModuleHelper.getParentModule( project.getModules() ));

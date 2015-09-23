@@ -49,4 +49,17 @@ public class ModuleHelper
 		return null;
 	}
 	
+	
+	public static BWModule getModule( List<BWModule> modules , String name )
+	{
+		for( BWModule module : modules )
+		{
+			if( module.getArtifactId().equals( name ) )
+			{
+				return module;
+			}
+		}
+		
+		return null;
+	}
 }

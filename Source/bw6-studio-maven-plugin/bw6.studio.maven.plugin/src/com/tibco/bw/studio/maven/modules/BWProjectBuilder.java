@@ -1,15 +1,19 @@
 package com.tibco.bw.studio.maven.modules;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.pde.internal.core.project.PDEProject;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.VersionHelper;
@@ -110,6 +114,12 @@ public class BWProjectBuilder
 			
 			module.setDepModules( dependencies.get(module.getArtifactId() ) );		
 			
+			if( module instanceof BWPluginModule )
+			{
+				boolean isCustomXpath = checkForCustomXPath(project);
+				((BWPluginModule)module).setCustomXpath( isCustomXpath );
+			}
+			
 			moduleList.add(module);
 		}
 		
@@ -120,7 +130,15 @@ public class BWProjectBuilder
 	{
 		module.setProject(project); 
 		
-		module.setArtifactId(( headers.get("Bundle-SymbolicName")));
+		module.setProjectName( project.getName() );
+		
+		String artifactId = headers.get("Bundle-SymbolicName");
+		if( artifactId.indexOf( ";") != -1 )
+		{
+			artifactId = artifactId.substring( 0 , ( artifactId.indexOf( ";") ) );
+		}
+		module.setArtifactId( artifactId );
+		module.setName(( headers.get("Bundle-Name")));
 		module.setVersion( VersionHelper.getOSGi2MavenVersion((headers.get("Bundle-Version"))));
 		module.setGroupId("com.tibco.bw");
 		
@@ -132,6 +150,33 @@ public class BWProjectBuilder
 		module.setPomfileLocation(pomFileAbs);
 
 		return module;
+	}
+	
+	private boolean checkForCustomXPath( IProject project )
+	{
+		IFile pluginXml = PDEProject.getPluginXml(project);
+		if( !pluginXml.exists() )
+		{
+			return false;
+		}
+		
+		try
+		{
+			
+			InputStream stream = pluginXml.getContents();
+			String fileContents = IOUtils.toString( pluginXml.getContents());
+			stream.close();	
+			if( fileContents.indexOf("com.tibco.xml.cxf.common.customXPathFunction") != -1 )
+			{
+				return true;
+			}
+		}
+		catch(Exception e )
+		{
+			
+		}
+		
+		return false;
 	}
 	
 	private void computeDependencies( String capabiltiies , BWModule module )

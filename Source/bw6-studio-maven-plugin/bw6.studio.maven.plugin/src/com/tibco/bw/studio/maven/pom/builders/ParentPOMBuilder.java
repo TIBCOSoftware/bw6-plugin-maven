@@ -6,6 +6,7 @@ import org.apache.maven.model.Model;
 
 import com.tibco.bw.studio.maven.helpers.ModuleOrderBuilder;
 import com.tibco.bw.studio.maven.modules.BWModule;
+import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWProject;
 
 public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
@@ -14,6 +15,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder
 	@Override
 	public void build(BWProject project, BWModule module) throws Exception
 	{
+		
 		this.project = project;
 		this.module = module;
 		this.model = new Model();
@@ -35,6 +37,15 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder
 	
 	protected void addModules()
 	{
+		
+		for( BWModule module : project.getModules() )
+		{
+			if( module.getType() == BWModuleType.PluginProject )
+			{
+				model.getModules().add( module.getProjectName());
+			}
+		}
+		
 		ModuleOrderBuilder builder = new ModuleOrderBuilder();
 		List<String> list = builder.getDependencyOrder(project);
 		for( String str : list )

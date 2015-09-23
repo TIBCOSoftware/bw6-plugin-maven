@@ -3,29 +3,7 @@
 
     <dirname property="project.dir" file="${ant.file.main}"/>
 
-    <target name="install-plugin" depends="getTibcoHome, getPlugin, setupMacros, bw63.maven.plugin.install,bw62.maven.plugin.install, vbuild.p2.plugin.install, devbuild.p2.plugin.install ">
-    </target>
-
-
-    <target name="getPlugin">
-
-         <input addproperty="pluginid">
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                Input the plugin ID     
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            </input>
-
-         <input addproperty="pluginversion">
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                Input the plugin version X.X   
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            </input>
-
-    </target>
+    <target name="setup" depends="getTibcoHome, setupMacros, vbuild.launcher.jar , devbuild.launcher.jar , studio-install , maven-install"/>
 
     <target name="getTibcoHome">
             <input addproperty="input.tibco.home">
@@ -48,6 +26,10 @@
             
             <property name="studio.home" location="${tibco.home}/studio/3.6/eclipse" />
 
+            <property name="bw.home" value="bw/6.2" />
+
+            <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
+
             <property environment="env" />
             <property name="MAVEN_HOME" value="${env.M2_HOME}"/>
             <fail message="Maven home is not set"  unless="MAVEN_HOME"/>
@@ -68,15 +50,7 @@
             <fail message="Tibco Home is not a valid directory."  unless="dir.exists"/>
 
 
-            <condition property="bw62.install">
-                <available file="${tibco.home}/bw/6.2" type="dir"/>
-            </condition>
-
-            <condition property="bw63.install">
-                <available file="${tibco.home}/bw/6.3" type="dir"/>
-            </condition>
-
-            <condition property="vbuild">
+           <condition property="vbuild">
                 <available file="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar"/>
             </condition>
 
@@ -87,125 +61,26 @@
     </target>
 
 
-    <target name="setup" depends="getTibcoHome, setupMacros, bw63.maven.install, bw62.maven.install , vbuild.p2.install , devbuild.p2.install ">
-
-
-    </target>
-
-
-    <target name="vbuild.p2.plugin.install" if="vbuild">
+    <target name="vbuild.launcher.jar" if="vbuild">
         <property name="launcher.jar" location="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
-        <antcall target="publish-plugin-all"/>
     </target>
 
 
-    <target name="devbuild.p2.plugin.install" if="devbuild">
+    <target name="devbuild.launcher.jar" if="devbuild">
         <property name="launcher.jar" location="${tibco.home}/studio/3.6/eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
-        <antcall target="publish-plugin-all"/>
-
     </target>
 
-
-    <target name="publish-plugin-all" depends="copy-plugin, cleanup">
-
-    </target>
-
-
-    <target name="bw63.maven.plugin.install" if="bw63.install">
-        <property name="bw.home" value="bw/6.3" />
-        <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
-
-    </target>
-
-
-    <target name="bw62.maven.plugin.install" if="bw62.install">
-        <property name="bw.home" value="bw/6.2" />
-        <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
-    </target>
-
-
-    <target name="copy-plugin">
-
-        <property name="maven.p2.repo" location="${tibco.maven.home}/p2repo"/>
-        <property name="temprepo" value="${project.dir}/p2temp"/>
-        <property name="temprepoplugins" value="${temprepo}/plugins"/>
-        <property name="shared.p2.repo" location="${tibco.maven.home}/sharedmodulerepo"/>
-        <property name="shared.repo.temp" location="${tibco.maven.home}/temp"/>
-
-
-        <mkdir dir="${maven.p2.repo}" />        
-        <mkdir dir="${temprepoplugins}" />
-
-        <copy todir="${temprepoplugins}" overwrite="on">
-            <fileset dir="${tibco.home}/bw/palettes/${pluginid}/${pluginversion}/runtime/plugins">
-                <include name="*/**"/>
-            </fileset>
-        </copy>
-
-
-        <echo message="Publishing the Plugin RUs to Maven Repository"/>
-        <p2.publish repo="${maven.p2.repo}" source="${temprepo}"/>
-
-
-    </target>
-
-
-    <target name="vbuild.p2.install" if="vbuild">
-        <property name="launcher.jar" location="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
-
-        <antcall target="p2-install"/>
-        <antcall target="publish-all"/>
-    </target>
-
-
-    <target name="devbuild.p2.install" if="devbuild">
-        <property name="launcher.jar" location="${tibco.home}/studio/3.6/eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
-
-        <antcall target="p2-install"/>
-        <antcall target="publish-all"/>
-
-    </target>
-
-
-    <target name="bw63.maven.install" if="bw63.install">
-        <property name="bw.home" value="bw/6.3" />
-        <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
-
-        <antcall target="maven-install"/>
-    </target>
-
-
-    <target name="bw62.maven.install" if="bw62.install">
-        <property name="bw.home" value="bw/6.2" />
-        <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
-        
-        <antcall target="maven-install"/>
-    </target>
-
-    <target name="p2-install" >
-
-        <echo> Installing Eclipse Plugin for Maven to the Tibco Home </echo>
-        <p2.install repo="http://download.eclipse.org/releases/indigo" ius="org.eclipse.equinox.p2.discovery.feature.feature.group"/>
-
-        <p2.install repo="http://download.eclipse.org/technology/m2e/releases/1.3/1.3.1.20130219-1424" ius="org.eclipse.m2e.feature.feature.group,org.eclipse.m2e.sdk.feature.feature.group,org.eclipse.m2e.logback.feature.feature.group"/>
-
-        <echo> UnInstalling the existing version of BusinessWorks Plugin for Maven if any</echo>
-        <p2.uninstall repo="jar:file:///${project.dir}/config/com.tibco.bw.mavengenerator.feature.zip!/" ius="com.tibco.bw.mavengenerator.feature.feature.group"/>
-
-        <echo> Installing BusinessWorks Plugin for Maven to the Tibco Home </echo>
-        <p2.install repo="jar:file:///${project.dir}/config/com.tibco.bw.mavengenerator.feature.zip!/" ius="com.tibco.bw.mavengenerator.feature.feature.group"/>
-
-    </target>
 
     <target name="maven-install">
 
-        <echo> Installing Maven Mojo for BW Packaging </echo>
+        <echo> Installing Maven Plugin for BW </echo>
         <mkdir dir="${tibco.maven.home}/plugins" />        
-        <unzip src="${project.dir}/config/com.tibco.bw.maven.packager.zip" dest="${tibco.maven.home}/plugins/com.tibco.bw.maven.packager"/>
-        <chmod file="${tibco.maven.home}/plugins/com.tibco.bw.maven.packager/install.sh" perm="ugo+rx"/>
+        <unzip src="${project.dir}/config/bw6-maven-plugin.zip" dest="${tibco.maven.home}/plugins/bw6-maven-plugin"/>
+        <chmod file="${tibco.maven.home}/plugins/bw6-maven-plugin/install.sh" perm="ugo+rx"/>
         <antcall target="maven-plugin-install"/>
 
     </target>
+
 
     <target depends="winInstall, linuxInstall" name="maven-plugin-install"/>
 
@@ -218,64 +93,26 @@
     </target>
 
 
-    <target name="publish-all" depends="copy, publish, cleanup">
+    <target name="studio-install" >
+
+        <echo> Installing Eclipse Plugin for Maven to the Tibco Home </echo>
+        <p2.install repo="http://download.eclipse.org/releases/indigo" ius="org.eclipse.equinox.p2.discovery.feature.feature.group"/>
+
+        <p2.install repo="http://download.eclipse.org/technology/m2e/releases/1.3/1.3.1.20130219-1424" ius="org.eclipse.m2e.feature.feature.group,org.eclipse.m2e.sdk.feature.feature.group,org.eclipse.m2e.logback.feature.feature.group"/>
+
+        <echo> UnInstalling the existing version of BusinessWorks Plugin for Maven if any</echo>
+        <p2.uninstall ius="com.tibco.bw.mavengenerator.feature.feature.group"/>
+
+        <p2.uninstall ius="bw6.studio.maven.feature.feature.group"/>
+
+        <echo> Installing BusinessWorks Plugin for Maven to the Tibco Home </echo>
+        <p2.install repo="jar:file:///${project.dir}/config/bw6.studio.maven.feature_1.0.0.zip!/" ius="bw6.studio.maven.feature.feature.group"/>
+
 
     </target>
 
-    <target name="copy">
 
-        <property name="maven.p2.repo" location="${tibco.maven.home}/p2repo"/>
-        <property name="temprepo" value="${project.dir}/p2temp"/>
-        <property name="temprepoplugins" value="${temprepo}/plugins"/>
-        <property name="shared.p2.repo" location="${tibco.maven.home}/sharedmodulerepo"/>
-        <property name="shared.repo.temp" location="${tibco.maven.home}/temp"/>
-
-        <mkdir dir="${maven.p2.repo}" />        
-        <mkdir dir="${temprepoplugins}" />
-        <mkdir dir="${shared.p2.repo}" />
-        <mkdir dir="${shared.repo.temp}" />
-
-        <copy todir="${temprepoplugins}" overwrite="on">
-            <fileset dir="${tibco.home}/${bw.home}/system/lib">
-                <include name="*/**"/>
-            </fileset>
-        </copy>
-
-        <copy todir="${temprepoplugins}" overwrite="on">
-            <fileset dir="${tibco.home}/${bw.home}/system/palettes">
-                <include name="*/**"/>
-            </fileset>
-        </copy>
-
-        <copy todir="${temprepoplugins}" overwrite="on">
-            <fileset dir="${tibco.home}/${bw.home}/system/shared">
-                <include name="*/**"/>
-            </fileset>
-        </copy>
-
-        <unzip src="${project.dir}/config/shared.repo.sample.zip" dest="${shared.repo.temp}"/>
-
-        <p2.publish repo="${shared.p2.repo}" source="${shared.repo.temp}"/>
-
-    </target>
-
-    <target name="publish">
-
-        <echo message="Publishing the Design Time RUs to Maven Repository"/>
-        <p2.publish repo="${maven.p2.repo}" source="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse"/>
-
-        <echo message="Publishing the Runtime Time RUs to Maven Repository"/>
-        <p2.publish repo="${maven.p2.repo}" source="${temprepo}"/>
-
-    </target>
-
-    <target name="cleanup">
-        <delete dir="${temprepo}"/>
-    </target>
-
-
-
-   <target name="setupMacros">
+    <target name="setupMacros">
 
 
         <macrodef name="p2.install">
@@ -305,7 +142,6 @@
 
         <macrodef name="p2.uninstall">
 
-            <attribute name="repo"/>
             <attribute name="ius"/>
 
             <sequential>
@@ -319,43 +155,8 @@
                     <arg value="-application"/>
                     <arg value="org.eclipse.equinox.p2.director"/>
 
-                    <arg value="-repository"/>
-                    <arg value="@{repo}"/>
-
                     <arg value="-uninstallIU"/>
                     <arg value="@{ius}"/>
-                </exec>
-            </sequential>
-        </macrodef>
-
-
-        <macrodef name="p2.publish">
-
-            <attribute name="repo"/>
-            <attribute name="source"/>
-
-            <sequential>
-                <exec executable="java">
-                    <arg value="-jar"/>
-                    <arg value="${launcher.jar}"/>
-
-                    <arg value="-install"/>
-                    <arg value="${studio.home}"/>     
-
-                    <arg value="-application"/>
-                    <arg value="org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher"/>
-
-                    <arg value="-metadataRepository"/>
-                    <arg value="file://@{repo}"/>
-
-                    <arg value="-artifactRepository"/>
-                    <arg value="file://@{repo}"/>
-
-                    <arg value="-source"/>
-                    <arg value="@{source}"/>
-
-                    <arg value="-append"/>
-                    <arg value="-publishArtifacts"/>
                 </exec>
             </sequential>
         </macrodef>
@@ -368,9 +169,9 @@
                     <os family="windows" />
                 </condition>
 
-                    <exec executable="cmd" dir="${tibco.maven.home}/plugins/com.tibco.bw.maven.packager" failonerror="true">
+                    <exec executable="cmd" dir="${tibco.maven.home}/plugins/bw6-maven-plugin" failonerror="true">
                     <arg value="/c" />
-                    <arg value="${tibco.maven.home}/plugins/com.tibco.bw.maven.packager/install.bat" />
+                    <arg value="${tibco.maven.home}/plugins/bw6-maven-plugin/install.bat" />
                 </exec>                
 
 
@@ -385,7 +186,7 @@
                     <os family="windows" />
                 </condition>
     
-                    <exec executable="/bin/bash" dir="${tibco.maven.home}/plugins/com.tibco.bw.maven.packager">
+                    <exec executable="/bin/bash" dir="${tibco.maven.home}/plugins/bw6-maven-plugin">
                         <arg value="./install.sh"/>                        
                     </exec>
 
@@ -394,23 +195,7 @@
 
     </target>
 
+    
 </project>
-
-
-<!--                 <exec executable="mvn" dir="config\bw.maven.packagingtype">
-                    <arg value="clean"/>
-                    <arg value="install"/>
-                </exec>
-<condition property="maven.executable" value="mvn.bat" else="mvn">
-    <os family="windows" />
-</condition>
-
- -->
-
- <!--                     <arg value="-bundlepool"/>
-                    <arg value="${bundle.pool}"/>
-
-                    <arg value="-destination"/>
-                    <arg value="${studio.home}"/> -->
 
 

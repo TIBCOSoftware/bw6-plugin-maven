@@ -1,8 +1,10 @@
 package com.tibco.bw.studio.maven.action;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.Manifest;
 
+import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -40,16 +42,55 @@ public class ManifestProcessor implements IObjectActionDelegate
 	public void run(IAction action) 
 	{
 		selectedProject = getCurrentSelectedProject();
-		
 		IFile file = selectedProject.getFile("META-INF/TIBCO.xml");
 		List<BWModuleParser.BWModuleData> moduleData =  BWModuleParser.INSTANCE.parseBWModules(file.getRawLocation().toFile());
 
 		for(BWModuleParser.BWModuleData module : moduleData )
 		{
 			updatePaths(module.getModuleName() );
-		}
+		}		
 	
 		
+	}
+	
+	public void run( List<String> applications )
+	{
+		List<IProject> list = getApplicationProjects( applications );
+		
+		for( IProject project : list )
+		{
+			selectedProject = project;
+			IFile file = selectedProject.getFile("META-INF/TIBCO.xml");
+			List<BWModuleParser.BWModuleData> moduleData =  BWModuleParser.INSTANCE.parseBWModules(file.getRawLocation().toFile());
+
+			for(BWModuleParser.BWModuleData module : moduleData )
+			{
+				updatePaths(module.getModuleName() );
+			}
+
+		}
+		
+	}
+	
+	private List<IProject> getApplicationProjects( List<String> applications )
+	{
+		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		
+		List<IProject> projectList = new ArrayList<IProject>();
+		for( IProject project : projects )
+		{
+			IFile file = project.getFile("META-INF/TIBCO.xml");
+			if( file.isAccessible() )
+			{
+				if(applications.contains(project.getName()))
+				{
+					projectList.add(project);	
+				}
+				
+			}
+		}
+		
+		return projectList;
 	}
 	
 
@@ -68,7 +109,18 @@ public class ManifestProcessor implements IObjectActionDelegate
 		try
 		{
 			String externalPath = getExternalPath(project);
+			
+			if( externalPath == null || externalPath.isEmpty() )
+			{
+				return;
+			}
 			String bundleClassPath =  mf.getMainAttributes().getValue("Bundle-ClassPath");
+			
+			if(bundleClassPath == null )
+			{
+				bundleClassPath = " .";
+			}
+			
 			if( !bundleClassPath.isEmpty() )
 			{
 				bundleClassPath = bundleClassPath + ",";
@@ -107,6 +159,10 @@ public class ManifestProcessor implements IObjectActionDelegate
 				JarPackageFragmentRoot jarelement = ((JarPackageFragmentRoot) element);
 				if( jarelement.getJar().getName().indexOf( mavenRepo ) != -1 )
 				{
+					if( jarelement.getJar().getName().indexOf("com.tibco.bw.palette.shared") != -1 ||  jarelement.getJar().getName().indexOf("com.tibco.xml.cxf.common") != -1 )
+					{
+						continue;
+					}
 					if( start != 0 )
 					{
 						buffer.append(",");

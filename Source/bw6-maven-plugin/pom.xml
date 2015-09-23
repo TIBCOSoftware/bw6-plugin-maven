@@ -4,7 +4,7 @@
 
   <groupId>com.tibco.plugins</groupId>
   <artifactId>bw6-maven-plugin</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>maven-plugin</packaging>
 
   <name>bw6-maven-plugin Maven Plugin</name>
@@ -84,5 +84,12 @@
       </plugin>
     </plugins>
   </build>
+
+<distributionManagement>
+  <snapshotRepository>
+    <id>snapshots</id>
+    <url>http://localhost:8085/nexus/content/repositories/snapshots</url>
+  </snapshotRepository>
+</distributionManagement>
  
 </project>

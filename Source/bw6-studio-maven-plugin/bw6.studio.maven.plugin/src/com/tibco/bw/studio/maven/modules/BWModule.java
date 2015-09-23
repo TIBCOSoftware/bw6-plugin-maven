@@ -16,12 +16,18 @@ public abstract class BWModule
 	protected String artifactId;
 	protected String groupId;
 	protected String version;
-	
+	protected String name;
+
 	protected String tibcoHome;
 	
 	protected File pomfileLocation;
 
 	protected List<String> depModules;
+	
+	protected boolean overridePOM;
+	
+	protected String projectName;
+	
 
 	public IProject getProject() 
 	{
@@ -92,6 +98,36 @@ public abstract class BWModule
 		this.depModules = depModules;
 	}
 	
+	public String getName()
+	{
+		return name;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+
+	public boolean isOverridePOM()
+	{
+		return overridePOM;
+	}
+
+	public void setOverridePOM(boolean overridePOM) 
+	{
+		this.overridePOM = overridePOM;
+	}
+
+	public String getProjectName() 
+	{
+		return projectName;
+	}
+
+	public void setProjectName(String projectName)
+	{
+		this.projectName = projectName;
+	}
+
 	abstract public BWModuleType getType();
 
 	abstract public IPOMBuilder getPOMBuilder();

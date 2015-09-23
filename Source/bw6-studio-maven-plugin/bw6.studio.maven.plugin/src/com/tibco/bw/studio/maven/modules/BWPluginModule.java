@@ -6,6 +6,9 @@ import com.tibco.bw.studio.maven.pom.builders.PluginPOMBuilder;
 public class BWPluginModule extends BWModule 
 {
 
+	private boolean isCustomXpath;
+	
+	
 	public BWModuleType getType() 
 	{
 		return BWModuleType.PluginProject;
@@ -14,6 +17,16 @@ public class BWPluginModule extends BWModule
 	public IPOMBuilder getPOMBuilder()
 	{
 		return new PluginPOMBuilder();
+	}
+
+	public boolean isCustomXpath()
+	{
+		return isCustomXpath;
+	}
+
+	public void setCustomXpath(boolean isCustomXpath)
+	{
+		this.isCustomXpath = isCustomXpath;
 	}
 	
 }
