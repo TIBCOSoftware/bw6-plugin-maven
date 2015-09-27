@@ -31,7 +31,9 @@ public abstract class AbstractPOMBuilder
 		parent.setGroupId( parentModule.getGroupId() );
 		parent.setArtifactId( parentModule.getArtifactId() );
 		parent.setVersion(parentModule.getVersion() );
+		parent.setRelativePath( module.getFromPath() );
 		model.setParent(parent);
+		
 	}
 	
 	protected void addProperties()

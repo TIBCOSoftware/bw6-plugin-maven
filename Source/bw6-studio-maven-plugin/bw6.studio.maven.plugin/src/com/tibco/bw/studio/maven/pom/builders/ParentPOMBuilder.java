@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.maven.model.Model;
 
+import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.helpers.ModuleOrderBuilder;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWModuleType;
@@ -42,7 +43,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder
 		{
 			if( module.getType() == BWModuleType.PluginProject )
 			{
-				model.getModules().add( module.getProjectName());
+				model.getModules().add( module.getToPath());
 			}
 		}
 		
@@ -50,7 +51,8 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder
 		List<String> list = builder.getDependencyOrder(project);
 		for( String str : list )
 		{
-			model.getModules().add(str);
+			BWModule module = ModuleHelper.getModule(project.getModules() , str );
+			model.getModules().add( module.getToPath() );
 		}
 	}
 

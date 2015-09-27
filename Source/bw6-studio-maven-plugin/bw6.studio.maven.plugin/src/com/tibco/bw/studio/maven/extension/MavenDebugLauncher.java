@@ -7,8 +7,8 @@ import com.tibco.bwcore.design.extension.IDebugLauncher;
 
 public class MavenDebugLauncher implements IDebugLauncher {
 
-	public MavenDebugLauncher() {
-		// TODO Auto-generated constructor stub
+	public MavenDebugLauncher()
+	{
 	}
 
 	@Override

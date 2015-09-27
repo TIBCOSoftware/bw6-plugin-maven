@@ -20,8 +20,12 @@ package com.tibco.bw.maven.plugin.utils;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
 
 public class BWFileUtils 
 {
@@ -41,6 +45,22 @@ public class BWFileUtils
 	    
 	    return files;
 	      		
+	}
+	
+	public static File[] getFilesForTypeRec( final File target , String filterDir , final String extension  )
+	{
+		String[] extensions = new String[] { "jar"};
+		List<File> files = (List<File>) FileUtils.listFiles(target, extensions, true);
+		List<File> filesSel = new ArrayList<File>();
+		
+		for( File file : files )
+		{
+			if( file.getPath().indexOf( filterDir ) == -1 )
+			{
+				filesSel.add(file);
+			}
+		}
+		return filesSel.toArray( new File[] {} );
 	}
 	
 	public static File[] sortFilesByDateDesc( File[] files )

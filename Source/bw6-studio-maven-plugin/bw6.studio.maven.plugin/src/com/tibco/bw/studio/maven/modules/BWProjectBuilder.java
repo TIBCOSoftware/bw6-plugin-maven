@@ -15,6 +15,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.pde.internal.core.project.PDEProject;
 
+import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.VersionHelper;
 
@@ -149,7 +150,20 @@ public class BWProjectBuilder
 		}
 		module.setPomfileLocation(pomFileAbs);
 
+		setRelativePaths(project, module);
+		
 		return module;
+	}
+	
+	private void setRelativePaths( IProject project , BWModule module )
+	{
+		String projectLocation = project.getLocation().toFile().toString();
+		String workspaceLocation = project.getWorkspace().getRoot().getLocation().toFile().toString();
+		String relativePathFrom = FileHelper.getRelativePath(workspaceLocation , projectLocation);
+		String relativePathTo =  FileHelper.getRelativePath(projectLocation, workspaceLocation);
+		
+		module.setFromPath( relativePathFrom );
+		module.setToPath(relativePathTo );  
 	}
 	
 	private boolean checkForCustomXPath( IProject project )

@@ -13,15 +13,12 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectBuilder;
-import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.FileSet;
@@ -55,18 +52,18 @@ public class BWModulePackageMojo  extends AbstractMojo
     @Component
     private MavenProject project;
 
-    @Component
-    private MojoExecution mojo;
-
-    @Component
-    private ProjectBuilder builder;
+//    @Component
+//    private MojoExecution mojo;
+//
+//    @Component
+//    private ProjectBuilder builder;
 
     @Parameter( defaultValue = "${project.build.outputDirectory}", required = true )
     private File classesDirectory;
 
     
-    @Component
-    private Settings settings;
+//    @Component
+//    private Settings settings;
     
     private Manifest manifest;
     
@@ -90,6 +87,8 @@ public class BWModulePackageMojo  extends AbstractMojo
     {
     	try
     	{
+    		getLog().info( "Module Packager Mojo started for Module " + project.getName() + " ...");
+    		
             MavenArchiver archiver = new MavenArchiver();
             
     	    archiveConfiguration = new MavenArchiveConfiguration();
@@ -98,14 +97,18 @@ public class BWModulePackageMojo  extends AbstractMojo
 
             manifest = ManifestParser.parseManifest(projectBasedir) ;
             
+            getLog().info( "Updated the Manifest version ");
             updateManifestVersion();
             
+            getLog().info( "Removing the externals entries if any. ");
             removeExternals();
             
             File pluginFile = getPluginJAR();                       
-                        
+            
+            getLog().info( "Created Plugin JAA with name " + pluginFile.toString() );
             FileSet set = getFileSet();
             
+            getLog().info( "Adding Maven Dependencies to the Plugin JAR file");
             
             addDependencies();
             
@@ -123,10 +126,12 @@ public class BWModulePackageMojo  extends AbstractMojo
 
             jarArchiver.setManifest(manifestFile);
             
+            getLog().info( "Creating the Plugin JAR file ");
             archiver.createArchive(session, project, archiveConfiguration);
             
             project.getArtifact().setFile( pluginFile);
 
+            getLog().info( "BW Module Packager Mojo finished execution. ");
     	}
     	catch (IOException e) 
     	{
@@ -151,17 +156,21 @@ public class BWModulePackageMojo  extends AbstractMojo
 
 
 
-	private void addDependencies() {
+	private void addDependencies() 
+	{
+		getLog().debug( "Adding Maven dependencies to the JAR file");
+		
 		Set<Artifact> artifacts = project.getDependencyArtifacts();
 		
 		StringBuffer buffer = new StringBuffer();
 		
 		for( Artifact artifact : artifacts )
 		{
-			if( artifact.getFile().getName().indexOf("com.tibco.bw.palette.shared") != -1  || artifact.getFile().getName().indexOf("com.tibco.xml.cxf.common") != -1 )
+			if( artifact.getFile().getName().indexOf("com.tibco.bw.palette.shared") != -1  || artifact.getFile().getName().indexOf("com.tibco.xml.cxf.common") != -1 || artifact.getFile().getName().indexOf("tempbw") != -1 )
 			{
 				continue;
 			}
+			getLog().debug( "Dependency added with name " + artifact.getFile().toString() );
 			jarArchiver.addFile( artifact.getFile(), "lib/" + artifact.getFile().getName() );
 			buffer.append(",lib/" + artifact.getFile().getName());
 		}
@@ -172,6 +181,8 @@ public class BWModulePackageMojo  extends AbstractMojo
 			bundleClasspath = ".";
 		}
 		bundleClasspath = bundleClasspath + buffer.toString();
+		
+		getLog().debug( "Final Bundle-Classpath  is " + bundleClasspath );
 		
 		manifest.getMainAttributes().putValue("Bundle-ClassPath",  bundleClasspath );
 	}
@@ -184,6 +195,10 @@ public class BWModulePackageMojo  extends AbstractMojo
 		List<String> binIncludesList = buildProperties.getBinIncludes();
 		List<String> binExcludeList = buildProperties.getBinExcludes();
 
+		getLog().debug( "Bininclude list is " + binIncludesList.toString() );
+		
+		getLog().debug( "Binexclude list is " + binExcludeList.toString() );
+		
 		FileSet set = getFileSet(projectBasedir, binIncludesList, binExcludeList);
 		return set;
 	}
@@ -195,11 +210,14 @@ public class BWModulePackageMojo  extends AbstractMojo
 		String qualifierVersion  = manifest.getMainAttributes().getValue("Bundle-Version" );
 		String name = manifest.getMainAttributes().getValue("Bundle-SymbolicName");
 		
-		getLog().info( "File name for Plugin = " + name );
+		
+		
 		if( name.indexOf(";") != -1 )
 		{
 			name = name.substring(0 , ( name.indexOf(";") -1 ) );
 		}
+		
+		getLog().debug( "Creating Plugin JAR from name  " + name );
 		
 		File pluginFile = new File(outputDirectory,  name +  "_" + qualifierVersion + ".jar");
 		if (pluginFile.exists()) 
@@ -246,6 +264,7 @@ public class BWModulePackageMojo  extends AbstractMojo
     	
     	String version = manifest.getMainAttributes().getValue("Bundle-Version");
     	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
+    	getLog().debug( "The OSGi verion is " + qualifierVersion + "  for Maven version of " + version );
     	manifest.getMainAttributes().putValue("Bundle-Version", qualifierVersion );
     	
     }
@@ -253,6 +272,9 @@ public class BWModulePackageMojo  extends AbstractMojo
     private void removeExternals()
     {
     	String bundlePath = manifest.getMainAttributes().getValue("Bundle-ClassPath");
+    	
+    	getLog().debug( "Bundle Classpath before removing externals is " + bundlePath );
+    	
     	if( bundlePath != null )
     	{
         	String [] entries = bundlePath.split(",");
@@ -274,6 +296,7 @@ public class BWModulePackageMojo  extends AbstractMojo
         		
         	}
         	
+        	getLog().debug( "Bundle Classpath after removing externals is " + buffer.toString() );
         	manifest.getMainAttributes().putValue("Bundle-ClassPath", buffer.toString() );
     		
     	}

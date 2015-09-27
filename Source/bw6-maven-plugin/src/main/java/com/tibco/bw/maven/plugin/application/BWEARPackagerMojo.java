@@ -25,15 +25,12 @@ import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectBuilder;
-import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -43,7 +40,6 @@ import org.w3c.dom.NodeList;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.Version;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.BWModulesParser;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 
@@ -64,18 +60,20 @@ public class BWEARPackagerMojo extends AbstractMojo
     @Component
     private MavenProject project;
 
-    @Component
-    private MojoExecution mojo;
+//    @Component
+//    private MojoExecution mojo;
+//
+//    @Component
+//    private ProjectBuilder builder;
 
-    @Component
-    private ProjectBuilder builder;
-
-    @Component
-    private Settings settings;
+//    @Component
+//    private Settings settings;
     
     private List<File> tempFiles;
 
     private Manifest manifest;
+    
+
 
 
 
@@ -103,6 +101,8 @@ public class BWEARPackagerMojo extends AbstractMojo
     {
     	try 
     	{
+    		getLog().info("BWEARPackager Mojo started ...");
+    		
     	    tempFiles = new ArrayList<File>();
 
     	    jarchiver = new JarArchiver();
@@ -115,11 +115,16 @@ public class BWEARPackagerMojo extends AbstractMojo
     	    
             manifest = ManifestParser.parseManifest(projectBasedir) ;
 
-    	    
+    	    getLog().info( "Adding Modules to the EAR file ");
     	    
     		addModules();
+    		
+    		getLog().info("Adding EAR Information to the EAR File.");
     		addApplication();
     		cleanup();
+    		
+    		getLog().info( "BWEARPackager Mojo finished execution.");
+    		
 		}
     	
     	catch (Exception e1) 
@@ -137,6 +142,8 @@ public class BWEARPackagerMojo extends AbstractMojo
 	 */
 	private void addApplication() throws Exception 
 	{
+		
+		getLog().debug("Adding Application specific files...");
 		// Get the META-INF Folder for the Application Project
 		File metainfFolder = getApplicationMetaInf();
 
@@ -177,27 +184,40 @@ public class BWEARPackagerMojo extends AbstractMojo
      */
     private void addModules() throws Exception
     {
+    	try
+    	{
+        	getLog().debug("Adding Modules to the Application EAR");
 
-    	BWModulesParser parser = new BWModulesParser(session, project);
-    	List<Artifact> artifacts = parser.getModulesSet();
-    	
-        for( Artifact artifact : artifacts )
-        {
-            
-            //Find the Module JAR file
-            File moduleJar = artifact.getFile();
-            
-            //Add the JAR file to the EAR file
-            jarchiver.addFile( moduleJar ,  moduleJar.getName() );
-            
-            String version = BWProjectUtils.getModuleVersion(moduleJar);
-            
-            //Save the module version in the Version Map.
-            moduleVersionMap.put(  artifact.getArtifactId() , version );
-            
-            this.version = version; 
+        	BWModulesParser parser = new BWModulesParser(session, project);
+        	List<Artifact> artifacts = parser.getModulesSet();
+        	
+            for( Artifact artifact : artifacts )
+            {
+                
+                //Find the Module JAR file
+                File moduleJar = artifact.getFile();
+                
+                
+                //Add the JAR file to the EAR file
+                jarchiver.addFile( moduleJar ,  moduleJar.getName() );
+                
+                String version = BWProjectUtils.getModuleVersion(moduleJar);
+                
+                getLog().debug( "Adding Module JAR with name " + moduleJar.getName() + "  with version " + version );
+                
+                //Save the module version in the Version Map.
+                moduleVersionMap.put(  artifact.getArtifactId() , version );
+                
+                this.version = version; 
 
-        }        
+            }        
+    		
+    	}
+    	catch(Exception e )
+    	{
+    		getLog().error("Failed to add modules to the Application");
+    		throw e;
+    	}
     }
     
 
@@ -215,6 +235,8 @@ public class BWEARPackagerMojo extends AbstractMojo
         String archiveName = project.getArtifactId() + "_" + fullVersion + ".ear";
         File archiveFile = new File( outputDirectory , archiveName );
 
+        getLog().debug("The EAR file name for Application is " + archiveFile.toString() );
+        
         return archiveFile;
 	}
 
@@ -235,6 +257,7 @@ public class BWEARPackagerMojo extends AbstractMojo
 
 	    File [] fileList = metainf.listFiles();
 
+	    getLog().debug("Adding files to META-INF folder of EAR. ");
 		
 	       for( int i = 0 ; i < fileList.length; i++ )
 	       {
@@ -295,12 +318,16 @@ public class BWEARPackagerMojo extends AbstractMojo
 		Attributes attr = mf.getMainAttributes();
 		attr.putValue("Bundle-Version", version);
 		
+		getLog().debug( "Manifest updated with Version " + version );
+		
 		//Write the updated file and return the same.
 		FileOutputStream os = new FileOutputStream( tempManifest );
 		mf.write( os );
 		os.close();
 		
 		tempFiles.add(tempManifest);
+		
+		getLog().debug("manifest added to temp location at " + tempManifest.toString() );
 		
 		return tempManifest;
 	}
@@ -334,29 +361,29 @@ public class BWEARPackagerMojo extends AbstractMojo
 
 
     
-    /**
-     * Finds the JAR file for the Module.
-     * 
-     * @param target the Module Output directory which is the target directory.
-     * 
-     * @return the Module JAR.
-     * 
-     * @throws Exception
-     */
-	private File getModuleJar( File target ) throws Exception
-	{
-		
-        File[] files = BWFileUtils.getFilesForType( target , ".jar" );
-        
-        files = BWFileUtils.sortFilesByDateDesc(files);
-        
-        if( files.length == 0 )
-        {
-        	throw new Exception("Module is not built yet. Please check your Application PO for the Module entry.");
-        }
-
-        return files[0];
-	}
+//    /**
+//     * Finds the JAR file for the Module.
+//     * 
+//     * @param target the Module Output directory which is the target directory.
+//     * 
+//     * @return the Module JAR.
+//     * 
+//     * @throws Exception
+//     */
+//	private File getModuleJar( File target ) throws Exception
+//	{
+//		
+//        File[] files = BWFileUtils.getFilesForType( target , ".jar" );
+//        
+//        files = BWFileUtils.sortFilesByDateDesc(files);
+//        
+//        if( files.length == 0 )
+//        {
+//        	throw new Exception("Module is not built yet. Please check your Application PO for the Module entry.");
+//        }
+//
+//        return files[0];
+//	}
 
 
 	/**
@@ -370,6 +397,7 @@ public class BWEARPackagerMojo extends AbstractMojo
 	 */
 	private File getUpdatedTibcoXML( File tibcoxML ) throws Exception
 	{
+		getLog().debug("Updating the TibcoXML file with the module versions ");
 		Document doc = loadTibcoXML(tibcoxML);
 		doc = updateTibcoXMLVersion(doc);
 		File file = saveTibcoXML(doc);		
@@ -393,7 +421,8 @@ public class BWEARPackagerMojo extends AbstractMojo
 
 		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 		Document doc = docBuilder.parse(file );
-		
+	
+		getLog().debug( "Loaded Tibco.xml file");
 		return doc;
 		
 	}
@@ -428,6 +457,9 @@ public class BWEARPackagerMojo extends AbstractMojo
 			technologyVersion.setTextContent(  moduleVersionMap.get( module) );
 
 		}
+		
+		getLog().debug("Updated Module versions in the Tibcoxml file");
+		
 		return doc;
 		
 	}
@@ -456,6 +488,8 @@ public class BWEARPackagerMojo extends AbstractMojo
         transformer.transform(source, result);
         tempFiles.add(tempXml);
         
+        getLog().debug( "Updated TibcoXML file to temp location " + tempXml.toString() );
+        
         return tempXml;
 	}
 
@@ -468,6 +502,8 @@ public class BWEARPackagerMojo extends AbstractMojo
 		{
 			file.delete();
 		}	
+		
+		getLog().debug( "cleaned up the temporary files. " );
     }
 	
 	

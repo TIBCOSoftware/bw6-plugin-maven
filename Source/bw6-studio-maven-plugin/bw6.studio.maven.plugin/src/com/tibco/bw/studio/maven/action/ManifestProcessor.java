@@ -9,6 +9,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -30,6 +31,7 @@ import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ManifestWriter;
 import com.tibco.bw.studio.maven.helpers.ProjectHelper;
 import com.tibco.bw.studio.maven.modules.BWModuleParser;
+import com.tibco.bw.studio.maven.plugin.Activator;
 
 public class ManifestProcessor implements IObjectActionDelegate 
 {
@@ -135,7 +137,7 @@ public class ManifestProcessor implements IObjectActionDelegate
 		}
 		catch(Exception e )
 		{
-			
+			Activator.getDefault().log("Failed to update External path for Project " + project.getName() , IStatus.ERROR );	
 		}
 		
 	}

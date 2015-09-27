@@ -28,6 +28,9 @@ public abstract class BWModule
 	
 	protected String projectName;
 	
+	protected String fromPath;
+	
+	protected String toPath;
 
 	public IProject getProject() 
 	{
@@ -126,6 +129,26 @@ public abstract class BWModule
 	public void setProjectName(String projectName)
 	{
 		this.projectName = projectName;
+	}
+
+	public String getFromPath() 
+	{
+		return fromPath;
+	}
+
+	public void setFromPath(String fromPath)
+	{
+		this.fromPath = fromPath;
+	}
+
+	public String getToPath() 
+	{
+		return toPath;
+	}
+
+	public void setToPath(String toPath)
+	{
+		this.toPath = toPath;
 	}
 
 	abstract public BWModuleType getType();
