@@ -5,12 +5,21 @@ This can be confirmed by running the command mvn -version from Terminal/Command 
 
 Installation
 
-a. Go to the <TibcoHome>/bw/6.2/bin
-b. Open the Terminal and run command bwinstall bw6-plugin-maven
+a. Git clone https://github.com/TIBCOSoftware/bw6-plugin-maven
+or
+Download the bw6-plugin-maven as Zip File and unzip it to a folder.
+ 
+b. Go to the Installer folder.
+
+c. Open the Terminal and run command ant setup.
+
+d. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Installer.
 
 This will install the Maven Plugin to the TibcoHome. 
 
 First Steps
+
+Running the Maven Build from Studio.
 
 a. Open the Studio.
 
@@ -24,9 +33,15 @@ e. Enter the details here and Click Finish.
 
 f. The Project will be converted to Maven nature. Note The Workspace will index on clicking for the first time and may take some time.
 
-f. Right click on the Application Project, Go to Run options and Click "mvn build"
+g. Open Run/Debug Configurations. Create a new Maven Build.
 
-g. Select the goal as "package" for creating the EAR file.
+h. Under the Base directory choose add variable for Workspace location. The variable name is ${workspace_loc}
 
-h. Select te goal as "install" for creating the EAR file and installing it to the bwadmin.
+i. In the Goal enter the Goal to be executed. The goal can be package, install, deploy etc.
+
+j. Select the goal as "package" for creating the EAR file.
+
+k. Select te goal as "install" for creating the EAR file and installing it to local Maven Repository.
+
+
 
