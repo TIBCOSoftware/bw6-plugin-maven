@@ -1,6 +1,7 @@
 package com.tibco.bw.maven.plugin.process;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,8 +23,14 @@ public class MvnInstallExecutor
 	{
 		List<String> list = new ArrayList<String>();
         
+		try {
+			Runtime.getRuntime().exec( "/Users/abhide/Programs/Tech/Maven/bin/mvn install:install-file -Dfile=/Users/abhide/Work/Workspaces/Studio/Maven1/tibco.bw.sample.palette.java.RESTInvokeToTwitter/lib/twitter4j-core-4.0.1.jar -DgroupId=tempbw -DartifactId=twitter4j-core-4.0.1 -Dversion=0.0.0 -Dpackaging=jar" );
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
-		list.add( "mvn.bat"); 	
+		list.add( "/Users/abhide/Programs/Tech/Maven/bin/mvn"); 	
 		list.add("install:install-file");
 		
 

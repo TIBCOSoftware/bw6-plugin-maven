@@ -24,9 +24,9 @@
             </pathconvert>
 
             
-            <property name="studio.home" location="${tibco.home}/studio/3.6/eclipse" />
+            <property name="studio.home" location="${tibco.home}/studio/4.0/eclipse" />
 
-            <property name="bw.home" value="bw/6.2" />
+            <property name="bw.home" value="bw/6.3" />
 
             <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
 
@@ -51,23 +51,23 @@
 
 
            <condition property="vbuild">
-                <available file="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar"/>
+                <available file="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar"/>
             </condition>
 
             <condition property="devbuild">
-                <available file="${tibco.home}/studio/3.6/eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar"/>
+                <available file="${tibco.home}/studio/3.6/eclipse/plugins/org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar"/>
             </condition>
 
     </target>
 
 
     <target name="vbuild.launcher.jar" if="vbuild">
-        <property name="launcher.jar" location="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
+        <property name="launcher.jar" location="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar" />
     </target>
 
 
     <target name="devbuild.launcher.jar" if="devbuild">
-        <property name="launcher.jar" location="${tibco.home}/studio/3.6/eclipse/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar" />
+        <property name="launcher.jar" location="${tibco.home}/studio/4.0/eclipse/plugins/org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar" />
     </target>
 
 
@@ -96,9 +96,12 @@
     <target name="studio-install" >
 
         <echo> Installing Eclipse Plugin for Maven to the Tibco Home </echo>
-        <p2.install repo="http://download.eclipse.org/releases/indigo" ius="org.eclipse.equinox.p2.discovery.feature.feature.group"/>
+        <p2.install repo="http://download.eclipse.org/releases/luna" ius="org.eclipse.equinox.p2.discovery.feature.feature.group"/>
 
-        <p2.install repo="http://download.eclipse.org/technology/m2e/releases/1.3/1.3.1.20130219-1424" ius="org.eclipse.m2e.feature.feature.group,org.eclipse.m2e.sdk.feature.feature.group,org.eclipse.m2e.logback.feature.feature.group"/>
+        <p2.install repo="jar:file:///${project.dir}/config/bw6.maven.dependencies-1.0.0.zip!/" ius="bw6.maven.dependencies.feature.group"/>
+
+
+        <p2.install repo="jar:file:///${project.dir}/config/org.eclipse.m2e.site-1.6.2.zip!/" ius="org.eclipse.m2e.feature.feature.group,org.eclipse.m2e.sdk.feature.feature.group,org.eclipse.m2e.logback.feature.feature.group"/>
 
         <echo> UnInstalling the existing version of BusinessWorks Plugin for Maven if any</echo>
         <p2.uninstall ius="com.tibco.bw.mavengenerator.feature.feature.group"/>
