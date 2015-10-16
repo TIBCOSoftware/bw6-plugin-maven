@@ -5,16 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.logging.Logger;
-import org.codehaus.plexus.util.xml.Xpp3DomWriter;
 
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 
@@ -59,7 +55,7 @@ public class MvnInstallExecutor
 			switch( BWProjectUtils.getOS() )
 			{
 			case WINDOWS:
-					
+				executeWinCommand(buffer.toString());	
 				break;
 				
 			case UNIX:
@@ -108,8 +104,29 @@ public class MvnInstallExecutor
 	    }
 	}
 
+	public void executeWinCommand( String command ) throws IOException, InterruptedException {
+
+	    File tempScript = createWinScript(command);
+
+	    try {
+	    	
+	    	
+	    	ProcessBuilder builder = new ProcessBuilder(Arrays.asList(new String[] {"cmd.exe", "/C", tempScript.toString()}));
+
+	        ProcessBuilder pb = new ProcessBuilder(Arrays.asList(new String[] {"cmd.exe", "/C", tempScript.toString()}));
+	        pb.inheritIO();
+	        pb.directory( new File(System.getProperty( "user.home")));
+	        Process process = pb.start();
+	        process.waitFor();
+	        System.out.println( process.exitValue());
+	    } finally {
+	        tempScript.delete();
+	    }
+	}
+
+
 	public File createUnixScript( String command ) throws IOException {
-	    File tempScript = File.createTempFile("script", null);
+	    File tempScript = File.createTempFile("script", ".sh");
 	    
 	    Writer streamWriter = new OutputStreamWriter(new FileOutputStream(tempScript));
 	    PrintWriter printWriter = new PrintWriter(streamWriter);
@@ -117,6 +134,19 @@ public class MvnInstallExecutor
 	    printWriter.println("#!/bin/bash");
 	    printWriter.println("source ~/.bash_profile");
 	    printWriter.println("source ~/.bashrc");
+
+	    printWriter.println(command);
+	  
+	    printWriter.close();
+	    return tempScript;
+	}
+
+
+	public File createWinScript( String command ) throws IOException {
+	    File tempScript = File.createTempFile("script", ".bat");
+	    
+	    Writer streamWriter = new OutputStreamWriter(new FileOutputStream(tempScript));
+	    PrintWriter printWriter = new PrintWriter(streamWriter);
 
 	    printWriter.println(command);
 	  
