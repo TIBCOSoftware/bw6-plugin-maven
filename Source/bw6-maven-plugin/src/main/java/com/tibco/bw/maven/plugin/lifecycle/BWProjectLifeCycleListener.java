@@ -44,11 +44,11 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
         
 		logger.info("Starting Maven Build for BW6 Project.................................");
 		
-		logger.info( "Checking for In-Project JAR dependencies and Pushing them to Local Maven Repository");
+		logger.info( "Checking for In-Project JAR dependencies if any and Pushing them to Local Maven Repository");
 
 		logger.debug("Cleaning existing JARs from Mavne Repository");
 
-		File file = new File( session.getLocalRepository().getBasedir() + "tempbw" );
+		File file = new File( session.getLocalRepository().getBasedir() + "/tempbw" );
 		try
 		{
 			FileUtils.deleteDirectory(file) ;	

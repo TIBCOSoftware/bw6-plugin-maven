@@ -51,6 +51,23 @@ public class BWProjectUtils
 		return "/bwadmin";
 	}
 
+
+	public static OS getOS()
+	{
+		String os = System.getProperty("os.name");
+		if (os.indexOf("Windows") != -1) 
+		{
+			return OS.WINDOWS;
+		}
+
+		return OS.UNIX;
+	}
+	
+	public enum OS
+	{
+		WINDOWS , UNIX
+	}
+
 	
 	public static File getBWAdminHome( String tibcoHome , String bwVersion ) throws Exception
 	{

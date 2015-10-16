@@ -1,13 +1,22 @@
 package com.tibco.bw.maven.plugin.process;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.logging.Logger;
+import org.codehaus.plexus.util.xml.Xpp3DomWriter;
+
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 
 public class MvnInstallExecutor
 {
@@ -19,50 +28,101 @@ public class MvnInstallExecutor
 	
 	}
 	
+	
+	private void executeUnix( String command ) throws IOException, InterruptedException
+	{
+		executeUnixCommand(command);
+		
+	}
+	
 	public void execute( Model model , File jarFile ) 
 	{
-		List<String> list = new ArrayList<String>();
         
-		try {
-			Runtime.getRuntime().exec( "/Users/abhide/Programs/Tech/Maven/bin/mvn install:install-file -Dfile=/Users/abhide/Work/Workspaces/Studio/Maven1/tibco.bw.sample.palette.java.RESTInvokeToTwitter/lib/twitter4j-core-4.0.1.jar -DgroupId=tempbw -DartifactId=twitter4j-core-4.0.1 -Dversion=0.0.0 -Dpackaging=jar" );
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		list.add( "/Users/abhide/Programs/Tech/Maven/bin/mvn"); 	
-		list.add("install:install-file");
+		
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("mvn install:install-file ");
 		
 
-		list.add("-Dfile=" + jarFile.getAbsolutePath() );
+		buffer.append(" -Dfile=" + jarFile.getAbsolutePath() );
 		
-		list.add("-DgroupId=tempbw");
+		buffer.append(" -DgroupId=tempbw");
 		
-		list.add("-DartifactId=" + jarFile.getName().substring(0,jarFile.getName().lastIndexOf(".")) );
+		buffer.append(" -DartifactId=" + jarFile.getName().substring(0,jarFile.getName().lastIndexOf(".")) );
 		
-		list.add("-Dversion=0.0.0");
+		buffer.append(" -Dversion=0.0.0");
 		
-		list.add("-Dpackaging=jar");
+		buffer.append(" -Dpackaging=jar");
 
-		ProcessExecutor executor = new ProcessExecutor( System.getProperty("user.home") , logger );
+		
 		try
 		{
-			executor.executeProcess( list );	
+			switch( BWProjectUtils.getOS() )
+			{
+			case WINDOWS:
+					
+				break;
+				
+			case UNIX:
+				
+				executeUnix( buffer.toString() );
+				break;
+				
+				
+			}
+			
+			Dependency dep = new Dependency();
+			dep.setGroupId("tempbw");
+			dep.setArtifactId(jarFile.getName().substring(0,jarFile.getName().lastIndexOf(".")));
+			dep.setVersion("0.0.0");
+			
+			model.addDependency(dep);
+			
+			logger.debug("Set the Dependency to Model");
+			
 		}
-		catch(Exception e )
+		catch(Exception e)
 		{
-			logger.error( "Failed to install JAR file to Maven Repository" );
-			return;
+			logger.error( "Failed to add Dependency to Maven Repository for JAR " + jarFile.getName() + " .Please do it manually");
+			e.printStackTrace();
 		}
 		
-		Dependency dep = new Dependency();
-		dep.setGroupId("tempbw");
-		dep.setArtifactId(jarFile.getName().substring(0,jarFile.getName().lastIndexOf(".")));
-		dep.setVersion("0.0.0");
-		
-		model.addDependency(dep);
-
-		logger.debug("Set the Dependency to Model");
 	}
+	
+	
+	
+	public void executeUnixCommand( String command ) throws IOException, InterruptedException {
+
+	    File tempScript = createUnixScript(command);
+
+	    try {
+	    	
+	    	
+	        ProcessBuilder pb = new ProcessBuilder("bash", tempScript.toString());
+	        pb.inheritIO();
+	        pb.directory( new File(System.getProperty( "user.home")));
+	        Process process = pb.start();
+	        process.waitFor();
+	        System.out.println( process.exitValue());
+	    } finally {
+	        tempScript.delete();
+	    }
+	}
+
+	public File createUnixScript( String command ) throws IOException {
+	    File tempScript = File.createTempFile("script", null);
+	    
+	    Writer streamWriter = new OutputStreamWriter(new FileOutputStream(tempScript));
+	    PrintWriter printWriter = new PrintWriter(streamWriter);
+
+	    printWriter.println("#!/bin/bash");
+	    printWriter.println("source ~/.bash_profile");
+	    printWriter.println("source ~/.bashrc");
+
+	    printWriter.println(command);
+	  
+	    printWriter.close();
+	    return tempScript;
+	}
+
 	
 }
