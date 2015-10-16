@@ -1,12 +1,11 @@
 Prerequisites
+-----------------
 
 1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the Path.
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
 
 Installation
-
-a. Git clone https://github.com/TIBCOSoftware/bw6-plugin-maven
-or
+----------------
 Download the bw6-plugin-maven as Zip File and unzip it to a folder.
  
 b. Go to the Installer folder.
@@ -18,7 +17,7 @@ d. The Installer will ask for TibcoHome location. Provide the TibcoHome to the I
 This will install the Maven Plugin to the TibcoHome. 
 
 First Steps
-
+--------------
 Running the Maven Build from Studio.
 
 a. Open the Studio.
