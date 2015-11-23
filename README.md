@@ -1,13 +1,12 @@
-Plugin Code for Apache Maven and TIBCO BusinessWorks™
+#Plugin Code for Apache Maven and TIBCO BusinessWorks™
 
-Prerequisites
-===============
+##Prerequisites
 
 1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the Path.
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
 
-Installation
-=============
+##Installation
+
 
 a. Git clone https://github.com/TIBCOSoftware/bw6-plugin-maven
 or
@@ -21,8 +20,7 @@ d. The Installer will ask for TibcoHome location. Provide the TibcoHome to the I
 
 This will install the Maven Plugin to the TibcoHome. 
 
-First Steps
-============
+###First Steps
 
 Running the Maven Build from Studio.
 
