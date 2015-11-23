@@ -6,6 +6,11 @@
     <target name="setup" depends="getTibcoHome, setupMacros, vbuild.launcher.jar , devbuild.launcher.jar , studio-install , maven-install"/>
 
     <target name="getTibcoHome">
+            <echo> 
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                Installing Plugin Code for Apache Maven and TIBCO BusinessWorks™
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                 </echo> 
             <input addproperty="input.tibco.home">
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -1,9 +1,6 @@
 package com.tibco.bw.studio.maven.wizard;
 
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.wizard.WizardPage;
