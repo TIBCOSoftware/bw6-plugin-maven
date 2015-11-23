@@ -9,7 +9,7 @@
             <echo> 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 Installing Plugin Code for Apache Maven and TIBCO BusinessWorks™
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                  </echo> 
             <input addproperty="input.tibco.home">
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,7 +78,7 @@
 
     <target name="maven-install">
 
-        <echo> Installing Maven Plugin for BW </echo>
+        <echo> Installing Maven Plugin for Plugin Code for Apache Maven and TIBCO BusinessWorks™ to Local Maven Repository</echo>
         <mkdir dir="${tibco.maven.home}/plugins" />        
         <unzip src="${project.dir}/config/bw6-maven-plugin.zip" dest="${tibco.maven.home}/plugins/bw6-maven-plugin"/>
         <chmod file="${tibco.maven.home}/plugins/bw6-maven-plugin/install.sh" perm="ugo+rx"/>
@@ -100,20 +100,19 @@
 
     <target name="studio-install" >
 
-        <echo> Installing Eclipse Plugin for Maven to the Tibco Home </echo>
+        <echo> Installing Eclipse M2E Plugin to Tibco Home </echo>
         <p2.install repo="http://download.eclipse.org/releases/luna" ius="org.eclipse.equinox.p2.discovery.feature.feature.group"/>
 
-        <p2.install repo="jar:file:///${project.dir}/config/bw6.maven.dependencies-1.0.0.zip!/" ius="bw6.maven.dependencies.feature.group"/>
+        <p2.install repo="jar:file:///${project.dir}/config/bw6.maven.dependencies-1.0.0.zip!/" ius="bw6.maven.dependencies.feature.feature.group"/>
 
 
         <p2.install repo="jar:file:///${project.dir}/config/org.eclipse.m2e.site-1.6.2.zip!/" ius="org.eclipse.m2e.feature.feature.group,org.eclipse.m2e.sdk.feature.feature.group,org.eclipse.m2e.logback.feature.feature.group"/>
 
-        <echo> UnInstalling the existing version of BusinessWorks Plugin for Maven if any</echo>
-        <p2.uninstall ius="com.tibco.bw.mavengenerator.feature.feature.group"/>
+        <echo> UnInstalling the existing version of Plugin Code for Apache Maven and TIBCO BusinessWorks™</echo>
 
         <p2.uninstall ius="bw6.studio.maven.feature.feature.group"/>
 
-        <echo> Installing BusinessWorks Plugin for Maven to the Tibco Home </echo>
+        <echo> Installing Studio Plugin for Plugin Code for Apache Maven and TIBCO BusinessWorks™ to the Tibco Home </echo>
         <p2.install repo="jar:file:///${project.dir}/config/bw6.studio.maven.feature_1.0.0.zip!/" ius="bw6.studio.maven.feature.feature.group"/>
 
 

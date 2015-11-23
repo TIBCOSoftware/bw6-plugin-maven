@@ -40,8 +40,8 @@ public class WizardPage1 extends WizardPage
 	{
 		super(pageName);
 		this.project = project;		 
-		setTitle("Maven Configuration Details");
-		setDescription("Enter the GroupId and ArtifactId for for Maven POM File generation. \n The POM files will be generated for Projects listed below and a Parent POM file will be generated aggregating the Projects");	
+		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorks™");
+		setDescription("Enter the GroupId and ArtifactId for for Maven POM File generation. \nThe POM files will be generated for Projects listed below and a Parent POM file will be generated aggregating the Projects");	
 	}
 	
 	@Override
@@ -122,7 +122,7 @@ public class WizardPage1 extends WizardPage
 
 		appGroupId = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appGroupId.setText( "com.tibco.bw");
-		GridData groupData = new GridData(120, 15);
+		GridData groupData = new GridData(200, 15);
 		appGroupId.setLayoutData(groupData);
 
 		Label artifactLabel = new Label(container, SWT.NONE);
@@ -130,7 +130,7 @@ public class WizardPage1 extends WizardPage
 
 		appArtifactId = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appArtifactId.setText(application.getArtifactId() + ".parent");
-		GridData artifactData = new GridData(120, 15);
+		GridData artifactData = new GridData(200, 15);
 		appArtifactId.setLayoutData(artifactData);
 
 		

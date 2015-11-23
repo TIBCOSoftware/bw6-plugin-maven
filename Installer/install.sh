@@ -1,4 +1,4 @@
  #!/bin/bash
-echo "Starting BW Maven Tool Installation ...." 
+echo "Starting Plugin Code for Apache Maven and TIBCO BusinessWorks™ installation .... " 
 java -cp antpackage.jar org.apache.tools.ant.launch.Launcher 
 #EOF
