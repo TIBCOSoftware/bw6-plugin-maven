@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="main" default="setup">
+
+    <dirname property="project.dir" file="${ant.file.main}"/>
+
+    <target name="setup" depends="getTibcoHome, setupMacros, vbuild.launcher.jar , devbuild.launcher.jar , studio-install , maven-install"/>
+
+    <target name="getTibcoHome">
+            <echo> 
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                Installing Plugin Code for Apache Maven and TIBCO BusinessWorks™
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                 </echo> 
+            <input addproperty="input.tibco.home">
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+                Input the path for Tibco Home here. Default will be c:\tibco    
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            </input>
+
+
+            <condition property="set.tibco.home" value="c:/tibco" else="${input.tibco.home}" >
+                    <equals arg1="" arg2="${input.tibco.home}"/>
+            </condition>
+
+            <pathconvert targetos="unix" property="tibco.home">
+                <path location="${set.tibco.home}"/>
+            </pathconvert>
+
+            
+            <property name="studio.home" location="${tibco.home}/studio/4.0/eclipse" />
+
+            <property name="bw.home" value="bw/6.3" />
+
+            <property name="tibco.maven.home" location="${tibco.home}/${bw.home}/maven" />
+
+            <property environment="env" />
+            <property name="MAVEN_HOME" value="${env.M2_HOME}"/>
+            <fail message="Maven home is not set"  unless="MAVEN_HOME"/>
+
+            <condition property="is-windows">
+                <os family="windows"/>
+            </condition>
+
+            <condition property="is-unix">
+                <not>
+                    <os family="windows"/>        
+                </not>
+            </condition>
+
+            <condition property="dir.exists">
+                <available file="${tibco.home}" type="dir"/>
+            </condition>
+            <fail message="Tibco Home is not a valid directory."  unless="dir.exists"/>
+
+
+           <condition property="vbuild">
+                <available file="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar"/>
+            </condition>
+
+            <condition property="devbuild">
+                <available file="${tibco.home}/studio/3.6/eclipse/plugins/org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar"/>
+            </condition>
+
+    </target>
+
+
+    <target name="vbuild.launcher.jar" if="vbuild">
+        <property name="launcher.jar" location="${tibco.home}/eclipse-platform/bundlepool/1.0/org.eclipse.equinox.p2.touchpoint.eclipse/plugins/org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar" />
+    </target>
+
+
+    <target name="devbuild.launcher.jar" if="devbuild">
+        <property name="launcher.jar" location="${tibco.home}/studio/4.0/eclipse/plugins/org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar" />
+    </target>
+
+
+    <target name="maven-install">
+
+        <echo> Installing Maven Plugin for Plugin Code for Apache Maven and TIBCO BusinessWorks™ to Local Maven Repository</echo>
+        <mkdir dir="${tibco.maven.home}/plugins" />        
+        <unzip src="${project.dir}/config/bw6-maven-plugin.zip" dest="${tibco.maven.home}/plugins/bw6-maven-plugin"/>
+        <chmod file="${tibco.maven.home}/plugins/bw6-maven-plugin/install.sh" perm="ugo+rx"/>
+        <antcall target="maven-plugin-install"/>
+
+    </target>
+
+
+    <target depends="winInstall, linuxInstall" name="maven-plugin-install"/>
+
+    <target name="winInstall" if="is-windows">
+        <maven.install.windows/>
+    </target>
+
+    <target name="linuxInstall" if="is-unix">
+        <maven.install.unix/>
+    </target>
+
+
+    <target name="studio-install" >
+
+        <echo> Installing Eclipse M2E Plugin to Tibco Home </echo>
+        <p2.install repo="http://download.eclipse.org/releases/luna" ius="org.eclipse.equinox.p2.discovery.feature.feature.group"/>
+
+        <p2.install repo="jar:file:///${project.dir}/config/bw6.maven.dependencies-1.0.0.zip!/" ius="bw6.maven.dependencies.feature.feature.group"/>
+
+
+        <p2.install repo="jar:file:///${project.dir}/config/org.eclipse.m2e.site-1.6.2.zip!/" ius="org.eclipse.m2e.feature.feature.group,org.eclipse.m2e.sdk.feature.feature.group,org.eclipse.m2e.logback.feature.feature.group"/>
+
+        <echo> UnInstalling the existing version of Plugin Code for Apache Maven and TIBCO BusinessWorks™</echo>
+
+        <p2.uninstall ius="bw6.studio.maven.feature.feature.group"/>
+
+        <echo> Installing Studio Plugin for Plugin Code for Apache Maven and TIBCO BusinessWorks™ to the Tibco Home </echo>
+        <p2.install repo="jar:file:///${project.dir}/config/bw6.studio.maven.feature_1.0.0.zip!/" ius="bw6.studio.maven.feature.feature.group"/>
+
+
+    </target>
+
+
+    <target name="setupMacros">
+
+
+        <macrodef name="p2.install">
+
+            <attribute name="repo"/>
+            <attribute name="ius"/>
+
+            <sequential>
+                <exec executable="java">
+                    <arg value="-jar"/>
+                    <arg value="${launcher.jar}"/>
+
+                    <arg value="-install"/>
+                    <arg value="${studio.home}"/>     
+
+                    <arg value="-application"/>
+                    <arg value="org.eclipse.equinox.p2.director"/>
+
+                    <arg value="-repository"/>
+                    <arg value="@{repo}"/>
+
+                    <arg value="-installIU"/>
+                    <arg value="@{ius}"/>
+                </exec>
+            </sequential>
+        </macrodef>
+
+        <macrodef name="p2.uninstall">
+
+            <attribute name="ius"/>
+
+            <sequential>
+                <exec executable="java">
+                    <arg value="-jar"/>
+                    <arg value="${launcher.jar}"/>
+
+                    <arg value="-install"/>
+                    <arg value="${studio.home}"/>     
+
+                    <arg value="-application"/>
+                    <arg value="org.eclipse.equinox.p2.director"/>
+
+                    <arg value="-uninstallIU"/>
+                    <arg value="@{ius}"/>
+                </exec>
+            </sequential>
+        </macrodef>
+
+
+        <macrodef name="maven.install.windows">
+
+            <sequential>
+                <condition property="maven.executable" value="install.bat" else="install.sh">
+                    <os family="windows" />
+                </condition>
+
+                    <exec executable="cmd" dir="${tibco.maven.home}/plugins/bw6-maven-plugin" failonerror="true">
+                    <arg value="/c" />
+                    <arg value="${tibco.maven.home}/plugins/bw6-maven-plugin/install.bat" />
+                </exec>                
+
+
+            </sequential>
+        </macrodef>
+
+
+        <macrodef name="maven.install.unix">
+
+            <sequential>
+                <condition property="maven.executable" value="install.bat" else="install.sh">
+                    <os family="windows" />
+                </condition>
+    
+                    <exec executable="/bin/bash" dir="${tibco.maven.home}/plugins/bw6-maven-plugin">
+                        <arg value="./install.sh"/>                        
+                    </exec>
+
+            </sequential>
+        </macrodef>
+
+    </target>
+
+    
+</project>
+
+
