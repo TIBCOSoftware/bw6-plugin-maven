@@ -1,10 +1,14 @@
 #Plugin Code for Apache Maven and TIBCO ActiveMatrix BusinessWorks™
 
+This plug-in has been provided subject to the license shared as part of the repository. Kindly ensure to review the same in detail before using or downloading this plug-in.
+
+It has been provided here as a sample Plug-in with the intention of supporting use-cases of integrating TIBCO ActiveMatrix BusinessWorks™ 6.3.0 and higher with Apache Maven.
+
 ##Prerequisites
 
 1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the Path.
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
-2. TIBCO ActiveMatrix BusinessWorks™ 6.3.0 or above should be installed.
+2. TIBCO ActiveMatrix BusinessWorks™ 6.3.0 or higher should be installed.
 
 ##Installation
 
