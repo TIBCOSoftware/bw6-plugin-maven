@@ -1,4 +1,4 @@
-#Plugin Code for Apache Maven and TIBCO BusinessWorks™
+#Plugin Code for Apache Maven and TIBCO ActiveMatrix BusinessWorks™
 
 ##Prerequisites
 
