@@ -1,8 +1,8 @@
-#Plugin Code for Apache Maven and TIBCO ActiveMatrix BusinessWorks™
+#Plug-in Code for Apache Maven and TIBCO ActiveMatrix BusinessWorks™
 
-This plug-in has been provided subject to the license shared as part of the repository. Kindly ensure to review the same in detail before using or downloading this plug-in.
+This plug-in is subject to the license shared as part of the repository. Kindly review the license before using or downloading this plug-in.
 
-It is provided as a sample Plug-in to support use-cases of integrating TIBCO ActiveMatrix BusinessWorks™ 6.3.0 and higher with Apache Maven.
+It is provided as a sample plug-in to support use-cases of integrating TIBCO ActiveMatrix BusinessWorks™ 6.3.0 and higher with Apache Maven.
 
 ##Prerequisites
 
