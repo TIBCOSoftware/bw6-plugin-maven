@@ -128,12 +128,22 @@ f. The Project will be converted to Maven (Eclipse Project) nature. Note the wor
 
 g. Open Run/Debug Configurations. Create a new Maven Build.
 
-h. Under the "Base directory" choose add variable for Workspace location. The variable name is ${project_loc}.
+h. Under the "Base directory" choose add variable based on the type of goal. 
+
+ - Choose ${project_loc} for goals - cf:login , cf:logout, cf:apps, cf:services
+ - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop
+
+NOTE: Whenever you execute {project_loc} specific goals, you should select your ".application" project in studio OR, from terminal point it to ".application" project folder, and, whenever you execute {workspace_loc} specific goals from terminal, you should point to your workspace OR, from studio you can just directly Run your goals without selecting ".application" project.   
+
+ - Incase authentication token expired, you can execute logout and login goals.
+ - Its recommended to execute c:login goal before execution of any cf goals.
+ - 'Package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR' 
+ - Since all ${workspace_loc} specific goals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
 
 i. In the Goal enter the Goal to be executed. The goal can be any standard PCF commands like cf:push, cf:start, cf:delete etc. for more goals you can view this link -
 http://docs.run.pivotal.io/buildpacks/java/build-tool-int.html
 
-j. Goal "cf:push" will create EAR file in the target folder under the Application project and will also push the same on PCF - 'Refresh' your project using the right-click menu if this folder is not visible. 
+j. Goal "cf:push" will also create EAR file in the target folder under the Application project and will also push the same on PCF - 'Refresh' your project using the right-click menu if this folder is not visible. 
 
 k. You can also do cf:push from your maven terminal, using maven commands like -
 mvn cf:push [-Dcf.appname=APPNAME] [-Dcf.path=PATH] [-Dcf.url=URL] [-Dcf.no-start=BOOLEAN]
