@@ -24,6 +24,8 @@ public class BWModulesParser
 	
 	private MavenProject project;
 	
+	public String bwEdtion;
+	
 	public BWModulesParser( MavenSession session , MavenProject project )
 	{
 		this.session = session;
@@ -83,7 +85,13 @@ public class BWModulesParser
 	
 	private Artifact getArtifactForModule( String module )
 	{
-		List<MavenProject> projects = session.getProjects();
+		List<MavenProject> projects = new ArrayList<MavenProject>();
+		if(bwEdtion!=null && bwEdtion.equals("bwcf")){
+			projects = session.getAllProjects();
+		}else{
+			projects = session.getProjects();
+		}
+		
 		for( MavenProject project : projects )
 		{
 			if( project.getArtifactId().equals(module) )

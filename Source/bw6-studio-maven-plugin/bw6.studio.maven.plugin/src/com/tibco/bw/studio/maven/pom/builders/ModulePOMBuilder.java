@@ -1,9 +1,12 @@
 package com.tibco.bw.studio.maven.pom.builders;
 
+import java.util.Map;
+
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 
+import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.BWAppModule;
 import com.tibco.bw.studio.maven.modules.BWModule;
@@ -12,7 +15,9 @@ import com.tibco.bw.studio.maven.modules.BWProject;
 
 public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 {
-
+	
+	private String bwEdition;
+	
 	@Override
 	public void build(BWProject project, BWModule module) throws Exception
 	{
@@ -23,6 +28,12 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder
 
 		this.project = project;
 		this.module = module;
+		
+		Map<String,String> manifest = ManifestParser.parseManifest(module.getProject());
+		if(manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")){
+			bwEdition="bwcf";
+		}else bwEdition="bw6";
+		
 		initializeModel();
 		
 		addPrimaryTags();
@@ -122,7 +133,9 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder
 
     	addSourceTarget( build );
     	addBW6MavenPlugin( build );
-    	
+    	if(bwEdition.equals("bwcf")){
+    		addPCFWithSkipMavenPlugin( build );
+    	}
     	model.setBuild(build);
 	}
 

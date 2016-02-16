@@ -189,6 +189,8 @@ public class BWEARPackagerMojo extends AbstractMojo
         	getLog().debug("Adding Modules to the Application EAR");
 
         	BWModulesParser parser = new BWModulesParser(session, project);
+        	String bwEdition = manifest.getMainAttributes().getValue("TIBCO-BW-Edition");
+        	parser.bwEdtion=bwEdition;
         	List<Artifact> artifacts = parser.getModulesSet();
         	
             for( Artifact artifact : artifacts )

@@ -2,6 +2,7 @@ package com.tibco.bw.maven.plugin.module;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -130,7 +131,13 @@ public class BWModulePackageMojo  extends AbstractMojo
             archiver.createArchive(session, project, archiveConfiguration);
             
             project.getArtifact().setFile( pluginFile);
-
+            
+            //Add Code for BWCE//
+            String bwEdition = manifest.getMainAttributes().getValue("TIBCO-BW-Edition");
+            if(bwEdition!=null && bwEdition.equals("bwcf")){
+            	session.getAllProjects().set(1, project);
+            }
+            
             getLog().info( "BW Module Packager Mojo finished execution. ");
     	}
     	catch (IOException e) 

@@ -31,7 +31,19 @@ public abstract class BWModule
 	protected String fromPath;
 	
 	protected String toPath;
-
+	
+	protected BWPCFModule bwpcfModule;
+	
+	public BWPCFModule getBwpcfModule()
+	{
+		return bwpcfModule;
+	}
+	
+	public void setBwpcfModule(BWPCFModule bwpcfModule)
+	{
+		this.bwpcfModule=bwpcfModule;
+	}
+	
 	public IProject getProject() 
 	{
 		return project;
