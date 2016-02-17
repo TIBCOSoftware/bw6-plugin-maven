@@ -89,7 +89,7 @@ d. Unzip the file in a folder on local drive.
 
 e. Open the Terminal and run install.bat ( for Windows based OS ) or install.sh ( for Unix based OS)
 
-f. The Installer will ask for TibcoHome and BW Home location. Provide the TibcoHome (eg. C:\TIBCO_HOME) and BW Home(eg.  C:\TIBCO_HOME\bwcf\1.0) to the Script.
+f. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script.
 
 
 This will install the Maven Plugin to the TibcoHome. 
