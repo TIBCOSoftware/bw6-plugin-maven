@@ -121,7 +121,7 @@ e. Enter the Parent POM details here and Click Finish.
        4. PCF Space
        5. Number of App Instance 
        6. App Memory (Minimum should be 1024 MB)
-       7. App Buildpack (BWCE buildpack which developer as pushed to PCF instance)
+       7. App Buildpack (BWCE buildpack which developer has pushed to PCF instance)
        8. Select Services (Button where you login to PCF and select required services you want to bind to your app)
 
 f. The Project will be converted to Maven (Eclipse Project) nature. Note the workspace will index after generating POM files for the first time and may take some time. You can continue with the steps below by allowing this indexing to run in the background.
@@ -136,7 +136,7 @@ h. Under the "Base directory" choose add variable based on the type of goal.
 NOTE: Whenever you execute {project_loc} specific goals, you should select your ".application" project in studio OR, from terminal point it to ".application" project folder, and, whenever you execute {workspace_loc} specific goals from terminal, you should point to your workspace OR, from studio you can just directly Run your goals without selecting ".application" project.   
 
  - Incase authentication token expired, you can execute logout and login goals.
- - Its recommended to execute c:login goal before execution of any cf goals.
+ - Its recommended to execute cf:login goal before execution of any other cf goals.
  - 'Package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR' 
  - Since all ${workspace_loc} specific goals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
 
