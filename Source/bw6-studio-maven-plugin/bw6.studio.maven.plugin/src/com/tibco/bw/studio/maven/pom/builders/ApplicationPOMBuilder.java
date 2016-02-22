@@ -34,8 +34,11 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		
 		addPrimaryTags();
 		addParent( ModuleHelper.getParentModule( project.getModules() ));
+		
+		if(bwEdition.equals("bwcf")){
+			addBWCEProperties();
+		}
 		addBuild();
-		addProperties();
 		
 		generatePOMFile();
 		
@@ -47,6 +50,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 
     	addBW6MavenPlugin( build );
     	if(bwEdition.equals("bwcf")){
+    		addBWCEPropertiesPlugin(build);
     		addPCFMavenPlugin(build);
     	}
     	model.setBuild(build);

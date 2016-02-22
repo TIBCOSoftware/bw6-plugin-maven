@@ -1,24 +1,33 @@
 package com.tibco.bw.studio.maven.pom.builders;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.ConfigurationContainer;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import com.tibco.bw.studio.maven.modules.BWModule;
+import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWPCFServicesModule;
 import com.tibco.bw.studio.maven.modules.BWParent;
 import com.tibco.bw.studio.maven.modules.BWProject;
@@ -41,9 +50,11 @@ public abstract class AbstractPOMBuilder
 		
 	}
 	
-	protected void addProperties()
+	protected void addBWCEProperties()
 	{
-		
+		Properties properties=new Properties();
+		properties.put("property.file", "../pcfdev.properties");
+		model.setProperties(properties);
 	}
 	
 	
@@ -83,9 +94,85 @@ public abstract class AbstractPOMBuilder
 			build.addPlugin(plugin);
 	}
 	
+	protected void addBWCEPropertiesPlugin( Build build )
+	{
+		Plugin plugin = new Plugin();
+		plugin.setGroupId("org.codehaus.mojo");
+		plugin.setArtifactId("properties-maven-plugin");
+		plugin.setVersion("1.0.0");
+		List<PluginExecution> executions=new ArrayList<PluginExecution>();
+		PluginExecution pe=new PluginExecution();
+		pe.setPhase("initialize");
+		pe.setGoals(Arrays.asList("read-project-properties"));
+		executions.add(pe);
+		plugin.setExecutions(executions);
+		
+		Xpp3Dom config=new Xpp3Dom("configuration");
+		Xpp3Dom child = new Xpp3Dom( "files" );
+		Xpp3Dom fileChild = new Xpp3Dom( "file" );
+		fileChild.setValue( "${property.file}" );
+		child.addChild( fileChild );
+        
+		config.addChild( child );
+		plugin.setConfiguration(config);
+		
+		build.addPlugin(plugin);
+	}
+	
+	private void createPCFPropertieFiles(){
+		try {
+			Properties properties = new Properties();
+			properties.setProperty("bwpcf.server", module.getBwpcfModule().getCredString());
+			properties.setProperty("bwpcf.target", module.getBwpcfModule().getTarget());
+			properties.setProperty("bwpcf.trustSelfSignedCerts", "true");
+			properties.setProperty("bwpcf.org", module.getBwpcfModule().getOrg());
+			properties.setProperty("bwpcf.space", module.getBwpcfModule().getSpace());
+			properties.setProperty("bwpcf.url", getPCFAppDefaultURL());
+			properties.setProperty("bwpcf.instances", module.getBwpcfModule().getInstances());
+			properties.setProperty("bwpcf.memory", module.getBwpcfModule().getMemory());
+			properties.setProperty("bwpcf.buildpack", module.getBwpcfModule().getBuildpack());
+			
+			File devfile = new File(getWorkspacepath()+"\\pcfdev.properties");
+			if (!devfile.exists()) {
+				boolean done=devfile.createNewFile();
+				if(done){
+					FileOutputStream fileOut = new FileOutputStream(devfile);
+					properties.store(fileOut, "PCF Properties");
+					fileOut.close();
+					
+					File prodfile = new File(getWorkspacepath()+"\\pcfprod.properties");
+					boolean proddone=prodfile.createNewFile();
+					if(proddone){
+						FileUtils.copyFile(devfile, prodfile);
+					}
+				}
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private String getWorkspacepath(){
+		
+		for (BWModule module : project.getModules() )
+		{
+			if(module.getType() == BWModuleType.Parent){
+				String pomloc=module.getPomfileLocation().toString();
+				String workspace=pomloc.substring(0,pomloc.indexOf("pom.xml"));
+				return workspace;
+			}
+		}
+		return null;
+	}
 	
 	protected void addPCFMavenPlugin( Build build )
 	{
+			//Create properties file for Dev and Prod environment
+			createPCFPropertieFiles();
+		
+			//Now just add PCF Maven plugin
 			Plugin plugin = new Plugin();
 			plugin.setGroupId("org.cloudfoundry");
 			plugin.setArtifactId("cf-maven-plugin");
@@ -94,48 +181,44 @@ public abstract class AbstractPOMBuilder
 			Xpp3Dom config=new Xpp3Dom("configuration");
 			
 			Xpp3Dom child = new Xpp3Dom( "server" );
-	        child.setValue( module.getBwpcfModule().getCredString() );
+	        child.setValue("${bwpcf.server}");
 	        config.addChild( child );
 			
 	        child = new Xpp3Dom( "target" );
-	        child.setValue( module.getBwpcfModule().getTarget());
+	        child.setValue("${bwpcf.target}");
 	        config.addChild( child );
 	        
 	        child = new Xpp3Dom( "trustSelfSignedCerts" );
-	        child.setValue("true");
+	        child.setValue("${bwpcf.trustSelfSignedCerts}");
 	        config.addChild( child );
 	        
 	        child = new Xpp3Dom( "org" );
-	        child.setValue( module.getBwpcfModule().getOrg());
+	        child.setValue("${bwpcf.org}");
 	        config.addChild( child );
 	        
 	        child = new Xpp3Dom( "space" );
-	        child.setValue( module.getBwpcfModule().getSpace());
+	        child.setValue("${bwpcf.space}");
 	        config.addChild( child );
 	        
 	        child = new Xpp3Dom( "url" );
-	        child.setValue(getPCFAppDefaultURL());
+	        child.setValue("${bwpcf.url}");
 	        config.addChild( child );
 	        
 	        child = new Xpp3Dom( "instances" );
-	        child.setValue(module.getBwpcfModule().getInstances());
+	        child.setValue("${bwpcf.instances}");
 	        config.addChild( child );
 	        
 	        child = new Xpp3Dom( "skip" );
 	        child.setValue("false");
 	        config.addChild( child );
 	        
-	        if(module.getBwpcfModule().getMemory()!=null && !module.getBwpcfModule().getMemory().isEmpty()){
-		        child = new Xpp3Dom( "memory" );
-		        child.setValue(module.getBwpcfModule().getMemory());
-		        config.addChild( child );
-			}
+	        child = new Xpp3Dom( "memory" );
+	        child.setValue("${bwpcf.memory}");
+	        config.addChild( child );
 	        
-	        if(module.getBwpcfModule().getBuildpack()!=null && !module.getBwpcfModule().getBuildpack().isEmpty()){
-		        child = new Xpp3Dom( "buildpack" );
-		        child.setValue(module.getBwpcfModule().getBuildpack());
-		        config.addChild( child );
-			}
+	        child = new Xpp3Dom( "buildpack" );
+	        child.setValue("${bwpcf.buildpack}");
+	        config.addChild( child );
 	        
 	        List<BWPCFServicesModule> services=module.getBwpcfModule().getServices();
 	        if(services!=null && services.size()>0){

@@ -121,10 +121,12 @@ e. Enter the Parent POM details here and Click Finish.
        4. PCF Space
        5. Number of App Instance 
        6. App Memory (Minimum should be 1024 MB)
-       7. App Buildpack (BWCE buildpack which developer has pushed to PCF instance)
+       7. App Buildpack (BWCE buildpack which developer as pushed to PCF instance)
        8. Select Services (Button where you login to PCF and select required services you want to bind to your app)
 
 f. The Project will be converted to Maven (Eclipse Project) nature. Note the workspace will index after generating POM files for the first time and may take some time. You can continue with the steps below by allowing this indexing to run in the background.
+
+ - You will find at your workspace two properties files are created with the name - pcfdev.properties and pcfprod.properties. These properties files signifies two PCF instances ie. for PCF Dev and PCF Production, if you have more PCF environments you can manually just create copy of one of these properties file and rename it to your another pcf environment (eg. pcfqa.properties). By default, both pcfdev and pcfprod properties are same, and contains values which you have specified in step (e), so you can manually edit these values in properties file for your PCF environment (prod / dev).  
 
 g. Open Run/Debug Configurations. Create a new Maven Build.
 
@@ -136,17 +138,20 @@ h. Under the "Base directory" choose add variable based on the type of goal.
 NOTE: Whenever you execute {project_loc} specific goals, you should select your ".application" project in studio OR, from terminal point it to ".application" project folder, and, whenever you execute {workspace_loc} specific goals from terminal, you should point to your workspace OR, from studio you can just directly Run your goals without selecting ".application" project.   
 
  - Incase authentication token expired, you can execute logout and login goals.
- - Its recommended to execute cf:login goal before execution of any other cf goals.
+ - Its recommended to execute c:login goal before execution of any cf goals.
  - 'Package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR' 
  - Since all ${workspace_loc} specific goals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
 
-i. In the Goal enter the Goal to be executed. The goal can be any standard PCF commands like cf:push, cf:start, cf:delete etc. for more goals you can view this link -
+i. In the 'Goal' enter the goal to be executed. The goal can be any standard PCF commands like cf:push, cf:start, cf:delete etc. for more goals you can view this link -
 http://docs.run.pivotal.io/buildpacks/java/build-tool-int.html
+
+ - Please make sure to prefix 'initialize' before all your cf goals. So in goal you should enter - 'initialize cf:push'
+ - Also make sure to add parameter - 'property.file' as name and the value as path to your pcf properties file ie. '../pcfprod.properties'. If you don't specify any parameter then, by default it will pick from pcfdev.properties.
 
 j. Goal "cf:push" will also create EAR file in the target folder under the Application project and will also push the same on PCF - 'Refresh' your project using the right-click menu if this folder is not visible. 
 
-k. You can also do cf:push from your maven terminal, using maven commands like -
-mvn cf:push [-Dcf.appname=APPNAME] [-Dcf.path=PATH] [-Dcf.url=URL] [-Dcf.no-start=BOOLEAN]
+k. You can also do cf:push from your maven terminal or from CI Server(Jenkins etc), using maven commands like -
+mvn initialize cf:push -Dproperty.file=../pcfprod.properties (you can specify any other pcf properties file as value to parameter property.file)
 
 l. Similarly you can try other goals, by creating new Maven Run Configurations for different goals.
 

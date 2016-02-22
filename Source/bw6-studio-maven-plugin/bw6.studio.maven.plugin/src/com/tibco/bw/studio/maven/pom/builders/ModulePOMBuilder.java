@@ -51,7 +51,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder
 			addCustomXPathDependency();
 		}
 		
-		addProperties();
+		//addProperties();
 		
 		generatePOMFile();
 

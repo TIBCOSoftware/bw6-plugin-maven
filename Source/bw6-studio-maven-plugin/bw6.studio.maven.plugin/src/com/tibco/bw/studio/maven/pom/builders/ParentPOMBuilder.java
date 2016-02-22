@@ -34,7 +34,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder
 		addPrimaryTags();
 		model.setGroupId( module.getGroupId());
 		model.setVersion( module.getVersion() );
-		addProperties();
+		//addProperties();
 		addModules();
 		if(bwEdition.equals("bwcf")){
 			addBuild();
