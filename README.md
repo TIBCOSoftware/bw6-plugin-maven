@@ -106,7 +106,7 @@ c. The Context Menu will show the option "Generate POM for Application".
 
 d. Clicking it will launch the POM Generation UI.
 
-e. Enter the Parent POM details here and Click Finish.
+e. Enter your PCF instance configuration details here and Click Finish.
 
         1. PCF Target = https://api.run.pivotal.io
         
