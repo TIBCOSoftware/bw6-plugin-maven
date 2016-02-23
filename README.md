@@ -154,7 +154,7 @@ j. Goal "cf:push" will also create EAR file in the target folder under the Appli
 k. You can do cf:push from your maven terminal or from CI Server(Jenkins etc), using maven commands like -
 mvn initialize cf:push -Dproperty.file=../pcfprod.properties (you can specify any other pcf instance properties file as value to parameter property.file)
 
-l. You can try other goals from studio, by creating new Maven Run Configurations for different goals , or from terminal pointing to your workspace using 'mvn initialize cf:<command> -Dproperty.file=../<pcfinstance>.properties'
+l. You can try other goals from studio, by creating new Maven Run Configurations for different goals , or from terminal pointing to your workspace using 'mvn initialize cf:command -Dproperty.file=../pcfinstance.properties'
 
 NOTE: For all non-web application if you are using PCF Elastic Runtime 1.6 or above (Diego) then, it will give health-check error while cf:push, so you have to use PCF CLI (6.13 or above) to set health-check as 'none' after pushing your application and re-push after setting health-check as 'none'.  You can use below command on CLI -
 cf set-health-check App_Name none 
