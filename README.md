@@ -126,14 +126,14 @@ e. Enter your PCF instance configuration details here and Click Finish.
 
 f. The Project will be converted to Maven (Eclipse Project) nature. Note the workspace will index after generating POM files for the first time and may take some time. You can continue with the steps below by allowing this indexing to run in the background.
 
- - You will find at your workspace two properties files are created with the name - pcfdev.properties and pcfprod.properties. These properties files signifies two PCF instances ie. for PCF Dev and PCF Production, if you have more PCF environments you can manually just create copy of one of these properties file and rename it to your another pcf environment (eg. pcfqa.properties). By default, both pcfdev and pcfprod properties are same, and contains values which you have specified in step (e), so you can manually edit these values in properties file for your PCF environment (prod / dev).  
+ - You will find at your workspace two properties files are created with the name - pcfdev.properties and pcfprod.properties. These properties files signifies two PCF instances ie. for PCF Dev and PCF Production, if you have more PCF environments you can manually just create copies of one of these properties file and rename it to your another pcf environment (eg. pcfqa.properties). By default, both pcfdev and pcfprod properties are same, and contains values which you have specified in step (e), so you can manually edit these values in properties file for your PCF environment (prod / dev).  
 
 g. Open Run/Debug Configurations. Create a new Maven Build.
 
 h. Under the "Base directory" choose add variable based on the type of goal. 
 
- - Choose ${project_loc} for goals - cf:login , cf:logout, cf:apps, cf:services
- - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop
+ - Choose ${project_loc} for goals - cf:login , cf:logout, cf:apps, cf:services (use 'initialize' before every cf goals eg. 'initialize cf:login')
+ - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop (use 'initialize' before every cf goals eg. 'initialize cf:push')
 
 NOTE: Whenever you execute {project_loc} specific goals, you should select your ".application" project in studio OR, from terminal point it to ".application" project folder, and, whenever you execute {workspace_loc} specific goals from terminal, you should point to your workspace OR, from studio you can just directly Run your goals without selecting ".application" project.   
 
