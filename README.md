@@ -130,14 +130,16 @@ f. The Project will be converted to Maven (Eclipse Project) nature. Note the wor
 
 g. Open Run/Debug Configurations. Create a new Maven Build.
 
-h. Under the "Base directory" choose add variable for Workspace location. The variable name is ${workspace_loc}
+h. Under the "Base directory" choose add variable for pom location. 
 
  - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop, cf:apps, cf:services (use 'initialize' before every cf goals eg. 'initialize cf:push', see step i,k)
- - Choose ${project_loc} for goals - cf:login , cf:logout (use 'initialize' before these goals eg. 'initialize cf:login')
+ - Choose ${project_loc} for goals - cf:login , cf:logout (use 'initialize' before these goals eg. 'initialize cf:login'), we need to fire these goals from '.application' project of your workspace.
 
 NOTE: Whenever you execute maven goals from terminal, you should point to your workspace. 
 
- - Incase authentication token expired, you can execute logout and login goals. From CI server you can call cf:login / cf:logout job only if cf:push job gives token expired error.
+ - Incase authentication token expired, you can execute logout and login goals. From CI server you can call cf:login / cf:logout job only if cf:push job gives token expired error. See example below for login -
+ Root POM : xxxxx.application/pom.xml (login / logout should be fired from '.application' project)
+ Goal : initialize cf:login -Dproperty.file=../pcfprod.properties
  - 'Package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR' 
  - Since all goals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
 
