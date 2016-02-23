@@ -134,10 +134,11 @@ h. Under the "Base directory" choose add variable for Workspace location. The va
 
  - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop, cf:apps, cf:services (use 'initialize' before every cf goals eg. 'initialize cf:push', see step i)
 
-NOTE: Whenever you execute maven goals from terminal, you should point to your workspace. For cf:login or cf:logout you need to pass username, password, target as parameters.
+NOTE: Whenever you execute maven goals from terminal, you should point to your workspace. For cf:login or cf:logout you need to pass username, password, target as parameters because these goals are independent of project pom.
 
  - Incase authentication token expired, you can execute logout and login goals.
- - Its recommended to execute c:login goal before execution of any cf goals.
+ - Its recommended to execute cf:login goal before execution of any other cf goals. eg. 'cf:login initialize cf:push' and pass 'cf.username' , 'cf.password', 'cf.target' as parameters for cf:login and pass 'property.file' as parameter for cf:push. From terminal it will be like -> 
+ mvn cf:login initialize cf:push -Dcf.username=admin -Dcf.password=xxxx -Dcf.target=https://api.run.pivotal.io -Dproperty.file=../pcfprod.properties
  - 'Package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR' 
  - Since all ${workspace_loc} specific goals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
 
