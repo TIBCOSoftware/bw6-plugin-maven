@@ -132,8 +132,8 @@ g. Open Run/Debug Configurations. Create a new Maven Build.
 
 h. Under the "Base directory" choose add variable based on the type of goal. 
 
- - Choose ${project_loc} for goals - cf:login , cf:logout, cf:apps, cf:services (use 'initialize' before every cf goals eg. 'initialize cf:login')
- - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop (use 'initialize' before every cf goals eg. 'initialize cf:push')
+ - Choose ${project_loc} for goals - cf:login , cf:logout, cf:apps, cf:services (use 'initialize' before every cf goals eg. 'initialize cf:login', see step i)
+ - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop (use 'initialize' before every cf goals eg. 'initialize cf:push', see step i)
 
 NOTE: Whenever you execute {project_loc} specific goals, you should select your ".application" project in studio OR, from terminal point it to ".application" project folder, and, whenever you execute {workspace_loc} specific goals from terminal, you should point to your workspace OR, from studio you can just directly Run your goals without selecting ".application" project.   
 
