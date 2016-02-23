@@ -133,12 +133,11 @@ g. Open Run/Debug Configurations. Create a new Maven Build.
 h. Under the "Base directory" choose add variable for Workspace location. The variable name is ${workspace_loc}
 
  - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop, cf:apps, cf:services (use 'initialize' before every cf goals eg. 'initialize cf:push', see step i,k)
+ - Choose ${project_loc} for goals - cf:login , cf:logout (use 'initialize' before these goals eg. 'initialize cf:login')
 
-NOTE: Whenever you execute maven goals from terminal, you should point to your workspace. For cf:login or cf:logout you need to pass username, password, target as parameters because these goals are independent of project pom.
+NOTE: Whenever you execute maven goals from terminal, you should point to your workspace. From studio, make sure to configure your maven runtime to your local maven home since we are picking username,pswd of pcf instance from settings.xml
 
- - Incase authentication token expired, you can execute logout and login goals.
- - You can specify cf:login goal and execute cf login along with other cf goals, this will avoid token expiration, but may be costly from CI server, so from CI server you can call cf:login job only if cf:push job gives token expired error. Command to execute login with push :- 'cf:login initialize cf:push' and pass 'cf.username' , 'cf.password', 'cf.target' as parameters for cf:login and pass 'property.file' as parameter for cf:push. From terminal it will be like > 
- mvn cf:login initialize cf:push -Dcf.username=admin -Dcf.password=xxxx -Dcf.target=https://api.run.pivotal.io -Dproperty.file=../pcfprod.properties
+ - Incase authentication token expired, you can execute logout and login goals. From CI server you can call cf:login / cf:logout job only if cf:push job gives token expired error.
  - 'Package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR' 
  - Since all progoals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
 
