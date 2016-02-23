@@ -135,24 +135,24 @@ h. Under the "Base directory" choose add variable for Workspace location. The va
  - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop, cf:apps, cf:services (use 'initialize' before every cf goals eg. 'initialize cf:push', see step i,k)
  - Choose ${project_loc} for goals - cf:login , cf:logout (use 'initialize' before these goals eg. 'initialize cf:login')
 
-NOTE: Whenever you execute maven goals from terminal, you should point to your workspace. From studio, make sure to configure your maven runtime to your local maven home since we are picking username,pswd of pcf instance from settings.xml
+NOTE: Whenever you execute maven goals from terminal, you should point to your workspace. 
 
  - Incase authentication token expired, you can execute logout and login goals. From CI server you can call cf:login / cf:logout job only if cf:push job gives token expired error.
  - 'Package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR' 
- - Since all progoals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
+ - Since all goals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
 
 i. In the 'Goal' enter the goal to be executed. The goal can be any standard PCF commands like cf:push, cf:start, cf:delete etc. for more goals you can view this link -
 http://docs.run.pivotal.io/buildpacks/java/build-tool-int.html
 
  - Please make sure to prefix 'initialize' before all your cf goals. So in goal you should enter - 'initialize cf:push'
- - Also make sure to add parameter - 'property.file' as name and the value as path to your pcf properties file ie. '../pcfprod.properties'. If you don't specify any parameter then, by default it will pick from pcfdev.properties.
+ - Also make sure to add parameter - 'property.file' as name and the value as path to your pcf instance properties file ie. '../pcfprod.properties'. If you don't specify any parameter then, by default it will pick from pcfdev.properties.
 
-j. Goal "cf:push" will also create EAR file in the target folder under the Application project and will also push the same on PCF - 'Refresh' your project using the right-click menu if this folder is not visible. 
+j. Goal "cf:push" will also create EAR file in the target folder under the Application project, along with pushing the same EAR on PCF - 'Refresh' your project using the right-click menu if this folder is not visible. 
 
-k. You can also do cf:push from your maven terminal or from CI Server(Jenkins etc), using maven commands like -
-mvn initialize cf:push -Dproperty.file=../pcfprod.properties (you can specify any other pcf properties file as value to parameter property.file)
+k. You can do cf:push from your maven terminal or from CI Server(Jenkins etc), using maven commands like -
+mvn initialize cf:push -Dproperty.file=../pcfprod.properties (you can specify any other pcf instance properties file as value to parameter property.file)
 
-l. Similarly you can try other goals, by creating new Maven Run Configurations for different goals.
+l. You can try other goals from studio, by creating new Maven Run Configurations for different goals , or from terminal pointing to your workspace using 'mvn initialize cf:<command> -Dproperty.file=../<pcfinstance>.properties'
 
 NOTE: For all non-web application if you are using PCF Elastic Runtime 1.6 or above (Diego) then, it will give health-check error while cf:push, so you have to use PCF CLI (6.13 or above) to set health-check as 'none' after pushing your application and re-push after setting health-check as 'none'.  You can use below command on CLI -
 cf set-health-check App_Name none 
