@@ -22,8 +22,7 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 	 @Requirement
 	  private Logger logger;
 	 
-	  
-	  
+  
     public BWProjectLifeCycleListener()
     {
 
@@ -51,7 +50,11 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 		File file = new File( session.getLocalRepository().getBasedir() + "/tempbw" );
 		try
 		{
-			FileUtils.deleteDirectory(file) ;	
+			if( file.exists() )
+			{
+				FileUtils.deleteDirectory(file) ;	
+			}
+				
 		}
 		catch(Exception e )
 		{
@@ -103,6 +106,19 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 	public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
 
 		super.afterSessionEnd(session);
+		
+		File file = new File( session.getLocalRepository().getBasedir() + "/tempbw" );
+		try
+		{
+			if( file.exists() )
+			{
+				FileUtils.deleteDirectory(file) ;	
+			}
+		}
+		catch(Exception e )
+		{
+			logger.error( "Failed to clean the existing bwtemp group in Maven Repository.");
+		}
 	}
     
     

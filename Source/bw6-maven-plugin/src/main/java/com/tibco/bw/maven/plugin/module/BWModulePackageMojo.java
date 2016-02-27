@@ -2,7 +2,7 @@ package com.tibco.bw.maven.plugin.module;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +12,7 @@ import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.artifact.resolver.filter.TypeArtifactFilter;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -19,13 +20,22 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.FileSet;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.archiver.jar.ManifestException;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
+import org.eclipse.aether.graph.Dependency;
 
 import com.tibco.bw.maven.plugin.build.BuildProperties;
 import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
@@ -75,8 +85,12 @@ public class BWModulePackageMojo  extends AbstractMojo
     @Component(role = Archiver.class, hint = "jar")
     private JarArchiver jarArchiver;
 
-   
+    @Component
+    DependencyGraphBuilder builder;
 
+    @Component
+    ProjectDependenciesResolver resolver;
+    
     MavenArchiver archiver;
 
     @Parameter
@@ -169,17 +183,39 @@ public class BWModulePackageMojo  extends AbstractMojo
 		
 		Set<Artifact> artifacts = project.getDependencyArtifacts();
 		
-		StringBuffer buffer = new StringBuffer();
+		Set<File> artifactFiles = new HashSet<File>(); 
+
 		
 		for( Artifact artifact : artifacts )
 		{
-			if( artifact.getFile().getName().indexOf("com.tibco.bw.palette.shared") != -1  || artifact.getFile().getName().indexOf("com.tibco.xml.cxf.common") != -1 || artifact.getFile().getName().indexOf("tempbw") != -1 )
+			artifactFiles.add( artifact.getFile() );
+		}
+
+		
+		
+        DependencyResolutionResult resolutionResult = getDependencies();
+        
+        if (resolutionResult != null )
+        {
+        	for( Dependency dependency : resolutionResult.getDependencies() )
+        	{
+        		artifactFiles.add( dependency.getArtifact().getFile() );
+        	}
+        }
+
+		
+		StringBuffer buffer = new StringBuffer();
+		
+		for( File file : artifactFiles )
+		{
+
+			if( file.getName().indexOf("com.tibco.bw.palette.shared") != -1  || file.getName().indexOf("com.tibco.xml.cxf.common") != -1 || file.getName().indexOf("tempbw") != -1 )
 			{
 				continue;
 			}
-			getLog().debug( "Dependency added with name " + artifact.getFile().toString() );
-			jarArchiver.addFile( artifact.getFile(), "lib/" + artifact.getFile().getName() );
-			buffer.append(",lib/" + artifact.getFile().getName());
+			getLog().debug( "Dependency added with name " + file.toString() );
+			jarArchiver.addFile( file , "lib/" + file.getName() );
+			buffer.append(",lib/" + file.getName());
 		}
 		
 		String bundleClasspath = manifest.getMainAttributes().getValue( "Bundle-ClassPath");
@@ -196,6 +232,23 @@ public class BWModulePackageMojo  extends AbstractMojo
 
 
 
+	private DependencyResolutionResult getDependencies() 
+	{
+		DependencyResolutionResult resolutionResult = null;
+
+        try
+        {
+            DefaultDependencyResolutionRequest resolution = new DefaultDependencyResolutionRequest( project, session.getRepositorySession() );
+            resolutionResult = resolver.resolve( resolution );
+        }
+        catch ( DependencyResolutionException e )
+        {
+            resolutionResult = e.getResult();
+        }
+		return resolutionResult;
+	}
+
+
 	private FileSet getFileSet() {
 		BuildProperties buildProperties = BuildPropertiesParser.parse(projectBasedir); 
 		
@@ -210,6 +263,32 @@ public class BWModulePackageMojo  extends AbstractMojo
 		return set;
 	}
 
+	
+	private void calculateDependencies( Artifact artifact )
+	{
+		TypeArtifactFilter filter = new TypeArtifactFilter( "jar");
+		filter.include(artifact);
+		try {
+			DependencyNode node = builder.buildDependencyGraph(project, filter);
+			node.getArtifact();
+			node.accept( new DependencyNodeVisitor() {
+				
+				public boolean visit(DependencyNode node) {
+					// TODO Auto-generated method stub
+					node.getArtifact();
+					return true;
+				}
+				
+				public boolean endVisit(DependencyNode node) {
+					// TODO Auto-generated method stub
+					return true;
+				}
+			});
+		} catch (DependencyGraphBuilderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 
 	private File getPluginJAR() 
