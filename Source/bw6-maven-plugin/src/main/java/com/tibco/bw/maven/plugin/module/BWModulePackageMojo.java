@@ -195,10 +195,15 @@ public class BWModulePackageMojo  extends AbstractMojo
 		
         DependencyResolutionResult resolutionResult = getDependencies();
         
+        getLog().debug( resolutionResult.toString() );
+        getLog().debug(resolutionResult.getDependencies().toString() );
+        
         if (resolutionResult != null )
         {
         	for( Dependency dependency : resolutionResult.getDependencies() )
         	{
+                getLog().debug( "Adding artifact for dependency => " + dependency + "   . The file for Dependency is => "  + dependency.getArtifact().getFile() );
+
         		artifactFiles.add( dependency.getArtifact().getFile() );
         	}
         }
@@ -238,11 +243,15 @@ public class BWModulePackageMojo  extends AbstractMojo
 
         try
         {
+        	
+        	getLog().debug( "Looking up dependency tree for the current project =>" +  project + "  and the current session =>" + session );
             DefaultDependencyResolutionRequest resolution = new DefaultDependencyResolutionRequest( project, session.getRepositorySession() );
             resolutionResult = resolver.resolve( resolution );
         }
         catch ( DependencyResolutionException e )
         {
+        	getLog().debug( "Caught DependencyResolutionException for the project => " + e.getMessage() + " with cause => " + e.getCause() );
+        	e.printStackTrace();
             resolutionResult = e.getResult();
         }
 		return resolutionResult;
