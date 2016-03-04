@@ -1,1 +1,0 @@
-java -cp antpackage.jar org.apache.tools.ant.launch.Launcher 
