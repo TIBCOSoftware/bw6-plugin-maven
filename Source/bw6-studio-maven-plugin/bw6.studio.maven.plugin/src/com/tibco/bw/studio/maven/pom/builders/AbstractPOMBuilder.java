@@ -119,7 +119,7 @@ public abstract class AbstractPOMBuilder
 		build.addPlugin(plugin);
 	}
 	
-	private void createPCFPropertieFiles(){
+	private void createPCFPropertiesFiles(){
 		try {
 			Properties properties = new Properties();
 			properties.setProperty("bwpcf.server", module.getBwpcfModule().getCredString());
@@ -170,7 +170,7 @@ public abstract class AbstractPOMBuilder
 	protected void addPCFMavenPlugin( Build build )
 	{
 			//Create properties file for Dev and Prod environment
-			createPCFPropertieFiles();
+			createPCFPropertiesFiles();
 		
 			//Now just add PCF Maven plugin
 			Plugin plugin = new Plugin();
