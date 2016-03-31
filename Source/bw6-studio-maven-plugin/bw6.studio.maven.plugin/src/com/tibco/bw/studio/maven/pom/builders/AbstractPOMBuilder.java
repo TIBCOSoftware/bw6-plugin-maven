@@ -119,7 +119,7 @@ public abstract class AbstractPOMBuilder
 		build.addPlugin(plugin);
 	}
 	
-	private void createPCFPropertieFiles(){
+	private void createPCFPropertiesFiles(){
 		try {
 			Properties properties = new Properties();
 			properties.setProperty("bwpcf.server", module.getBwpcfModule().getCredString());
@@ -132,7 +132,7 @@ public abstract class AbstractPOMBuilder
 			properties.setProperty("bwpcf.memory", module.getBwpcfModule().getMemory());
 			properties.setProperty("bwpcf.buildpack", module.getBwpcfModule().getBuildpack());
 			
-			File devfile = new File(getWorkspacepath()+"\\pcfdev.properties");
+			File devfile = new File(getWorkspacepath() + File.separator + "pcfdev.properties");
 			if (!devfile.exists()) {
 				boolean done=devfile.createNewFile();
 				if(done){
@@ -140,7 +140,7 @@ public abstract class AbstractPOMBuilder
 					properties.store(fileOut, "PCF Properties");
 					fileOut.close();
 					
-					File prodfile = new File(getWorkspacepath()+"\\pcfprod.properties");
+					File prodfile = new File(getWorkspacepath() + File.separator + "pcfprod.properties");
 					boolean proddone=prodfile.createNewFile();
 					if(proddone){
 						FileUtils.copyFile(devfile, prodfile);
@@ -170,7 +170,7 @@ public abstract class AbstractPOMBuilder
 	protected void addPCFMavenPlugin( Build build )
 	{
 			//Create properties file for Dev and Prod environment
-			createPCFPropertieFiles();
+			createPCFPropertiesFiles();
 		
 			//Now just add PCF Maven plugin
 			Plugin plugin = new Plugin();
