@@ -14,6 +14,8 @@ public class BWPCFModule {
 	
 	private String space;
 	
+	private String appName;
+	
 	private String instances;
 	
 	private String memory;
@@ -94,6 +96,14 @@ public class BWPCFModule {
 
 	public void setClient(CloudFoundryClient client) {
 		this.client = client;
+	}
+
+	public String getAppName() {
+		return appName;
+	}
+
+	public void setAppName(String appName) {
+		this.appName = appName;
 	}
 
 	

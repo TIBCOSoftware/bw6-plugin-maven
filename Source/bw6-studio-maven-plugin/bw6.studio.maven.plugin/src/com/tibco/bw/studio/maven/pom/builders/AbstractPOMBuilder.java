@@ -119,20 +119,25 @@ public abstract class AbstractPOMBuilder
 		build.addPlugin(plugin);
 	}
 	
-	private void createPCFPropertieFiles(){
+	private void createPCFPropertiesFiles(){
 		try {
 			Properties properties = new Properties();
 			properties.setProperty("bwpcf.server", module.getBwpcfModule().getCredString());
 			properties.setProperty("bwpcf.target", module.getBwpcfModule().getTarget());
 			properties.setProperty("bwpcf.trustSelfSignedCerts", "true");
 			properties.setProperty("bwpcf.org", module.getBwpcfModule().getOrg());
+			properties.setProperty("bwpcf.appName", module.getBwpcfModule().getAppName());
 			properties.setProperty("bwpcf.space", module.getBwpcfModule().getSpace());
-			properties.setProperty("bwpcf.url", getPCFAppDefaultURL());
+			if(module.getBwpcfModule().getAppName()!=null && !module.getBwpcfModule().getAppName().isEmpty()){
+				properties.setProperty("bwpcf.url", getPCFAppURL(module.getBwpcfModule().getAppName()));
+			}else{
+				properties.setProperty("bwpcf.url", getPCFAppDefaultURL());
+			}
 			properties.setProperty("bwpcf.instances", module.getBwpcfModule().getInstances());
 			properties.setProperty("bwpcf.memory", module.getBwpcfModule().getMemory());
 			properties.setProperty("bwpcf.buildpack", module.getBwpcfModule().getBuildpack());
 			
-			File devfile = new File(getWorkspacepath()+"\\pcfdev.properties");
+			File devfile = new File(getWorkspacepath() + File.separator + "pcfdev.properties");
 			if (!devfile.exists()) {
 				boolean done=devfile.createNewFile();
 				if(done){
@@ -140,7 +145,7 @@ public abstract class AbstractPOMBuilder
 					properties.store(fileOut, "PCF Properties");
 					fileOut.close();
 					
-					File prodfile = new File(getWorkspacepath()+"\\pcfprod.properties");
+					File prodfile = new File(getWorkspacepath()+ File.separator + "pcfprod.properties");
 					boolean proddone=prodfile.createNewFile();
 					if(proddone){
 						FileUtils.copyFile(devfile, prodfile);
@@ -170,7 +175,7 @@ public abstract class AbstractPOMBuilder
 	protected void addPCFMavenPlugin( Build build )
 	{
 			//Create properties file for Dev and Prod environment
-			createPCFPropertieFiles();
+			createPCFPropertiesFiles();
 		
 			//Now just add PCF Maven plugin
 			Plugin plugin = new Plugin();
@@ -198,6 +203,10 @@ public abstract class AbstractPOMBuilder
 	        
 	        child = new Xpp3Dom( "space" );
 	        child.setValue("${bwpcf.space}");
+	        config.addChild( child );
+	        
+	        child = new Xpp3Dom( "appname" );
+	        child.setValue("${bwpcf.appName}");
 	        config.addChild( child );
 	        
 	        child = new Xpp3Dom( "url" );
@@ -250,6 +259,15 @@ public abstract class AbstractPOMBuilder
 			plugin.setConfiguration(config);
 			
 			build.addPlugin(plugin);
+	}
+	
+	private String getPCFAppURL(String appName){
+		
+		appName=appName.replace(".", "-");
+		String domainStr=module.getBwpcfModule().getTarget();
+		String protoDom=domainStr.substring(0,domainStr.indexOf("."));
+		String domain=domainStr.replace(protoDom, "");
+		return appName+domain;
 	}
 	
 	private String getPCFAppDefaultURL(){

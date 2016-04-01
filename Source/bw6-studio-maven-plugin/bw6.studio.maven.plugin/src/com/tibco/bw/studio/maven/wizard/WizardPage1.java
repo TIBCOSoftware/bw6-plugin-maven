@@ -41,6 +41,7 @@ public class WizardPage1 extends WizardPage
 	private Text appPCFCred;
 	private Text appPCFOrg;
 	private Text appPCFSpace;
+	private Text appPCFAppName;
 	private Text appPCFInstances;
 	private Text appPCFMemory;
 	private Text appPCFBuildpack;
@@ -169,6 +170,14 @@ public class WizardPage1 extends WizardPage
 		GridData spaceData = new GridData(100, 15);
 		appPCFSpace.setLayoutData(spaceData);
 		
+		Label appNameLabel = new Label(container, SWT.RIGHT);
+		appNameLabel.setText( "App Name" );
+		
+		appPCFAppName = new Text(container, SWT.BORDER | SWT.SINGLE);
+		appPCFAppName.setText("AppName");
+		GridData appNameData = new GridData(100, 15);
+		appPCFAppName.setLayoutData(appNameData);
+		
 		
 		Label instancesLabel = new Label(container, SWT.RIGHT);
 		instancesLabel.setText( "App Instances" );
@@ -196,10 +205,12 @@ public class WizardPage1 extends WizardPage
 		GridData buildpackData = new GridData(200, 15);
 		appPCFBuildpack.setLayoutData(buildpackData);
 		
+		Label pcfServicesLabel = new Label(container, SWT.RIGHT);
+		pcfServicesLabel.setText( "PCF Services" );
 		
 		/////// Add a Button to select PCF services //////
 		final Button servicesButton = new Button(container, SWT.PUSH | SWT.BORDER);
-		servicesButton.setText("Select Service");
+		servicesButton.setText("Select Services");
 		servicesButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -422,6 +433,7 @@ public class WizardPage1 extends WizardPage
 		bwpcf.setCredString(appPCFCred.getText());
 		bwpcf.setOrg(appPCFOrg.getText());
 		bwpcf.setSpace(appPCFSpace.getText());
+		bwpcf.setAppName(appPCFAppName.getText());
 		bwpcf.setInstances(appPCFInstances.getText());
 		bwpcf.setMemory(appPCFMemory.getText());
 		bwpcf.setBuildpack(appPCFBuildpack.getText());
