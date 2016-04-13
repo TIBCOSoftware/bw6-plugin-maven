@@ -284,7 +284,11 @@ public abstract class AbstractPOMBuilder
 		List<Dependency> list =   model.getDependencies();
 		for ( Dependency dep : list )
 		{
-			return dep.getArtifactId().equals( check.getArtifactId() ) && dep.getGroupId().equals( check.getGroupId() ) && dep.getVersion().equals( check.getVersion() ); 
+			if(dep.getArtifactId().equals( check.getArtifactId() ) && dep.getGroupId().equals( check.getGroupId() ) && dep.getVersion().equals( check.getVersion() ) )
+			{
+				return true;	
+			}
+			 
 		}
 		
 		return false;

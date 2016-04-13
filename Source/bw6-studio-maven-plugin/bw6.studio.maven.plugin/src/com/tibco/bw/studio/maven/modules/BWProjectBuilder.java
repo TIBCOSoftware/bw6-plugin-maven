@@ -17,6 +17,7 @@ import org.eclipse.pde.internal.core.project.PDEProject;
 
 import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
+import com.tibco.bw.studio.maven.helpers.POMHelper;
 import com.tibco.bw.studio.maven.helpers.VersionHelper;
 
 public class BWProjectBuilder 
@@ -34,7 +35,7 @@ public class BWProjectBuilder
 		buildModuleData( applicationProject );
 		
 		BWApplication application = buildApplication( applicationProject );
-		buildModules();		
+		buildModules( application );		
 		buildParent( application );
 		
 		BWProject project = new BWProject();
@@ -63,6 +64,11 @@ public class BWProjectBuilder
 		if (!pomFileAbs.exists()) {
 			pomFileAbs.createNewFile();
 		}
+		else
+		{
+			module.setPomExists( true );
+			module.setMavenModel( POMHelper.readModelFromPOM(pomFileAbs) );
+		}
 		module.setPomfileLocation(pomFileAbs);
 		moduleList.add(module);
 		return module;
@@ -72,7 +78,7 @@ public class BWProjectBuilder
 	{
 		BWApplication application = new BWApplication();
 		Map<String,String> headers = ManifestParser.parseManifest(applicationProject);
-		buildCommonInfo(applicationProject, application, headers);
+		buildCommonInfo(applicationProject, application, headers , application );
 		
 		moduleList.add(application);
 		
@@ -80,7 +86,7 @@ public class BWProjectBuilder
 }
 	
 	
-	private void buildModules() throws Exception
+	private void buildModules( BWApplication application ) throws Exception
 	{
 		for( BWModuleParser.BWModuleData data : moduleData )
 		{
@@ -107,7 +113,7 @@ public class BWProjectBuilder
 			
 			IProject project  = ResourcesPlugin.getWorkspace().getRoot().getProject(data.getModuleName() );
 			Map<String,String> headers = ManifestParser.parseManifest(project);
-			buildCommonInfo(project, module, headers);
+			buildCommonInfo(project, module, headers , application);
 			if( headers.get("Require-Capability") != null )
 			{
 				computeDependencies( headers.get("Require-Capability") , module );	
@@ -127,7 +133,7 @@ public class BWProjectBuilder
 
 	}
 	
-	private BWModule buildCommonInfo( IProject project , BWModule module ,  Map<String,String> headers ) throws IOException
+	private BWModule buildCommonInfo( IProject project , BWModule module ,  Map<String,String> headers ,BWApplication application) throws IOException
 	{
 		module.setProject(project); 
 		
@@ -148,21 +154,51 @@ public class BWProjectBuilder
 		if (!pomFileAbs.exists()) {
 			pomFileAbs.createNewFile();
 		}
+		else
+		{
+			module.setPomExists( true );
+			module.setMavenModel( POMHelper.readModelFromPOM(pomFileAbs) );
+		}
 		module.setPomfileLocation(pomFileAbs);
 
-		setRelativePaths(project, module);
+		setRelativePaths(project, module , application );
 		
 		return module;
 	}
 	
-	private void setRelativePaths( IProject project , BWModule module )
+	private void setRelativePaths( IProject project , BWModule module , BWApplication application )
 	{
 		String projectLocation = project.getLocation().toFile().toString();
-		String workspaceLocation = project.getWorkspace().getRoot().getLocation().toFile().toString();
-		String relativePathFrom = FileHelper.getRelativePath(workspaceLocation , projectLocation);
-		String relativePathTo =  FileHelper.getRelativePath(projectLocation, workspaceLocation);
+		
+		String parentLocation = project.getWorkspace().getRoot().getLocation().toFile().toString();
+		
+		
+		if( application.isPomExists() )
+		{
+			try
+			{
+				String pom = application.getMavenModel().getParent().getRelativePath();
+				File pomFile = new File( application.getProject().getLocation().toFile().toString() + "/" + pom , "pom.xml ");
+				if( pomFile.getCanonicalFile().exists() )
+				{
+					parentLocation = pomFile.getCanonicalFile().getParent();
+				}
+
+			}
+			catch( Exception e )
+			{
+				
+			}
+			
+		}
+		
+		
+		
+		String relativePathFrom = FileHelper.getRelativePath(parentLocation , projectLocation);
+		String relativePathTo =  FileHelper.getRelativePath(projectLocation, parentLocation);
 		
 		module.setFromPath( relativePathFrom );
+		
 		module.setToPath(relativePathTo );  
 	}
 	

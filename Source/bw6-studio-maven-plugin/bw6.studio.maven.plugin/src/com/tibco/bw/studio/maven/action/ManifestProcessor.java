@@ -125,6 +125,26 @@ public class ManifestProcessor implements IObjectActionDelegate
 			
 			if( !bundleClassPath.isEmpty() )
 			{
+			
+				
+				String[] bundleentries = bundleClassPath.split(",");
+				bundleClassPath = "";
+				int start = 0; 
+				for(String entry : bundleentries)
+				{
+					if( entry != null && !entry.startsWith( " external:"))
+					{
+						if( start > 0)
+						{
+							bundleClassPath = bundleClassPath + ",";
+						}
+						bundleClassPath = bundleClassPath + entry;
+					}
+					
+					start++;
+					
+				}
+				
 				bundleClassPath = bundleClassPath + ",";
 			}
 			
@@ -170,6 +190,7 @@ public class ManifestProcessor implements IObjectActionDelegate
 						buffer.append(",");
 					}
 					buffer.append(" external:" + jarelement.getJar().getName());
+					start++;
 				}
 				
 			}

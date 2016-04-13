@@ -15,7 +15,6 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -28,6 +27,7 @@ import com.tibco.bw.studio.maven.modules.BWProject;
 import com.tibco.bw.studio.maven.modules.BWProjectBuilder;
 import com.tibco.bw.studio.maven.plugin.Activator;
 import com.tibco.bw.studio.maven.wizard.MavenWizard;
+import com.tibco.bw.studio.maven.wizard.MavenWizardDialog;
 
 public class MavenPOMProcessor implements IObjectActionDelegate 
 {
@@ -65,7 +65,7 @@ public class MavenPOMProcessor implements IObjectActionDelegate
 			
 			MavenWizard wizard = new MavenWizard( project );
 
-			WizardDialog wizardDialog = new WizardDialog(shell, wizard);
+			MavenWizardDialog wizardDialog = new MavenWizardDialog(shell, wizard);
 			if (wizardDialog.open() == Window.OK) 
 			{
 				project = wizard.getProject();

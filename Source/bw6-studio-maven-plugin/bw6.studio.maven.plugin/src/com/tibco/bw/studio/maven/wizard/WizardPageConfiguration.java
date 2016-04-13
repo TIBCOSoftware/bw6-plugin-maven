@@ -10,6 +10,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -28,7 +29,7 @@ import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWPCFModule;
 import com.tibco.bw.studio.maven.modules.BWProject;
 
-public class WizardPage1 extends WizardPage
+public class WizardPageConfiguration extends WizardPage
 {
 	
 	private BWProject project;
@@ -37,21 +38,14 @@ public class WizardPage1 extends WizardPage
 	private Text appArtifactId;
 	private Text appVersion;
 	
-	private Text appPCFTarget;
-	private Text appPCFCred;
-	private Text appPCFOrg;
-	private Text appPCFSpace;
-	private Text appPCFAppName;
-	private Text appPCFInstances;
-	private Text appPCFMemory;
-	private Text appPCFBuildpack;
+	private Button addDeploymentConfig;
 	
 	private Composite container;
 	private String bwEdition;
 
 	private Map<String, Button> buttonMap = new HashMap<String, Button>();
 	
-	public WizardPage1( String pageName , BWProject project ) 
+	public WizardPageConfiguration( String pageName , BWProject project ) 
 	{
 		super(pageName);
 		this.project = project;		 
@@ -77,18 +71,22 @@ public class WizardPage1 extends WizardPage
 
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
-		layout.numColumns = 4;
+		layout.numColumns = 1;
 
 		addNotes();
 		
-		if(bwEdition.equals("bwcf")){
-			addSeperator(parent);
-			
-			setApplicationPCFPOMFields();
-		}
+//		if(bwEdition.equals("bwcf")){
+//			addSeperator(parent);
+//			
+//			setApplicationPCFPOMFields();
+//		}
 		addSeperator(parent);
 
 		setApplicationPOMFields();
+		
+		addSeperator(parent);
+		
+		setDeploymentCheckBox();
 		
 		addSeperator(parent);
 		
@@ -133,115 +131,63 @@ public class WizardPage1 extends WizardPage
 		horizontalLine.setFont(parent.getFont());
 	}
 	
-	private void setApplicationPCFPOMFields() 
+	
+	private void setDeploymentCheckBox()
 	{
 		
-		
-		Label targetLabel = new Label(container, SWT.NONE);
-		targetLabel.setText("PCF Target");
+		Composite innerContainer = new Composite(container, SWT.NONE);
 
-		appPCFTarget = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFTarget.setText( "https://api.run.pivotal.io");
-		GridData targetData = new GridData(150, 15);
-		appPCFTarget.setLayoutData(targetData);
-		
-		Label credLabel = new Label(container, SWT.RIGHT);
-		credLabel.setText( "PCF Server Name" );
+		GridLayout layout = new GridLayout();
+		innerContainer.setLayout(layout);
+		layout.numColumns = 2;
 
-		appPCFCred = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFCred.setText("PCF_UK_credential");
-		GridData credData = new GridData(100, 15);
-		appPCFCred.setLayoutData(credData);
+		addDeploymentConfig = new Button(innerContainer, SWT.CHECK );
+		addDeploymentConfig.setSelection( true );
 		
-		Label orgLabel = new Label(container, SWT.RIGHT);
-		orgLabel.setText( "PCF Org" );
-
-		appPCFOrg = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFOrg.setText("tibco");
-		GridData orgData = new GridData(100, 15);
-		appPCFOrg.setLayoutData(orgData);
-		
-		
-		Label spaceLabel = new Label(container, SWT.RIGHT);
-		spaceLabel.setText( "PCF Space" );
-		
-		appPCFSpace = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFSpace.setText("development");
-		GridData spaceData = new GridData(100, 15);
-		appPCFSpace.setLayoutData(spaceData);
-		
-		Label appNameLabel = new Label(container, SWT.RIGHT);
-		appNameLabel.setText( "App Name" );
-		
-		appPCFAppName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFAppName.setText("AppName");
-		GridData appNameData = new GridData(100, 15);
-		appPCFAppName.setLayoutData(appNameData);
-		
-		
-		Label instancesLabel = new Label(container, SWT.RIGHT);
-		instancesLabel.setText( "App Instances" );
-		
-		appPCFInstances = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFInstances.setText("1");
-		GridData instancesData = new GridData(50, 15);
-		appPCFInstances.setLayoutData(instancesData);
-		
-		
-		Label memoryLabel = new Label(container, SWT.RIGHT);
-		memoryLabel.setText( "App Memory" );
-		
-		appPCFMemory = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFMemory.setText("1024");
-		GridData memoryData = new GridData(50, 15);
-		appPCFMemory.setLayoutData(memoryData);
-		
-		
-		Label buildpackLabel = new Label(container, SWT.RIGHT);
-		buildpackLabel.setText( "App Buildpack" );
-		
-		appPCFBuildpack = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFBuildpack.setText("bw-buildpack");
-		GridData buildpackData = new GridData(200, 15);
-		appPCFBuildpack.setLayoutData(buildpackData);
-		
-		Label pcfServicesLabel = new Label(container, SWT.RIGHT);
-		pcfServicesLabel.setText( "PCF Services" );
-		
-		/////// Add a Button to select PCF services //////
-		final Button servicesButton = new Button(container, SWT.PUSH | SWT.BORDER);
-		servicesButton.setText("Select Services");
-		servicesButton.addSelectionListener(new SelectionAdapter() {
+		addDeploymentConfig.addSelectionListener( new SelectionListener() 
+		{
+			
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-			  ////set BWCFModule with above provided values//////
-				for( BWModule module : project.getModules() )
+			public void widgetSelected(SelectionEvent e) 
+			{
+				if( addDeploymentConfig.getSelection() )
 				{
-					if( module.getType() == BWModuleType.Application )
-					{
-						module.setBwpcfModule(setBWPCFValues(module));
-						break;
-					}
+					MavenWizardContext.INSTANCE.getNextButton().setEnabled( true);
 				}
-				
-				//call Services Wizard
-			  PCFServiceWizard serviceWizard =	new PCFServiceWizard(project);	
-			  WizardDialog dialog = new WizardDialog(container.getShell(),serviceWizard);
-			  if (dialog.open() == Window.OK) 
-			  {
-					project = serviceWizard.getProject();
-			  }
+				else
+				{
+					MavenWizardContext.INSTANCE.getNextButton().setEnabled( false );
+				}
 			}
+			
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-		    }
+			public void widgetDefaultSelected(SelectionEvent e) {}
 		});
+
 		
+		Label label = new Label(innerContainer, SWT.NONE );
+		
+
+		if(bwEdition.equals("bwcf"))
+		{
+			label.setText( "Deploy EAR to PCF" );
+		}
+		else
+		{
+			label.setText( "Deploy EAR to BW Administrator" );
+		}
 
 	}
 	
 	private void setApplicationPOMFields() 
 	{
+		
+		Composite innerContainer = new Composite(container, SWT.NONE);
+
+		GridLayout layout = new GridLayout();
+		innerContainer.setLayout(layout);
+		layout.numColumns = 4;
+
 		BWModule application = null;
 		for( BWModule module : project.getModules() )
 		{
@@ -253,31 +199,32 @@ public class WizardPage1 extends WizardPage
 		}
 		
 				
-		Label groupLabel = new Label(container, SWT.NONE);
+		Label groupLabel = new Label(innerContainer, SWT.NONE);
 		groupLabel.setText("Group Id");
 
-		appGroupId = new Text(container, SWT.BORDER | SWT.SINGLE);
+		appGroupId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
 		appGroupId.setText( "com.tibco.bw");
 		GridData groupData = new GridData(200, 15);
 		appGroupId.setLayoutData(groupData);
 		
 		if(bwEdition.equals("bwcf")){}
 		else{
-			Label artifactLabel = new Label(container, SWT.NONE);
+			Label artifactLabel = new Label(innerContainer, SWT.NONE);
 			artifactLabel.setText( "Parent ArtifactId" );
 	
-			appArtifactId = new Text(container, SWT.BORDER | SWT.SINGLE);
+			appArtifactId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
 			appArtifactId.setText(application.getArtifactId() + ".parent");
 			GridData artifactData = new GridData(200, 15);
 			appArtifactId.setLayoutData(artifactData);
 		}
 		
-		Label versionLabel = new Label(container, SWT.NONE);
+		Label versionLabel = new Label(innerContainer, SWT.NONE);
 		versionLabel.setText("Version");
 
-		appVersion = new Text(container, SWT.BORDER | SWT.SINGLE);
+		appVersion = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
 		appVersion.setText(application.getVersion());
 		GridData versionData = new GridData(120, 15);
+		
 		
 		if(bwEdition.equals("bwcf")){}
 		else{
@@ -286,12 +233,22 @@ public class WizardPage1 extends WizardPage
 		appVersion.setLayoutData(versionData);
 		appVersion.setEditable( false);
 		
+
+
+	
+		
 	}
 
 	
 	private void createModulesTable()
 	{
 		
+//		Composite innerContainer = new Composite(container, SWT.NONE);
+//
+//		GridLayout layout = new GridLayout();
+//		innerContainer.setLayout(layout);
+//		layout.numColumns = 3;
+
 				
 		Table table = new Table (container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION  );
 		table.setLinesVisible (true);
@@ -400,9 +357,9 @@ public class WizardPage1 extends WizardPage
 		{
 			module.setGroupId( appGroupId.getText() );
 			
-			if(bwEdition.equals("bwcf") && module.getType() == BWModuleType.Application){
-				module.setBwpcfModule(setBWPCFValues(module));
-			}
+//			if(bwEdition.equals("bwcf") && module.getType() == BWModuleType.Application){
+//				module.setBwpcfModule(setBWPCFValues(module));
+//			}
 			module.setOverridePOM(true);
 			
 			
@@ -420,26 +377,5 @@ public class WizardPage1 extends WizardPage
 	}
 	
 	
-	private BWPCFModule setBWPCFValues(BWModule module){
-		
-		////BWPCFModule will not be null if its set through Services Wizard ///////
-		
-		BWPCFModule bwpcf=module.getBwpcfModule();
-		if(bwpcf==null){
-			bwpcf=new BWPCFModule();
-		}
-		
-		bwpcf.setTarget(appPCFTarget.getText());
-		bwpcf.setCredString(appPCFCred.getText());
-		bwpcf.setOrg(appPCFOrg.getText());
-		bwpcf.setSpace(appPCFSpace.getText());
-		bwpcf.setAppName(appPCFAppName.getText());
-		bwpcf.setInstances(appPCFInstances.getText());
-		bwpcf.setMemory(appPCFMemory.getText());
-		bwpcf.setBuildpack(appPCFBuildpack.getText());
-		
-		return bwpcf;
-		
-	}
 
 }

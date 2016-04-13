@@ -3,6 +3,7 @@ package com.tibco.bw.studio.maven.modules;
 import java.io.File;
 import java.util.List;
 
+import org.apache.maven.model.Model;
 import org.eclipse.core.resources.IProject;
 
 import com.tibco.bw.studio.maven.pom.builders.IPOMBuilder;
@@ -34,6 +35,15 @@ public abstract class BWModule
 	
 	protected BWPCFModule bwpcfModule;
 	
+	protected boolean pomExists;
+	
+	protected Model mavenModel;
+	
+
+	abstract public BWModuleType getType();
+
+	abstract public IPOMBuilder getPOMBuilder();
+
 	public BWPCFModule getBwpcfModule()
 	{
 		return bwpcfModule;
@@ -163,7 +173,23 @@ public abstract class BWModule
 		this.toPath = toPath;
 	}
 
-	abstract public BWModuleType getType();
 
-	abstract public IPOMBuilder getPOMBuilder();
+	public boolean isPomExists() {
+		return pomExists;
+	}
+
+	public void setPomExists(boolean pomExists) 
+	{
+		this.pomExists = pomExists;
+	}
+
+	public Model getMavenModel() 
+	{
+		return mavenModel;
+	}
+
+	public void setMavenModel(Model mavenModel) 
+	{
+		this.mavenModel = mavenModel;
+	}
 }
