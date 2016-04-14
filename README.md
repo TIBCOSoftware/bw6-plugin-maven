@@ -13,7 +13,7 @@ This can be confirmed by running the command mvn -version from Terminal/Command 
 
 ## Installation of this maven plugin
 
-1. Clone to https://github.com/TIBCOSoftware/bw6-plugin-maven
+1. Clone from https://github.com/TIBCOSoftware/bw6-plugin-maven
 
 2. Navigate to the Source Folder.
 
