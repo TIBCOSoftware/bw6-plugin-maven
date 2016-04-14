@@ -24,11 +24,11 @@ This can be confirmed by running the command mvn -version from Terminal/Command 
 
 Starting from scratch, go into Studio and Build a BW project and check 'Use Java configuration'.. 
 
-
+### Puts things where Studio expects them..
 This plugin is a Maven plugin only - there is no Studio plugin - 
-**BW6 Studio will not be aware of maven, it will treat these as normal faceted projects** 
+**BW6 Studio will not be aware of maven, it will treat these as normal BW6 projects** 
 
-so you have to run maven externally or through a Maven run configuration in Eclipse..
+So you have to run maven externally or through a Maven run configuration in Eclipse..
 
 When you run 'mvn clean install' This plugin will:
 - sync the dependencies setup within each BW project pom.xml to the BW project lib folder
@@ -37,7 +37,9 @@ When you run 'mvn clean install' This plugin will:
 	- to do so it converts snapshot versions like 1.0.0-SNAPSHOT to 1.0.0.qualifier (OSGI friendly)
 	- or, for release versioning keeps 1.0.0 as it is already OSGI friendly
 
-Aside from Studio, this plugin will package BW modules and BW ears and deploy them to the maven repository. It will resolve third party jar and BW module jar depenencies via maven when building these ears for deployment (via bwadmin or TEA) and also generates the necessary META-INF/MANIFEST.mf information..
+### Ear Packaging for deployment
+Aside from Studio, this plugin will package BW modules and BW ears and deploy them to the maven repository. 
+It will resolve third party jar and BW module jar dependencies via maven when building these ears for deployment (via bwadmin or TEA) and also generates the necessary META-INF/MANIFEST.mf information..
 
 Create a BW Project pom.xml file manually based on the samples in the Samples folder..
 Here is a quick guideline..
