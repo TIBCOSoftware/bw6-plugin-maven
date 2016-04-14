@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://tns.tibco.com/bw/json/1458918623730" elementFormDefault="qualified" targetNamespace="http://tns.tibco.com/bw/json/1458918623730">
+  <complexType name="JWTID_Token_With_Claimstype">
+    <sequence>
+      <element maxOccurs="1" minOccurs="0" name="sub" type="string"/>
+      <element maxOccurs="1" minOccurs="0" name="iss" type="string"/>
+      <element maxOccurs="1" minOccurs="0" name="aud" type="string"/>
+      <element maxOccurs="1" minOccurs="0" name="nonce" type="string"/>
+      <element maxOccurs="1" minOccurs="0" name="auth_time" type="integer"/>
+      <element maxOccurs="1" minOccurs="0" name="acr" type="string"/>
+      <element maxOccurs="1" minOccurs="0" name="iat" type="integer"/>
+      <element maxOccurs="1" minOccurs="0" name="exp" type="integer"/>
+      <element maxOccurs="1" minOccurs="0" name="clientID" type="string"/>
+      <element maxOccurs="unbounded" minOccurs="0" name="scopes" type="string"/>
+    </sequence>
+  </complexType>
+  <element name="JWTID_Token_With_Claims" type="tns:JWTID_Token_With_Claimstype"/>
+</schema>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://tns.tibco.com/bw/REST" targetNamespace="http://tns.tibco.com/bw/REST">
+
+	<element name="messageBody" type="tns:tmessageBody"/>
+	<simpleType name="tmessageBody">
+		<restriction base="string"/>
+	</simpleType>
+
+	<complexType name="httpTransportHeaders">
+		<sequence>
+			<element form="unqualified" minOccurs="0" name="Accept" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Accept-Charset" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Accept-Encoding" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Content-Type" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Content-Length" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Connection" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Cookie" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Pragma" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Authorization" type="string"/>
+			<element maxOccurs="1" minOccurs="0" name="DynamicHeaders" type="tns:dynamicHeadersType"/>
+		</sequence>
+	</complexType>
+	
+		<complexType name="httpTransportResponseHeaders">
+		<sequence>
+			<element form="unqualified" minOccurs="0" name="Content-Length" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Connection" type="string"/>
+			<element form="unqualified" minOccurs="0" name="Pragma" type="string"/>
+		    <element form="unqualified" minOccurs="0" name="StatusLine" type="string"/>
+		    <element form="unqualified" minOccurs="0" name="Location" type="string"/>
+            <element form="unqualified" minOccurs="0" name="Set-Cookie" type="string"/>
+            <element form="unqualified" minOccurs="0" name="Content-Type" type="string"/>
+			<element maxOccurs="1" minOccurs="0" name="DynamicHeaders" type="tns:dynamicHeadersType"/>
+		</sequence>
+	</complexType>	
+	
+	
+	
+	<complexType name="dynamicHeadersTypeDetails">
+		<sequence>
+			<element form="unqualified" maxOccurs="1" minOccurs="1" name="Name" type="string"/>
+			<element form="unqualified" maxOccurs="1" minOccurs="1" name="Value" type="string"/>
+		</sequence>
+	</complexType>
+
+	<complexType name="dynamicHeadersType">
+		<sequence>
+			<element form="unqualified" maxOccurs="unbounded" minOccurs="0" name="Header" type="tns:dynamicHeadersTypeDetails"/>
+		</sequence>
+	</complexType>
+	<element name="httpHeaders" type="tns:httpTransportHeaders"/>
+	<element name="httpResponseHeaders" type="tns:httpTransportResponseHeaders"/>
+	
+	<complexType name="statusLineType">
+		<sequence>
+			<element form="unqualified" maxOccurs="1" minOccurs="1" name="statusCode" type="integer"/>
+		</sequence>
+	</complexType>
+	<element name="statusLine" type="tns:statusLineType"/>
+
+	<complexType name="client4XXErrorType">
+		<sequence>
+			<element form="unqualified" maxOccurs="1" minOccurs="1" name="statusCode" type="integer"/>
+			<element form="unqualified" maxOccurs="1" minOccurs="0" name="message" type="string"/>
+		</sequence>
+	</complexType>
+	<element name="client4XXError" type="tns:client4XXErrorType"/>
+
+	<complexType name="server5XXErrorType">
+		<sequence>
+			<element form="unqualified" maxOccurs="1" minOccurs="1" name="statusCode" type="integer"/>
+			<element form="unqualified" maxOccurs="1" minOccurs="0" name="message" type="string"/>
+		</sequence>
+	</complexType>
+	<element name="server5XXError" type="tns:server5XXErrorType"/>
+
+</schema>

@@ -1,0 +1,5 @@
+{"records": [{
+    "jsonSchemaLocation": "/SampleApp/Service Descriptors/sampleapp.Resource-Resource.json",
+    "conversionType": "linked",
+    "xsdSchemaTargetNamespace": "http://tns.tibco.com/bw/REST"
+}]}
