@@ -66,8 +66,8 @@ You must include the plugin dependency as such (in a parent POM or individual BW
     <plugins>
       <plugin>
         <groupId>com.tibco.plugins</groupId>
-        <artifactId>bw6-maven-plugin</artifactId>
-        <version>1.0.0-TC-SNAPSHOT</version>
+        <artifactId>bw6-tc-maven-plugin</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
         <extensions>true</extensions>
       </plugin>
     </plugins>
