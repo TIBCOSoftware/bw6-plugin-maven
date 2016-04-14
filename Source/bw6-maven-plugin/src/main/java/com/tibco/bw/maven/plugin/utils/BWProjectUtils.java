@@ -1,11 +1,11 @@
 package com.tibco.bw.maven.plugin.utils;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
-
-import org.apache.maven.plugin.MojoExecutionException;
 
 public class BWProjectUtils 
 {
@@ -18,7 +18,6 @@ public class BWProjectUtils
 		jarStream.close();
 		
 		return moduleManifest.getMainAttributes().getValue("Bundle-Version");
-
 	}
 
 	
@@ -44,7 +43,26 @@ public class BWProjectUtils
 
 		return OS.UNIX;
 	}
-	
+
+	public static String convertMvnVersionToOSGI(String mvnVersion) {
+		String convertedVersion="1.0.0.qualifier";
+
+		String[] parts = mvnVersion.replaceAll("-", ".").replaceAll("_", ".").split("\\.");
+		if (parts.length == 4){
+			String parts3 = parts[3];
+			if (parts3.equals("SNAPSHOT") || ! parts3.matches("[0-9]]")){
+				parts3 = "qualifier"; // 'qaulifier' means SNAPSHOT according to Tycho conventions for OSGI versioning
+			}
+			convertedVersion=parts[0]+"."+parts[1]+"."+parts[2]+"."+parts3;
+		}
+		else if (parts.length == 3){
+			// release versions
+			convertedVersion=parts[0]+"."+parts[1]+"."+parts[2];
+		}
+
+		return convertedVersion;
+	}
+
 	public enum OS
 	{
 		WINDOWS , UNIX

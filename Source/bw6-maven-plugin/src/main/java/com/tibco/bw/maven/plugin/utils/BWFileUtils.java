@@ -1,13 +1,13 @@
 package com.tibco.bw.maven.plugin.utils;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
-import org.apache.commons.io.FileUtils;
 
 public class BWFileUtils 
 {

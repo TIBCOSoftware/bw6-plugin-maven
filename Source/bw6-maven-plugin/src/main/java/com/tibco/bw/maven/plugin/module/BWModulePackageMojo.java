@@ -1,13 +1,10 @@
 package com.tibco.bw.maven.plugin.module;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.jar.Manifest;
-
+import com.tibco.bw.maven.plugin.build.BuildProperties;
+import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
@@ -20,11 +17,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.DefaultDependencyResolutionRequest;
-import org.apache.maven.project.DependencyResolutionException;
-import org.apache.maven.project.DependencyResolutionResult;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectDependenciesResolver;
+import org.apache.maven.project.*;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
@@ -37,11 +30,13 @@ import org.codehaus.plexus.archiver.jar.ManifestException;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.eclipse.aether.graph.Dependency;
 
-import com.tibco.bw.maven.plugin.build.BuildProperties;
-import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
-import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.jar.Manifest;
 
 
 @Mojo( name = "bwmodule", defaultPhase = LifecyclePhase.PACKAGE )
@@ -111,10 +106,7 @@ public class BWModulePackageMojo  extends AbstractMojo
             archiver.setArchiver(jarArchiver);
 
             manifest = ManifestParser.parseManifest(projectBasedir) ;
-            
-            getLog().info( "Updated the Manifest version ");
-            updateManifestVersion();
-            
+
             getLog().info( "Removing the externals entries if any. ");
             removeExternals();
             
@@ -131,16 +123,19 @@ public class BWModulePackageMojo  extends AbstractMojo
             {
             	archiver.getArchiver().addDirectory( classesDirectory );	
             }
-            
-            		
+
             archiver.getArchiver().addFileSet( set );
             
             archiver.setOutputFile(pluginFile);
 
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+			getLog().info( "Updated the Manifest version ");
+			String qualifierVersion = BWProjectUtils.convertMvnVersionToOSGI(project.getVersion());
+			manifest.getMainAttributes().putValue("Bundle-Version", qualifierVersion );
+
+            File manifestFile = ManifestWriter.updateManifest(project.getBuild().getDirectory(), manifest);
 
             jarArchiver.setManifest(manifestFile);
-            
+
             getLog().info( "Creating the Plugin JAR file ");
             archiver.createArchive(session, project, archiveConfiguration);
             
@@ -208,13 +203,12 @@ public class BWModulePackageMojo  extends AbstractMojo
         	}
         }
 
-		
-		StringBuffer buffer = new StringBuffer();
+		StringBuffer buffer = new StringBuffer(".");
 		
 		for( File file : artifactFiles )
 		{
 
-			if( file.getName().indexOf("com.tibco.bw.palette.shared") != -1  || file.getName().indexOf("com.tibco.xml.cxf.common") != -1 || file.getName().indexOf("tempbw") != -1 )
+			if( file.getName().indexOf("com.tibco.bw.palette.shared") != -1  || file.getName().indexOf("com.tibco.xml.cxf.common") != -1)
 			{
 				continue;
 			}
@@ -222,13 +216,8 @@ public class BWModulePackageMojo  extends AbstractMojo
 			jarArchiver.addFile( file , "lib/" + file.getName() );
 			buffer.append(",lib/" + file.getName());
 		}
-		
-		String bundleClasspath = manifest.getMainAttributes().getValue( "Bundle-ClassPath");
-		if( bundleClasspath == null || bundleClasspath.isEmpty() )
-		{
-			bundleClasspath = ".";
-		}
-		bundleClasspath = bundleClasspath + buffer.toString();
+
+		String bundleClasspath = buffer.toString();
 		
 		getLog().debug( "Final Bundle-Classpath  is " + bundleClasspath );
 		
@@ -354,16 +343,6 @@ public class BWModulePackageMojo  extends AbstractMojo
         return fileSet;
     }
     
-    private void updateManifestVersion()
-    {
-    	
-    	String version = manifest.getMainAttributes().getValue("Bundle-Version");
-    	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
-    	getLog().debug( "The OSGi verion is " + qualifierVersion + "  for Maven version of " + version );
-    	manifest.getMainAttributes().putValue("Bundle-Version", qualifierVersion );
-    	
-    }
-    
     private void removeExternals()
     {
     	String bundlePath = manifest.getMainAttributes().getValue("Bundle-ClassPath");
@@ -373,7 +352,7 @@ public class BWModulePackageMojo  extends AbstractMojo
     	if( bundlePath != null )
     	{
         	String [] entries = bundlePath.split(",");
-        	
+
         	StringBuffer buffer = new StringBuffer();
         	int start = 0;
         	for( String entry : entries )

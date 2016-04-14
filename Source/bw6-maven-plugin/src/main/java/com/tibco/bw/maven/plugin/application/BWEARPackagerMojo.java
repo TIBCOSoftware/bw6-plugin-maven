@@ -1,30 +1,13 @@
 package com.tibco.bw.maven.plugin.application;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.utils.BWModulesParser;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -32,21 +15,19 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.Version;
-import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.BWModulesParser;
-import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 
 @Mojo( name = "bwear", defaultPhase = LifecyclePhase.PACKAGE )
-public class BWEARPackagerMojo extends AbstractMojo
-{
+public class BWEARPackagerMojo extends AbstractBWApplicationMojo {
 
 	@Parameter( property="project.build.directory")
     private File outputDirectory;
@@ -68,8 +49,6 @@ public class BWEARPackagerMojo extends AbstractMojo
 
 //    @Component
 //    private Settings settings;
-    
-    private List<File> tempFiles;
 
     private Manifest manifest;
     
@@ -85,10 +64,6 @@ public class BWEARPackagerMojo extends AbstractMojo
 
     //Archive Configuration. This will set the Configuration for the Archive.
     protected MavenArchiveConfiguration archiveConfiguration;
-    
-    //This map is required for maintaining the module name vs is version which needs 
-    //to be updated in the TibcoXML at the later stage.    
-    Map<String, String> moduleVersionMap;
 
     //The version to be updated in the Application Manifest. 
     String version;
@@ -102,8 +77,7 @@ public class BWEARPackagerMojo extends AbstractMojo
     	try 
     	{
     		getLog().info("BWEARPackager Mojo started ...");
-    		
-    	    tempFiles = new ArrayList<File>();
+			initialize();
 
     	    jarchiver = new JarArchiver();
 
@@ -121,8 +95,7 @@ public class BWEARPackagerMojo extends AbstractMojo
     		
     		getLog().info("Adding EAR Information to the EAR File.");
     		addApplication();
-    		cleanup();
-    		
+
     		getLog().info( "BWEARPackager Mojo finished execution.");
     		
 		}
@@ -130,6 +103,9 @@ public class BWEARPackagerMojo extends AbstractMojo
     	catch (Exception e1) 
 		{
 			throw new MojoExecutionException( "Failed to create BW EAR Archive ", e1);
+		}
+		finally {
+			cleanup();
 		}
 
 	}
@@ -177,7 +153,7 @@ public class BWEARPackagerMojo extends AbstractMojo
 
     /**
      * Adds the Modules included in the Application to the EAR file. 
-     * It will also maintain a Module vs Version map which will be used later by the Application 
+     * It will also maintain a Module vs mvn-version map which will be used later by the Application
      * to populate the TIBCO.xml
      *  
      * @throws Exception
@@ -207,7 +183,7 @@ public class BWEARPackagerMojo extends AbstractMojo
                 
                 getLog().debug( "Adding Module JAR with name " + moduleJar.getName() + "  with version " + version );
                 
-                //Save the module version in the Version Map.
+                //Save the module version in the mvn-version Map.
                 moduleVersionMap.put(  artifact.getArtifactId() , version );
                 
                 this.version = version; 
@@ -231,8 +207,7 @@ public class BWEARPackagerMojo extends AbstractMojo
 	 */
 	private File getArchiveFileName()
 	{
-		Version version = VersionParser.parseVersion( manifest.getMainAttributes().getValue("Bundle-Version") );
-		String fullVersion = version.getMajor() + "." + version.getMinor() + "." + version.getMicro() ;
+		String fullVersion = BWProjectUtils.convertMvnVersionToOSGI(project.getVersion());
 		
         String archiveName = project.getArtifactId() + "_" + fullVersion + ".ear";
         File archiveFile = new File( outputDirectory , archiveName );
@@ -264,7 +239,7 @@ public class BWEARPackagerMojo extends AbstractMojo
 	       for( int i = 0 ; i < fileList.length; i++ )
 	       {
 
-	    	   // If the File is MANIFEST.MF then the Version needs to be updated in the File
+	    	   // If the File is MANIFEST.MF then the mvn-version needs to be updated in the File
 	    	   // and added to the Archiver
 	    	   if(fileList[i].getName().indexOf("MANIFEST") != -1 )
 	    	   {
@@ -272,7 +247,7 @@ public class BWEARPackagerMojo extends AbstractMojo
 	    		   jarchiver.addFile(manifestFile , "META-INF/" + fileList[i].getName());
 	    	   }
 	    	   
-	    	   // If the File is TIBCO.xml then the each Module Version needs to be updated in the File.	    	   
+	    	   // If the File is TIBCO.xml then the each Module mvn-version needs to be updated in the File.
 	    	   else if( fileList[i].getName().indexOf("TIBCO.xml") != -1 )
 	    	   {
 	    		   File tibcoXML = getUpdatedTibcoXML( fileList[i]);
@@ -298,7 +273,7 @@ public class BWEARPackagerMojo extends AbstractMojo
 	
 
 	/**
-	 * Updates the MANIFEST.MF with the Module Version number.
+	 * Updates the MANIFEST.MF with the Module mvn-version.
 	 * 
 	 * @param manifest the MANIFEST.MF file
 	 * 
@@ -311,12 +286,12 @@ public class BWEARPackagerMojo extends AbstractMojo
 		//Copy the MANIFEST.MF to a temporary location.
 		File tempManifest = File.createTempFile("bwear", "mf");
 		FileUtils.copyFile(manifest, tempManifest);
-		
+
 		FileInputStream is = new FileInputStream(tempManifest);
 		Manifest mf = new Manifest( new FileInputStream(tempManifest));
 		is.close();
 		
-		// Update the Bundle Version
+		// Update the Bundle with mvn-version
 		Attributes attr = mf.getMainAttributes();
 		attr.putValue("Bundle-Version", version);
 		
@@ -386,127 +361,4 @@ public class BWEARPackagerMojo extends AbstractMojo
 //
 //        return files[0];
 //	}
-
-
-	/**
-	 * Gets the Tibco XML file with the updated Module versions.
-	 * 
-	 * @param tibcoxML the Application Project TIBCO.xml file
-	 *  
-	 * @return the updated TIBCO.xml file.
-	 * 
-	 * @throws Exception
-	 */
-	private File getUpdatedTibcoXML( File tibcoxML ) throws Exception
-	{
-		getLog().debug("Updating the TibcoXML file with the module versions ");
-		Document doc = loadTibcoXML(tibcoxML);
-		doc = updateTibcoXMLVersion(doc);
-		File file = saveTibcoXML(doc);		
-		return file;
-	}
-	
-	/**
-	 * Loads the TibcoXMLfile in a Document object (DOM)
-	 * 
-	 * @param file the TIBCO.xml file
-	 * 
-	 * @return the root Document object for the TIBCO.xml file
-	 * 
-	 * @throws Exception
-	 */
-	private Document loadTibcoXML(File file) throws Exception
-	{
-		
-		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-		docFactory.setNamespaceAware(true);
-
-		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-		Document doc = docBuilder.parse(file );
-	
-		getLog().debug( "Loaded Tibco.xml file");
-		return doc;
-		
-	}
-	
-	/**
-	 * Updates the document with the Module Version for the Modules.
-	 * 
-	 * @param doc the Root document object.
-	 * 
-	 * @return the Document updated with the Module versions.
-	 * 
-	 * @throws Exception
-	 */
-	private Document updateTibcoXMLVersion( Document doc ) throws Exception
-	{
-		// The modules are listed under the Modules tag with name as "module"
-		NodeList nList = doc.getElementsByTagNameNS("http://schemas.tibco.com/tra/model/core/PackagingModel" , "module");
-
-		for( int i = 0 ; i < nList.getLength(); i++ )
-		{
-	
-			Element node = (Element)nList.item(i);
-		
-			// The Symbolic name is the Module name. The version for this needs to be updated under the tag technologyVersion 
-			NodeList childList = node.getElementsByTagNameNS("http://schemas.tibco.com/tra/model/core/PackagingModel", "symbolicName");
-			String module = childList.item(0).getTextContent();
-		
-			NodeList technologyVersionList = node.getElementsByTagNameNS("http://schemas.tibco.com/tra/model/core/PackagingModel", "technologyVersion");
-			Node technologyVersion = technologyVersionList.item(0);
-		
-			//Get the version from the Module from the Map and set it in the Document. 
-			technologyVersion.setTextContent(  moduleVersionMap.get( module) );
-
-		}
-		
-		getLog().debug("Updated Module versions in the Tibcoxml file");
-		
-		return doc;
-		
-	}
-	
-	/**
-	 * Save the TibcoXML file to a temporary file with the new changes.
-	 * 
-	 * @param doc the root Document
-	 * 
-	 * @return the updated TIBCO.xml file location
-	 * 
-	 * @throws Exception
-	 */
-	private File saveTibcoXML( Document doc ) throws Exception
-	{
-		File tempXml = File.createTempFile("bwear", "xml");
-		doc.getDocumentElement().normalize();
-		
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        
-        DOMSource source = new DOMSource(doc);
-        
-        StreamResult result = new StreamResult( tempXml );
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.transform(source, result);
-        tempFiles.add(tempXml);
-        
-        getLog().debug( "Updated TibcoXML file to temp location " + tempXml.toString() );
-        
-        return tempXml;
-	}
-
-	/**
-	 * Clean the updated MANIFEST.MF and TIBCO.xml files
-	 */
-    private void cleanup()
-    {
-		for( File file : tempFiles )
-		{
-			file.delete();
-		}	
-		
-		getLog().debug( "cleaned up the temporary files. " );
-    }
-	
-	
 }

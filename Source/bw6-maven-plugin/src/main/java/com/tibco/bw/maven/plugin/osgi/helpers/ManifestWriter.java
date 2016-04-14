@@ -8,12 +8,18 @@ import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
 
-import org.apache.maven.project.MavenProject;
-
 public class ManifestWriter 
 {
 
-    public static File updateManifest( MavenProject project , Manifest mf ) throws IOException
+    /**
+     * uses the Maven artifact version to populate OSGI Bundle-Version
+     *
+     * @param outputDir
+     * @param mf
+     * @return
+     * @throws IOException
+     */
+    public static File updateManifest(String outputDir , Manifest mf ) throws IOException
     {
         Attributes attributes = mf.getMainAttributes();
 
@@ -22,7 +28,7 @@ public class ManifestWriter
             attributes.put(Name.MANIFEST_VERSION, "1.0");
         }
 
-        File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
+        File mfile = new File(outputDir, "MANIFEST.MF");
         mfile.getParentFile().mkdirs();
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
         try {
@@ -33,5 +39,5 @@ public class ManifestWriter
 
         return mfile;
     }
-	
+
 }
