@@ -1,6 +1,6 @@
 # Sample Shared Module with Java dependencies, and an Application Module that uses it..
 
-## Steps
+## Steps taken to build this sample
 
 ### Create JWT folder
 Create parent pom.xml here..
