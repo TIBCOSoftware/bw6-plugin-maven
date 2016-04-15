@@ -1,21 +1,23 @@
 Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: SampleSharedModule Module
 Bundle-SymbolicName: SampleSharedModule
-Bundle-Version: 1.0.0.qualifier
-Bundle-ClassPath: .,lib/jjwt-0.6.0.jar,lib/jackson-databind-2.4.2.jar,lib/jackson-annotations-2.4.0.jar,lib/jackson-core-2.4.2.jar
-Bundle-Vendor: TIBCO Software Inc.
-Export-Package: samplepkg.jwt
-TIBCO-BW-JobSharedVariables: META-INF/module.jsv
 TIBCO-BW-SharedModule: META-INF/module.bwm
-TIBCO-BW-Version: 6.3.1 V12 2016-01-27
+Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Provide-Capability: com.tibco.bw.module; name="SampleSharedModule"; version:Version="1.0.0",
- com.tibco.bw.schemas; ns="http://tns.tibco.com/bw/json/1458918623730",
- com.tibco.bw.wsdls; ns="http://xmlns.example.com/20160414154836",
- com.tibco.bw.processes; name="samplesharedmodule"
-TIBCO-BW-ConfigProfile: META-INF/default.substvar
+Bundle-Vendor: TIBCO Software Inc.
 TIBCO-BW-ModuleSharedVariables: META-INF/module.msv
-Require-Capability: com.tibco.bw.model; filter:="(name=bwext)",
- com.tibco.bw.palette; filter:="(name=bw.restjson)",
- com.tibco.bw.palette; filter:="(name=bw.java)"
+Require-Capability: com.tibco.bw.model; filter:="(name=bwext)",com.tib
+ co.bw.palette; filter:="(name=bw.restjson)",com.tibco.bw.palette; fil
+ ter:="(name=bw.java)"
+TIBCO-BW-ConfigProfile: META-INF/default.substvar
+TIBCO-BW-Version: 6.3.1 V12 2016-01-27
+Provide-Capability: com.tibco.bw.module; name="SampleSharedModule"; ve
+ rsion:Version="1.0.0",com.tibco.bw.schemas; ns="http://tns.tibco.com/
+ bw/json/1458918623730",com.tibco.bw.wsdls; ns="http://xmlns.example.c
+ om/20160414154836",com.tibco.bw.processes; name="samplesharedmodule"
+Export-Package: samplepkg.jwt
+Bundle-Name: SampleSharedModule Module
+Bundle-Version: 1.0.0.qualifier
+Bundle-ClassPath: ., lib/nimbus-jose-jwt-4.15.jar, lib/jcip-annotation
+ s-1.0.jar, lib/json-smart-1.3.1.jar, lib/commons-io-2.4.jar
+TIBCO-BW-JobSharedVariables: META-INF/module.jsv
+

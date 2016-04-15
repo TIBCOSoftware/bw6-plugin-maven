@@ -1,6 +1,8 @@
 package samplepkg.jwt;
 
-import io.jsonwebtoken.Jwts;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.SignedJWT;
 
 public class JWTVerifier {
 	public static String resolveAuthenticationToken(String jwtSecret,
@@ -13,11 +15,14 @@ public class JWTVerifier {
 			String[] jwtParts = jwt.split("\\.");
 			String payload = jwtParts[1];
 
-			try {
-				// Throws an JwtException in case of error (e.g. expired)
-				Jwts.parser().setSigningKey(jwtSecret.getBytes("UTF-8"))
-						.parseClaimsJws(jwt).getBody();
+			try {	
+				// Parse the JWS and verify its HMAC
+				SignedJWT signedJWT = SignedJWT.parse(jwt);
 
+				JWSVerifier verifier = new MACVerifier(jwtSecret);
+
+				signedJWT.verify(verifier);
+				
 				// Token is valid..
 				return pad(payload);
 
