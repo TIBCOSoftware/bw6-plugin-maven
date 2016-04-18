@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.model.Model;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -57,17 +59,44 @@ public class BWProjectBuilder
 	{
 		BWParent module = new BWParent();
 		module.setGroupId("com.tibco.bw");
-		module.setArtifactId("parent");
+		module.setArtifactId(application.getArtifactId() + ".parent");
 		module.setVersion( application.getVersion() );
-		File workspace = ResourcesPlugin.getWorkspace().getRoot().getRawLocation().toFile();
-		File pomFileAbs = new File ( workspace , "pom.xml");
+		File parent = new File( application.getPomfileLocation().getParentFile().getParent() + "/" + application.getArtifactId() + ".parent" );
+		
+		if( application.isPomExists() )
+		{
+			try
+			{
+				String pom = application.getMavenModel().getParent().getRelativePath();
+				File pomFile = new File( application.getProject().getLocation().toFile().toString() + "/" + pom , "pom.xml ");
+				if( pomFile.getCanonicalFile().exists() )
+				{
+					parent = pomFile.getCanonicalFile().getParentFile();
+				}
+
+			}
+			catch( Exception e )
+			{
+				
+			}
+			
+		}
+		if( ! parent.exists())
+		{
+			parent.mkdirs();	
+		}
+		
+		File pomFileAbs = new File ( parent , "pom.xml");
 		if (!pomFileAbs.exists()) {
 			pomFileAbs.createNewFile();
 		}
 		else
 		{
 			module.setPomExists( true );
-			module.setMavenModel( POMHelper.readModelFromPOM(pomFileAbs) );
+			Model model = POMHelper.readModelFromPOM(pomFileAbs);
+			module.setMavenModel( model );
+			module.setArtifactId( model.getArtifactId() );
+			module.setGroupId( model.getGroupId() );
 		}
 		module.setPomfileLocation(pomFileAbs);
 		moduleList.add(module);
@@ -170,7 +199,7 @@ public class BWProjectBuilder
 	{
 		String projectLocation = project.getLocation().toFile().toString();
 		
-		String parentLocation = project.getWorkspace().getRoot().getLocation().toFile().toString();
+		String parentLocation = application.getPomfileLocation().getParentFile().getParent() + "/" + application.getArtifactId() + ".parent";
 		
 		
 		if( application.isPomExists() )

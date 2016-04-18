@@ -6,7 +6,8 @@ import com.tibco.bw.studio.maven.pom.builders.ParentPOMBuilder;
 public class BWParent extends BWModule 
 {
 	
-
+	private boolean valueChanged;
+	
 	public BWModuleType getType() 
 	{
 		return BWModuleType.Parent;
@@ -15,6 +16,16 @@ public class BWParent extends BWModule
 	public IPOMBuilder getPOMBuilder()
 	{
 		return new ParentPOMBuilder();
+	}
+
+	public boolean isValueChanged() 
+	{
+		return valueChanged;
+	}
+
+	public void setValueChanged(boolean valueChanged)
+	{
+		this.valueChanged = valueChanged;
 	}
 	
 }

@@ -27,6 +27,7 @@ import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWPCFModule;
+import com.tibco.bw.studio.maven.modules.BWParent;
 import com.tibco.bw.studio.maven.modules.BWProject;
 
 public class WizardPageConfiguration extends WizardPage
@@ -188,22 +189,13 @@ public class WizardPageConfiguration extends WizardPage
 		innerContainer.setLayout(layout);
 		layout.numColumns = 4;
 
-		BWModule application = null;
-		for( BWModule module : project.getModules() )
-		{
-			if( module.getType() == BWModuleType.Application )
-			{
-				application = module;
-				break;
-			}
-		}
-		
+		BWParent parent = ModuleHelper.getParentModule( project.getModules() );
 				
 		Label groupLabel = new Label(innerContainer, SWT.NONE);
 		groupLabel.setText("Group Id");
 
 		appGroupId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-		appGroupId.setText( "com.tibco.bw");
+		appGroupId.setText( parent.getGroupId() );
 		GridData groupData = new GridData(200, 15);
 		appGroupId.setLayoutData(groupData);
 		
@@ -213,7 +205,7 @@ public class WizardPageConfiguration extends WizardPage
 			artifactLabel.setText( "Parent ArtifactId" );
 	
 			appArtifactId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-			appArtifactId.setText(application.getArtifactId() + ".parent");
+			appArtifactId.setText(parent.getArtifactId() );
 			GridData artifactData = new GridData(200, 15);
 			appArtifactId.setLayoutData(artifactData);
 		}
@@ -222,7 +214,7 @@ public class WizardPageConfiguration extends WizardPage
 		versionLabel.setText("Version");
 
 		appVersion = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-		appVersion.setText(application.getVersion());
+		appVersion.setText(parent.getVersion());
 		GridData versionData = new GridData(120, 15);
 		
 		
@@ -367,11 +359,14 @@ public class WizardPageConfiguration extends WizardPage
 		}
 		
 		BWModule parent = ModuleHelper.getParentModule(project.getModules());
-		if(bwEdition.equals("bwcf")){
-			parent.setArtifactId( "bwcfapps.parent" );
-		}else{
+		
+		if( !parent.getArtifactId().equals(appArtifactId.getText()  ) || !parent.getGroupId().equals(appGroupId.getText() ))
+		{
 			parent.setArtifactId( appArtifactId.getText() );
+			((BWParent)parent).setValueChanged(true);
 		}
+		
+		
 		
 		return project;
 	}

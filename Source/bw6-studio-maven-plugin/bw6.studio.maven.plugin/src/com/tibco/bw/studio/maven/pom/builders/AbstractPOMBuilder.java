@@ -304,7 +304,15 @@ public abstract class AbstractPOMBuilder
 	protected void generatePOMFile() throws Exception
 	{
 		FileWriter writer = new FileWriter( module.getPomfileLocation());
-		new MavenXpp3Writer().write(writer, model);
+		try
+		{
+			new MavenXpp3Writer().write(writer, model);	
+		}
+		finally
+		{
+			writer.close();
+		}
+		
 	}
 
 	protected abstract String getPackaging();
