@@ -4,14 +4,13 @@ import java.util.List;
 
 public interface BuildProperties {
 
-	
-	
-    public List<String> getBinIncludes();
 
-    public List<String> getBinExcludes();
+    List<String> getBinIncludes();
 
-    public List<String> getSourceIncludes();
+    List<String> getBinExcludes();
 
-    public List<String> getSourceExcludes();
+    List<String> getSourceIncludes();
+
+    List<String> getSourceExcludes();
 
 }

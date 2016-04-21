@@ -5,13 +5,33 @@
   <parent>
     <groupId>sample.jwt.app.domain</groupId>
     <artifactId>SampleApp.parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-    <relativePath>../</relativePath>
+    <version>1.0.1-SNAPSHOT</version>
   </parent>
   <artifactId>SampleApp</artifactId>
   <packaging>bwmodule</packaging>
+  <properties>
+    <maven.jar.classifier>bw-appmodule</maven.jar.classifier>
+  </properties>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <outputDirectory>target/classes</outputDirectory>
   </build>
+  <dependencies>
+    <dependency>
+      <groupId>sample.jwt.app.domain</groupId>
+      <artifactId>SampleSharedModule</artifactId>
+      <classifier>bw-sharedmodule</classifier>
+      <version>${project.version}</version>
+      <!-- 
+           SampleSharedModule dependencies are 
+           already packaged within SampleSharedModule.jar 
+      -->
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+       </exclusions>
+    </dependency>
+  </dependencies>
 </project>

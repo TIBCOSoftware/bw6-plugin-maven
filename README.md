@@ -17,7 +17,7 @@ This can be confirmed by running the command mvn -version from Terminal/Command 
 
 2. Navigate to the Source Folder.
 
-3. run **mvn clean install** which will install bw6-maven-plugin to your local maven repository (you could also deploy this to your Nexus or Artifactory)
+3. run **mvn clean install** which will install bw6-tc-maven-plugin to your local maven repository (you could also deploy this to your Nexus or Artifactory)
 
 
 ### Enables studio debugging
@@ -38,16 +38,30 @@ When you run 'mvn compile' or more involved goals this plugin will:
 ### Ear Packaging for deployment
 Running 'mvn package' or other goals further into the maven build lifecycle (install, deploy etc) will get module jars and module.application ears built completely aside from Studio.
 
-The plugin will resolve third party jar and BW module jar dependencies via maven when building these artifacts for deployment (via bwadmin or TEA) and also generates the necessary META-INF/MANIFEST.mf and META-INF/TIBCO.xml information..
+The plugin will resolve third party jar and bwmodule (bw-sharedmodule and bw-appmodule classifiers) dependencies via maven when building these artifacts for deployment (via bwadmin or TEA) and also generates the necessary META-INF/MANIFEST.mf and META-INF/TIBCO.xml information..
 
-Create a BW Project pom.xml file manually based on the samples in the Samples folder..
+Create a BW Project pom.xml file(s) manually based on the samples in the Samples folder..
+
 Here is a quick guideline..
 
-#### Shared Modules and Application Modules
-Must have a packaging type of 'bwmodule'.
+#### Shared Modules
+Must have a packaging type of 'bwmodule' with classifier 'bw-sharedmodule'.
 
 ```xml
   <packaging>bwmodule</packaging>
+  <properties>
+    <maven.jar.classifier>bw-sharedmodule</maven.jar.classifier>
+  </properties>
+```
+
+#### App Modules
+Must have a packaging type of 'bwmodule' with classifier 'bw-appmodule'.
+
+```xml
+  <packaging>bwmodule</packaging>
+  <properties>
+    <maven.jar.classifier>bw-appmodule</maven.jar.classifier>
+  </properties>
 ```
 
 #### Packaging Modules (.application modules) 
@@ -68,7 +82,7 @@ You must include the plugin dependency as such (in a parent POM or individual BW
       <plugin>
         <groupId>com.tibco.plugins</groupId>
         <artifactId>bw6-tc-maven-plugin</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.1.0-SNAPSHOT</version>
         <extensions>true</extensions>
       </plugin>
     </plugins>

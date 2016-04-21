@@ -1,19 +1,18 @@
 Manifest-Version: 1.0
-Bundle-SymbolicName: SampleApp
-Require-Bundle: SampleSharedModule;bundle-version="1.0.0"
 Bundle-ManifestVersion: 2
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Bundle-Vendor: TIBCO Software Inc.
-TIBCO-BW-ModuleSharedVariables: META-INF/module.msv
-Require-Capability: com.tibco.bw.model; filter:="(name=bwext)",com.tib
- co.bw.module; filter:="(&(name=SampleSharedModule)(version=1.0.0))",c
- om.tibco.bw.sharedresource.model; filter:="(name=bw.httpconnector)",c
- om.tibco.bw.binding.model; filter:="(name=bw.rest)"
-TIBCO-BW-ConfigProfile: META-INF/default.substvar
-TIBCO-BW-Version: 6.3.1 V12 2016-01-27
 Bundle-Name: SampleApp Module
-Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: SampleApp
+Bundle-Version: 1.0.1.qualifier
 Bundle-ClassPath: .
-TIBCO-BW-ApplicationModule: META-INF/module.bwm
+Bundle-Vendor: TIBCO Software Inc.
+Require-Bundle: SampleSharedModule;bundle-version="1.0.1"
 TIBCO-BW-JobSharedVariables: META-INF/module.jsv
-
+TIBCO-BW-ApplicationModule: META-INF/module.bwm
+TIBCO-BW-Version: 6.3.1 V12 2016-01-27
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+TIBCO-BW-ConfigProfile: META-INF/default.substvar
+TIBCO-BW-ModuleSharedVariables: META-INF/module.msv
+Require-Capability: com.tibco.bw.model; filter:="(name=bwext)",
+ com.tibco.bw.module; filter:="(&(name=SampleSharedModule)(version=1.0.1))",
+ com.tibco.bw.sharedresource.model; filter:="(name=bw.httpconnector)",
+ com.tibco.bw.binding.model; filter:="(name=bw.rest)"

@@ -8,8 +8,8 @@ import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
 
-public class ManifestWriter 
-{
+@SuppressWarnings("ThrowFromFinallyBlock")
+public class ManifestWriter {
 
     /**
      * uses the Maven artifact version to populate OSGI Bundle-Version
@@ -19,12 +19,10 @@ public class ManifestWriter
      * @return
      * @throws IOException
      */
-    public static File updateManifest(String outputDir , Manifest mf ) throws IOException
-    {
+    public static File updateManifest(String outputDir, Manifest mf) throws IOException {
         Attributes attributes = mf.getMainAttributes();
 
-        if (attributes.getValue(Name.MANIFEST_VERSION) == null)
-        {
+        if (attributes.getValue(Name.MANIFEST_VERSION) == null) {
             attributes.put(Name.MANIFEST_VERSION, "1.0");
         }
 

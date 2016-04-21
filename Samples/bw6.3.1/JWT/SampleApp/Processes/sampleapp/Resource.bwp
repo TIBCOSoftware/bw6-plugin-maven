@@ -161,7 +161,7 @@
             </wsdl:portType>
         </wsdl:definitions>
     </tibex:Types>
-    <tibex:ProcessInfo createdBy="e7nrlj4"
+    <tibex:ProcessInfo createdBy="tcosley"
         createdOn="Thu Apr 14 15:55:48 CDT 2016" description=""
         modifiers="public" productVersion="6.3.1 V12 2016-01-27"
         scalable="true" singleton="true" stateless="true" type="IT"/>

@@ -5,9 +5,16 @@
   <parent>
     <groupId>sample.jwt.app.domain</groupId>
     <artifactId>SampleApp.parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-    <relativePath>../</relativePath>
+    <version>1.0.1-SNAPSHOT</version>
   </parent>
   <artifactId>SampleApp.application</artifactId>
   <packaging>bwear</packaging>
+  <dependencies>
+    <dependency>
+      <groupId>sample.jwt.app.domain</groupId>
+      <artifactId>SampleApp</artifactId>
+      <classifier>bw-appmodule</classifier>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 </project>

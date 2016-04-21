@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <packaging:packageUnit xmlns:packaging="http://schemas.tibco.com/tra/model/core/PackagingModel" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <packaging:description></packaging:description>
+  <packaging:description/>
   <packaging:properties>
     <packaging:property>
       <packaging:name>//SampleApp//BW.DEPLOYMENTUNIT.TYPE</packaging:name>
@@ -130,15 +130,15 @@
     </packaging:property>
   </packaging:properties>
   <packaging:modules>
-    <packaging:module>
-      <packaging:symbolicName>SampleApp</packaging:symbolicName>
-      <packaging:technologyType>osgi-bundle,bw-appmodule</packaging:technologyType>
-      <packaging:technologyVersion>1.0.0.qualifier</packaging:technologyVersion>
-    </packaging:module>
-    <packaging:module>
-      <packaging:symbolicName>SampleSharedModule</packaging:symbolicName>
-      <packaging:technologyType>osgi-bundle,bw-sharedmodule</packaging:technologyType>
-      <packaging:technologyVersion>1.0.0.qualifier</packaging:technologyVersion>
-    </packaging:module>
-  </packaging:modules>
+<packaging:module>
+<packaging:symbolicName>SampleApp</packaging:symbolicName>
+<packaging:technologyType>osgi-bundle,bw-appmodule</packaging:technologyType>
+<packaging:technologyVersion>1.0.1.qualifier</packaging:technologyVersion>
+</packaging:module>
+<packaging:module>
+<packaging:symbolicName>SampleSharedModule</packaging:symbolicName>
+<packaging:technologyType>osgi-bundle,bw-sharedmodule</packaging:technologyType>
+<packaging:technologyVersion>1.0.1.qualifier</packaging:technologyVersion>
+</packaging:module>
+</packaging:modules>
 </packaging:packageUnit>
