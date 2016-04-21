@@ -51,7 +51,8 @@ public class TibcoStudioMojo extends AbstractMojo {
     private File projectBasedir;
     @Parameter(property = "maven.jar.classifier", defaultValue = "")
     private String classifier;
-
+    @Parameter(property = "studio.jar.excludelist", defaultValue = "")
+    private String studioJarExcludeList;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!project.getPackaging().equals(BWMODULE)) return;
@@ -296,9 +297,12 @@ public class TibcoStudioMojo extends AbstractMojo {
                 if ((artifact.getFile() != null) && artifact.getType().equals("jar")
                         && !artifact.getArtifactId().startsWith("com.tibco.bw.palette") &&
                         !BWProjectUtils.getClassifierOrEmptyString(artifact).equals(BWProjectUtils.BW_SHAREDMODULE)) {
-                    moduleClasspath.append(",lib/")
-                            .append(artifactName);
-                    updateLib(jarLib, artifact.getFile());
+                    // check studio.jar.excludejist property..
+                    if (!studioJarExcludeList.contains(artifactName)) {
+                        moduleClasspath.append(",lib/")
+                                .append(artifactName);
+                        updateLib(jarLib, artifact.getFile());
+                    }
                 }
             }
         } catch (Exception e) {

@@ -53,6 +53,15 @@ Must have a packaging type of 'bwmodule' with classifier 'bw-sharedmodule'.
     <maven.jar.classifier>bw-sharedmodule</maven.jar.classifier>
   </properties>
 ```
+Special property for excluding jars from studio lib - but allowing them to get packaged into deployable ear..
+(ran into issues with stax wherein transitive stax dependency pulled in by a java dependency caused things to fail in studio - but was needed standalone..
+```xml
+  <packaging>bwmodule</packaging>
+  <properties>
+    <maven.jar.classifier>bw-sharedmodule</maven.jar.classifier>
+	<studio.jar.excludelist>stax-api-1.0-2.jar|stax2-api-3.1.4.jar|woodstox-core-asl-4.4.1.jar</studio.jar.excludelist>
+  </properties>
+```
 
 #### App Modules
 Must have a packaging type of 'bwmodule' with classifier 'bw-appmodule'.
