@@ -49,10 +49,10 @@ public class TibcoStudioMojo extends AbstractMojo {
     private MavenProject project;
     @Parameter(property = "project.basedir")
     private File projectBasedir;
-    @Parameter(property = "maven.jar.classifier", defaultValue = "")
-    private String classifier;
-    @Parameter(property = "studio.jar.excludelist", defaultValue = "")
-    private String studioJarExcludeList;
+    @Parameter(property = "maven.jar.classifier")
+    private String classifier="";
+    @Parameter(property = "studio.jar.excludelist")
+    private String studioJarExcludeList="";
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!project.getPackaging().equals(BWMODULE)) return;

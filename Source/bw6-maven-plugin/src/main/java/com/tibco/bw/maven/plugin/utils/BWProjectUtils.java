@@ -27,7 +27,9 @@ public class BWProjectUtils {
         String convertedVersion = "1.0.0.qualifier";
 
         String[] parts = mvnVersion.replaceAll("-", ".").replaceAll("_", ".").split("\\.");
-        if (parts.length == 4) {
+        // may have '1.0.0-SNAPSHOT' or other things like '1.0.1-20160422.203047-2'
+        // use the first three and tag on 'qualifier' (OSGI term for SNAPSHOT)
+        if (parts.length > 3) {
             String parts3 = parts[3];
             if ((parts3.equals("SNAPSHOT") || !parts3.matches("[0-9]]")) && includeQualifier) {
                 parts3 = "qualifier"; // 'qaulifier' means SNAPSHOT according to Tycho conventions for OSGI versioning
@@ -37,6 +39,7 @@ public class BWProjectUtils {
             }
         } else if ((parts.length == 3) || !includeQualifier) {
             // release versions
+            // just use first three here
             convertedVersion = parts[0] + "." + parts[1] + "." + parts[2];
         } else {
             throw new MojoFailureException("Maven version format unsupported: " + mvnVersion);
