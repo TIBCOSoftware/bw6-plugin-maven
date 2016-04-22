@@ -3,13 +3,14 @@ package com.tibco.bw.studio.maven.wizard;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
 
 public class MavenWizardDialog extends WizardDialog 
 {
-
+	
 	public MavenWizardDialog (Shell parentShell, IWizard newWizard )
 	{	
 		super(parentShell, newWizard);
@@ -29,6 +30,12 @@ public class MavenWizardDialog extends WizardDialog
 
 		MavenWizardContext.INSTANCE.setCancelButton( getButton( IDialogConstants.CANCEL_ID ));
 
+	}
+	
+	@Override
+	protected Point getInitialSize() {
+		//return super.getInitialSize();
+		return new Point(750, 610);
 	}
 	
 }

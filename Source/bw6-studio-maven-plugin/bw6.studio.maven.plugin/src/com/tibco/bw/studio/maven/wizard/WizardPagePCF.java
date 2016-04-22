@@ -1,7 +1,5 @@
 package com.tibco.bw.studio.maven.wizard;
 
-import java.util.Map;
-
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.jface.wizard.WizardPage;
@@ -15,8 +13,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import com.tibco.bw.studio.maven.helpers.ManifestParser;
-import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWPCFModule;
@@ -26,8 +22,7 @@ public class WizardPagePCF extends WizardPage
 {
 	private Composite container;
 	private BWProject project;
-	private String bwEdition;
-
+	
 	private Text appPCFTarget;
 	private Text appPCFCred;
 	private Text appPCFOrg;
@@ -43,32 +38,14 @@ public class WizardPagePCF extends WizardPage
 	{
 		super(pageName);
 		this.project = project;		 
-		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorks™");
-		setDescription("Enter the GroupId and ArtifactId for for Maven POM File generation. \nThe POM files will be generated for Projects listed below and a Parent POM file will be generated aggregating the Projects");	
+		setTitle("CloudFoundry Plugin for Apache Maven and TIBCO BusinessWorks Container Edition™");
+		setDescription("Enter CloudFoundry Platform details for pushing and running BWCE apps.");	
 	}
 
 	@Override
 	public void createControl(Composite parent) 
 	{
 		container = new Composite(parent, SWT.NONE);
-
-		
-		  bwEdition = "bw6";
-		  try
-		  {
-			  Map<String,String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
-			  if(manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf"))
-			  {
-				  bwEdition="bwcf";
-			  }
-			  else
-			  {
-				  bwEdition="bw6";
-			  }
-		  } catch (Exception e) 
-		  {
-			  e.printStackTrace();
-		  }
 		
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
@@ -215,16 +192,10 @@ public class WizardPagePCF extends WizardPage
 	{
 		for (BWModule module : project.getModules() )
 		{
-			
-			if(bwEdition.equals("bwcf") && module.getType() == BWModuleType.Application){
+			if(module.getType() == BWModuleType.Application){
 				module.setBwpcfModule(setBWPCFValues(module));
 			}
-			
-			
-			//module.setOverridePOM( buttonMap.containsKey( module.getArtifactId() ) ? (buttonMap.get(module.getArtifactId())).getSelection() : true  );
 		}
-		
-		
 		return project;
 	}
 

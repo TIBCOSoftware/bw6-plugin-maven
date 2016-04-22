@@ -3,12 +3,9 @@ package com.tibco.bw.studio.maven.wizard;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.jface.window.Window;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
@@ -26,9 +23,9 @@ import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWModuleType;
-import com.tibco.bw.studio.maven.modules.BWPCFModule;
 import com.tibco.bw.studio.maven.modules.BWParent;
 import com.tibco.bw.studio.maven.modules.BWProject;
+import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class WizardPageConfiguration extends WizardPage
 {
@@ -61,7 +58,12 @@ public class WizardPageConfiguration extends WizardPage
 		try {
 			Map<String,String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
 			if(manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")){
-				bwEdition="bwcf";
+				String targetPlatform = ContainerPreferenceProject.getCurrentContainer().getLabel();
+				if(targetPlatform.equals("Cloud Foundry")){
+					  bwEdition="cf";
+				  }else{
+					  bwEdition="docker";
+				  }
 			}else bwEdition="bw6";
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -169,9 +171,13 @@ public class WizardPageConfiguration extends WizardPage
 		Label label = new Label(innerContainer, SWT.NONE );
 		
 
-		if(bwEdition.equals("bwcf"))
+		if(bwEdition.equals("cf"))
 		{
-			label.setText( "Deploy EAR to PCF" );
+			label.setText( "Deploy EAR to Cloud Foundry" );
+		}
+		else if(bwEdition.equals("docker"))
+		{
+			label.setText( "Deploy EAR to Docker" );
 		}
 		else
 		{
@@ -199,16 +205,13 @@ public class WizardPageConfiguration extends WizardPage
 		GridData groupData = new GridData(200, 15);
 		appGroupId.setLayoutData(groupData);
 		
-		if(bwEdition.equals("bwcf")){}
-		else{
-			Label artifactLabel = new Label(innerContainer, SWT.NONE);
-			artifactLabel.setText( "Parent ArtifactId" );
-	
-			appArtifactId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-			appArtifactId.setText(parent.getArtifactId() );
-			GridData artifactData = new GridData(200, 15);
-			appArtifactId.setLayoutData(artifactData);
-		}
+		Label artifactLabel = new Label(innerContainer, SWT.NONE);
+		artifactLabel.setText( "Parent ArtifactId" );
+
+		appArtifactId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
+		appArtifactId.setText(parent.getArtifactId() );
+		GridData artifactData = new GridData(200, 15);
+		appArtifactId.setLayoutData(artifactData);
 		
 		Label versionLabel = new Label(innerContainer, SWT.NONE);
 		versionLabel.setText("Version");
@@ -216,12 +219,7 @@ public class WizardPageConfiguration extends WizardPage
 		appVersion = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
 		appVersion.setText(parent.getVersion());
 		GridData versionData = new GridData(120, 15);
-		
-		
-		if(bwEdition.equals("bwcf")){}
-		else{
-			versionData.horizontalSpan = 3;
-		}
+		versionData.horizontalSpan = 3;
 		appVersion.setLayoutData(versionData);
 		appVersion.setEditable( false);
 		

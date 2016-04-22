@@ -35,6 +35,8 @@ public abstract class BWModule
 	
 	protected BWPCFModule bwpcfModule;
 	
+	protected BWDockerModule bwDockerModule;
+	
 	protected boolean pomExists;
 	
 	protected Model mavenModel;
@@ -43,6 +45,16 @@ public abstract class BWModule
 	abstract public BWModuleType getType();
 
 	abstract public IPOMBuilder getPOMBuilder();
+
+	
+	
+	public BWDockerModule getBwDockerModule() {
+		return bwDockerModule;
+	}
+
+	public void setBwDockerModule(BWDockerModule bwDockerModule) {
+		this.bwDockerModule = bwDockerModule;
+	}
 
 	public BWPCFModule getBwpcfModule()
 	{

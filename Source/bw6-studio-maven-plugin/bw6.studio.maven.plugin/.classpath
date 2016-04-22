@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/commons-io-2.4.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/maven-model-3.0.5.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/plexus-utils-3.0.10.jar" sourcepath="C:/Users/apps/.m2/repository/org/codehaus/plexus/plexus-utils/3.0.10/plexus-utils-3.0.10-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="lib" path="lib/commons-io-2.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/maven-model-3.0.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/plexus-utils-3.0.10.jar" sourcepath="C:/Users/apps/.m2/repository/org/codehaus/plexus/plexus-utils/3.0.10/plexus-utils-3.0.10-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

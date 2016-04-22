@@ -81,9 +81,9 @@ public class PCFLoginWizardPage extends WizardPage{
 		Label pswdLabel = new Label(container, SWT.RIGHT);
 		pswdLabel.setText( "Password" );
 
-		password = new Text(container, SWT.BORDER | SWT.SINGLE);
+		password = new Text(container, SWT.BORDER | SWT.PASSWORD);
 		password.setText("");
-		GridData pswdData = new GridData(100, 15);
+		GridData pswdData = new GridData(150, 15);
 		password.setLayoutData(pswdData);
 		
 		Label orgLabel = new Label(container, SWT.NONE);
