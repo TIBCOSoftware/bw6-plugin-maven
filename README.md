@@ -63,6 +63,7 @@ If you'd like to contribute to this plug-in, please reach out to integration-pm@
 
 ***
 
+NOTE- Below Container Edition plugin instructions are valid for branch : BWCE 1.0.1 ga  and not for master.
 
 #Plug-in Code for Apache Maven and TIBCO BusinessWorks™ Container Edition
 
