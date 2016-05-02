@@ -17,25 +17,17 @@ public class BWDockerModule {
 	
 	private String dockerAppName;
 	
-	private String dockerVolume;
+	private List<String> dockerVolumes;
 	
-	private String dockerLink;
+	private List<String> dockerLinks;
 	
 	private List<String> dockerPorts;
 	
+	private Map<String, String> dockerEnvs;
+	
 	private String platform;
 	
-	private String rcName;
 	
-	private String numOfReplicas;
-	
-	private String serviceName;
-	
-	private String containerPort;
-	
-	private String k8sNamespace;
-	
-	private Map<String, String> k8sEnvVariables;
 
 	public String getDockerHost() {
 		return dockerHost;
@@ -85,23 +77,32 @@ public class BWDockerModule {
 		this.dockerAppName = dockerAppName;
 	}
 	
-	public String getDockerVolume() {
-		return dockerVolume;
-	}
-
-	public void setDockerVolume(String dockerVolume) {
-		this.dockerVolume = dockerVolume;
-	}
-
-	public String getDockerLink() {
-		return dockerLink;
-	}
-
-	public void setDockerLink(String dockerLink) {
-		this.dockerLink = dockerLink;
-	}
 	
 	
+
+	public Map<String, String> getDockerEnvs() {
+		return dockerEnvs;
+	}
+
+	public void setDockerEnvs(Map<String, String> dockerEnvs) {
+		this.dockerEnvs = dockerEnvs;
+	}
+
+	public List<String> getDockerVolumes() {
+		return dockerVolumes;
+	}
+
+	public void setDockerVolumes(List<String> dockerVolumes) {
+		this.dockerVolumes = dockerVolumes;
+	}
+
+	public List<String> getDockerLinks() {
+		return dockerLinks;
+	}
+
+	public void setDockerLinks(List<String> dockerLinks) {
+		this.dockerLinks = dockerLinks;
+	}
 
 	public List<String> getDockerPorts() {
 		return dockerPorts;
@@ -113,14 +114,6 @@ public class BWDockerModule {
 	
 	
 	
-	
-	public Map<String, String> getK8sEnvVariables() {
-		return k8sEnvVariables;
-	}
-
-	public void setK8sEnvVariables(Map<String, String> k8sEnvVariables) {
-		this.k8sEnvVariables = k8sEnvVariables;
-	}
 
 	public String getPlatform() {
 		return platform;
@@ -130,45 +123,7 @@ public class BWDockerModule {
 		this.platform = platform;
 	}
 
-	public String getRcName() {
-		return rcName;
-	}
 
-	public void setRcName(String rcName) {
-		this.rcName = rcName;
-	}
-
-	public String getNumOfReplicas() {
-		return numOfReplicas;
-	}
-
-	public void setNumOfReplicas(String numOfReplicas) {
-		this.numOfReplicas = numOfReplicas;
-	}
-
-	public String getServiceName() {
-		return serviceName;
-	}
-
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
-
-	public String getContainerPort() {
-		return containerPort;
-	}
-
-	public void setContainerPort(String containerPort) {
-		this.containerPort = containerPort;
-	}
-
-	public String getK8sNamespace() {
-		return k8sNamespace;
-	}
-
-	public void setK8sNamespace(String k8sNamespace) {
-		this.k8sNamespace = k8sNamespace;
-	}
 	
 	
 }

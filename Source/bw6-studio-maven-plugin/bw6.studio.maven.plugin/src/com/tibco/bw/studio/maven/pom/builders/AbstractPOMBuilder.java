@@ -50,23 +50,48 @@ public abstract class AbstractPOMBuilder
 	
 	protected void addBWCloudFoundryProperties()
 	{
-		Properties properties=new Properties();
-		properties.put("property.file", "pcfdev.properties");
+		Properties properties=model.getProperties();
+		if(properties==null)
+		{
+			properties=new Properties();
+		}
+		properties.put("pcf.property.file", "pcfdev.properties");
 		model.setProperties(properties);
 	}
 	
 	protected void addBWDockerProperties(String platform)
 	{
-		Properties properties=new Properties();
-		if(platform.equals("K8S")){
-			properties.put("property.file", "docker-k8s-dev.properties");
+		Properties properties=model.getProperties();
+		if(properties==null)
+		{
+			properties=new Properties();
 		}
-		else if(platform.equals("Mesos")){
-			properties.put("property.file", "docker-mesos-dev.properties");
+		
+		properties.put("docker.property.file", "docker-dev.properties");
+		if(module.getBwDockerModule().getDockerEnvs()!=null && module.getBwDockerModule().getDockerEnvs().size()>0)
+		{
+			properties.put("docker.env.property.file", "docker-host-env-dev.properties");
 		}
-		else if(platform.equals("Swarm")){
-			properties.put("property.file", "docker-swarm-dev.properties");
+		else
+		{
+			if(properties.containsKey("docker.env.property.file"))
+			{
+				properties.remove("docker.env.property.file");
+			}
 		}
+		
+		if(platform.equals("K8S"))
+		{
+			properties.put("k8s.property.file", "k8s-dev.properties");
+		}
+		else
+		{
+			if(properties.containsKey("k8s.property.file"))
+			{
+				properties.remove("k8s.property.file");
+			}
+		}
+
 		model.setProperties(properties);
 	}
 	
@@ -107,29 +132,166 @@ public abstract class AbstractPOMBuilder
 			build.addPlugin(plugin);
 	}
 	
-	protected void addBWCEPropertiesPlugin( Build build )
+	protected void addBWCEPropertiesPlugin( Build build, String bwEdition, String platfrom)
 	{
-		Plugin plugin = new Plugin();
-		plugin.setGroupId("org.codehaus.mojo");
-		plugin.setArtifactId("properties-maven-plugin");
-		plugin.setVersion("1.0.0");
-		List<PluginExecution> executions=new ArrayList<PluginExecution>();
-		PluginExecution pe=new PluginExecution();
-		pe.setPhase("initialize");
-		pe.setGoals(Arrays.asList("read-project-properties"));
-		executions.add(pe);
-		plugin.setExecutions(executions);
+		Plugin plugin = null;
+		List<Plugin> plugins=build.getPlugins();
+		for(int i=0;i<plugins.size();i++)
+		{
+			Plugin plg=plugins.get(i);
+			if(plg.getArtifactId().equals("properties-maven-plugin"))
+			{
+				plugin=plg;
+				break;
+			}
+		}
 		
-		Xpp3Dom config=new Xpp3Dom("configuration");
-		Xpp3Dom child = new Xpp3Dom( "files" );
-		Xpp3Dom fileChild = new Xpp3Dom( "file" );
-		fileChild.setValue( "${property.file}" );
-		child.addChild( fileChild );
-        
-		config.addChild( child );
-		plugin.setConfiguration(config);
-		
-		build.addPlugin(plugin);
+		if(plugin==null)
+		{
+			plugin=new Plugin();
+			plugin.setGroupId("org.codehaus.mojo");
+			plugin.setArtifactId("properties-maven-plugin");
+			plugin.setVersion("1.0.0");
+			List<PluginExecution> executions=new ArrayList<PluginExecution>();
+			PluginExecution pe=new PluginExecution();
+			pe.setPhase("initialize");
+			pe.setGoals(Arrays.asList("read-project-properties"));
+			executions.add(pe);
+			plugin.setExecutions(executions);
+
+			Xpp3Dom config=new Xpp3Dom("configuration");
+			Xpp3Dom child = new Xpp3Dom( "files" );
+			Xpp3Dom fileChild = new Xpp3Dom( "file" );
+			if(bwEdition.equals("cf"))
+			{
+				fileChild.setValue( "${pcf.property.file}" );
+				child.addChild( fileChild );
+			}
+			else if(bwEdition.equals("docker"))
+			{
+				fileChild.setValue( "${docker.property.file}" );
+				child.addChild( fileChild );
+				if(module.getBwDockerModule().getDockerEnvs()!=null && module.getBwDockerModule().getDockerEnvs().size()>0)
+				{
+					Xpp3Dom fileChild1 = new Xpp3Dom( "file" );
+					fileChild1.setValue( "${docker.env.property.file}" );
+					child.addChild( fileChild1 );
+				}
+				if(platfrom.equals("K8S"))
+				{
+					Xpp3Dom fileChild2 = new Xpp3Dom( "file" );
+					fileChild2.setValue( "${k8s.property.file}" );
+					child.addChild( fileChild2 );
+				}
+			}
+			
+
+			config.addChild( child );
+			plugin.setConfiguration(config);
+			build.addPlugin(plugin);
+		}
+		else
+		{
+			Xpp3Dom config=(Xpp3Dom) plugin.getConfiguration();
+			if (config != null && config.getChild("files") != null) 
+			{
+				Xpp3Dom files=(Xpp3Dom) config.getChild("files");
+				Xpp3Dom[] childs = files.getChildren();
+				if (files != null && files.getChild("file") != null) 
+				{
+					if(bwEdition.equals("cf"))
+					{
+						boolean found=false;
+						for(int i=0;i<childs.length;i++)
+						{
+							Xpp3Dom child=childs[i];
+							if(child.getValue().equals("${pcf.property.file}"))
+							{
+								found=true;
+								break;
+							}
+						}
+						if(!found)
+						{
+							Xpp3Dom fileChild = new Xpp3Dom( "file" );
+							fileChild.setValue( "${pcf.property.file}" );
+							files.addChild(fileChild);
+						}
+					}
+					else if(bwEdition.equals("docker"))
+					{
+						boolean dfound=false;
+						boolean defound=false;
+						boolean k8sfound=false;
+						int envIndex=0;
+						int k8sIndex=0;
+						for(int i=0;i<childs.length;i++)
+						{
+							Xpp3Dom child=childs[i];
+							if(child.getValue().equals("${docker.property.file}"))
+							{
+								dfound=true;
+							}
+							if(child.getValue().equals("${docker.env.property.file}"))
+							{
+								defound=true;
+								envIndex=i;
+							}
+							if(child.getValue().equals("${k8s.property.file}"))
+							{
+								k8sfound=true;
+								k8sIndex=i;
+							}
+						}
+						if(!dfound)
+						{
+							Xpp3Dom fileChild = new Xpp3Dom( "file" );
+							fileChild.setValue( "${docker.property.file}" );
+							files.addChild(fileChild);
+						}
+						
+						if(module.getBwDockerModule().getDockerEnvs()!=null && module.getBwDockerModule().getDockerEnvs().size()>0)
+						{
+							if(!defound)
+							{
+								Xpp3Dom fileChild = new Xpp3Dom( "file" );
+								fileChild.setValue( "${docker.env.property.file}" );
+								files.addChild(fileChild);
+							}
+						}
+						else
+						{
+							if(defound)
+							{
+								files.removeChild(envIndex);
+								//Delete existing properties files for docker-env
+								
+								if(k8sIndex>envIndex) k8sIndex--;  //If K8s index is > the removed index of env, then decrement
+							}
+						}
+						
+						if(platfrom.equals("K8S"))
+						{
+							if(!k8sfound)
+							{
+								Xpp3Dom fileChild = new Xpp3Dom( "file" );
+								fileChild.setValue( "${k8s.property.file}" );
+								files.addChild(fileChild);
+							}
+						}
+						else
+						{
+							if(k8sfound)
+							{
+								files.removeChild(k8sIndex);
+								//Delete existing properties files for k8s
+								
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	protected void addDockerK8SWithSkipMavenPlugin( Build build )
@@ -151,6 +313,8 @@ public abstract class AbstractPOMBuilder
 	
 	protected void addDockerK8SMavenPlugin( Build build)
 	{
+		createK8SPropertiesFiles();
+		
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("fabric8-maven-plugin");
@@ -254,14 +418,16 @@ public abstract class AbstractPOMBuilder
 				buildchild.addChild( portchild );
 				
 				// IF Volume exist
-				if(module.getBwDockerModule().getDockerVolume()!=null 
-						&& !module.getBwDockerModule().getDockerVolume().isEmpty())
+				List<String> volumes=module.getBwDockerModule().getDockerVolumes();
+				if(volumes!=null && volumes.size()>0)
 				{
 					Xpp3Dom volchild = new Xpp3Dom( "volumes" );
-						Xpp3Dom child25 = new Xpp3Dom( "volume" );
-						child25.setValue("${bwdocker.volume.v1}");
-						volchild.addChild( child25 );
-				
+					for(int i=0;i<volumes.size();i++)
+					{
+							Xpp3Dom child25 = new Xpp3Dom( "volume" );
+							child25.setValue("${bwdocker.volume.v"+i+"}");
+							volchild.addChild( child25 );
+					}
 					buildchild.addChild( volchild );
 				}
 				
@@ -273,34 +439,44 @@ public abstract class AbstractPOMBuilder
 				runchild.addChild( child3 );
 				
 				// IF Ports exist
-				if(module.getBwDockerModule().getDockerPorts()!=null 
-						&& module.getBwDockerModule().getDockerPorts().size()>0)
+				List<String> ports=module.getBwDockerModule().getDockerPorts();
+				if(ports!=null && ports.size()>0)
 				{
 					Xpp3Dom runportchild = new Xpp3Dom( "ports" );
+					for(int i=0;i<ports.size();i++)
+					{
 						Xpp3Dom child31 = new Xpp3Dom( "port" );
-						child31.setValue("${bwdocker.port.p1}");
+						child31.setValue("${bwdocker.port.p"+i+"}");
 						runportchild.addChild( child31 );
-						
-						if(module.getBwDockerModule().getDockerPorts().size()==2)
-						{
-						child31 = new Xpp3Dom( "port" );
-						child31.setValue("${bwdocker.port.p2}");
-						runportchild.addChild( child31 );
-						}
-						
+					}
 					runchild.addChild( runportchild );
 				}
 				
 				// IF Links exist
-				if(module.getBwDockerModule().getDockerLink()!=null 
-						&& !module.getBwDockerModule().getDockerLink().isEmpty())
+				List<String> links=module.getBwDockerModule().getDockerLinks();
+				if(links!=null && links.size()>0)
 				{
 					Xpp3Dom linkchild = new Xpp3Dom( "links" );
-						Xpp3Dom child32 = new Xpp3Dom( "link" );
-						child32.setValue("${bwdocker.link.l1}");
-						linkchild.addChild( child32 );
+					for(int i=0;i<links.size();i++)
+					{
+							Xpp3Dom child32 = new Xpp3Dom( "link" );
+							child32.setValue("${bwdocker.link.l"+i+"}");
+							linkchild.addChild( child32 );
+					}
 					runchild.addChild( linkchild );
 				}
+				
+				//IF env variable exist
+				if(module.getBwDockerModule().getDockerEnvs()!=null && module.getBwDockerModule().getDockerEnvs().size()>0)
+				{
+					createDockerEnvVarPropertiesFiles();
+					
+					Xpp3Dom envVarChild = new Xpp3Dom( "envPropertyFile" );
+					envVarChild.setValue("${docker.env.property.file}");
+					runchild.addChild( envVarChild );
+				}
+				
+				
 			imageChild.addChild( runchild );
 			
 		 child.addChild( imageChild );
@@ -312,6 +488,107 @@ public abstract class AbstractPOMBuilder
 		build.addPlugin(plugin);
 	}
 	
+	private void createDockerEnvVarPropertiesFiles(){
+		try {
+			Properties properties = new Properties();
+			//Add k8s env variables
+			Map<String, String> dockEnvVars=module.getBwDockerModule().getDockerEnvs();
+			if(!dockEnvVars.isEmpty())
+			{
+				for (String key : dockEnvVars.keySet()) 
+				{
+					properties.setProperty(key, dockEnvVars.get(key));
+				}
+			}
+
+			File devfile = new File(getWorkspacepath() + File.separator + "docker-host-env-dev.properties");
+			if(devfile.exists()) 
+			{
+				devfile.delete();
+			}
+			boolean done=devfile.createNewFile();
+			if(done)
+			{
+				FileOutputStream fileOut = new FileOutputStream(devfile);
+				String msg = "Your Docker Host Environment Variables properties";
+				properties.store(fileOut, msg);
+				fileOut.close();
+
+				File prodfile = new File(getWorkspacepath()+ File.separator + "docker-host-env-prod.properties");
+				if(prodfile.exists()) 
+				{
+					prodfile.delete();
+				}
+				Files.copy(devfile.toPath(), prodfile.toPath());
+			}
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void createK8SPropertiesFiles(){
+		try {
+			Properties properties = new Properties();
+			//Add platform properties
+
+			String platform=module.getBwDockerModule().getPlatform();
+			properties.setProperty("fabric8.template", module.getBwk8sModule().getRcName());
+			properties.setProperty("fabric8.replicationController.name", module.getBwk8sModule().getRcName());
+			properties.setProperty("fabric8.replicas", module.getBwk8sModule().getNumOfReplicas());
+			properties.setProperty("fabric8.label.project", module.getBwk8sModule().getRcName());
+			properties.setProperty("fabric8.label.group", module.getBwk8sModule().getRcName());
+			properties.setProperty("fabric8.label.container", module.getBwk8sModule().getRcName());
+			properties.setProperty("fabric8.container.name", module.getBwk8sModule().getRcName());
+			properties.setProperty("fabric8.service.name", module.getBwk8sModule().getServiceName());
+			properties.setProperty("fabric8.service.type", "LoadBalancer");
+			properties.setProperty("fabric8.service.port", "80");
+			properties.setProperty("fabric8.provider", "Tibco");
+			properties.setProperty("fabric8.service.containerPort", module.getBwk8sModule().getContainerPort());
+			properties.setProperty("fabric8.namespace", module.getBwk8sModule().getK8sNamespace());
+			properties.setProperty("fabric8.apply.namespace", module.getBwk8sModule().getK8sNamespace());
+
+			//Add k8s env variables
+			Map<String, String> k8sEnvVars=module.getBwk8sModule().getK8sEnvVariables();
+			if(!k8sEnvVars.isEmpty())
+			{
+				for (String key : k8sEnvVars.keySet()) 
+				{
+					String fabric8Key="fabric8.env."+key;
+					properties.setProperty(fabric8Key, k8sEnvVars.get(key));
+				}
+			}
+
+			File devfile = new File(getWorkspacepath() + File.separator + "k8s-dev.properties");
+			if(devfile.exists()) 
+			{
+				devfile.delete();
+			}
+			boolean done=devfile.createNewFile();
+			if(done)
+			{
+				FileOutputStream fileOut = new FileOutputStream(devfile);
+				String msg = "Your "+platform+" platform properties";
+				properties.store(fileOut, msg);
+				fileOut.close();
+
+				File prodfile = new File(getWorkspacepath()+ File.separator + "k8s-prod.properties");
+				if(prodfile.exists()) 
+				{
+					prodfile.delete();
+				}
+				Files.copy(devfile.toPath(), prodfile.toPath());
+			}
+
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	private void createDockerPropertiesFiles(){
 		try {
@@ -324,78 +601,56 @@ public abstract class AbstractPOMBuilder
 			properties.setProperty("bwdocker.containername", module.getBwDockerModule().getDockerAppName());
 			properties.setProperty("bwdocker.from", module.getBwDockerModule().getDockerImageFrom());
 			properties.setProperty("bwdocker.maintainer", module.getBwDockerModule().getDockerImageMaintainer());
-			if(module.getBwDockerModule().getDockerVolume()!=null && !module.getBwDockerModule().getDockerVolume().isEmpty())
+
+			List<String> volumes=module.getBwDockerModule().getDockerVolumes();
+			if(volumes!=null && volumes.size()>0)
 			{
-				properties.setProperty("bwdocker.volume.v1", module.getBwDockerModule().getDockerVolume());
-			}
-
-			if(module.getBwDockerModule().getDockerLink()!=null && !module.getBwDockerModule().getDockerLink().isEmpty())
-			{
-				properties.setProperty("bwdocker.link.l1", module.getBwDockerModule().getDockerLink());
-			}
-
-			if(module.getBwDockerModule().getDockerPorts().size()>0){
-				properties.setProperty("bwdocker.port.p1", module.getBwDockerModule().getDockerPorts().get(0));
-			}
-			if(module.getBwDockerModule().getDockerPorts().size()==2){
-				properties.setProperty("bwdocker.port.p2", module.getBwDockerModule().getDockerPorts().get(1));
-			}
-			//Add platform properties
-
-			String platform=module.getBwDockerModule().getPlatform();
-			String devFileName="";
-			if(platform.equals("K8S")){
-				devFileName="docker-k8s-dev.properties";
-
-				properties.setProperty("fabric8.template", module.getBwDockerModule().getRcName());
-				properties.setProperty("fabric8.replicationController.name", module.getBwDockerModule().getRcName());
-				properties.setProperty("fabric8.replicas", module.getBwDockerModule().getNumOfReplicas());
-				properties.setProperty("fabric8.label.project", module.getBwDockerModule().getRcName());
-				properties.setProperty("fabric8.label.group", module.getBwDockerModule().getRcName());
-				properties.setProperty("fabric8.label.container", module.getBwDockerModule().getRcName());
-				properties.setProperty("fabric8.container.name", module.getBwDockerModule().getRcName());
-				properties.setProperty("fabric8.service.name", module.getBwDockerModule().getServiceName());
-				properties.setProperty("fabric8.service.type", "LoadBalancer");
-				properties.setProperty("fabric8.service.port", "80");
-				properties.setProperty("fabric8.service.containerPort", module.getBwDockerModule().getContainerPort());
-				properties.setProperty("fabric8.namespace", module.getBwDockerModule().getK8sNamespace());
-				properties.setProperty("fabric8.apply.namespace", module.getBwDockerModule().getK8sNamespace());
-
-				//Add k8s env variables
-				Map<String, String> k8sEnvVars=module.getBwDockerModule().getK8sEnvVariables();
-				for (String key : k8sEnvVars.keySet()) {
-					String fabric8Key="fabric8.env."+key;
-					properties.setProperty(fabric8Key, k8sEnvVars.get(key));
+				for(int i=0;i<volumes.size();i++)
+				{
+					properties.setProperty("bwdocker.volume.v"+i, volumes.get(i));
 				}
-
-			}
-			else if(platform.equals("Mesos")){
-				devFileName="docker-mesos-dev.properties";
-			}
-			else if(platform.equals("Swarm")){
-				devFileName="docker-swarm-dev.properties";
 			}
 
-			File devfile = new File(getWorkspacepath() + File.separator + devFileName);
-			if(devfile.exists()) 
+			List<String> links=module.getBwDockerModule().getDockerLinks();
+			if(links!=null && links.size()>0)
 			{
-				devfile.delete();
+				for(int i=0;i<links.size();i++)
+				{
+					properties.setProperty("bwdocker.link.l"+i, links.get(i));
+				}
 			}
-			boolean done=devfile.createNewFile();
-			if(done)
+
+			List<String> ports=module.getBwDockerModule().getDockerPorts();
+			if(ports!=null && ports.size()>0)
 			{
-				FileOutputStream fileOut = new FileOutputStream(devfile);
-				String msg = "Docker and "+platform+" platform properties";
+				for(int i=0;i<ports.size();i++)
+				{
+					properties.setProperty("bwdocker.port.p"+i, ports.get(i));
+				}
+			}
+
+
+			//Create docker properties file
+
+			File dkrdevfile = new File(getWorkspacepath() + File.separator + "docker-dev.properties");
+			if(dkrdevfile.exists()) 
+			{
+				dkrdevfile.delete();
+			}
+			boolean dkrdone=dkrdevfile.createNewFile();
+			if(dkrdone)
+			{
+				FileOutputStream fileOut = new FileOutputStream(dkrdevfile);
+				String msg = "Docker host properties";
 				properties.store(fileOut, msg);
 				fileOut.close();
 
-				String prodFileName=devFileName.replace("dev", "prod");
-				File prodfile = new File(getWorkspacepath()+ File.separator + prodFileName);
-				if(prodfile.exists()) 
+				File dkrprodfile = new File(getWorkspacepath()+ File.separator + "docker-prod.properties");
+				if(dkrprodfile.exists()) 
 				{
-					prodfile.delete();
+					dkrprodfile.delete();
 				}
-				Files.copy(devfile.toPath(), prodfile.toPath());
+				Files.copy(dkrdevfile.toPath(), dkrprodfile.toPath());
 			}
 
 		} catch (FileNotFoundException e) {

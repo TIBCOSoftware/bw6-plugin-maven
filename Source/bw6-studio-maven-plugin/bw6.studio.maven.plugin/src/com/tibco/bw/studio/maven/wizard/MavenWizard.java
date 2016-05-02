@@ -2,7 +2,9 @@ package com.tibco.bw.studio.maven.wizard;
 
 import java.util.Map;
 
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Control;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.modules.BWProject;
@@ -63,9 +65,10 @@ public class MavenWizard extends Wizard
 		  {
 			  addPage(pcfPage);
 		  }
-		  else if(bwEdition.equals("docker")){
+		  else if(bwEdition.equals("docker"))
+		  {
 			  addPage(dockerPage);
-		  }
+		 }
 	  }
 
 	  @Override
@@ -93,8 +96,7 @@ public class MavenWizard extends Wizard
 	{
 		return project;
 	}
-
-	 
+	
 }
 
 

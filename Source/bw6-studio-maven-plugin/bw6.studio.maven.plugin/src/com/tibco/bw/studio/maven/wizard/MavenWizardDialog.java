@@ -34,8 +34,8 @@ public class MavenWizardDialog extends WizardDialog
 	
 	@Override
 	protected Point getInitialSize() {
-		//return super.getInitialSize();
-		return new Point(750, 610);
+		return super.getInitialSize();
+		//return new Point(750, 610);
 	}
 	
 }

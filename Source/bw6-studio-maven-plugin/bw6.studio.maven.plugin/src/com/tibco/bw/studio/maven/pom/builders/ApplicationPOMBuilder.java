@@ -66,11 +66,17 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			build = new Build();
 			//BW6 maven plugin only needs to be created/added if its a new POM
 			addBW6MavenPlugin( build );
-			
-			if(bwEdition.equals("cf") || bwEdition.equals("docker"))
-	    	{
-				addBWCEPropertiesPlugin(build);
-	    	}
+		}
+		
+		String platform = "";
+		if(bwEdition.equals("docker"))
+		{
+			platform=module.getBwDockerModule().getPlatform();
+		}
+		//Add this plugin
+		if(bwEdition.equals("cf") || bwEdition.equals("docker"))
+    	{
+			addBWCEPropertiesPlugin(build, bwEdition, platform);
     	}
 		
 		if(bwEdition.equals("cf"))
@@ -102,7 +108,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
     		}
     		
     		addDockerMavenPlugin(build);
-    		String platform = module.getBwDockerModule().getPlatform();
+    		
     		if(platform.equals("K8S"))
     		{
     			for(int i=0;i<plugins.size();i++)

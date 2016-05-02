@@ -37,6 +37,8 @@ public abstract class BWModule
 	
 	protected BWDockerModule bwDockerModule;
 	
+	protected BWK8SModule bwk8sModule;
+	
 	protected boolean pomExists;
 	
 	protected Model mavenModel;
@@ -48,6 +50,14 @@ public abstract class BWModule
 
 	
 	
+	public BWK8SModule getBwk8sModule() {
+		return bwk8sModule;
+	}
+
+	public void setBwk8sModule(BWK8SModule bwk8sModule) {
+		this.bwk8sModule = bwk8sModule;
+	}
+
 	public BWDockerModule getBwDockerModule() {
 		return bwDockerModule;
 	}
