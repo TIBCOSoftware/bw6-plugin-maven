@@ -44,7 +44,7 @@ public class MavenWizard extends Wizard
 			  }
 			  else
 			  {
-				  bwEdition="cf";
+				  bwEdition="bw6";
 			  }
 		  } catch (Exception e) 
 		  {
