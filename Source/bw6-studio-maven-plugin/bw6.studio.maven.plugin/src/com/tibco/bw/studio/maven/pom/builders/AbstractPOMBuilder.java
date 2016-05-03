@@ -681,7 +681,20 @@ public abstract class AbstractPOMBuilder
 			properties.setProperty("bwpcf.instances", module.getBwpcfModule().getInstances());
 			properties.setProperty("bwpcf.memory", module.getBwpcfModule().getMemory());
 			properties.setProperty("bwpcf.buildpack", module.getBwpcfModule().getBuildpack());
-
+			
+			//Add cf env variables
+			Map<String, String> cfEnvVars=module.getBwpcfModule().getCfEnvVariables();
+			if(!cfEnvVars.isEmpty())
+			{
+				int i=0;
+				for (String key : cfEnvVars.keySet()) 
+				{
+					String cfKey="bwpcf.env."+i;
+					properties.setProperty(cfKey, cfEnvVars.get(key));
+					i++;
+				}
+			}
+			
 			File devfile = new File(getWorkspacepath() + File.separator + "pcfdev.properties");
 			if(devfile.exists()) 
 			{
@@ -780,6 +793,24 @@ public abstract class AbstractPOMBuilder
 	        child = new Xpp3Dom( "buildpack" );
 	        child.setValue("${bwpcf.buildpack}");
 	        config.addChild( child );
+	        
+	        
+	        Map<String, String> cfEnvVars=module.getBwpcfModule().getCfEnvVariables();
+			if(!cfEnvVars.isEmpty())
+			{
+				child = new Xpp3Dom( "env" );
+				int i=0;
+				for (String key : cfEnvVars.keySet()) 
+				{
+					Xpp3Dom child1 = new Xpp3Dom( key );
+					String cfVal="${bwpcf.env."+i+"}";
+					child1.setValue(cfVal);
+					child.addChild(child1);
+					i++;
+				}
+				config.addChild( child );
+			}
+	        
 	        
 	        List<BWPCFServicesModule> services=module.getBwpcfModule().getServices();
 	        if(services!=null && services.size()>0){

@@ -1,6 +1,7 @@
 package com.tibco.bw.studio.maven.modules;
 
 import java.util.List;
+import java.util.Map;
 
 import org.cloudfoundry.client.lib.CloudFoundryClient;
 
@@ -23,6 +24,8 @@ public class BWPCFModule {
 	private String buildpack;
 	
 	private List<BWPCFServicesModule> services;
+	
+	private Map<String, String> cfEnvVariables;
 	
 	private CloudFoundryClient client;
 	
@@ -104,6 +107,14 @@ public class BWPCFModule {
 
 	public void setAppName(String appName) {
 		this.appName = appName;
+	}
+
+	public Map<String, String> getCfEnvVariables() {
+		return cfEnvVariables;
+	}
+
+	public void setCfEnvVariables(Map<String, String> cfEnvVariables) {
+		this.cfEnvVariables = cfEnvVariables;
 	}
 
 	

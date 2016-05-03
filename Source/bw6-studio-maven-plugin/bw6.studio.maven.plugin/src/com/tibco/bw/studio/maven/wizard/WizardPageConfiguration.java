@@ -64,7 +64,7 @@ public class WizardPageConfiguration extends WizardPage
 				  }else{
 					  bwEdition="docker";
 				  }
-			}else bwEdition="bw6";
+			}else bwEdition="cf";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

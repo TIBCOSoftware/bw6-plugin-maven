@@ -1,5 +1,11 @@
 package com.tibco.bw.studio.maven.wizard;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.jface.wizard.WizardPage;
@@ -31,7 +37,7 @@ public class WizardPagePCF extends WizardPage
 	private Text appPCFInstances;
 	private Text appPCFMemory;
 	private Text appPCFBuildpack;
-	
+	private Text cfEnvVars;
 
 
 	protected WizardPagePCF ( String pageName , BWProject project ) 
@@ -130,6 +136,15 @@ public class WizardPagePCF extends WizardPage
 		GridData buildpackData = new GridData(200, 15);
 		appPCFBuildpack.setLayoutData(buildpackData);
 		
+		Label envVarsLabel = new Label(container, SWT.NONE);
+		envVarsLabel.setText("Env Vars");
+		
+		cfEnvVars = new Text(container, SWT.BORDER | SWT.SINGLE);
+		cfEnvVars.setText("APP_CONFIG_PROFILE=PCF , BW_LOGLEVEL=DEBUG");
+		GridData envvarData = new GridData(400, 15);
+		envvarData.horizontalSpan=3;
+		cfEnvVars.setLayoutData(envvarData);
+		
 		Label pcfServicesLabel = new Label(container, SWT.RIGHT);
 		pcfServicesLabel.setText( "PCF Services" );
 		
@@ -183,6 +198,23 @@ public class WizardPagePCF extends WizardPage
 		bwpcf.setInstances(appPCFInstances.getText());
 		bwpcf.setMemory(appPCFMemory.getText());
 		bwpcf.setBuildpack(appPCFBuildpack.getText());
+		
+		List<String> envvars=new ArrayList<String>();
+		if(cfEnvVars.getText()!=null && !cfEnvVars.getText().isEmpty())
+		{
+			envvars=Arrays.asList(cfEnvVars.getText().split("\\s*,\\s*"));
+		}
+
+		Map<String,String> envMap=new HashMap<String,String>();
+		for(String env:envvars)
+		{
+			String[] keyval=env.split("=");
+			if(keyval[0]!=null && keyval[1]!=null)
+			{
+				envMap.put(keyval[0].trim(), keyval[1].trim());
+			}
+		}
+		bwpcf.setCfEnvVariables(envMap);
 		
 		return bwpcf;
 		
