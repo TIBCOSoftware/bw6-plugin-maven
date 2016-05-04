@@ -18,6 +18,8 @@ import org.eclipse.swt.widgets.Text;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
+import com.tibco.bw.studio.maven.modules.BWApplication;
+import com.tibco.bw.studio.maven.modules.BWDeploymentInfo;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWProject;
@@ -27,28 +29,26 @@ public class WizardPageEnterprise extends WizardPage
 	private Composite container;
 	private BWProject project;
 	private String bwEdition;
-	
-	private Text domain;
-	private Text appspace;
-	private Text appNode;
 
-	private Text domainDesc;
-	private Text appspaceDesc;
-	private Text appNodeDesc;
-
-	
-	private Button createDomain;
-	private Button createAppSpace;
-	private Button createAppNode;
- 
-	
-	private Button redeploy;
-	
 	private Button deployToAdmin;
 
+	private Text agentHost;
+	private Text agentPort;
+
+	private Text domain;
+	private Text domainDesc;
+	
+	private Text appspace;	
+	private Text appspaceDesc;
+	private Text minNodes;
+	
+	private Text appNode;
+	private Text appNodeDesc;
+
+	private Button redeploy;
+		
 	private Text httpPort;
 	private Text osgiPort;
-	private Text agent;
 	
 	private Combo profile;
 
@@ -58,68 +58,55 @@ public class WizardPageEnterprise extends WizardPage
 	{
 		super(pageName);
 		this.project = project;		 
-		setTitle("Maven Configuration Details for Apache Maven and TIBCO BusinessWorks™");
-		setDescription("Enter the GroupId and ArtifactId for for Maven POM File generation. \nThe POM files will be generated for Projects listed below and a Parent POM file will be generated aggregating the Projects");	
+		setTitle("Deployment Details for Apache Maven and TIBCO BusinessWorks™");
+		setDescription("");	
 	}
 
 	@Override
 	public void createControl(Composite parent) 
-	{	
+	{
 		container = new Composite(parent, SWT.NONE);
 
-		GridLayout layout = new GridLayout( 4 , false );
+		GridLayout layout = new GridLayout(4, false);
 		container.setLayout(layout);
 		layout.numColumns = 4;
 
-		appModule = ModuleHelper.getAppModule( project.getModules() );
+		appModule = ModuleHelper.getAppModule(project.getModules());
 
-		  bwEdition = "bw6";
-		  try
-		  {
-			  Map<String,String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
-			  if(manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf"))
-			  {
-				  bwEdition="bwcf";
-			  }
-			  else
-			  {
-				  bwEdition="bw6";
-			  }
-		  } catch (Exception e) 
-		  {
-			  e.printStackTrace();
-		  }
-		  
-		  addNotes();
-		  addSeperator(parent);
-		  addDeploymentFields();
-		  
-			setControl(container);
-			setPageComplete(true);
+		bwEdition = "bw6";
+		try 
+		{
+			Map<String, String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
+			if (manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) 
+			{
+				bwEdition = "bwcf";
+			} else {
+				bwEdition = "bw6";
+			}
+		} 
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+		}
 
-
+		addNotes();
+		addSeperator(parent);
+		addDeploymentFields(parent);
+		setControl(container);
+		setPageComplete(true);
 	}
 	
-	private void addNotes()
+	private void addNotes() 
 	{
 		Label label = new Label(container, SWT.NONE);
-		label.setText( "Note* : Please Enter the Host and Port of the Machine where the BWAgent is running. \r\n "
-			+	"Note* : Please Enter the Domain Name, AppSpace Name and AppNode Name. \r\n"
-			+ "Note* : If the Domain, Appspace and AppNode do not exist then they will be created."
-			+ "");
+		label.setText("Please Enter the Host and Port of the Machine where the BWAgent is running. \r\n"
+				+ "Please Enter the Domain, AppSpace and AppNode Information\r\n"
+				+ "Note* : If the Domain, Appspace and AppNode do not exist then they will be created.\r\n"
+				+ "EAR file will be started on deployment");
 		GridData versionData = new GridData();
 		versionData.horizontalSpan = 4;
 		label.setLayoutData(versionData);
-
-		
-		Label label1 = new Label(container, SWT.NONE);
-		label1.setText( "Note* : The Maven Version and the Bundle-Version should be same." );
-		versionData = new GridData();
-		versionData.horizontalSpan = 4;
-		label1.setLayoutData(versionData);
-
 	}
-	
 
 
 	private void addSeperator(Composite parent) 
@@ -137,45 +124,69 @@ public class WizardPageEnterprise extends WizardPage
 			
 			if(bwEdition.equals("bw6") && module.getType() == BWModuleType.Application)
 			{
+			
+				BWDeploymentInfo info = ((BWApplication)module).getDeploymentInfo();
+				
+				info.setAgentHost(agentHost.getText());
+				info.setAgentPort(agentPort.getText());
+				
+				info.setDomain(domain.getText());
+				info.setDomainDesc(domainDesc.getText());
+				
+				info.setAppspace(appspace.getText());
+				info.setAppspaceDesc(appspaceDesc.getText());
+				
+				info.setAppNode(appNode.getText());
+				info.setAppNodeDesc(appNodeDesc.getText());
+				
+				info.setHttpPort(httpPort.getText());
+				info.setOsgiPort(osgiPort.getText());
+				
+				info.setProfile( profile.getText());
+				info.setRedeploy(redeploy.getSelection() );
+				
 				
 			}
 			module.setOverridePOM(true);
 			
-			
-			//module.setOverridePOM( buttonMap.containsKey( module.getArtifactId() ) ? (buttonMap.get(module.getArtifactId())).getSelection() : true  );
 		}
-		
 		
 		return project;
 	}
 	
-	
-	private void addRedeployBox()
+	private void addDeploymentFields(Composite parent) 
 	{
-		redeploy = new Button(container, SWT.CHECK);
-		redeploy.setSelection(true);
-		redeploy.setToolTipText("If this is checked the the Application will be redeployed if exists.");
-		
-		Label domainLabel = new Label(container, SWT.NONE);
-		domainLabel.setText("Re Deploy the Application if exists.");
-		domainLabel.setToolTipText("Re Deploy the Application if exists.");
-		
-		GridData deployData = new GridData(350, 15);
-		deployData.horizontalSpan = 3;
-		
-		domainLabel.setLayoutData(deployData);
-
-	}
-
-	private void addDeploymentFields() 
-	{
-
+		addAgentInfo();
+		addSeperator(parent);
 		addDomain();
 		addAppSpace();
+		addSeperator(parent);
 		addAppNode();
-		addRedeployBox();
+		addSeperator(parent);
+		addProfile();
+		addSeperator(parent);
 	}
 
+	
+	private void addAgentInfo()
+	{
+		Label agentLabel = new Label(container, SWT.NONE);
+		agentLabel.setText("Agent Host");
+
+		agentHost = new Text(container, SWT.BORDER | SWT.SINGLE);
+		agentHost.setText("");
+		GridData agentData = new GridData(150, 15);
+		agentHost.setLayoutData(agentData);
+
+		Label agentPortLabel = new Label(container, SWT.NONE);
+		agentPortLabel.setText("Agent Port");
+
+		agentPort = new Text(container, SWT.BORDER | SWT.SINGLE);
+		agentPort.setText("");
+		GridData agentPortData = new GridData(150, 15);
+		agentPort.setLayoutData(agentPortData);
+
+	}
 
 	private void addDomain() 
 	{
@@ -183,8 +194,8 @@ public class WizardPageEnterprise extends WizardPage
 		domainLabel.setText("Domain");
 
 		domain = new Text(container, SWT.BORDER | SWT.SINGLE);
-		domain.setText("bwdomain");
-		GridData domainData = new GridData(120, 15);
+		domain.setText( appModule.getArtifactId() + "-Domain");
+		GridData domainData = new GridData(150, 15);
 		domain.setLayoutData(domainData);
 
 		Label domainDescLabel = new Label(container, SWT.NONE);
@@ -192,7 +203,7 @@ public class WizardPageEnterprise extends WizardPage
 
 		domainDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		domainDesc.setText("");
-		GridData domainDescData = new GridData(120, 15);
+		GridData domainDescData = new GridData(300, 15);
 		domainDesc.setLayoutData(domainDescData);
 
 	}
@@ -204,7 +215,7 @@ public class WizardPageEnterprise extends WizardPage
 
 		appspace = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appspace.setText( appModule.getArtifactId() + "-AppSpace");
-		GridData appspaceData = new GridData(120, 15);
+		GridData appspaceData = new GridData(150, 15);
 		appspace.setLayoutData(appspaceData);
 
 		
@@ -213,7 +224,7 @@ public class WizardPageEnterprise extends WizardPage
 
 		appspaceDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appspaceDesc.setText("");
-		GridData appspaceDescData = new GridData(120, 15);
+		GridData appspaceDescData = new GridData(300, 15);
 		appspaceDesc.setLayoutData(appspaceDescData);
 
 	}
@@ -226,7 +237,7 @@ public class WizardPageEnterprise extends WizardPage
 
 		appNode = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appNode.setText(appModule.getArtifactId() + "-AppNode");
-		GridData appNodeData = new GridData(120, 15);
+		GridData appNodeData = new GridData(150, 15);
 		appNode.setLayoutData(appNodeData);
 
 		Label appnodeDescLabel = new Label(container, SWT.NONE);
@@ -234,40 +245,33 @@ public class WizardPageEnterprise extends WizardPage
 
 		appNodeDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appNodeDesc.setText("");
-		GridData appnodeDescData = new GridData(120, 15);
+		GridData appnodeDescData = new GridData(300, 15);
 		appNodeDesc.setLayoutData(appnodeDescData);
 
-
-	}
-
-	
-	private void addNodeInfo() 
-	{
-//		Label osgiLabel = new Label(container, SWT.NONE);
-//		osgiLabel.setText("OSGi Port");
-//
-//		osgiPort = new Text(container, SWT.BORDER | SWT.SINGLE);
-//		osgiPort.setText("1112");
-//		GridData osgiData = new GridData(120, 15);
-//		osgiPort.setLayoutData(osgiData);
 
 		Label httpLabel = new Label(container, SWT.NONE);
 		httpLabel.setText("HTTP Port");
 
 		httpPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		httpPort.setText("9065");
-		GridData httpData = new GridData(120, 15);
+		GridData httpData = new GridData(150, 15);
 		httpPort.setLayoutData(httpData);
 		
-		Label agentLabel = new Label(container, SWT.NONE);
-		agentLabel.setText("Agent");
+		Label osgiPortLabel = new Label(container, SWT.NONE);
+		osgiPortLabel.setText("OSGI Port");
 
-		agent = new Text(container, SWT.BORDER | SWT.SINGLE);
-		agent.setText("");
-		GridData agentData = new GridData(120, 15);
+		osgiPort = new Text(container, SWT.BORDER | SWT.SINGLE);
+		osgiPort.setText("");
+		GridData agentData = new GridData(150, 15);
 		//agentData.horizontalSpan = 3;
-		agent.setLayoutData(agentData);
+		osgiPort.setLayoutData(agentData);
 
+
+	}
+	
+	
+	private void addProfile()
+	{
 		
 		Label profileLabel = new Label(container, SWT.NONE);
 		profileLabel.setText("Profile");
@@ -287,11 +291,29 @@ public class WizardPageEnterprise extends WizardPage
 		}
 		
 		GridData profileData = new GridData(120, 15);
-		//agentData.horizontalSpan = 3;
+		profileData.horizontalSpan = 3;
 		profile.setLayoutData(profileData);
 
+		addRedeployBox();
 	}
 	
+	private void addRedeployBox()
+	{
+		redeploy = new Button(container, SWT.CHECK);
+		redeploy.setSelection(true);
+		redeploy.setToolTipText("If this is checked the the Application will be redeployed if exists.");
+		
+		Label domainLabel = new Label(container, SWT.NONE);
+		domainLabel.setText("Re Deploy the Application if exists.");
+		domainLabel.setToolTipText("Re Deploy the Application if exists.");
+		
+		GridData deployData = new GridData(350, 15);
+		deployData.horizontalSpan = 3;
+		
+		domainLabel.setLayoutData(deployData);
+
+	}
+
 	private int getSelectedProfile( List<String> profiles )
 	{
 		String os = System.getProperty("os.name");
@@ -316,14 +338,23 @@ public class WizardPageEnterprise extends WizardPage
 			return 0;
 		}
 		
+		else 
+		{
+			if( profiles.contains( "default.substvar" ))
+			{
+				return profiles.indexOf( "default.substvar");	
+			}
+			
+		}
+		
 		return -1;
 
 	}
 	
 	private List<String> getProfiles()
 	{
-		File project = new File(appModule.getProject().getLocationURI());
-		File metainf = new File ( project , "META-INF" );
+		File appProject = new File( ModuleHelper.getApplication( project.getModules()).getProject().getLocationURI() );
+		File metainf = new File ( appProject , "META-INF" );
 		File[] files = metainf.listFiles(new FileFilter() {
 			
 			public boolean accept(File pathname) {

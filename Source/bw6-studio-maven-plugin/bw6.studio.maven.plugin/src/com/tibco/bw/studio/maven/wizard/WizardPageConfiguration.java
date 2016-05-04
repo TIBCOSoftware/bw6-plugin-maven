@@ -21,6 +21,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
+import com.tibco.bw.studio.maven.modules.BWApplication;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWParent;
@@ -347,9 +348,14 @@ public class WizardPageConfiguration extends WizardPage
 		{
 			module.setGroupId( appGroupId.getText() );
 			
-//			if(bwEdition.equals("bwcf") && module.getType() == BWModuleType.Application){
-//				module.setBwpcfModule(setBWPCFValues(module));
-//			}
+			if(bwEdition.equals("bw6") && module.getType() == BWModuleType.Application)
+			{
+				if( addDeploymentConfig.getSelection() )
+				{
+					((BWApplication)module).getDeploymentInfo().setDeployToAdmin( true);	
+				}
+				
+			}
 			module.setOverridePOM(true);
 			
 			

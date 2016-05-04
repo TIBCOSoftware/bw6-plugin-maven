@@ -5,9 +5,12 @@ import java.util.Map;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Plugin;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
+import com.tibco.bw.studio.maven.modules.BWApplication;
+import com.tibco.bw.studio.maven.modules.BWDeploymentInfo;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWProject;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
@@ -59,14 +62,104 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		
 	}
 	
+	
+	
+	@Override
+	protected void addDeploymentDetails(Plugin plugin) 
+	{
+		if( !bwEdition.equals("bw6"))
+		{
+			return;
+		}
+	
+		BWDeploymentInfo info = ((BWApplication)module).getDeploymentInfo();
+		
+		if( info == null || ! info.isDeployToAdmin() )
+		{
+			return;
+		}
+		
+		Xpp3Dom config = new Xpp3Dom("configuration");
+
+		Xpp3Dom deployToAdmin  = new Xpp3Dom("deployToAdmin");
+		deployToAdmin.setValue( Boolean.toString(info.isDeployToAdmin()) );
+
+
+		Xpp3Dom agentHost  = new Xpp3Dom("agentHost");
+		agentHost.setValue( info.getAgentHost() );
+		
+		Xpp3Dom agentPort = new Xpp3Dom("agentPort");
+		agentPort.setValue( info.getAgentPort() );
+		
+		Xpp3Dom domain  = new Xpp3Dom("domain");
+		domain.setValue( info.getDomain() );
+
+		Xpp3Dom domainDesc  = new Xpp3Dom("domainDesc");
+		domainDesc.setValue( info.getDomainDesc() );
+		
+		Xpp3Dom appspace  = new Xpp3Dom("appSpace");
+		appspace.setValue( info.getAppspace() );
+
+		Xpp3Dom appspaceDesc  = new Xpp3Dom("appSpaceDesc");
+		appspaceDesc.setValue( info.getAppspaceDesc() );
+
+
+		
+		Xpp3Dom appnode  = new Xpp3Dom("appNode");
+		appnode.setValue( info.getAppNode() );
+		
+		
+		Xpp3Dom appnodeDesc  = new Xpp3Dom("appNodeDesc");
+		appnodeDesc.setValue( info.getAppNodeDesc() );
+
+		Xpp3Dom osgiport  = new Xpp3Dom("osgiPort");
+		osgiport.setValue( info.getOsgiPort() );
+
+		Xpp3Dom httpPort  = new Xpp3Dom("httpPort");
+		httpPort.setValue( info.getHttpPort() );
+
+		Xpp3Dom profile  = new Xpp3Dom("profile");
+		profile.setValue( info.getProfile() );
+
+		Xpp3Dom redeploy  = new Xpp3Dom("redeploy");
+		redeploy.setValue( Boolean.toString(info.isRedeploy()) );
+
+
+		config.addChild(deployToAdmin);
+		
+		config.addChild(agentHost);
+		config.addChild(agentPort);
+		
+		config.addChild(domain);
+		config.addChild(domainDesc);
+		
+		config.addChild(appspace);
+		config.addChild(appspaceDesc);
+		
+		config.addChild(appnode);
+		config.addChild(appnodeDesc);
+		
+		config.addChild(osgiport );
+		config.addChild(httpPort );
+		
+		config.addChild(redeploy);		
+		config.addChild(profile );
+		
+		plugin.setConfiguration(config);
+
+		
+	}
+
+
+
 	protected void addBuild()
 	{
 		Build build = model.getBuild();
 		if(build == null){
-			build = new Build();
-			//BW6 maven plugin only needs to be created/added if its a new POM
-			addBW6MavenPlugin( build );
+			build = new Build();			
+			
 		}
+		addBW6MavenPlugin( build );
 		
 		String platform = "";
 		if(bwEdition.equals("docker"))

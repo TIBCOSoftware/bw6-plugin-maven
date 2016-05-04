@@ -103,15 +103,35 @@ public abstract class AbstractPOMBuilder
     	model.setPackaging( getPackaging() );
 	}
 
-	protected void addBW6MavenPlugin( Build build )
-	{
-			Plugin plugin = new Plugin();
-			plugin.setGroupId("com.tibco.plugins");
-			plugin.setArtifactId("bw6-maven-plugin");
-			plugin.setVersion("1.0.0");
-			plugin.setExtensions("true");
-			
+	protected void addBW6MavenPlugin(Build build) {
+
+		Plugin plugin = null;
+		for( Plugin p : build.getPlugins() )
+		{
+			if( p.getArtifactId().equals("bw6-maven-plugin") && p.getGroupId().equals("com.tibco.plugins"))
+			{
+				plugin = p;
+			}
+		}
+		if( plugin == null )
+		{
+			plugin = new Plugin();	
 			build.addPlugin(plugin);
+		}
+		
+		plugin.setGroupId("com.tibco.plugins");
+		plugin.setArtifactId("bw6-maven-plugin");
+		plugin.setVersion("1.0.0");
+		plugin.setExtensions("true");
+
+		addDeploymentDetails(plugin);
+
+
+	}
+	
+	protected void addDeploymentDetails( Plugin plugin)
+	{
+		
 	}
 	
 	

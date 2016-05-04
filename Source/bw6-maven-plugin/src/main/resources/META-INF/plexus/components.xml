@@ -57,8 +57,8 @@
           <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
           <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
           <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
-          <package>com.tibco.plugins:bw6-maven-plugin:bwear</package>
-          <install>org.apache.maven.plugins:maven-install-plugin:install</install>
+          <package>com.tibco.plugins:bw6-maven-plugin:bwear</package>                    
+          <install>org.apache.maven.plugins:maven-install-plugin:install,com.tibco.plugins:bw6-maven-plugin:bwinstall</install>
           <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
         </phases>
       </configuration>

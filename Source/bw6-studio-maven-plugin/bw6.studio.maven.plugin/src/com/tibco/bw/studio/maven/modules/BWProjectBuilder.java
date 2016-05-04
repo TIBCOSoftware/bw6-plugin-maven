@@ -94,9 +94,12 @@ public class BWProjectBuilder
 		{
 			module.setPomExists( true );
 			Model model = POMHelper.readModelFromPOM(pomFileAbs);
-			module.setMavenModel( model );
-			module.setArtifactId( model.getArtifactId() );
-			module.setGroupId( model.getGroupId() );
+			if( model != null )
+			{
+				module.setMavenModel( model );
+				module.setArtifactId( model.getArtifactId() );
+				module.setGroupId( model.getGroupId() );
+			}
 		}
 		module.setPomfileLocation(pomFileAbs);
 		moduleList.add(module);
