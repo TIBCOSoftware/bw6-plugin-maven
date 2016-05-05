@@ -53,6 +53,8 @@ public class WizardPageEnterprise extends WizardPage
 	private Combo profile;
 
 	private BWModule appModule;
+	
+	private BWDeploymentInfo info;
 
 	protected WizardPageEnterprise( String pageName , BWProject project ) 
 	{
@@ -62,6 +64,120 @@ public class WizardPageEnterprise extends WizardPage
 		setDescription("");	
 	}
 
+	public boolean validate()
+	{
+		String errorMessage = "";
+		boolean isValidHost = !agentHost.getText().isEmpty();
+		if( !isValidHost )
+		{
+			errorMessage = errorMessage + "[Agent Host value is required]";
+		}
+		
+		boolean isValidPort = false;
+		try
+		{
+			if( agentPort.getText().isEmpty())
+			{
+				errorMessage = errorMessage + "[Agent Port value is required]";
+			}
+			else if( Integer.parseInt( agentPort.getText() ) < 0 )
+			{
+				errorMessage = errorMessage + "[Agent Port value must be an Integer Value]";
+			}
+			else
+			{
+				isValidPort = true;
+			}
+		}
+		catch( Exception e )
+		{
+			errorMessage = errorMessage + "[Agent Port value must be an Integer Value]";
+		}
+		
+		boolean isValidDomain = !domain.getText().isEmpty();
+		if( !isValidDomain )
+		{
+			errorMessage = errorMessage + "[Domain Value is required]";
+		}
+		
+		boolean isValidAppSpace = !appspace.getText().isEmpty(); 
+		if(!isValidAppSpace )
+		{
+			errorMessage = errorMessage + "[AppSpace Value is required]";
+		}
+		
+		boolean isValidAppNode = !appNode.getText().isEmpty();
+		if( !isValidAppNode )
+		{
+			errorMessage = errorMessage + "[AppNode Value is required]";
+		}
+		
+		
+		boolean isValidHTTPPort = false;
+		try
+		{
+			if( httpPort.getText().isEmpty())
+			{
+				errorMessage = errorMessage + "[HTTP Port value is required]";
+			}
+			else if( Integer.parseInt( httpPort.getText() ) < 0 )
+			{
+				errorMessage = errorMessage + "[HTTP Port value must be an Integer Value]";
+			}
+			else
+			{
+				isValidHTTPPort = true;
+			}
+		}
+		
+		
+		
+		catch( Exception e )
+		{
+			errorMessage = errorMessage + "[HTTP Port value must be an Integer Value]";
+		}
+		
+		boolean isValidOSGi = false;
+		
+		try
+		{
+			if( osgiPort.getText().isEmpty())
+			{
+				isValidOSGi = true;
+			}
+			else if( Integer.parseInt( osgiPort.getText() ) < 0 )
+			{
+				isValidOSGi = false;
+				errorMessage = errorMessage + "[OSGi Port value must be an Integer Value]";
+			}
+			else
+			{
+				isValidOSGi = true;
+			}
+		}
+		catch( Exception e )
+		{
+			errorMessage = errorMessage + "[OSGi Port value must be an Integer Value]";
+		}
+		
+		
+		if( !errorMessage.isEmpty() )
+		{
+			setErrorMessage( errorMessage );
+			return false;
+		}
+		
+		if( isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort )
+		{
+			return true;	
+		}
+		
+		return false;
+		
+		
+		
+	}
+	
 	@Override
 	public void createControl(Composite parent) 
 	{
@@ -72,7 +188,9 @@ public class WizardPageEnterprise extends WizardPage
 		layout.numColumns = 4;
 
 		appModule = ModuleHelper.getAppModule(project.getModules());
-
+		
+		info = ((BWApplication)ModuleHelper.getApplication(project.getModules())).getDeploymentInfo();
+		
 		bwEdition = "bw6";
 		try 
 		{
@@ -174,7 +292,7 @@ public class WizardPageEnterprise extends WizardPage
 		agentLabel.setText("Agent Host");
 
 		agentHost = new Text(container, SWT.BORDER | SWT.SINGLE);
-		agentHost.setText("");
+		agentHost.setText(info.getAgentHost() );
 		GridData agentData = new GridData(150, 15);
 		agentHost.setLayoutData(agentData);
 
@@ -182,7 +300,7 @@ public class WizardPageEnterprise extends WizardPage
 		agentPortLabel.setText("Agent Port");
 
 		agentPort = new Text(container, SWT.BORDER | SWT.SINGLE);
-		agentPort.setText("");
+		agentPort.setText( info.getAgentPort());
 		GridData agentPortData = new GridData(150, 15);
 		agentPort.setLayoutData(agentPortData);
 
@@ -194,7 +312,15 @@ public class WizardPageEnterprise extends WizardPage
 		domainLabel.setText("Domain");
 
 		domain = new Text(container, SWT.BORDER | SWT.SINGLE);
-		domain.setText( appModule.getArtifactId() + "-Domain");
+		if( info.getDomain() != null && !info.getDomain().isEmpty() )
+		{
+			domain.setText( info.getDomain() );
+		}
+		else
+		{
+			domain.setText( appModule.getArtifactId() + "-Domain");	
+		}
+		
 		GridData domainData = new GridData(150, 15);
 		domain.setLayoutData(domainData);
 
@@ -202,7 +328,7 @@ public class WizardPageEnterprise extends WizardPage
 		domainDescLabel.setText("Description");
 
 		domainDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
-		domainDesc.setText("");
+		domainDesc.setText( info.getDomainDesc() );
 		GridData domainDescData = new GridData(300, 15);
 		domainDesc.setLayoutData(domainDescData);
 
@@ -214,7 +340,15 @@ public class WizardPageEnterprise extends WizardPage
 		appspaceLabel.setText("AppSpace");
 
 		appspace = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appspace.setText( appModule.getArtifactId() + "-AppSpace");
+		if( info.getAppspace() != null && !info.getAppspace().isEmpty())
+		{
+			appspace.setText( info.getAppspace() );
+		}
+		else
+		{
+			appspace.setText( appModule.getArtifactId() + "-AppSpace");	
+		}
+		
 		GridData appspaceData = new GridData(150, 15);
 		appspace.setLayoutData(appspaceData);
 
@@ -223,7 +357,7 @@ public class WizardPageEnterprise extends WizardPage
 		appspaceDescLabel.setText("Description");
 
 		appspaceDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appspaceDesc.setText("");
+		appspaceDesc.setText( info.getAppspaceDesc() );
 		GridData appspaceDescData = new GridData(300, 15);
 		appspaceDesc.setLayoutData(appspaceDescData);
 
@@ -236,7 +370,15 @@ public class WizardPageEnterprise extends WizardPage
 		appNodeLabel.setText("AppNode");
 
 		appNode = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appNode.setText(appModule.getArtifactId() + "-AppNode");
+		if( info.getAppNode() != null && !info.getAppNode().isEmpty() )
+		{
+			appNode.setText( info.getAppNode() );
+		}
+		else
+		{
+			appNode.setText(appModule.getArtifactId() + "-AppNode");	
+		}
+		
 		GridData appNodeData = new GridData(150, 15);
 		appNode.setLayoutData(appNodeData);
 
@@ -244,7 +386,7 @@ public class WizardPageEnterprise extends WizardPage
 		appnodeDescLabel.setText("Description");
 
 		appNodeDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appNodeDesc.setText("");
+		appNodeDesc.setText( info.getAppNodeDesc() );
 		GridData appnodeDescData = new GridData(300, 15);
 		appNodeDesc.setLayoutData(appnodeDescData);
 
@@ -253,7 +395,7 @@ public class WizardPageEnterprise extends WizardPage
 		httpLabel.setText("HTTP Port");
 
 		httpPort = new Text(container, SWT.BORDER | SWT.SINGLE);
-		httpPort.setText("9065");
+		httpPort.setText( info.getHttpPort() );
 		GridData httpData = new GridData(150, 15);
 		httpPort.setLayoutData(httpData);
 		
@@ -261,9 +403,8 @@ public class WizardPageEnterprise extends WizardPage
 		osgiPortLabel.setText("OSGI Port");
 
 		osgiPort = new Text(container, SWT.BORDER | SWT.SINGLE);
-		osgiPort.setText("");
+		osgiPort.setText( info.getOsgiPort() );
 		GridData agentData = new GridData(150, 15);
-		//agentData.horizontalSpan = 3;
 		osgiPort.setLayoutData(agentData);
 
 
@@ -300,7 +441,7 @@ public class WizardPageEnterprise extends WizardPage
 	private void addRedeployBox()
 	{
 		redeploy = new Button(container, SWT.CHECK);
-		redeploy.setSelection(true);
+		redeploy.setSelection( info.isRedeploy() );
 		redeploy.setToolTipText("If this is checked the the Application will be redeployed if exists.");
 		
 		Label domainLabel = new Label(container, SWT.NONE);
@@ -316,6 +457,15 @@ public class WizardPageEnterprise extends WizardPage
 
 	private int getSelectedProfile( List<String> profiles )
 	{
+		
+		if( info.getProfile() != null && !info.getProfile().isEmpty())
+		{
+			if( profiles.contains( info.getProfile() ))
+			{
+				return profiles.indexOf( info.getProfile() );	
+			}
+			
+		}
 		String os = System.getProperty("os.name");
 		boolean isWindows = false;
 		if (os.indexOf("Windows") != -1) 

@@ -71,26 +71,34 @@ public class MavenWizard extends Wizard
 		 }
 	  }
 
-	  @Override
-	  public boolean performFinish() 
-	  {
-		project = configPage.getUpdatedProject();
-		
-	    if( bwEdition.equals("bw6"))
-	    {
-	    	enterprisePage.getUpdatedProject();
-	    }
-	    else if(bwEdition.equals("cf"))
-	    {
-	    	pcfPage.getUpdatedProject();
-	    }
-	    else if(bwEdition.equals("docker"))
-	    {
-	    	dockerPage.getUpdatedProject();
-	    }
+	@Override
+	public boolean performFinish() {
 
-	    return true;
-	  }
+		project = configPage.getUpdatedProject();
+
+		if (bwEdition.equals("bw6")) 
+		{
+			if( ((WizardPageEnterprise) enterprisePage).validate() )
+			{
+				enterprisePage.getUpdatedProject();	
+			}
+			else
+			{
+				return false;
+			}
+			
+		} 
+		else if (bwEdition.equals("cf")) 
+		{
+			pcfPage.getUpdatedProject();
+		}
+		else if (bwEdition.equals("docker")) 
+		{
+			dockerPage.getUpdatedProject();
+		}
+
+		return true;
+	}
 
 	public BWProject getProject() 
 	{

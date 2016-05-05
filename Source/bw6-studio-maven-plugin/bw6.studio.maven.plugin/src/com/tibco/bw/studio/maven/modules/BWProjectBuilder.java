@@ -11,7 +11,10 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.model.ConfigurationContainer;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Plugin;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -112,11 +115,87 @@ public class BWProjectBuilder
 		Map<String,String> headers = ManifestParser.parseManifest(applicationProject);
 		buildCommonInfo(applicationProject, application, headers , application );
 		
+		loadDeploymentInfo(application);
+		
 		moduleList.add(application);
 		
 		return application;
-}
+	}
 	
+	private void loadDeploymentInfo( BWApplication application )
+	{
+		BWDeploymentInfo info = application.getDeploymentInfo();
+		Model model = application.getMavenModel();
+		if( model == null )
+		{
+			return;
+		}
+		Plugin plugin = null;
+		for( Plugin p : model.getBuild().getPlugins() )
+		{
+			if( p.getArtifactId().equals("bw6-maven-plugin") && p.getGroupId().equals("com.tibco.plugins"))
+			{
+				plugin = p;
+			}
+		}
+	
+		if( plugin == null )
+		{
+			return;
+		}
+		
+		Xpp3Dom dom = (Xpp3Dom) plugin.getConfiguration();
+		if( dom == null )
+		{
+			return;
+		}
+		
+		info.setDeployToAdmin( getBooleanValuefromDom("deployToAdmin", dom ));
+		
+		info.setAgentHost( getStringValuefromDom("agentHost", dom));
+		info.setAgentPort( getStringValuefromDom( "agentPort", dom));
+		
+		info.setDomain( getStringValuefromDom("domain", dom));
+		info.setDomainDesc( getStringValuefromDom("domainDesc", dom));
+		
+		info.setAppspace( getStringValuefromDom("appSpace", dom));
+		info.setAppspaceDesc( getStringValuefromDom("appSpaceDesc", dom));
+		
+		info.setAppNode( getStringValuefromDom("appNode", dom));
+		info.setAppNodeDesc( getStringValuefromDom("appNodeDesc", dom));
+		
+		info.setHttpPort( getStringValuefromDom("httpPort", dom));
+		info.setOsgiPort( getStringValuefromDom("osgiPort", dom));
+		
+		info.setProfile( getStringValuefromDom("profile", dom));
+		info.setRedeploy( getBooleanValuefromDom("redeploy", dom));
+		
+	}
+
+	
+	private String getStringValuefromDom( String name , Xpp3Dom dom )
+	{
+		Xpp3Dom child = dom.getChild( name );
+		if ( child != null )
+		{
+			return child.getValue();
+		}
+		
+		return "";
+	}
+	
+	private boolean getBooleanValuefromDom( String name ,Xpp3Dom dom )
+	{
+		String value = getStringValuefromDom(name, dom);
+		try 
+		{
+			return Boolean.parseBoolean(value);
+		}
+		catch(Exception e )
+		{
+			return false;
+		}
+	}
 	
 	private void buildModules( BWApplication application ) throws Exception
 	{

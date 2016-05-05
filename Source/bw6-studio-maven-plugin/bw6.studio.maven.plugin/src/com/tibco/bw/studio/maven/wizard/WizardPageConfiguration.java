@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Text;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.BWApplication;
+import com.tibco.bw.studio.maven.modules.BWDeploymentInfo;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWParent;
@@ -79,11 +80,7 @@ public class WizardPageConfiguration extends WizardPage
 
 		addNotes();
 		
-//		if(bwEdition.equals("bwcf")){
-//			addSeperator(parent);
-//			
-//			setApplicationPCFPOMFields();
-//		}
+
 		addSeperator(parent);
 
 		setApplicationPOMFields();
@@ -146,7 +143,10 @@ public class WizardPageConfiguration extends WizardPage
 		layout.numColumns = 2;
 
 		addDeploymentConfig = new Button(innerContainer, SWT.CHECK );
-		addDeploymentConfig.setSelection( true );
+		
+		BWDeploymentInfo info = ((BWApplication) ModuleHelper.getApplication(project.getModules())).getDeploymentInfo();
+		
+		addDeploymentConfig.setSelection( info.isDeployToAdmin() );
 		
 		addDeploymentConfig.addSelectionListener( new SelectionListener() 
 		{

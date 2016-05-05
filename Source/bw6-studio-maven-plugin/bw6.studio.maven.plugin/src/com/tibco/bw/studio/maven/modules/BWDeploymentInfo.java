@@ -4,33 +4,33 @@ public class BWDeploymentInfo
 {
 
 	
-	private boolean deployToAdmin; 
+	private boolean deployToAdmin = false; 
 	
 	
-	private String agentHost;
+	private String agentHost = "";
 	
-	private String agentPort;
+	private String agentPort = "";
 
-	private String domain;
+	private String domain = "";
 	
-	private String appspace;
+	private String appspace = "";
 	
-	private String appNode;
+	private String appNode = "";
 	
-	private String domainDesc;
+	private String domainDesc = "";
 	
-	private String appspaceDesc;
+	private String appspaceDesc = "";
 	
-	private String appNodeDesc;
+	private String appNodeDesc = "";
 
-	private String httpPort;
+	private String httpPort = "";
 	
-	private String osgiPort;
+	private String osgiPort = "";
 	
 	
-	private String profile;
+	private String profile = "";
 	
-	private boolean redeploy;
+	private boolean redeploy = true;
 
 	
 	

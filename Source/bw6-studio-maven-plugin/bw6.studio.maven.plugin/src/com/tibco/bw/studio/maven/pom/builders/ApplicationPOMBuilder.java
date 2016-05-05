@@ -72,6 +72,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			return;
 		}
 	
+		plugin.setConfiguration(null);
+		
 		BWDeploymentInfo info = ((BWApplication)module).getDeploymentInfo();
 		
 		if( info == null || ! info.isDeployToAdmin() )
