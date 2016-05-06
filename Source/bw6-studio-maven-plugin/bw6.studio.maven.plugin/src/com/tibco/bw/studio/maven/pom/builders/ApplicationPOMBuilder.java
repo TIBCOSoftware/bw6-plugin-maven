@@ -193,28 +193,32 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		
 		plugin.setConfiguration(config);
 
-		File deploymentProperties = new File( ModuleHelper.getParentModule( project.getModules() ).getProject().getLocationURI().getRawPath() + File.separator + "deployment.properties");
-
-		if(deploymentProperties.exists()) 
+		if( ModuleHelper.getParentModule( project.getModules() ).getProject() != null )
 		{
-			deploymentProperties.delete();
-		}
+			File deploymentProperties = new File( ModuleHelper.getParentModule( project.getModules() ).getProject().getLocationURI().getRawPath() + File.separator + "deployment.properties");
 
-		boolean fileCreated = false;
-		FileOutputStream fileOut = null;
-		try {
-			
-			fileCreated = deploymentProperties.createNewFile();
-			fileOut = new FileOutputStream(deploymentProperties);
-			String msg = "EAR Deployment Properties. Pass -DdeploymentConfig.file=<File Location/File Name> if you are running from Command Line. Otherwise add 'deploymentConfig.file' property to the POM File ";
-			properties.store(fileOut, msg);
-			fileOut.close();
+			if(deploymentProperties.exists()) 
+			{
+				deploymentProperties.delete();
+			}
+
+			boolean fileCreated = false;
+			FileOutputStream fileOut = null;
+			try {
+				
+				fileCreated = deploymentProperties.createNewFile();
+				fileOut = new FileOutputStream(deploymentProperties);
+				String msg = "EAR Deployment Properties. Pass -DdeploymentConfig.file=<File Location/File Name> if you are running from Command Line. Otherwise add 'deploymentConfig.file' property to the POM File ";
+				properties.store(fileOut, msg);
+				fileOut.close();
 
 
-		} 
-		catch (Exception e) 
-		{
-			e.printStackTrace();
+			} 
+			catch (Exception e) 
+			{
+				e.printStackTrace();
+			}
+
 		}
 		
 
