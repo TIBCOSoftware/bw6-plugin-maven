@@ -196,8 +196,53 @@ public class WizardPageDocker extends WizardPage{
 		dockerImageMaintainer = new Text(container, SWT.BORDER | SWT.SINGLE);
 		dockerImageMaintainer.setText("abc@tibco.com");
 		GridData maintainerData = new GridData(200, 15);
+		maintainerData.horizontalSpan=3;
 		dockerImageMaintainer.setLayoutData(maintainerData);
+		
+		
+		final Button dkr = new Button(container, SWT.CHECK );
+		dkr.setSelection( false );
+		
+		dkr.addSelectionListener( new SelectionListener() 
+		{
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				if( dkr.getSelection() )
+				{
+					dockerAppName.setEditable(true);
+					dockerAppName.setText("BWCEAPP");
+					dockerVolume.setEditable(true);
+					dockerLink.setEditable(true);
+					dockerEnv.setEditable(true);
+					dockerPort.setEditable(true);
+					dockerPort.setText("18080:8080,17777:7777");
+					container.layout();
+				}
+				else
+				{
+					dockerAppName.setEditable(false);
+					dockerAppName.setText("");
+					dockerVolume.setEditable(false);
+					dockerVolume.setText("");
+					dockerLink.setEditable(false);
+					dockerLink.setText("");
+					dockerEnv.setEditable(false);
+					dockerEnv.setText("");
+					dockerPort.setEditable(false);
+					dockerPort.setText("");
+					container.layout();
+				}
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		});
 
+		
+		Label dkrlabel = new Label(container, SWT.NONE );
+		dkrlabel.setText( "Run on docker host" );
 		//createContents(container);
 	}
 	
@@ -219,8 +264,8 @@ public class WizardPageDocker extends WizardPage{
 		Label appNameLabel = new Label(container, SWT.NONE);
 		appNameLabel.setText("App Name");
 
-		dockerAppName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerAppName.setText("BWCEAPP");
+		dockerAppName = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+		dockerAppName.setText("");
 		GridData appNameData = new GridData(100, 15);
 		dockerAppName.setLayoutData(appNameData);
 		
@@ -228,7 +273,7 @@ public class WizardPageDocker extends WizardPage{
 		Label volumeLabel = new Label(container, SWT.NONE);
 		volumeLabel.setText("Volumes");
 
-		dockerVolume = new Text(container, SWT.BORDER | SWT.SINGLE);
+		dockerVolume = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerVolume.setText("");
 		GridData volData = new GridData(200, 15);
 		dockerVolume.setLayoutData(volData);
@@ -237,15 +282,15 @@ public class WizardPageDocker extends WizardPage{
 		Label portLabel = new Label(container, SWT.NONE);
 		portLabel.setText("Ports");
 
-		dockerPort = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerPort.setText("18080:8080,17777:7777");
+		dockerPort = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+		dockerPort.setText("");
 		GridData port1Data = new GridData(200, 15);
 		dockerPort.setLayoutData(port1Data);
 		
 		Label linkLabel = new Label(container, SWT.NONE);
 		linkLabel.setText("Links");
 
-		dockerLink = new Text(container, SWT.BORDER | SWT.SINGLE);
+		dockerLink = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerLink.setText("");
 		GridData linkData = new GridData(200, 15);
 		dockerLink.setLayoutData(linkData);
@@ -254,7 +299,7 @@ public class WizardPageDocker extends WizardPage{
 		Label envLabel = new Label(container, SWT.NONE);
 		envLabel.setText("Env Vars");
 
-		dockerEnv = new Text(container, SWT.BORDER | SWT.SINGLE);
+		dockerEnv = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerEnv.setText("");
 		GridData envData = new GridData(200, 15);
 		dockerEnv.setLayoutData(envData);
@@ -273,6 +318,8 @@ public class WizardPageDocker extends WizardPage{
 		bwdocker.setDockerImageName(dockerImageName.getText());
 		bwdocker.setDockerImageFrom(dockerImageFrom.getText());
 		bwdocker.setDockerImageMaintainer(dockerImageMaintainer.getText());
+		
+		//Below are Docker Run values - set them only if checked otherwise blank
 		bwdocker.setDockerAppName(dockerAppName.getText());
 		
 		List<String> volumes=new ArrayList<String>();
@@ -289,13 +336,16 @@ public class WizardPageDocker extends WizardPage{
 		}
 		bwdocker.setDockerLinks(links);
 		
-		List<String> ports=new ArrayList<String>();
-		if(dockerPort.getText()!=null && !dockerPort.getText().isEmpty())
-		{
-			ports=Arrays.asList(dockerPort.getText().split("\\s*,\\s*"));
-		}
-		bwdocker.setDockerPorts(ports);
 		
+		if(dockerPort.getEditable())
+		{
+			List<String> ports=new ArrayList<String>();
+			if(dockerPort.getText()!=null && !dockerPort.getText().isEmpty())
+			{
+				ports=Arrays.asList(dockerPort.getText().split("\\s*,\\s*"));
+			}
+			bwdocker.setDockerPorts(ports);
+		}
 		
 		List<String> envs=new ArrayList<String>();
 		if(dockerEnv.getText()!=null && !dockerEnv.getText().isEmpty())
@@ -313,6 +363,8 @@ public class WizardPageDocker extends WizardPage{
 			}
 		}
 		bwdocker.setDockerEnvs(envMap);
+		///Run ends
+		
 		
 		bwdocker.setPlatform(platform.getText());
 		
