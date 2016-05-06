@@ -61,7 +61,7 @@ public class WizardPageEnterprise extends WizardPage
 		super(pageName);
 		this.project = project;		 
 		setTitle("Deployment Details for Apache Maven and TIBCO BusinessWorks™");
-		setDescription("");	
+		setDescription("Please Enter the Deployment details to Deploy the EAR file to BWAgent. \r\nThe EAR file will be deployed to the Agent provided below during the Maven \"install \" lifecycle phase.");	
 	}
 
 	public boolean validate()

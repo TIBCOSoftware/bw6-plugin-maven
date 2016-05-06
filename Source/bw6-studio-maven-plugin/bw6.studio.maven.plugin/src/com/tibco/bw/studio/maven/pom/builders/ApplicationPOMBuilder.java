@@ -1,7 +1,11 @@
 package com.tibco.bw.studio.maven.pom.builders;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Plugin;
@@ -72,60 +76,100 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			return;
 		}
 	
+		Properties properties = new Properties();
+
 		plugin.setConfiguration(null);
 		
 		BWDeploymentInfo info = ((BWApplication)module).getDeploymentInfo();
 		
 		if( info == null || ! info.isDeployToAdmin() )
 		{
+			Xpp3Dom config = new Xpp3Dom("configuration");
+			plugin.setConfiguration( config );
+			model.getProperties().remove("deployToAdmin");
+			model.getProperties().remove("agentHost");
+			model.getProperties().remove("agentPort");
+			model.getProperties().remove("domain");
+			model.getProperties().remove("domainDesc");
+			model.getProperties().remove("appSpace");
+			model.getProperties().remove("appSpaceDesc");
+			model.getProperties().remove("appNode");
+			model.getProperties().remove("appNodeDesc");
+			model.getProperties().remove("httpPort");
+			model.getProperties().remove("osgiPort");
+			model.getProperties().remove("redeploy");
+			model.getProperties().remove("profile");
 			return;
 		}
 		
 		Xpp3Dom config = new Xpp3Dom("configuration");
 
-		Xpp3Dom deployToAdmin  = new Xpp3Dom("deployToAdmin");
-		deployToAdmin.setValue( Boolean.toString(info.isDeployToAdmin()) );
+		properties.put("deploymentConfig.file", "" );
 
+		Xpp3Dom deployToAdmin  = new Xpp3Dom("deployToAdmin");
+		deployToAdmin.setValue( "${deployToAdmin}" );
+		model.addProperty("deployToAdmin", Boolean.toString(info.isDeployToAdmin()) );
+		properties.put("deployToAdmin", Boolean.toString(info.isDeployToAdmin()) );
 
 		Xpp3Dom agentHost  = new Xpp3Dom("agentHost");
-		agentHost.setValue( info.getAgentHost() );
-		
+		agentHost.setValue( "${agentHost}"  );
+		model.addProperty("agentHost", info.getAgentHost() );		
+		properties.put("agentHost", info.getAgentHost() );
+				
 		Xpp3Dom agentPort = new Xpp3Dom("agentPort");
-		agentPort.setValue( info.getAgentPort() );
+		agentPort.setValue( "${agentPort}" );
+		model.addProperty("agentPort", info.getAgentPort() );
+		properties.put("agentPort", info.getAgentPort() );
 		
 		Xpp3Dom domain  = new Xpp3Dom("domain");
-		domain.setValue( info.getDomain() );
-
+		domain.setValue( "${domain}" );
+		model.addProperty("domain", info.getDomain() );
+		properties.put("domain", info.getDomain() );
+		
 		Xpp3Dom domainDesc  = new Xpp3Dom("domainDesc");
-		domainDesc.setValue( info.getDomainDesc() );
+		domainDesc.setValue( "${domainDesc}" );
+		model.addProperty("domainDesc", info.getDomainDesc() );
+		properties.put("domainDesc", info.getDomainDesc() );
 		
 		Xpp3Dom appspace  = new Xpp3Dom("appSpace");
-		appspace.setValue( info.getAppspace() );
-
+		appspace.setValue( "${appSpace}" );
+		model.addProperty("appSpace", info.getAppspace() );
+		properties.put("appSpace", info.getAppspace() );
+		
 		Xpp3Dom appspaceDesc  = new Xpp3Dom("appSpaceDesc");
-		appspaceDesc.setValue( info.getAppspaceDesc() );
+		appspaceDesc.setValue( "${appSpaceDesc}" );
+		model.addProperty("appSpaceDesc", info.getAppspaceDesc() );
+		properties.put("appSpaceDesc", info.getAppspaceDesc() );
 
-
-		
 		Xpp3Dom appnode  = new Xpp3Dom("appNode");
-		appnode.setValue( info.getAppNode() );
-		
+		appnode.setValue( "${appNode}" );
+		model.addProperty("appNode", info.getAppNode() );
+		properties.put("appNode", info.getAppNode() );
 		
 		Xpp3Dom appnodeDesc  = new Xpp3Dom("appNodeDesc");
-		appnodeDesc.setValue( info.getAppNodeDesc() );
+		appnodeDesc.setValue( "${appNodeDesc}" );
+		model.addProperty("appNodeDesc", info.getAppNodeDesc() );
+		properties.put("appNodeDesc", info.getAppNodeDesc() );
 
 		Xpp3Dom osgiport  = new Xpp3Dom("osgiPort");
-		osgiport.setValue( info.getOsgiPort() );
+		osgiport.setValue( "${osgiPort}" );
+		model.addProperty("osgiPort", info.getOsgiPort() );
+		properties.put("osgiPort", info.getOsgiPort() );
 
 		Xpp3Dom httpPort  = new Xpp3Dom("httpPort");
-		httpPort.setValue( info.getHttpPort() );
+		httpPort.setValue( "${httpPort}" );
+		model.addProperty("httpPort", info.getHttpPort() );
+		properties.put("httpPort", info.getHttpPort() );
 
 		Xpp3Dom profile  = new Xpp3Dom("profile");
-		profile.setValue( info.getProfile() );
+		profile.setValue( "${profile}" );
+		model.addProperty("profile", info.getProfile() );
+		properties.put("profile", info.getProfile() );
 
 		Xpp3Dom redeploy  = new Xpp3Dom("redeploy");
-		redeploy.setValue( Boolean.toString(info.isRedeploy()) );
-
+		redeploy.setValue( "${redeploy}" );
+		model.addProperty("redeploy", Boolean.toString(info.isRedeploy()) );
+		properties.put("redeploy", Boolean.toString(info.isRedeploy()) );
 
 		config.addChild(deployToAdmin);
 		
@@ -148,6 +192,31 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		config.addChild(profile );
 		
 		plugin.setConfiguration(config);
+
+		File deploymentProperties = new File( ModuleHelper.getParentModule( project.getModules() ).getProject().getLocationURI().getRawPath() + File.separator + "deployment.properties");
+
+		if(deploymentProperties.exists()) 
+		{
+			deploymentProperties.delete();
+		}
+
+		boolean fileCreated = false;
+		FileOutputStream fileOut = null;
+		try {
+			
+			fileCreated = deploymentProperties.createNewFile();
+			fileOut = new FileOutputStream(deploymentProperties);
+			String msg = "EAR Deployment Properties. Pass -DdeploymentConfig.file=<File Location/File Name> if you are running from Command Line. Otherwise add 'deploymentConfig.file' property to the POM File ";
+			properties.store(fileOut, msg);
+			fileOut.close();
+
+
+		} 
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+		}
+		
 
 		
 	}

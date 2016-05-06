@@ -3,6 +3,10 @@ package com.tibco.bw.studio.maven.wizard;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
@@ -13,11 +17,13 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
@@ -53,6 +59,69 @@ public class WizardPageConfiguration extends WizardPage
 		setDescription("Enter the GroupId and ArtifactId for for Maven POM File generation. \nThe POM files will be generated for Projects listed below and a Parent POM file will be generated aggregating the Projects");	
 	}
 	
+	
+	
+	
+	@Override
+	public void setVisible(boolean visible) 
+	{
+		super.setVisible(visible);
+
+		Job job = new Job( "Validating Page") {
+			
+			@Override
+			protected IStatus run(IProgressMonitor monitor) 
+			{
+				
+				try 
+				{
+					Thread.sleep( 300 );
+				} catch (InterruptedException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				final Display display = PlatformUI.getWorkbench().getDisplay();
+
+				display.syncExec( new Runnable() 
+				{
+					
+					@Override
+					public void run() 
+					{
+						
+						BWDeploymentInfo info = ((BWApplication) ModuleHelper.getApplication(project.getModules())).getDeploymentInfo();
+						if(info.isDeployToAdmin() )
+						{
+							MavenWizardContext.INSTANCE.getNextButton().setEnabled( true);
+						}
+						else
+						{
+							MavenWizardContext.INSTANCE.getNextButton().setEnabled( false);
+
+						}
+
+					}
+				});
+				return Status.OK_STATUS;
+
+				
+			}
+			
+		};
+
+		if( visible )
+		{
+			job. schedule();
+		}
+		
+		
+	}
+
+
+
+
 	@Override
 	public void createControl(Composite parent) 
 	{
@@ -353,6 +422,12 @@ public class WizardPageConfiguration extends WizardPage
 				if( addDeploymentConfig.getSelection() )
 				{
 					((BWApplication)module).getDeploymentInfo().setDeployToAdmin( true);	
+				}
+				else
+				{
+					((BWApplication)module).setDeploymentInfo( new BWDeploymentInfo() );
+					((BWApplication)module).getDeploymentInfo().setDeployToAdmin( false );	
+
 				}
 				
 			}

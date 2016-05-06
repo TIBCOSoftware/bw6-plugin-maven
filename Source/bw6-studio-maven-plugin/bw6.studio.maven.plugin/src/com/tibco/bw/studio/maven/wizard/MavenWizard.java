@@ -7,6 +7,8 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Control;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
+import com.tibco.bw.studio.maven.helpers.ModuleHelper;
+import com.tibco.bw.studio.maven.modules.BWApplication;
 import com.tibco.bw.studio.maven.modules.BWProject;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
 
@@ -75,16 +77,22 @@ public class MavenWizard extends Wizard
 	public boolean performFinish() {
 
 		project = configPage.getUpdatedProject();
-
+		
+		
+		
 		if (bwEdition.equals("bw6")) 
 		{
-			if( ((WizardPageEnterprise) enterprisePage).validate() )
+			if(((BWApplication)ModuleHelper.getApplication( project.getModules() )).getDeploymentInfo().isDeployToAdmin() )
 			{
-				enterprisePage.getUpdatedProject();	
-			}
-			else
-			{
-				return false;
+				if( ((WizardPageEnterprise) enterprisePage).validate() )
+				{
+					enterprisePage.getUpdatedProject();	
+				}
+				else
+				{
+					return false;
+				}
+				
 			}
 			
 		} 

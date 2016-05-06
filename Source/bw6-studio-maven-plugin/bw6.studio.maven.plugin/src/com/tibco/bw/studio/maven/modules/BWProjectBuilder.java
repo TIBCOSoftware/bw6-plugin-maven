@@ -75,6 +75,9 @@ public class BWProjectBuilder
 				if( pomFile.getCanonicalFile().exists() )
 				{
 					parent = pomFile.getCanonicalFile().getParentFile();
+					IProject project  = ResourcesPlugin.getWorkspace().getRoot().getProject(parent.getName() );
+					module.setProject(project);
+
 				}
 
 			}
@@ -150,33 +153,48 @@ public class BWProjectBuilder
 			return;
 		}
 		
-		info.setDeployToAdmin( getBooleanValuefromDom("deployToAdmin", dom ));
+		info.setDeployToAdmin( getBooleanValuefromDom("deployToAdmin", dom , model ));
 		
-		info.setAgentHost( getStringValuefromDom("agentHost", dom));
-		info.setAgentPort( getStringValuefromDom( "agentPort", dom));
+		info.setAgentHost( getStringValuefromDom("agentHost", dom , model));
+		info.setAgentPort( getStringValuefromDom( "agentPort", dom , model));
 		
-		info.setDomain( getStringValuefromDom("domain", dom));
-		info.setDomainDesc( getStringValuefromDom("domainDesc", dom));
+		info.setDomain( getStringValuefromDom("domain", dom , model));
+		info.setDomainDesc( getStringValuefromDom("domainDesc", dom , model));
 		
-		info.setAppspace( getStringValuefromDom("appSpace", dom));
-		info.setAppspaceDesc( getStringValuefromDom("appSpaceDesc", dom));
+		info.setAppspace( getStringValuefromDom("appSpace", dom , model));
+		info.setAppspaceDesc( getStringValuefromDom("appSpaceDesc", dom , model));
 		
-		info.setAppNode( getStringValuefromDom("appNode", dom));
-		info.setAppNodeDesc( getStringValuefromDom("appNodeDesc", dom));
+		info.setAppNode( getStringValuefromDom("appNode", dom , model));
+		info.setAppNodeDesc( getStringValuefromDom("appNodeDesc", dom , model ));
 		
-		info.setHttpPort( getStringValuefromDom("httpPort", dom));
-		info.setOsgiPort( getStringValuefromDom("osgiPort", dom));
+		info.setHttpPort( getStringValuefromDom("httpPort", dom , model));
+		info.setOsgiPort( getStringValuefromDom("osgiPort", dom , model));
 		
-		info.setProfile( getStringValuefromDom("profile", dom));
-		info.setRedeploy( getBooleanValuefromDom("redeploy", dom));
+		info.setProfile( getStringValuefromDom("profile", dom , model));
+		info.setRedeploy( getBooleanValuefromDom("redeploy", dom , model));
 		
 	}
 
 	
-	private String getStringValuefromDom( String name , Xpp3Dom dom )
+	private String getStringValuefromDom( String name , Xpp3Dom dom , Model model )
 	{
 		Xpp3Dom child = dom.getChild( name );
-		if ( child != null )
+		
+		if( child == null )
+		{
+			return "";
+		}
+		
+		if( child.getValue().startsWith( "$"))
+		{
+			String value = model.getProperties().getProperty( child.getName() );
+			if( value != null )
+			{
+				return value;
+			}
+		}
+		
+		else
 		{
 			return child.getValue();
 		}
@@ -184,9 +202,9 @@ public class BWProjectBuilder
 		return "";
 	}
 	
-	private boolean getBooleanValuefromDom( String name ,Xpp3Dom dom )
+	private boolean getBooleanValuefromDom( String name ,Xpp3Dom dom ,Model model )
 	{
-		String value = getStringValuefromDom(name, dom);
+		String value = getStringValuefromDom(name, dom , model );
 		try 
 		{
 			return Boolean.parseBoolean(value);

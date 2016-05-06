@@ -84,6 +84,9 @@ public class BWEARInstallerMojo extends AbstractMojo
 	@Parameter( property="redeploy")
 	private boolean redeploy;
 
+	@Parameter( property="deploymentConfigfile")
+	private String deploymentConfigfile;
+
 	private String earLoc;
 
 	private String earName;
@@ -183,8 +186,8 @@ public class BWEARInstallerMojo extends AbstractMojo
 	
 	private boolean deploymentConfigExists()
 	{
-		Properties properties = project.getProperties();
-		if ( properties.getProperty( "deploymentConfig.file" ) == null || properties.getProperty( "deploymentConfig.file" ).isEmpty() ) 
+
+		if ( deploymentConfigfile == null || deploymentConfigfile.isEmpty() ) 
 		{
 			getLog().info( "No Deployment Config File set. Reading the deployment Properties from POM File.");
 			
@@ -192,7 +195,7 @@ public class BWEARInstallerMojo extends AbstractMojo
 			
 		}
 		
-		String deploymentFile = properties.getProperty( "deploymentConfig.file" );
+		String deploymentFile = deploymentConfigfile;
 		
 		File file = new File ( deploymentFile );
 		
@@ -210,11 +213,10 @@ public class BWEARInstallerMojo extends AbstractMojo
 	
 	private void loadFromDeploymentProperties()
 	{
-		Properties properties = project.getProperties();
+	
 		
-		String deploymentFile = properties.getProperty( "deploymentConfig.file" );
 		
-		File file = new File ( deploymentFile );
+		File file = new File ( deploymentConfigfile );
 		
 		Properties deployment = new Properties();
 		
@@ -248,7 +250,7 @@ public class BWEARInstallerMojo extends AbstractMojo
 			
 			
 			agentHost = deployment.getProperty( "agentHost" );
-			agentPort = deployment.getProperty( "agentPort ");
+			agentPort = deployment.getProperty( "agentPort");
 			
 			domain = deployment.getProperty( "domain" );
 			domainDesc = deployment.getProperty( "domainDesc" );
@@ -256,7 +258,7 @@ public class BWEARInstallerMojo extends AbstractMojo
 			appSpace = deployment.getProperty( "appSpace" );
 			appSpaceDesc = deployment.getProperty( "appSpaceDesc" );
 			
-			appNode = deployment.getProperty( "appNode ");
+			appNode = deployment.getProperty( "appNode");
 			appNodeDesc = deployment.getProperty( "appNodeDesc" );
 			
 			httpPort = deployment.getProperty( "httpPort" );
@@ -282,7 +284,7 @@ public class BWEARInstallerMojo extends AbstractMojo
 	private boolean validateFields()
 	{
 		String errorMessage = "";
-		boolean isValidHost = !agentHost.isEmpty();
+		boolean isValidHost = agentHost != null && !agentHost.isEmpty();
 		if( !isValidHost )
 		{
 			errorMessage = errorMessage + "[Agent Host value is required]";
@@ -291,7 +293,7 @@ public class BWEARInstallerMojo extends AbstractMojo
 		boolean isValidPort = false;
 		try
 		{
-			if( agentPort.isEmpty())
+			if( agentPort == null || agentPort.isEmpty())
 			{
 				errorMessage = errorMessage + "[Agent Port value is required]";
 			}
@@ -309,19 +311,19 @@ public class BWEARInstallerMojo extends AbstractMojo
 			errorMessage = errorMessage + "[Agent Port value must be an Integer Value]";
 		}
 		
-		boolean isValidDomain = !domain.isEmpty();
+		boolean isValidDomain = domain != null && !domain.isEmpty();
 		if( !isValidDomain )
 		{
 			errorMessage = errorMessage + "[Domain Value is required]";
 		}
 		
-		boolean isValidAppSpace = !appSpace.isEmpty(); 
+		boolean isValidAppSpace = appSpace != null && !appSpace.isEmpty(); 
 		if(!isValidAppSpace )
 		{
 			errorMessage = errorMessage + "[AppSpace Value is required]";
 		}
 		
-		boolean isValidAppNode = !appNode.isEmpty();
+		boolean isValidAppNode = appNode != null && !appNode.isEmpty();
 		if( !isValidAppNode )
 		{
 			errorMessage = errorMessage + "[AppNode Value is required]";
@@ -331,7 +333,7 @@ public class BWEARInstallerMojo extends AbstractMojo
 		boolean isValidHTTPPort = false;
 		try
 		{
-			if( httpPort.isEmpty())
+			if( httpPort == null || httpPort.isEmpty())
 			{
 				errorMessage = errorMessage + "[HTTP Port value is required]";
 			}
@@ -356,7 +358,7 @@ public class BWEARInstallerMojo extends AbstractMojo
 		
 		try
 		{
-			if( osgiPort.isEmpty())
+			if( osgiPort == null || osgiPort.isEmpty())
 			{
 				isValidOSGi = true;
 			}
