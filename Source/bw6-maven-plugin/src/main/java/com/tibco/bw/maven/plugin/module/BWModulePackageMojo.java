@@ -197,7 +197,11 @@ public class BWModulePackageMojo  extends AbstractMojo
 		
 		for( Artifact artifact : artifacts )
 		{
-			artifactFiles.add( artifact.getFile() );
+			if( !artifact.getVersion().equals("0.0.0"))
+			{
+				artifactFiles.add( artifact.getFile() );	
+			}
+			
 		}
 
 		
@@ -213,7 +217,11 @@ public class BWModulePackageMojo  extends AbstractMojo
         	{
                 getLog().debug( "Adding artifact for dependency => " + dependency + "   . The file for Dependency is => "  + dependency.getArtifact().getFile() );
 
-        		artifactFiles.add( dependency.getArtifact().getFile() );
+    			if( !dependency.getArtifact().getVersion().equals("0.0.0"))
+    			{
+            		artifactFiles.add( dependency.getArtifact().getFile() );
+
+    			}
         	}
         }
 

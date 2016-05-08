@@ -102,7 +102,13 @@ public class BWEARInstallerMojo extends AbstractMojo
     	try 
     	{    		
     		getLog().info("BWEAR Installer Mojo started ...");
-    		
+    		Manifest manifest = ManifestParser.parseManifest(projectBasedir) ;
+    		String bwEdition = manifest.getMainAttributes().getValue("TIBCO-BW-Edition");
+            if(bwEdition!=null && bwEdition.equals("bwcf"))
+            {
+            	getLog().debug("BWCF edition. Returning..");
+            	return;
+            }
     		boolean configFileExists = deploymentConfigExists();
     		if( configFileExists )
     		{
@@ -129,7 +135,6 @@ public class BWEARInstallerMojo extends AbstractMojo
 
     		deriveEARInformation(files[0]);
     	
-    		Manifest manifest = ManifestParser.parseManifest(projectBasedir) ;
     		applicationName = manifest.getMainAttributes().getValue("Bundle-SymbolicName");
     		 
     		RemoteDeployer deployer = new RemoteDeployer(agentHost, agentPort);
