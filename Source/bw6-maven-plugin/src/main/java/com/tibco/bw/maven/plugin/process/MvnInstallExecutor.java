@@ -39,7 +39,7 @@ public class MvnInstallExecutor
 		buffer.append("mvn install:install-file ");
 		
 
-		buffer.append(" -Dfile=" + jarFile.getAbsolutePath() );
+		buffer.append(" -Dfile=" + "\"" + jarFile.getAbsolutePath() + "\"");
 		
 		buffer.append(" -DgroupId=tempbw");
 		
@@ -76,7 +76,7 @@ public class MvnInstallExecutor
 			logger.debug("Set the Dependency to Model");
 			
 		}
-		catch(Exception e)
+		catch(Throwable e)
 		{
 			logger.error( "Failed to add Dependency to Maven Repository for JAR " + jarFile.getName() + " .Please do it manually");
 			e.printStackTrace();
