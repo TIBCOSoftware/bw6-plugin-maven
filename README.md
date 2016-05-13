@@ -178,11 +178,14 @@ http://fabric8io.github.io/docker-maven-plugin/index.html
 http://fabric8.io/guide/mavenPlugin.html
 
 Docker authorize for GCP docker repo before trying docker:push
+
 --- Windows ---
 gcloud auth print-access-token
 docker login -e not@val.id -u _token -p "your token" https://gcr.io
+
 --- Linux/OSX ----
 docker login -e 1234@5678.com -u _token -p "$(gcloud auth print-access-token)" https://gcr.io
+
 
 l. You can try other goals from studio, by creating new Maven Run Configurations for different goals , or from terminal pointing to your workspace using 'mvn initialize cf:command -Dpcf.property.file=pcfdev.properties'
 
