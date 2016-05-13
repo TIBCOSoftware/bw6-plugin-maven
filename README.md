@@ -63,8 +63,6 @@ If you'd like to contribute to this plug-in, please reach out to integration-pm@
 
 ***
 
-NOTE- Below Container Edition plugin instructions are valid for branch : BWCE 1.0.1 ga  and not for master.
-
 #Plug-in Code for Apache Maven and TIBCO BusinessWorks™ Container Edition
 
 This plug-in is subject to the license shared as part of the repository. Kindly review the license before using or downloading this plug-in.
@@ -151,9 +149,9 @@ h. The Project will be converted to Maven (Eclipse Project) nature. Note the wor
  - You will find in your application project properties files are getting created for dev and prod environments, but, if you have more environments you can manually just create copies of one of these properties file and rename it to your another environment (eg. pcfqa.properties, docker-qa.properties, k8s-qa.properties etc.). By default, both dev and prod properties are same, and contains values which you have specified from studio pop-up, so you can manually edit these values in properties file for your environment (prod / dev).  
  
 Property files:
-PCF - pcfdev.properties and pcfprod.properties and variable name as pcf.property.file
-Docker - docker-dev.properties and docker-prod.properties and variable name as docker.property.file
-K8S - k8s-dev.properties and k8s-prod.properties and variable name as k8s.property.file
+ - PCF - pcfdev.properties and pcfprod.properties and variable name as pcf.property.file
+ - Docker - docker-dev.properties and docker-prod.properties and variable name as docker.property.file
+ - K8S - k8s-dev.properties and k8s-prod.properties and variable name as k8s.property.file
 
 i. Open Run/Debug Configurations. Create a new Maven Build.
 
@@ -170,11 +168,11 @@ http://docs.run.pivotal.io/buildpacks/java/build-tool-int.html
 
 Docker and Kubernetes - 
 
-clean package initialize docker:build
-initialize docker:start
-initialize docker:push (before push make sure you generate token and authorize your docker host for GCP repo, follow step)
-initialize fabric8:json
-initialize fabric8:apply
+ - clean package initialize docker:build 
+ - initialize docker:start
+ - initialize docker:push (before push make sure you generate token and authorize your docker host for GCP repo, follow step)
+ - initialize fabric8:json 
+ - initialize fabric8:apply
 
 http://fabric8io.github.io/docker-maven-plugin/index.html
 http://fabric8.io/guide/mavenPlugin.html
