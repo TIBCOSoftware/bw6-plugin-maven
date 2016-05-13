@@ -84,7 +84,7 @@ a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
 
 b. Navigate to the Installer Folder.
 
-c. Download TIB_BW_Maven_Plugin_1.0.0.zip
+c. Download TIB_BW_Maven_Plugin_1.0.0.zip (for BWCE 1.0.1 having on PCF) or TIB_BW_Maven_Plugin_1.1.0.zip (for BWCE 2.0 having both Docker and PCF)
 
 d. Unzip the file in a folder on local drive.
 
@@ -107,7 +107,11 @@ c. The Context Menu will show the option "Generate POM for Application".
 
 d. Clicking it will launch the POM Generation UI.
 
-e. Enter your PCF instance configuration details here and Click Finish.
+e. There are two platforms supported by this plugin -
+- CloudFoundry (follow step f)
+- Docker + Kubernetes (follow step g)
+
+f. Enter your PCF instance configuration details here and Click Finish.
 
         1. PCF Target = https://api.run.pivotal.io
         
@@ -123,39 +127,66 @@ e. Enter your PCF instance configuration details here and Click Finish.
        5. Number of App Instance 
        6. App Memory (Minimum should be 1024 MB)
        7. App Buildpack (BWCE buildpack which developer as pushed to PCF instance)
-       8. Select Services (Button where you login to PCF and select required services you want to bind to your app)
+       8. Env Var (add environment variabled as key=value with comma seperated) 
+       9. Select Services (Button where you login to PCF and select required services you want to bind to your app)
 
-f. The Project will be converted to Maven (Eclipse Project) nature. Note the workspace will index after generating POM files for the first time and may take some time. You can continue with the steps below by allowing this indexing to run in the background.
+g. Enter Docker + Kubernetes details 
 
- - You will find at your workspace two properties files are created with the name - pcfdev.properties and pcfprod.properties. These properties files signifies two PCF instances ie. for PCF Dev and PCF Production, if you have more PCF environments you can manually just create copies of one of these properties file and rename it to your another pcf environment (eg. pcfqa.properties). By default, both pcfdev and pcfprod properties are same, and contains values which you have specified in step (e), so you can manually edit these values in properties file for your PCF environment (prod / dev).  
+       1. Docker Host 
+       2. Docker Cert Path
+       3. Image name (You can provide public/private repo as part of the image name like - gcr.io/<project_id>/<image-name>) 
+       4. BWCE image (BWCE Runtime base image)
+       5. Maintainer (your name/email)
+       6. checkbox- if you want to run this image on Docker host. If yes, you will see Docker run configurations. 
+       7. checkbox for Kubernetes (if checked step8 onwards)
+       8. RC Name (Replication controller name of kubernetes)
+       9. No. of replicas (how many pods/instances on kubernetes)
+       10. Service name (by default we are exposing service on LoadBalancer)
+       11. Container port
+       12. Namespace (Kubernetes namespace)
+       13. Env Variables (key=value comma seperated)
 
-g. Open Run/Debug Configurations. Create a new Maven Build.
+h. The Project will be converted to Maven (Eclipse Project) nature. Note the workspace will index after generating POM files for the first time and may take some time. You can continue with the steps below by allowing this indexing to run in the background.
+ - You will find parent project will get created in your workspace with a pom file.
+ - You will find in your application project properties files are getting created for dev and prod environments, but, if you have more environments you can manually just create copies of one of these properties file and rename it to your another environment (eg. pcfqa.properties, docker-qa.properties, k8s-qa.properties etc.). By default, both dev and prod properties are same, and contains values which you have specified from studio pop-up, so you can manually edit these values in properties file for your environment (prod / dev).  
+ 
+Property files:
+PCF - pcfdev.properties and pcfprod.properties and variable name as pcf.property.file
+Docker - docker-dev.properties and docker-prod.properties and variable name as docker.property.file
+K8S - k8s-dev.properties and k8s-prod.properties and variable name as k8s.property.file
 
-h. Under the "Base directory" choose add variable for pom location. 
+i. Open Run/Debug Configurations. Create a new Maven Build.
 
- - Choose ${workspace_loc} for goals - package, cf:push, cf:delete, cf:scale, cf:start, cf:restart, cf:stop, cf:apps, cf:services (use 'initialize' before every cf goals eg. 'initialize cf:push', see step i,k)
- - Choose ${project_loc} for goals - cf:login , cf:logout (use 'initialize' before these goals eg. 'initialize cf:login'), we need to fire these goals from '.application' project of your workspace.
+j. Under the "Base directory" choose add variable for pom location choose ${project_loc} or browse parent project as workspace. 
 
-NOTE: Whenever you execute maven goals from terminal, you should point to your workspace. 
+k. In the 'Goal' enter the goal to be executed. 
 
- - Incase authentication token expired, you can execute logout and login goals. From CI server you can call cf:login / cf:logout job only if cf:push job gives token expired error. See example below for login -
- Root POM : xxxxx.application/pom.xml (login / logout should be fired from '.application' project)
- Goal : initialize cf:login -Dproperty.file=../pcfprod.properties
- - 'Package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR' 
- - Since all goals are fired from your workspace location (having parent/root pom.xml), so, make sure before executing any such goals like cf:push, you are aware about which ".application" project is getting pushed on PCF.  
+- Make sure you add initialize before all maven goals.
+- 'package' goal is standard Maven goal, which is independent of cf-maven-plugin and can be executed to create application 'EAR'. 
+- Below are platform specific goals:
 
-i. In the 'Goal' enter the goal to be executed. The goal can be any standard PCF commands like cf:push, cf:start, cf:delete etc. for more goals you can view this link -
+CloudFoundry - cf:push , cf:scale etc
 http://docs.run.pivotal.io/buildpacks/java/build-tool-int.html
 
- - Please make sure to prefix 'initialize' before all your cf goals. So in goal you should enter - 'initialize cf:push'
- - Also make sure to add parameter - 'property.file' as name and the value as path to your pcf instance properties file ie. '../pcfprod.properties'. If you don't specify any parameter then, by default it will pick from pcfdev.properties.
+Docker and Kubernetes - 
 
-j. Goal "cf:push" will also create EAR file in the target folder under the Application project, along with pushing the same EAR on PCF - 'Refresh' your project using the right-click menu if this folder is not visible. 
+clean package initialize docker:build
+initialize docker:start
+initialize docker:push (before push make sure you generate token and authorize your docker host for GCP repo, follow step)
+initialize fabric8:json
+initialize fabric8:apply
 
-k. You can do cf:push from your maven terminal or from CI Server(Jenkins etc), using maven commands like -
-mvn initialize cf:push -Dproperty.file=../pcfprod.properties (you can specify any other pcf instance properties file as value to parameter property.file)
+http://fabric8io.github.io/docker-maven-plugin/index.html
+http://fabric8.io/guide/mavenPlugin.html
 
-l. You can try other goals from studio, by creating new Maven Run Configurations for different goals , or from terminal pointing to your workspace using 'mvn initialize cf:command -Dproperty.file=../pcfinstance.properties'
+Docker authorize for GCP docker repo before trying docker:push
+--- Windows ---
+gcloud auth print-access-token
+docker login -e not@val.id -u _token -p "your token" https://gcr.io
+--- Linux/OSX ----
+docker login -e 1234@5678.com -u _token -p "$(gcloud auth print-access-token)" https://gcr.io
+
+l. You can try other goals from studio, by creating new Maven Run Configurations for different goals , or from terminal pointing to your workspace using 'mvn initialize cf:command -Dpcf.property.file=pcfdev.properties'
 
 NOTE: For all non-web application if you are using PCF Elastic Runtime 1.6 or above (Diego) then, it will give health-check error while cf:push, so you have to use PCF CLI (6.13 or above) to set health-check as 'none' after pushing your application and re-push after setting health-check as 'none'.  You can use below command on CLI -
 cf set-health-check App_Name none 
