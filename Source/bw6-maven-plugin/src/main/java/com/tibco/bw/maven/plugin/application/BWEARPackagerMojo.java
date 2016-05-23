@@ -188,6 +188,8 @@ public class BWEARPackagerMojo extends AbstractMojo
     	{
         	getLog().debug("Adding Modules to the Application EAR");
 
+                 // The fist artifact is an Application Module.
+	        boolean isApplicationModuleArtifact = true;
         	BWModulesParser parser = new BWModulesParser(session, project);
         	String bwEdition = manifest.getMainAttributes().getValue("TIBCO-BW-Edition");
         	parser.bwEdtion=bwEdition;
@@ -209,8 +211,12 @@ public class BWEARPackagerMojo extends AbstractMojo
                 
                 //Save the module version in the Version Map.
                 moduleVersionMap.put(  artifact.getArtifactId() , version );
-                
+                if (isApplicationModuleArtifact)
+                {
+
                 this.version = version; 
+                isApplicationModuleArtifact=false;
+                }
 
             }        
     		
