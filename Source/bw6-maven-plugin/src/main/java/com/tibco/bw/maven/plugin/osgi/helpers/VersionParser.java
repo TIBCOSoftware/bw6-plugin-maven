@@ -27,7 +27,10 @@ public class VersionParser
 	{
 		Version version = parseVersion(versionStr ); 
 		String calcQualifier = calculateQualifier( version.getQualifier() );
-        String fullVersion = version.getMajor() + "." + version.getMinor() + "." + version.getMicro() + "." + calcQualifier; 
+        String fullVersion = version.getMajor() + "." + version.getMinor() + "." + version.getMicro();
+		if (calcQualifier != null && "".equals(calcQualifier) == false) {
+			fullVersion += "." + calcQualifier;
+		}
 		
 		return fullVersion;
 	}

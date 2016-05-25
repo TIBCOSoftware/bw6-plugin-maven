@@ -1,5 +1,8 @@
 package com.tibco.bw.maven.plugin.osgi.helpers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
@@ -13,7 +16,7 @@ public class Version
 	private final String qualifier;
 	private static final String	SEPARATOR		= ".";
 	public static final Version	EMPTYVERSION	= new Version(0, 0, 0);
-
+	private final Logger logger = LoggerFactory.getLogger(Version.class);
 
 	public Version(int major, int minor, int micro) 
 	{
@@ -22,6 +25,7 @@ public class Version
 
 	public Version(int major, int minor, int micro, String qualifier) 
 	{
+		logger.info("Version: major: " + major + " minor: " + ", micro: " + micro + " qualifier:" + qualifier);
 		if (qualifier == null) {
 			qualifier = "";
 		}
@@ -36,6 +40,7 @@ public class Version
 
 	public Version(String version) 
 	{
+        logger.info("Version:: " + version);
 		int maj = 0;
 		int min = 0;
 		int mic = 0;

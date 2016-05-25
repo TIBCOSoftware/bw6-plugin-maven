@@ -51,6 +51,8 @@ public class Application {
     private String                          archiveName;
     private String                          archivePath;
     private String                          profileName;
+    private String code;
+    private String message;
     private String                      docURL;
     private ApplicationDeploymentStates     deploymentStatus;
     private List<String>                    deploymentStatusDetail;
@@ -65,6 +67,22 @@ public class Application {
         this.deploymentStatusDetail = new ArrayList<String>();
         this.components = new ArrayList<>();
         this.processes = new ArrayList<>();
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     /**
