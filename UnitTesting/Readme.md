@@ -1,4 +1,4 @@
-# Assertions plugin for TIBCO ActiveMatrix BusinessWorks 6
+# Assertions plugin for TIBCO ActiveMatrix BusinessWorks™ 6
 
 ### To add plugin to existing Installation:
 
