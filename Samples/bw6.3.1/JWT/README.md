@@ -62,7 +62,7 @@ and invoke these sub-processes in dependent application modules.
 
 
 ## To run this sample
-Import and Open SampleSharedApp, SampleApp and SampleApp.application in Studio.
+Import and Open SampleSharedModule, SampleApp and SampleApp.application in Studio.
 
 Run SampleApp from Studio debugger..
 You can use the sample postman collection in this folder to perform a get with a Bearer token..
