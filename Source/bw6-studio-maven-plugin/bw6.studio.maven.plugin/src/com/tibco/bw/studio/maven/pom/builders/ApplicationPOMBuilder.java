@@ -229,13 +229,15 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 
 	protected void addBuild()
 	{
+
 		Build build = model.getBuild();
 		if(build == null){
 			build = new Build();			
 			
 		}
 		addBW6MavenPlugin( build );
-		
+		//Add profiles in pom
+		addBW6MavenProfile(model);
 		String platform = "";
 		if(bwEdition.equals("docker"))
 		{

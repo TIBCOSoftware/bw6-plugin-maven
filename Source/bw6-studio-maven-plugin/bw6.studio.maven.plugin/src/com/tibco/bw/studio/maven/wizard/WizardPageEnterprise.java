@@ -261,6 +261,9 @@ public class WizardPageEnterprise extends WizardPage
 				info.setOsgiPort(osgiPort.getText());
 				
 				info.setProfile( profile.getText());
+				//Save info multiProfile config.
+				info.setProfiles( getProfiles());
+				//18-07-2016
 				info.setRedeploy(redeploy.getSelection() );
 				
 				
