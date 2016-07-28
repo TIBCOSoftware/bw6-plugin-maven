@@ -17,7 +17,7 @@ a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
 
 b. Navigate to the Installer Folder.
 
-c. Download TIB_BW_Maven_Plugin_1.0.0.zip
+c. Download TIB_BW_Maven_Plugin_1.1.0.zip
 
 d. Unzip the file in a folder on local drive.
 
