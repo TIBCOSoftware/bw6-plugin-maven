@@ -108,6 +108,7 @@ d. Clicking it will launch the POM Generation UI.
 e. There are two platforms supported by this plugin -
 - CloudFoundry (follow step f)
 - Docker + Kubernetes (follow step g)
+NOTE - For Docker/Kubernetes you also need to download gCloud-sdk and kubectl (CLIs), and make sure you add them to your path environment-variable. 
 
 f. Enter your PCF instance configuration details here and Click Finish.
 
