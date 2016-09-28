@@ -29,6 +29,7 @@ import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
+import org.apache.maven.shared.utils.StringUtils;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.FileSet;
@@ -320,6 +321,11 @@ public class BWModulePackageMojo  extends AbstractMojo
 	private File getPluginJAR() 
 	{
 		String qualifierVersion  = manifest.getMainAttributes().getValue("Bundle-Version" );
+		if (qualifierVersion != null && qualifierVersion.endsWith(".")) {
+            qualifierVersion = qualifierVersion.substring(0, qualifierVersion.lastIndexOf('.'));
+        }
+        getLog().info("Determined Qualify Version:: " + qualifierVersion);
+
 		String name = manifest.getMainAttributes().getValue("Bundle-SymbolicName");
 		
 		
