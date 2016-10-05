@@ -1,12 +1,14 @@
 package com.tibco.bw.studio.maven.pom.builders;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,16 +16,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.maven.model.Activation;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.Plugin;
+
 import org.apache.maven.model.PluginExecution;
+import org.apache.maven.model.Profile;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.codehaus.plexus.util.WriterFactory;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
+import com.tibco.bw.studio.maven.modules.BWApplication;
+import com.tibco.bw.studio.maven.modules.BWDeploymentInfo;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.modules.BWPCFServicesModule;
@@ -32,6 +40,7 @@ import com.tibco.bw.studio.maven.modules.BWProject;
 
 public abstract class AbstractPOMBuilder 
 {
+	private static final int POM_NAME = 0;
 	protected BWProject project; 
 	protected BWModule module;
 	
@@ -126,6 +135,7 @@ public abstract class AbstractPOMBuilder
 
 		addDeploymentDetails(plugin);
 
+				
 
 	}
 	
@@ -133,6 +143,47 @@ public abstract class AbstractPOMBuilder
 	{
 		
 	}
+	
+		
+	protected void addBW6MavenProfile(Model model) {
+		List<Profile> profiles = new ArrayList<Profile>();
+		
+		
+		BWDeploymentInfo info = ((BWApplication)module).getDeploymentInfo();
+		
+			
+		for( String nameProfile : info.getProfiles() )
+		{
+			Profile profile = new Profile();
+			System.out.println(nameProfile.indexOf("."));
+			System.out.println(nameProfile.replace(".substvar", ""));
+			if (nameProfile.replace(".substvar", "").equals("default"))
+			{
+				profile.setId("DEFAULT");
+			}
+			else
+			{
+				profile.setId(nameProfile.replace(".substvar", ""));	
+			}
+			
+			if (nameProfile.equals(info.getProfile()) )
+					{
+				Activation activation = new Activation();
+				activation.setActiveByDefault(true);
+				profile.setActivation(activation);
+					}
+
+			Properties properties = new Properties();
+			properties .setProperty("profile", nameProfile);
+			profile.setProperties(properties);
+			profiles.add(profile);
+		}
+
+
+		model.setProfiles(profiles);
+
+	}
+	
 	
 	
 	protected void addPCFWithSkipMavenPlugin( Build build )

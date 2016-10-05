@@ -1,5 +1,8 @@
 package com.tibco.bw.studio.maven.modules;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BWDeploymentInfo
 {
 
@@ -31,10 +34,20 @@ public class BWDeploymentInfo
 	private String profile = "";
 	
 	private boolean redeploy = true;
+	
+	private List<String> profiles = new ArrayList<String>();
 
 	
 	
 	
+	public List<String> getProfiles() {
+		return profiles;
+	}
+
+	public void setProfiles(List<String> profiles) {
+		this.profiles = profiles;
+	}
+
 	public boolean isDeployToAdmin() 
 	{
 		return deployToAdmin;
