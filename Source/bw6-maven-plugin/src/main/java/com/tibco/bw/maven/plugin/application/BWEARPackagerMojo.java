@@ -42,6 +42,7 @@ import com.tibco.bw.maven.plugin.osgi.helpers.Version;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
 import com.tibco.bw.maven.plugin.utils.BWModulesParser;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwear", defaultPhase = LifecyclePhase.PACKAGE)
 public class BWEARPackagerMojo extends AbstractMojo {
@@ -148,7 +149,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
         	// The first artifact is an Application Module
         	boolean isAppModuleArtifact = true;
         	BWModulesParser parser = new BWModulesParser(session, project);
-        	String bwEdition = manifest.getMainAttributes().getValue("TIBCO-BW-Edition");
+        	String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
         	parser.bwEdtion=bwEdition;
         	List<Artifact> artifacts = parser.getModulesSet();
 
@@ -159,7 +160,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
                 //Add the JAR file to the EAR file
                 jarchiver.addFile(moduleJar, moduleJar.getName());
                 String version = BWProjectUtils.getModuleVersion(moduleJar);
-                getLog().debug("Adding Module JAR with name " + moduleJar.getName() + "  with version " + version);
+                getLog().debug("Adding Module JAR with name " + moduleJar.getName() + " with version " + version);
 
                 //Save the module version in the Version Map.
                 moduleVersionMap.put(artifact.getArtifactId(), version);
@@ -180,7 +181,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 	 * @return
 	 */
 	private File getArchiveFileName() {
-		Version version = VersionParser.parseVersion(manifest.getMainAttributes().getValue("Bundle-Version"));
+		Version version = VersionParser.parseVersion(manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
 		String fullVersion = version.getMajor() + "." + version.getMinor() + "." + version.getMicro();
 
         String archiveName = project.getArtifactId() + "_" + fullVersion + ".ear";
@@ -240,8 +241,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
 		// Update the Bundle Version
 		Attributes attr = mf.getMainAttributes();
-		attr.putValue("Bundle-Version", version);
-
+		attr.putValue(Constants.BUNDLE_VERSION, version);
 		getLog().debug("Manifest updated with Version " + version);
 
 		//Write the updated file and return the same.
@@ -250,7 +250,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		os.close();
 
 		tempFiles.add(tempManifest);
-		getLog().debug("manifest added to temp location at " + tempManifest.toString());
+		getLog().debug("Manifest added to temp location at " + tempManifest.toString());
 		return tempManifest;
 	}
 
