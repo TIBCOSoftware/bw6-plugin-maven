@@ -24,6 +24,7 @@ import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
 import com.tibco.bw.maven.plugin.admin.dto.Domain;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
+import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwinstall", defaultPhase = LifecyclePhase.INSTALL)
 public class BWEARInstallerMojo extends AbstractMojo {
@@ -93,7 +94,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     	try {    		
     		getLog().info("BWEAR Installer Mojo started ...");
     		Manifest manifest = ManifestParser.parseManifest(projectBasedir);
-    		String bwEdition = manifest.getMainAttributes().getValue("TIBCO-BW-Edition");
+    		String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
             if(bwEdition!=null && bwEdition.equals("bwcf")) {
             	getLog().debug("BWCF edition. Returning..");
             	return;
@@ -117,7 +118,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		}
 
     		deriveEARInformation(files[0]);
-    		applicationName = manifest.getMainAttributes().getValue("Bundle-SymbolicName");
+    		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
     		RemoteDeployer deployer = new RemoteDeployer(agentHost, agentPort);
     		deployer.setLog(getLog());
