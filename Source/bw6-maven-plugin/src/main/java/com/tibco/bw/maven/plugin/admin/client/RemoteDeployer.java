@@ -62,8 +62,8 @@ public class RemoteDeployer {
 	private final String host;
 	private final int port;
 
-	static Logger log = Logger.getLogger(RemoteDeployer.class);
-
+	//static Logger log = Logger.getLogger(RemoteDeployer.class);
+	Log log;
 	private void init() {
 		if (this.jerseyClient == null) {
 			ClientConfig clientConfig = new ClientConfig();
@@ -88,7 +88,7 @@ public class RemoteDeployer {
 	}
 
 	public void setLog(Log log) {
-		RemoteDeployer.log = (Logger) log;
+		this.log = log;
 	}
 
 	public void close() {
