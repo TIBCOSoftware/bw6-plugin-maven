@@ -15,14 +15,16 @@ public class ManifestWriter
 
     public static File updateManifest( MavenProject project , Manifest mf ) throws IOException
     {
+    	project.getVersion();
         Attributes attributes = mf.getMainAttributes();
 
-        if (attributes.getValue(Name.MANIFEST_VERSION) == null)
+        if ((attributes.getValue(Name.MANIFEST_VERSION) == null ||attributes.getValue(Name.MANIFEST_VERSION).equals("1.0")) &&  project.getVersion().equals("1.0.0-SNAPSHOT"))
         {
-            attributes.put(Name.MANIFEST_VERSION, "1.0");
+            attributes.put(Name.MANIFEST_VERSION, project.getVersion());
         }
 
         File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
+        System.out.println(mfile.getAbsolutePath());
         mfile.getParentFile().mkdirs();
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
         try {
