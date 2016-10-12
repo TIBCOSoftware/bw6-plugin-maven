@@ -8,6 +8,8 @@ import java.util.Map;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -28,17 +30,18 @@ public class WizardPageEnterprise extends WizardPage {
 	private Composite container;
 	private BWProject project;
 	private String bwEdition;
-	private Button deployToAdmin;
+	//private Button deployToAdmin;
 	private Text agentHost;
 	private Text agentPort;
 	private Text domain;
 	private Text domainDesc;
 	private Text appspace;	
 	private Text appspaceDesc;
-	private Text minNodes;
 	private Text appNode;
 	private Text appNodeDesc;
 	private Button redeploy;
+	private Button backup;
+	private Text backupLocation;
 	private Text httpPort;
 	private Text osgiPort;
 	private Combo profile;
@@ -113,11 +116,17 @@ public class WizardPageEnterprise extends WizardPage {
 			errorMessage.append("[OSGi Port value must be an Integer]");
 		}
 
+		boolean isValidBackupLoc = true;
+		if(backup.getSelection() && backupLocation.getText().isEmpty()) {
+			isValidBackupLoc = false;
+			errorMessage.append("[Backup Location value is required]");
+		}
+
 		if(!errorMessage.toString().isEmpty()) {
 			setErrorMessage(errorMessage.toString());
 			return false;
 		}
-		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort) {
+		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc) {
 			return true;
 		}
 		return false;
@@ -181,7 +190,10 @@ public class WizardPageEnterprise extends WizardPage {
 				info.setHttpPort(httpPort.getText());
 				info.setOsgiPort(osgiPort.getText());
 				info.setProfile(profile.getText());
+				info.setProfiles(getProfiles());
 				info.setRedeploy(redeploy.getSelection());
+				info.setBackup(backup.getSelection());
+				info.setBackupLocation(backupLocation.getText());
 			}
 			module.setOverridePOM(true);
 		}
@@ -254,7 +266,7 @@ public class WizardPageEnterprise extends WizardPage {
 
 		GridData appspaceData = new GridData(150, 15);
 		appspace.setLayoutData(appspaceData);
-		
+
 		Label appspaceDescLabel = new Label(container, SWT.NONE);
 		appspaceDescLabel.setText("Description");
 
@@ -302,7 +314,7 @@ public class WizardPageEnterprise extends WizardPage {
 		GridData agentData = new GridData(150, 15);
 		osgiPort.setLayoutData(agentData);
 	}
-	
+
 	private void addProfile() {
 		Label profileLabel = new Label(container, SWT.NONE);
 		profileLabel.setText("Profile");
@@ -317,16 +329,17 @@ public class WizardPageEnterprise extends WizardPage {
 			profile.select(index);	
 		}
 
-		GridData profileData = new GridData(120, 15);
+		GridData profileData = new GridData(136, 15);
 		profileData.horizontalSpan = 3;
 		profile.setLayoutData(profileData);
 		addRedeployBox();
+		addBackupEarBox();
 	}
 
 	private void addRedeployBox() {
 		redeploy = new Button(container, SWT.CHECK);
 		redeploy.setSelection(info.isRedeploy());
-		redeploy.setToolTipText("If this is checked the the Application will be redeployed if exists.");
+		redeploy.setToolTipText("If this is checked, then the Application will be redeployed if exists.");
 
 		Label domainLabel = new Label(container, SWT.NONE);
 		domainLabel.setText("Re Deploy the Application if exists.");
@@ -336,6 +349,39 @@ public class WizardPageEnterprise extends WizardPage {
 		deployData.horizontalSpan = 3;
 
 		domainLabel.setLayoutData(deployData);
+	}
+
+	private void addBackupEarBox() {
+		backup = new Button(container, SWT.CHECK);
+		backup.setSelection(info.isBackup());
+		backup.setToolTipText("If this is checked, then the Application EAR will be backed up if exists.");
+		Label backupLabel = new Label(container, SWT.NONE);
+		backupLabel.setText("Backup Application EAR if exists.");
+		backupLabel.setToolTipText("Backup Application EAR if exists.");
+		GridData backupData = new GridData(350, 15);
+		backupData.horizontalSpan = 3;
+		backupLabel.setLayoutData(backupData);
+
+		Label backupLocLabel = new Label(container, SWT.NONE);
+		backupLocLabel.setText("Backup Location");
+		backupLocation = new Text(container, SWT.BORDER | SWT.SINGLE);
+		backupLocation.setText(info.getBackupLocation());
+		GridData backupLocationData = new GridData(150, 15);
+		backupLocation.setLayoutData(backupLocationData);
+
+		backup.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if(backup.getSelection()) {
+					backupLocation.setEnabled(true);
+				} else {
+					backupLocation.setText("");
+					backupLocation.setEnabled(false);
+				}
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		});
 	}
 
 	private int getSelectedProfile(List<String> profiles) {

@@ -28,17 +28,17 @@ import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwinstall", defaultPhase = LifecyclePhase.INSTALL)
 public class BWEARInstallerMojo extends AbstractMojo {
-	@Parameter(property="project.build.directory")
-    private File outputDirectory;
-
-	@Parameter(property="project.basedir")
-	private File projectBasedir;
-
     @Component
     private MavenSession session;
 
     @Component
     private MavenProject project;
+
+	@Parameter(property="project.build.directory")
+    private File outputDirectory;
+
+	@Parameter(property="project.basedir")
+	private File projectBasedir;
 
 	@Parameter(property="deployToAdmin")
 	private boolean deployToAdmin; 
@@ -79,15 +79,18 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="redeploy")
 	private boolean redeploy;
 
+	@Parameter(property="backup")
+	private boolean backup;
+
+	@Parameter(property="backupLocation")
+	private String backupLocation;
+
 	@Parameter(property="deploymentConfigfile")
 	private String deploymentConfigfile;
 
 	private String earLoc;
-
 	private String earName;
-
 	private String applicationName;
-
 	private String applicationVersion;
 
     public void execute() throws MojoExecutionException {
@@ -142,7 +145,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		} else {
     			getLog().info("AppSpace is Running.");
     		}
-    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), true, profile);    		
+    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation);    		
     	} catch(Exception e) {
     		getLog().error(e);
     	}
@@ -179,35 +182,30 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		} catch(Exception e) {
 			getLog().info("Failed to load Propeties from Deployment Config File");
 		} finally {
-			 if(stream != null) {
-				 try {
+			if(stream != null) {
+				try {
 					stream.close();
 				} catch(IOException e) {
 					e.printStackTrace();
 				}
-			 }
-		 }
+			}
+		}
 		try {
 			agentHost = deployment.getProperty("agentHost");
 			agentPort = deployment.getProperty("agentPort");
-			
 			domain = deployment.getProperty("domain");
 			domainDesc = deployment.getProperty("domainDesc");
-			
 			appSpace = deployment.getProperty("appSpace");
 			appSpaceDesc = deployment.getProperty("appSpaceDesc");
-			
 			appNode = deployment.getProperty("appNode");
 			appNodeDesc = deployment.getProperty("appNodeDesc");
-			
 			httpPort = deployment.getProperty("httpPort");
 			osgiPort = deployment.getProperty("osgiPort");
-			
 			profile = deployment.getProperty("profile");
-			
 			deployToAdmin = Boolean.parseBoolean(deployment.getProperty("deployToAdmin"));
-
 			redeploy = Boolean.parseBoolean(deployment.getProperty("redeploy"));
+			backup = Boolean.parseBoolean(deployment.getProperty("backup"));
+			backupLocation = deployment.getProperty("backupLocation");
 		} catch(Exception e) {
 			deployToAdmin = false;
 			getLog().error(e);
@@ -227,12 +225,12 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			if(agentPort == null || agentPort.isEmpty()) {
 				errorMessage.append("[Agent Port value is required]");
 			} else if(Integer.parseInt(agentPort) < 0) {
-				errorMessage.append("[Agent Port value must be an Integer Value]");
+				errorMessage.append("[Agent Port value must be an Integer]");
 			} else {
 				isValidPort = true;
 			}
 		} catch(Exception e) {
-			errorMessage.append("[Agent Port value must be an Integer Value]");
+			errorMessage.append("[Agent Port value must be an Integer]");
 		}
 
 		boolean isValidDomain = domain != null && !domain.isEmpty();
@@ -255,12 +253,12 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			if(httpPort == null || httpPort.isEmpty())	{
 				errorMessage.append("[HTTP Port value is required]");
 			} else if(Integer.parseInt(httpPort) < 0) {
-				errorMessage.append("[HTTP Port value must be an Integer Value]");
+				errorMessage.append("[HTTP Port value must be an Integer]");
 			} else {
 				isValidHTTPPort = true;
 			}
 		} catch(Exception e) {
-			errorMessage.append("[HTTP Port value must be an Integer Value]");
+			errorMessage.append("[HTTP Port value must be an Integer]");
 		}
 
 		boolean isValidOSGi = false;
@@ -270,12 +268,18 @@ public class BWEARInstallerMojo extends AbstractMojo {
 				isValidOSGi = true;
 			} else if(Integer.parseInt(osgiPort) < 0) {
 				isValidOSGi = false;
-				errorMessage.append("[OSGi Port value must be an Integer Value]");
+				errorMessage.append("[OSGi Port value must be an Integer]");
 			} else {
 				isValidOSGi = true;
 			}
 		} catch(Exception e) {
-			errorMessage.append("[OSGi Port value must be an Integer Value]");
+			errorMessage.append("[OSGi Port value must be an Integer]");
+		}
+
+		boolean isValidBackupLoc = true;
+		if(backup && backupLocation.isEmpty()) {
+			isValidBackupLoc = false;
+			errorMessage.append("[Backup Location value is required]");
 		}
 
 		if(!errorMessage.toString().isEmpty()) {
@@ -283,10 +287,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			return false;
 		}
 
-		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi) {
+		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc) {
 			return true;
 		}
-
 		return false;
 	}
 }
