@@ -10,15 +10,11 @@ import java.util.jar.Manifest;
 
 import org.apache.maven.project.MavenProject;
 
-public class ManifestWriter 
-{
+public class ManifestWriter {
 
-    public static File updateManifest( MavenProject project , Manifest mf ) throws IOException
-    {
+    public static File updateManifest(MavenProject project , Manifest mf) throws IOException {
         Attributes attributes = mf.getMainAttributes();
-
-        if (attributes.getValue(Name.MANIFEST_VERSION) == null)
-        {
+        if (attributes.getValue(Name.MANIFEST_VERSION) == null) {
             attributes.put(Name.MANIFEST_VERSION, "1.0");
         }
 
@@ -28,10 +24,10 @@ public class ManifestWriter
         try {
             mf.write(os);
         } finally {
-            os.close();
+        	if(os != null) {
+        		os.close();	
+        	}
         }
-
         return mfile;
     }
-	
 }

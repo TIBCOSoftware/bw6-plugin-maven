@@ -40,7 +40,7 @@ import com.tibco.bw.maven.plugin.admin.dto.Archive;
 import com.tibco.bw.maven.plugin.admin.dto.Domain;
 
 public class RemoteDeployer {
-	private static final String DATE_TIME = new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date());
+	private static final String DATE_TIME = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
 	private static final String CONTEXT_ROOT = "/bw/v1";
 	private Client jerseyClient;
 	private final String host;
@@ -296,6 +296,7 @@ public class RemoteDeployer {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void startAppNode(final String domainName, final String appSpaceName, final String appNodeName) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
@@ -386,6 +387,7 @@ public class RemoteDeployer {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
@@ -423,6 +425,7 @@ public class RemoteDeployer {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private List<Archive> getArchives(final String domainName, final String path, final String filter) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();

@@ -115,17 +115,17 @@ public class BWModulePackageMojo extends AbstractMojo {
 
             jarArchiver.setManifest(manifestFile);
 
-            getLog().info("Creating the Plugin JAR file ");
+            getLog().info("Creating the Plugin JAR file");
             archiver.createArchive(session, project, archiveConfiguration);
 
             project.getArtifact().setFile(pluginFile);
 
             // Code for BWCE
             String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-            if(bwEdition != null && bwEdition.equals("bwcf")) {
-            	List<MavenProject> projs=session.getAllProjects();
-            	for(int i=0;i<projs.size();i++) {
-            		MavenProject proj=projs.get(i);
+            if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
+            	List<MavenProject> projs = session.getAllProjects();
+            	for(int i = 0; i < projs.size(); i++) {
+            		MavenProject proj = projs.get(i);
             		if(proj.getArtifactId().equals(project.getArtifactId())) {
         				session.getAllProjects().set(i, project);
         			}
@@ -210,6 +210,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 		return set;
 	}
 
+	@SuppressWarnings("unused")
 	private void calculateDependencies(Artifact artifact) {
 		TypeArtifactFilter filter = new TypeArtifactFilter("jar");
 		filter.include(artifact);

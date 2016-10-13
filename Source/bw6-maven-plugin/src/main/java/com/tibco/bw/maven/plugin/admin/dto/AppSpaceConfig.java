@@ -18,14 +18,12 @@ import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
 
 public class AppSpaceConfig {
 
-
     public enum AppSpaceConfigStatus {
         InSync, OutOfSync
     }
 
-    private String               appSpaceName;
-    private String               agentName;
-
+    private String appSpaceName;
+    private String agentName;
     private AppSpaceRuntimeStatus status;      // this can be in InSync or OutOfSync depending on the result of deploy command..
     private AppSpaceConfigStatus configStatus; // this can be in InSync or OutOfSync depending on the result of config command..
 
@@ -85,5 +83,4 @@ public class AppSpaceConfig {
     public void setConfigStatus(final AppSpaceConfigStatus status) {
         this.configStatus = status;
     }
-
 }

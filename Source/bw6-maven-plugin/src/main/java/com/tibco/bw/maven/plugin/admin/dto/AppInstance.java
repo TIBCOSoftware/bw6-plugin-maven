@@ -20,54 +20,23 @@ import javax.xml.bind.annotation.XmlElement;
  */
 
 public class AppInstance {
-    //private String                    name;
-    //private String                    version;
-    private String                    appNodeName;
-    private String                    state;
-    private String                    stateDetail;
-    private String                    profileName;
-    private String                    deploymentStatus;
-    private String                    deploymentStatusDetail;
-    private String                    configState;
+    private String         appNodeName;
+    private String         state;
+    private String         stateDetail;
+    private String         profileName;
+    private String         deploymentStatus;
+    private String         deploymentStatusDetail;
+    private String         configState;
     private String         docURL;
     private List<Endpoint> endpoints;
     private List<Property> configuration;
     private HRef           profileContentRef;     // href to get the profile configured for a given appInstance when user supplied one.
 
-    public AppInstance() {
+    @SuppressWarnings("unchecked")
+	public AppInstance() {
         this.endpoints = Collections.EMPTY_LIST;
         this.configuration = Collections.EMPTY_LIST;
     }
-
-    /**
-     * @return the name
-     */
-    /*  public String getName() {
-        return this.name;
-    }*/
-
-    /**
-     * @param name
-     *            the name to set
-     */
-    /* public void setName(final String name) {
-        this.name = name;
-    }*/
-
-    /**
-     * @return the version
-     */
-    /*public String getVersion() {
-        return this.version;
-    }*/
-
-    /**
-     * @param version
-     *            the version to set
-     */
-    /*public void setVersion(final String version) {
-        this.version = version;
-    }*/
 
     /**
      * @return the appNodeName
@@ -247,5 +216,4 @@ public class AppInstance {
     public void setEndpoints(final List<Endpoint> endpoints) {
         this.endpoints = endpoints;
     }
-
 }

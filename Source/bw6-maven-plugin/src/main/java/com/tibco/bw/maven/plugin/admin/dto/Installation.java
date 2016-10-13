@@ -22,11 +22,13 @@ public class Installation {
     private String                        location;
     private Collection<com.tibco.bw.maven.plugin.admin.dto.InstalledSoftware> installedSoftware;
 
-    public Installation() {
+    @SuppressWarnings("unchecked")
+	public Installation() {
         this.installedSoftware = Collections.EMPTY_LIST;
     }
 
-    public Installation(final String name, final String location, final Collection<InstalledSoftware> software ) {
+    @SuppressWarnings("unchecked")
+	public Installation(final String name, final String location, final Collection<InstalledSoftware> software ) {
         this.name = name;
         this.location = location;
         this.installedSoftware = software != null ? software : Collections.EMPTY_LIST;
@@ -75,7 +77,8 @@ public class Installation {
      *            the installedSoftware to set
      */
 
-    public void setInstalledSoftware(final Collection<com.tibco.bw.maven.plugin.admin.dto.InstalledSoftware> installedSoftware) {
+    @SuppressWarnings("unchecked")
+	public void setInstalledSoftware(final Collection<com.tibco.bw.maven.plugin.admin.dto.InstalledSoftware> installedSoftware) {
         this.installedSoftware = installedSoftware != null ? installedSoftware : Collections.EMPTY_LIST;
     }
 

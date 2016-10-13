@@ -18,10 +18,8 @@ import org.apache.maven.project.MavenProject;
 
 import com.tibco.bw.maven.plugin.admin.client.RemoteDeployer;
 import com.tibco.bw.maven.plugin.admin.dto.Agent;
-import com.tibco.bw.maven.plugin.admin.dto.AppNode;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
-import com.tibco.bw.maven.plugin.admin.dto.Domain;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
@@ -91,14 +89,14 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	private String earLoc;
 	private String earName;
 	private String applicationName;
-	private String applicationVersion;
+	//private String applicationVersion;
 
     public void execute() throws MojoExecutionException {
     	try {    		
     		getLog().info("BWEAR Installer Mojo started ...");
     		Manifest manifest = ManifestParser.parseManifest(projectBasedir);
     		String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-            if(bwEdition!=null && bwEdition.equals("bwcf")) {
+            if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
             	getLog().debug("BWCF edition. Returning..");
             	return;
             }
@@ -111,7 +109,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			return;
     		}
     		if(!deployToAdmin) {
-    			getLog().info("Deploy To Admin is set to False. Skipping EAR Deployment");
+    			getLog().info("Deploy To Admin is set to False. Skipping EAR Deployment.");
     			return;
     		}
 
@@ -137,9 +135,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
         		getLog().info("Agent Name -> " + agent.getName());
         	}
 
-    		Domain domainDto = deployer.getOrCreateDomain(domain, domainDesc);
+    		deployer.getOrCreateDomain(domain, domainDesc);
     		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
-    		AppNode nodeDto = deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc);
+    		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc);
     		if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
     			deployer.startAppSpace(domain, appSpace);
     		} else {
