@@ -173,10 +173,10 @@ public class BWProjectBuilder
 		
 		info.setProfile( getStringValuefromDom("profile", dom , model));
 		info.setRedeploy( getBooleanValuefromDom("redeploy", dom , model));
-		
+		info.setBackup(getBooleanValuefromDom("backup", dom, model));
+		info.setBackupLocation(getStringValuefromDom("backupLocation", dom, model));
 	}
 
-	
 	private String getStringValuefromDom( String name , Xpp3Dom dom , Model model )
 	{
 		Xpp3Dom child = dom.getChild( name );

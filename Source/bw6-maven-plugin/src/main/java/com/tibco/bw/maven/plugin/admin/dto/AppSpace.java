@@ -25,7 +25,6 @@ import javax.xml.bind.annotation.XmlElement;
 
 public class AppSpace {
 
-
     public enum AppSpaceRuntimeStatus {
         Stopped, Running, Starting, Stopping, Degraded, Unreachable, InSync, OutOfSync
     }
@@ -343,5 +342,4 @@ public class AppSpace {
     public void setAppNodeRefs(final List<HRef> appNodeRefs) {
         this.appNodeRefs = appNodeRefs;
     }
-
 }

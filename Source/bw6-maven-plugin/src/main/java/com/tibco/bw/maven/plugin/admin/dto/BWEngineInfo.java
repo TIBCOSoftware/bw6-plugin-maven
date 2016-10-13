@@ -17,7 +17,6 @@ import javax.xml.bind.annotation.XmlElement;
  */
 
 public class BWEngineInfo {
-
     private String   engineName;
     private String   engineThreadCount;
     private String   engineStepCount;
@@ -31,7 +30,6 @@ public class BWEngineInfo {
     private String   groupProviderTechnology;
     private String   engineState;
     private String[] errors;
-
 
     /**
      * @return the engineName
@@ -239,5 +237,4 @@ public class BWEngineInfo {
     public void setDebuggerInterface(final String debuggerInterface) {
         this.debuggerInterface = debuggerInterface;
     }
-
 }

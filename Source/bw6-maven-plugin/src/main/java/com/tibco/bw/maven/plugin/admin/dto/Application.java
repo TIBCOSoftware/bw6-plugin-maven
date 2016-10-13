@@ -23,8 +23,6 @@ import javax.xml.bind.annotation.XmlElement;
  */
 
 public class Application {
-
-
     public enum ApplicationDeploymentStates {
         Deployed, DeployFailed, UndeployFailed, OutOfSync
     }

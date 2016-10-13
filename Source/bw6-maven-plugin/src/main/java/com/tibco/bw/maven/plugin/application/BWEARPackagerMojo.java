@@ -150,7 +150,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
         	boolean isAppModuleArtifact = true;
         	BWModulesParser parser = new BWModulesParser(session, project);
         	String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-        	parser.bwEdtion=bwEdition;
+        	parser.bwEdition = bwEdition;
         	List<Artifact> artifacts = parser.getModulesSet();
 
             for(Artifact artifact : artifacts) {
@@ -337,13 +337,13 @@ public class BWEARPackagerMojo extends AbstractMojo {
 	 */
 	private Document updateTibcoXMLVersion(Document doc) throws Exception	{
 		// The modules are listed under the Modules tag with name as "module"
-		NodeList nList = doc.getElementsByTagNameNS("http://schemas.tibco.com/tra/model/core/PackagingModel", "module");
+		NodeList nList = doc.getElementsByTagNameNS(Constants.PACKAGING_MODEL_NAMESPACE_URI, Constants.MODULE);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Element node = (Element)nList.item(i);
 			// The Symbolic name is the Module name. The version for this needs to be updated under the tag technologyVersion 
-			NodeList childList = node.getElementsByTagNameNS("http://schemas.tibco.com/tra/model/core/PackagingModel", "symbolicName");
+			NodeList childList = node.getElementsByTagNameNS(Constants.PACKAGING_MODEL_NAMESPACE_URI, Constants.SYMBOLIC_NAME);
 			String module = childList.item(0).getTextContent();		
-			NodeList technologyVersionList = node.getElementsByTagNameNS("http://schemas.tibco.com/tra/model/core/PackagingModel", "technologyVersion");
+			NodeList technologyVersionList = node.getElementsByTagNameNS(Constants.PACKAGING_MODEL_NAMESPACE_URI, Constants.TECHNOLOGY_VERSION);
 			Node technologyVersion = technologyVersionList.item(0);
 			//Get the version from the Module from the Map and set it in the Document. 
 			technologyVersion.setTextContent(moduleVersionMap.get(module));
