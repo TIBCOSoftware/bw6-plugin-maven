@@ -36,11 +36,11 @@ import org.eclipse.ui.PlatformUI;
 
 import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
-import com.tibco.bw.studio.maven.modules.BWApplication;
 import com.tibco.bw.studio.maven.modules.BWModule;
 import com.tibco.bw.studio.maven.modules.BWParent;
 import com.tibco.bw.studio.maven.modules.BWProject;
 import com.tibco.bw.studio.maven.modules.BWProjectBuilder;
+import com.tibco.bw.studio.maven.modules.model.BWApplication;
 import com.tibco.bw.studio.maven.plugin.Activator;
 import com.tibco.bw.studio.maven.wizard.MavenWizard;
 import com.tibco.bw.studio.maven.wizard.MavenWizardDialog;

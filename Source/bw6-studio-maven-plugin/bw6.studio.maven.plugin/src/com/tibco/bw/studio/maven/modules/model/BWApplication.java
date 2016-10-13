@@ -1,5 +1,8 @@
-package com.tibco.bw.studio.maven.modules;
+package com.tibco.bw.studio.maven.modules.model;
 
+import com.tibco.bw.studio.maven.modules.BWDeploymentInfo;
+import com.tibco.bw.studio.maven.modules.BWModule;
+import com.tibco.bw.studio.maven.modules.BWModuleType;
 import com.tibco.bw.studio.maven.pom.builders.ApplicationPOMBuilder;
 import com.tibco.bw.studio.maven.pom.builders.IPOMBuilder;
 

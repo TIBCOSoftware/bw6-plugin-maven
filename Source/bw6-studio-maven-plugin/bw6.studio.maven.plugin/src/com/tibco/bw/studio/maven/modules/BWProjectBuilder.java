@@ -24,6 +24,7 @@ import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.POMHelper;
 import com.tibco.bw.studio.maven.helpers.VersionHelper;
+import com.tibco.bw.studio.maven.modules.model.BWApplication;
 
 public class BWProjectBuilder 
 {
