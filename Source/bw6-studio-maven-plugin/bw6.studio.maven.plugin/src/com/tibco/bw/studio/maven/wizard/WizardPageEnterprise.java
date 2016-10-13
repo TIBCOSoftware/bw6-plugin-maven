@@ -20,11 +20,11 @@ import org.eclipse.swt.widgets.Text;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
-import com.tibco.bw.studio.maven.modules.BWDeploymentInfo;
-import com.tibco.bw.studio.maven.modules.BWModule;
-import com.tibco.bw.studio.maven.modules.BWModuleType;
-import com.tibco.bw.studio.maven.modules.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
+import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
+import com.tibco.bw.studio.maven.modules.model.BWModule;
+import com.tibco.bw.studio.maven.modules.model.BWModuleType;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
 
 public class WizardPageEnterprise extends WizardPage {
 	private Composite container;

@@ -1,4 +1,4 @@
-package com.tibco.bw.studio.maven.modules;
+package com.tibco.bw.studio.maven.modules.model;
 
 import com.tibco.bw.studio.maven.pom.builders.IPOMBuilder;
 import com.tibco.bw.studio.maven.pom.builders.ModulePOMBuilder;

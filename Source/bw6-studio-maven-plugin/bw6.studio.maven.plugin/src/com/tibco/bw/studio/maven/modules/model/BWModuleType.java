@@ -1,4 +1,4 @@
-package com.tibco.bw.studio.maven.modules;
+package com.tibco.bw.studio.maven.modules.model;
 
 public enum BWModuleType
 {

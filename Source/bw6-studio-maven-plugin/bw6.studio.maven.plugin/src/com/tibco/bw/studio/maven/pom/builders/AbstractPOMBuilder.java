@@ -27,12 +27,12 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
-import com.tibco.bw.studio.maven.modules.BWDeploymentInfo;
-import com.tibco.bw.studio.maven.modules.BWModule;
-import com.tibco.bw.studio.maven.modules.BWModuleType;
-import com.tibco.bw.studio.maven.modules.BWPCFServicesModule;
-import com.tibco.bw.studio.maven.modules.BWParent;
-import com.tibco.bw.studio.maven.modules.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
+import com.tibco.bw.studio.maven.modules.model.BWModule;
+import com.tibco.bw.studio.maven.modules.model.BWModuleType;
+import com.tibco.bw.studio.maven.modules.model.BWPCFServicesModule;
+import com.tibco.bw.studio.maven.modules.model.BWParent;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
 
 public abstract class AbstractPOMBuilder {
 	protected BWProject project; 

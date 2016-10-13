@@ -8,8 +8,8 @@ import org.eclipse.swt.widgets.Control;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
-import com.tibco.bw.studio.maven.modules.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class MavenWizard extends Wizard 

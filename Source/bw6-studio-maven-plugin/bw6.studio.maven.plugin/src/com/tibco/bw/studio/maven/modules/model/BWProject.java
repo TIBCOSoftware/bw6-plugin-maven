@@ -1,4 +1,4 @@
-package com.tibco.bw.studio.maven.modules;
+package com.tibco.bw.studio.maven.modules.model;
 
 import java.util.HashMap;
 import java.util.List;
