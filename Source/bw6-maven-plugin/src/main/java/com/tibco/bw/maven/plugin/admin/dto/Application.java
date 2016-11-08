@@ -37,26 +37,28 @@ public class Application {
         InSync, OutOfSync
     }
 
-    private String                          name;
-    private String                          appSpaceName;
-    private String                          domainName;
-    private String                          version;
-    private String                          description;
-    private HRef                            archiveRef;
+    private String                      name;
+    private String                      appSpaceName;
+    private String                      domainName;
+    private String                      version;
+    private String                      description;
+    private HRef                        archiveRef;
     private List<Property>              configuration;
-    private int                             revision;
+    private int                         revision;
     private ApplicationRuntimeStates    state;                 // this is the aggregate runtime status of the application
-    private String                          archiveName;
-    private String                          archivePath;
-    private String                          profileName;
+    private String                      archiveName;
+    private String                      archivePath;
+    private String                      profileName;
     private String                      docURL;
-    private ApplicationDeploymentStates     deploymentStatus;
-    private List<String>                    deploymentStatusDetail;
-    private List<AppInstance>               instances;
-    private HRef                            profileContentRef;  // href to get the profile configured for a given application
-    private HRef                            href; // href to the application to be used to get/undeploy operations and as a baseurl for start/stop actions
+    private ApplicationDeploymentStates deploymentStatus;
+    private List<String>                deploymentStatusDetail;
+    private List<AppInstance>           instances;
+    private HRef                        profileContentRef;  // href to get the profile configured for a given application
+    private HRef                        href; // href to the application to be used to get/undeploy operations and as a baseurl for start/stop actions
     private Collection<Component>       components;
     private Collection<Process>         processes;
+	private String 						message;
+	private String 						code;
 
     public Application() {
         this.instances = new ArrayList<AppInstance>();
@@ -385,4 +387,40 @@ public class Application {
     public void setProcesses(final Collection<Process> processes) {
         this.processes = processes;
     }
+
+    /**
+     * @return the message
+     */
+    @XmlElement
+    public String getMessage() {
+		return message;
+	}
+
+    /**
+     * 
+     * @param message
+     * 			the message to set
+     */
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	/**
+	 * 
+	 * @return the cpde
+	 */
+	@XmlElement
+	public String getCode() {
+		return code;
+	}
+
+	/**
+	 * 
+	 * @param code
+	 * 			the code to set
+	 */
+	public void setCode(String code) {
+		this.code = code;
+	}
+
 }

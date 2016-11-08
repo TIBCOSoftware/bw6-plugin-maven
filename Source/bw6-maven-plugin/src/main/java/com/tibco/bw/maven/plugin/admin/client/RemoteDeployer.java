@@ -365,6 +365,9 @@ public class RemoteDeployer {
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 			Application application = response.readEntity(Application.class);
+			if(!application.getCode().isEmpty()) {
+				throw new ClientException(500, application.getCode() + ": " + application.getMessage(), null);
+			}
 			return application;
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
