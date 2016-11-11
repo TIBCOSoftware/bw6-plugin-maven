@@ -234,6 +234,9 @@ public class BWModulePackageMojo extends AbstractMojo {
 
 	private File getPluginJAR() {
 		String qualifierVersion = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+		if(qualifierVersion != null && qualifierVersion.endsWith(".")) {
+			qualifierVersion = qualifierVersion.substring(0, qualifierVersion.lastIndexOf("."));
+		}
 		String name = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
 		if(name.indexOf(";") != -1) {

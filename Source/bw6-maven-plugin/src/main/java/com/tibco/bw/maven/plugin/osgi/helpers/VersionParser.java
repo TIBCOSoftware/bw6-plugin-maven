@@ -17,7 +17,10 @@ public class VersionParser {
 	public static String getcalculatedOSGiVersion(String versionStr) {
 		Version version = parseVersion(versionStr);
 		String calcQualifier = calculateQualifier(version.getQualifier());
-        String fullVersion = version.getMajor() + "." + version.getMinor() + "." + version.getMicro() + "." + calcQualifier; 
+		String fullVersion = version.getMajor() + "." + version.getMinor() + "." + version.getMicro();
+		if(!calcQualifier.isEmpty()) {
+			fullVersion += "." + calcQualifier;
+		}
 		return fullVersion;
 	}
 
