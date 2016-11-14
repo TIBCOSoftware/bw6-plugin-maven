@@ -25,6 +25,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -46,15 +47,26 @@ public class RemoteDeployer {
 	private final String host;
 	private final int port;
 	private Log log;
-
+	private String user;
+	private String pass;
+	
 	private void init() {
 		if (this.jerseyClient == null) {
 			ClientConfig clientConfig = new ClientConfig();
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
+		if (user.length()>0)
+		{
+			 HttpAuthenticationFeature feature = HttpAuthenticationFeature.universalBuilder()
+					  .credentialsForBasic(user, pass)
+				      .credentials(user, pass)
+				      .build();
+			 this.jerseyClient.register(feature);
+		}
 	}
 
+	
 	public RemoteDeployer(final String host, final String port) {
 		if (host == null) {
 			throw new IllegalArgumentException("Host must not be null");
@@ -65,6 +77,21 @@ public class RemoteDeployer {
 		}
 		this.host = host;
 		this.port = p;
+	}
+	
+	
+	public RemoteDeployer(final String host, final String port,String user, String pass) {
+		if (host == null) {
+			throw new IllegalArgumentException("Host must not be null");
+		}
+		int p = Integer.parseInt(port);
+		if (p <= 0 | p > 65535) {
+			throw new IllegalArgumentException("Invalid port number");
+		}
+		this.host = host;
+		this.port = p;
+		this.user = user;
+		this.pass = pass;
 	}
 
 	public void setLog(Log log) {
@@ -476,7 +503,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	private void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
+	public void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
@@ -491,7 +518,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	private void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
+	public void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);

@@ -45,6 +45,12 @@ extends AbstractMojo
 
 	@Parameter( property="agentPort")
 		private String agentPort;
+	
+	@Parameter(property="agentUser")
+	private String agentUser;
+	
+	@Parameter(property="agentPass")
+	private String agentPass;
 
 	@Parameter( property="domain")
 		private String domain;
@@ -78,6 +84,9 @@ extends AbstractMojo
 
 	@Parameter(property = "deploymentConfigfile")
 	private String deploymentConfigfile;
+	
+	@Parameter(property="backupLocation")
+	private String backupLocation;
 
 	private String earLoc;
 
@@ -94,9 +103,15 @@ extends AbstractMojo
 	    	{    		
 	    		getLog().info("BWEAR Backup Mojo started ...");
 	    		
-   		
-	    		 
-	    		RemoteDeployer deployer = new RemoteDeployer(agentHost, agentPort);
+	    		RemoteDeployer deployer = null;
+	    		if (agentUser.length()>0)
+	    		{
+	    			deployer = new RemoteDeployer(agentHost, agentPort,agentUser,agentPass);
+	    		}
+	    		else
+	    		{
+	    			deployer = new RemoteDeployer(agentHost, agentPort);	
+	    		}
 	    		deployer.setLog(getLog());
 	    		
 	    		List<Agent> agents = deployer.getAgentInfo();
@@ -114,7 +129,11 @@ extends AbstractMojo
 	        		getLog().info( "Agent Name -> " + agent.getName() );
 	        	}
 	    		
-	        	deployer.backupApplication(domain, appSpace, applicationName, earName, true , profile);
+	        	//deployer.backupApplication(domain, appSpace, applicationName, earName, true , profile);
+	        	getLog().info("Generating backup ear file for application -> " + applicationName);
+	        	deployer.downloadArchive(domain, backupLocation, applicationName);
+				getLog().info("Generating backup substvar file for profile -> " +profile);
+				deployer.downloadProfileAplication(domain, backupLocation, applicationName, profile);
 	        		    		
 	    	}
 	    	catch(Exception e )
