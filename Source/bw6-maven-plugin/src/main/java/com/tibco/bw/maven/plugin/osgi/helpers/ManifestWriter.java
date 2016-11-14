@@ -10,30 +10,24 @@ import java.util.jar.Manifest;
 
 import org.apache.maven.project.MavenProject;
 
-public class ManifestWriter 
-{
+public class ManifestWriter {
 
-    public static File updateManifest( MavenProject project , Manifest mf ) throws IOException
-    {
-    	project.getVersion();
+    public static File updateManifest(MavenProject project , Manifest mf) throws IOException {
         Attributes attributes = mf.getMainAttributes();
-
-        if ((attributes.getValue(Name.MANIFEST_VERSION) == null ||attributes.getValue(Name.MANIFEST_VERSION).equals("1.0")) &&  project.getVersion().equals("1.0.0-SNAPSHOT"))
-        {
+        if((attributes.getValue(Name.MANIFEST_VERSION) == null || attributes.getValue(Name.MANIFEST_VERSION).equals("1.0")) && project.getVersion().equals("1.0.0-SNAPSHOT")) {
             attributes.put(Name.MANIFEST_VERSION, project.getVersion());
         }
 
         File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
-        System.out.println(mfile.getAbsolutePath());
         mfile.getParentFile().mkdirs();
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
         try {
             mf.write(os);
         } finally {
-            os.close();
+        	if(os != null) {
+        		os.close();	
+        	}
         }
-
         return mfile;
     }
-	
 }

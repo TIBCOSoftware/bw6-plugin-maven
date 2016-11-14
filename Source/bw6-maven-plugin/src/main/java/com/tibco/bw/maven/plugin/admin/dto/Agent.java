@@ -19,7 +19,6 @@ import javax.xml.bind.annotation.XmlElement;
  *
  * @since 1.0.0
  */
-
 public class Agent {
     public static enum AgentConfigStates {
         InSync, OutOfSync
@@ -277,5 +276,4 @@ public class Agent {
     public void setConfigMap(final Map<String, Object> config) {
         this.configProps = config;
     }
-
 }

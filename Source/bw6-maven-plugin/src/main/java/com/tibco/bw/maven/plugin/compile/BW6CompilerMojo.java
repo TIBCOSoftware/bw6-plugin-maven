@@ -9,25 +9,17 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 @Mojo( name = "bwcompile", defaultPhase = LifecyclePhase.COMPILE )
-public class BW6CompilerMojo extends CompilerMojo 
-{
-
+public class BW6CompilerMojo extends CompilerMojo {
 	@Parameter( property="project.build.directory")
     private File outputDirectory;
-    
+
 	@Parameter( property="project.basedir")
 	private File projectBasedir;
-	
     
-    public void execute() throws MojoExecutionException
-    {
-    	try 
-    	{
+    public void execute() throws MojoExecutionException {
+    	try {
     		super.execute();    	
-    	}
-    	catch(Exception e )
-    	{
-    		
+    	} catch(Exception e) {
     	}
     }
 }

@@ -20,11 +20,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 public class AppNode {
 
-
     public enum AppNodeRuntimeStates {
         Running, Stopped, Impaired, Starting, Stopping, StartFailed, Unreachable
     }
-
 
     public enum AppNodeRuntimeConfigStates {
         InSync, OutOfSync
@@ -44,7 +42,6 @@ public class AppNode {
     private String   configState;
     private String   pid;
     private long     uptime;
-
 
     public AppNode() {
     }
@@ -246,5 +243,4 @@ public class AppNode {
     public void setDomainName(final String domainName) {
         this.domainName = domainName;
     }
-
 }
