@@ -2,9 +2,9 @@ package com.tibco.bw.studio.maven.helpers;
 
 import java.util.List;
 
-import com.tibco.bw.studio.maven.modules.BWModule;
-import com.tibco.bw.studio.maven.modules.BWModuleType;
-import com.tibco.bw.studio.maven.modules.BWParent;
+import com.tibco.bw.studio.maven.modules.model.BWModule;
+import com.tibco.bw.studio.maven.modules.model.BWModuleType;
+import com.tibco.bw.studio.maven.modules.model.BWParent;
 
 public class ModuleHelper 
 {

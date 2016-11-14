@@ -2,7 +2,7 @@ package com.tibco.bw.studio.maven.wizard;
 
 import org.eclipse.jface.wizard.Wizard;
 
-import com.tibco.bw.studio.maven.modules.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
 
 public class PCFServiceWizard extends Wizard {
 	

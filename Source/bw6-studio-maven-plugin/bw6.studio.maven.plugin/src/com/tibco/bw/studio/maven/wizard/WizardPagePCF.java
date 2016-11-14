@@ -19,10 +19,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import com.tibco.bw.studio.maven.modules.BWModule;
-import com.tibco.bw.studio.maven.modules.BWModuleType;
-import com.tibco.bw.studio.maven.modules.BWPCFModule;
-import com.tibco.bw.studio.maven.modules.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWModule;
+import com.tibco.bw.studio.maven.modules.model.BWModuleType;
+import com.tibco.bw.studio.maven.modules.model.BWPCFModule;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
 
 public class WizardPagePCF extends WizardPage 
 {

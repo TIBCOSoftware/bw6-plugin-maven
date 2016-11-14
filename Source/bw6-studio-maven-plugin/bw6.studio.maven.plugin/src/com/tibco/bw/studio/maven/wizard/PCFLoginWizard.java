@@ -3,10 +3,10 @@ package com.tibco.bw.studio.maven.wizard;
 import org.cloudfoundry.client.lib.CloudFoundryClient;
 import org.eclipse.jface.wizard.Wizard;
 
-import com.tibco.bw.studio.maven.modules.BWModule;
-import com.tibco.bw.studio.maven.modules.BWModuleType;
-import com.tibco.bw.studio.maven.modules.BWPCFModule;
-import com.tibco.bw.studio.maven.modules.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWModule;
+import com.tibco.bw.studio.maven.modules.model.BWModuleType;
+import com.tibco.bw.studio.maven.modules.model.BWPCFModule;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
 
 public class PCFLoginWizard extends Wizard{
 

@@ -24,6 +24,14 @@ import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.POMHelper;
 import com.tibco.bw.studio.maven.helpers.VersionHelper;
+import com.tibco.bw.studio.maven.modules.model.BWAppModule;
+import com.tibco.bw.studio.maven.modules.model.BWApplication;
+import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
+import com.tibco.bw.studio.maven.modules.model.BWModule;
+import com.tibco.bw.studio.maven.modules.model.BWParent;
+import com.tibco.bw.studio.maven.modules.model.BWPluginModule;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWSharedModule;
 
 public class BWProjectBuilder 
 {
@@ -172,10 +180,10 @@ public class BWProjectBuilder
 		
 		info.setProfile( getStringValuefromDom("profile", dom , model));
 		info.setRedeploy( getBooleanValuefromDom("redeploy", dom , model));
-		
+		info.setBackup(getBooleanValuefromDom("backup", dom, model));
+		info.setBackupLocation(getStringValuefromDom("backupLocation", dom, model));
 	}
 
-	
 	private String getStringValuefromDom( String name , Xpp3Dom dom , Model model )
 	{
 		Xpp3Dom child = dom.getChild( name );

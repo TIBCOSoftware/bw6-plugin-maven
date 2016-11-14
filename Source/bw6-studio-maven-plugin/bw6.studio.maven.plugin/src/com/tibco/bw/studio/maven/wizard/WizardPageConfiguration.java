@@ -27,44 +27,33 @@ import org.eclipse.ui.PlatformUI;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
-import com.tibco.bw.studio.maven.modules.BWApplication;
-import com.tibco.bw.studio.maven.modules.BWDeploymentInfo;
-import com.tibco.bw.studio.maven.modules.BWModule;
-import com.tibco.bw.studio.maven.modules.BWModuleType;
-import com.tibco.bw.studio.maven.modules.BWParent;
-import com.tibco.bw.studio.maven.modules.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWApplication;
+import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
+import com.tibco.bw.studio.maven.modules.model.BWModule;
+import com.tibco.bw.studio.maven.modules.model.BWModuleType;
+import com.tibco.bw.studio.maven.modules.model.BWParent;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
 
-public class WizardPageConfiguration extends WizardPage
-{
-	
+public class WizardPageConfiguration extends WizardPage {
 	private BWProject project;
-
 	private Text appGroupId;
 	private Text appArtifactId;
 	private Text appVersion;
-	
 	private Button addDeploymentConfig;
-	
 	private Composite container;
 	private String bwEdition;
-
 	private Map<String, Button> buttonMap = new HashMap<String, Button>();
 	
-	public WizardPageConfiguration( String pageName , BWProject project ) 
-	{
+	public WizardPageConfiguration(String pageName , BWProject project) {
 		super(pageName);
 		this.project = project;		 
-		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorks™");
-		setDescription("Enter the GroupId and ArtifactId for for Maven POM File generation. \nThe POM files will be generated for Projects listed below and a Parent POM file will be generated aggregating the Projects");	
+		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorksï¿½");
+		setDescription("Enter the GroupId and ArtifactId for Maven POM File generation. \nThe POM files will be generated for Projects listed below and a Parent POM file will be generated aggregating the Projects");	
 	}
-	
-	
-	
-	
+
 	@Override
-	public void setVisible(boolean visible) 
-	{
+	public void setVisible(boolean visible) {
 		super.setVisible(visible);
 
 		Job job = new Job( "Validating Page") {
@@ -444,12 +433,6 @@ public class WizardPageConfiguration extends WizardPage
 			parent.setArtifactId( appArtifactId.getText() );
 			((BWParent)parent).setValueChanged(true);
 		}
-		
-		
-		
 		return project;
 	}
-	
-	
-
 }
