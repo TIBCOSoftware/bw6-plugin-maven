@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" factory="com.tibco.bw.palette.unittest.AssertNodeEquals" name="bw.unittest.AssertNodeEquals">
+   <implementation class="com.tibco.bw.unittest.runtime.assertnodeequals.AssertNode_Equals"/>
+   <property name="activityTypeID" type="String" value="bw.unittest.AssertNodeEquals"/>
+   <property name="modelPackageClass" type="String" value="com.tibco.bw.unittest.model.bw6unit.Bw6unitPackage"/>
+   <property name="runtimeClass" type="String" value="com.tibco.bw.unittest.runtime.assertnodeequals.AssertNode_Equals"/>
+</scr:component>

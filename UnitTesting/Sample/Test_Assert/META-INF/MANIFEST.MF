@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Test_Assert Module
+Bundle-SymbolicName: Test_Assert
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: TIBCO Software Inc.
+TIBCO-BW-ModuleSharedVariables: META-INF/module.msv
+Require-Capability: com.tibco.bw.model; filter:="(name=bwext)",
+ com.tibco.bw.palette; filter:="(name=bw.generalactivities)",
+ com.tibco.bw.palette; filter:="(name=bw.jdbc)",
+ com.tibco.bw.palette; filter:="(name=bw.file)",
+ com.tibco.bw.palette; filter:="(name=bw.unittest)",
+ com.tibco.bw.palette; filter:="(name=bw.parse)",
+ com.tibco.bw.sharedresource.model; filter:="(name=bw.dataformat)",
+ com.tibco.bw.sharedresource.model; filter:="(name=bw.jdbc)"
+TIBCO-BW-ConfigProfile: META-INF/default.substvar
+TIBCO-BW-ApplicationModule: META-INF/module.bwm
+TIBCO-BW-JobSharedVariables: META-INF/module.jsv
+TIBCO-BW-Version: 6.3.2 V15 2016-03-14

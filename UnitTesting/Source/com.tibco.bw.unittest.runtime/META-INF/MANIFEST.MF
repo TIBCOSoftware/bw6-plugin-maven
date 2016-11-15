@@ -1,0 +1,35 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: TIBCO Unit Test Plugin Runtime
+Bundle-SymbolicName: com.tibco.bw.unittest.runtime
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: TIBCO Software Inc.
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Import-Package: com.tibco.bw.runtime;version="6.3.100",
+ com.tibco.bw.runtime.annotation;version="6.3.100",
+ com.tibco.bw.runtime.util;version="6.3.100",
+ com.tibco.bw.unittest.model.bw6unit;version="1.0.0",
+ com.tibco.neo.common;version="2.6.2",
+ com.tibco.neo.localized;version="2.6.2",
+ com.tibco.neo.util;version="2.6.2",
+ org.apache.xerces.util;version="2.20.0",
+ org.eclipse.emf.common;version="2.10.1",
+ org.eclipse.emf.common.util;version="2.10.1",
+ org.eclipse.emf.ecore;version="2.10.1",
+ org.genxdm;version="1.2.0",
+ org.genxdm.axes;version="1.2.0",
+ org.genxdm.bridgekit.atoms;version="1.2.0",
+ org.genxdm.exceptions;version="1.2.0",
+ org.genxdm.io;version="1.2.0",
+ org.genxdm.mutable;version="1.2.0",
+ org.genxdm.nodes;version="1.2.0",
+ org.genxdm.typed;version="1.2.0",
+ org.genxdm.typed.types;version="1.2.0",
+ org.genxdm.xs;version="1.2.0",
+ org.genxdm.xs.components;version="1.2.0",
+ org.genxdm.xs.exceptions;version="1.2.0",
+ org.osgi.framework;version="1.8.0",
+ org.osgi.util.tracker;version="1.5.1"
+Service-Component: OSGI-INF/AssertNodeEquals.xml
+Provide-Capability: com.tibco.bw.palette; name=bw.unittest
+Export-Package: com.tibco.bw.unittest.runtime.assertnodeequals

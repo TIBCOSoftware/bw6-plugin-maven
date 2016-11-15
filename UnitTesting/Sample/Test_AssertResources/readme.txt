@@ -1,0 +1,1 @@
+place the “theNodes.txt” file in an external folder then update BW process to point to that file 

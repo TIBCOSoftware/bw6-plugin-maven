@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+	<extension point="org.eclipse.ui.popupMenus">
+   
+		<objectContribution adaptable="true" id="genpom.popupmenu" objectClass="org.eclipse.core.resources.IProject">
+ 			<filter name="projectNature" value="com.tibco.zion.dc.ApplicationNature"/>
+ 			<action class="com.tibco.bw.studio.maven.action.MavenPOMProcessor" id="com.tibco.bw.studio.maven.pom.generate.action" label="Generate POM for Application" menubarPath="additions"/>
+  		</objectContribution>
+   </extension>
+ <extension
+       point="com.tibco.bw.debug.launch">
+    <Name
+          class="com.tibco.bw.studio.maven.extension.MavenDebugLauncher">
+    </Name>
+ </extension>
+
+</plugin>

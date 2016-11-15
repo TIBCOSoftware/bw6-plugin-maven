@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="bw6.studio.maven.feature"
+      label="TIBCO BusinessWorks™ Studio Feature for Maven"
+      version="1.1.0.qualifier"
+      provider-name="Tibco Software Inc">
+
+   <description url="http://www.example.com/description">
+      Feature Project for BW6 Maven Studio Plugin.
+This feature will provide the POM generation feature.
+   </description>
+
+   <plugin
+         id="bw6.studio.maven.plugin"
+         download-size="0"
+         install-size="0"
+         version="1.1.0.qualifier"
+         unpack="false"/>
+
+</feature>
