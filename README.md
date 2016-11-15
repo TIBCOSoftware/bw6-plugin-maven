@@ -17,7 +17,7 @@ a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
 
 b. Navigate to the Installer Folder.
 
-c. Download TIB_BW_Maven_Plugin_1.0.0.zip
+c. Download TIB_BW_Maven_Plugin_1.1.0.zip
 
 d. Unzip the file in a folder on local drive.
 
@@ -108,6 +108,7 @@ d. Clicking it will launch the POM Generation UI.
 e. There are two platforms supported by this plugin -
 - CloudFoundry (follow step f)
 - Docker + Kubernetes (follow step g)
+NOTE - For Docker/Kubernetes you also need to download gCloud-sdk and kubectl (CLIs), and make sure you add them to your path environment-variable. 
 
 f. Enter your PCF instance configuration details here and Click Finish.
 

@@ -47,15 +47,20 @@ public class RemoteDeployer {
 	private final String host;
 	private final int port;
 	private Log log;
+<<<<<<< HEAD
 	private String user;
 	private String pass;
 	
+=======
+
+>>>>>>> upstream2/master
 	private void init() {
 		if (this.jerseyClient == null) {
 			ClientConfig clientConfig = new ClientConfig();
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
+<<<<<<< HEAD
 		if (user.length()>0)
 		{
 			 HttpAuthenticationFeature feature = HttpAuthenticationFeature.universalBuilder()
@@ -71,6 +76,14 @@ public class RemoteDeployer {
 		if (host == null) {
 			throw new IllegalArgumentException("Host must not be null");
 		}
+=======
+	}
+
+	public RemoteDeployer(final String host, final String port) {
+		if (host == null) {
+			throw new IllegalArgumentException("Host must not be null");
+		}
+>>>>>>> upstream2/master
 		int p = Integer.parseInt(port);
 		if (p <= 0 | p > 65535) {
 			throw new IllegalArgumentException("Invalid port number");
@@ -78,6 +91,7 @@ public class RemoteDeployer {
 		this.host = host;
 		this.port = p;
 	}
+<<<<<<< HEAD
 	
 	
 	public RemoteDeployer(final String host, final String port,String user, String pass) {
@@ -93,6 +107,8 @@ public class RemoteDeployer {
 		this.user = user;
 		this.pass = pass;
 	}
+=======
+>>>>>>> upstream2/master
 
 	public void setLog(Log log) {
 		this.log = log;
@@ -503,7 +519,11 @@ public class RemoteDeployer {
 		}
 	}
 
+<<<<<<< HEAD
 	public void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
+=======
+	private void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
+>>>>>>> upstream2/master
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
@@ -517,6 +537,7 @@ public class RemoteDeployer {
 			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}
+<<<<<<< HEAD
 
 	public void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
 		init();
@@ -574,6 +595,65 @@ public class RemoteDeployer {
 		}
 	}
 
+=======
+
+	private void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
+		init();
+		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
+		WebTarget r = this.jerseyClient.target(u);
+		try {
+			Response response = r.path("/domains").path(domainName).path("archives").path(name).path(profileName).request().get();
+			processErrorResponse(response);
+			saveArchive(response, path, profileName);
+		} catch (ProcessingException pe) {
+			throw getConnectionException(pe);
+		} catch (Exception ex) {
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+
+	private void saveArchive(Response response, final String path, final String name) throws IOException {
+		FileOutputStream outputStream = null;
+		try {
+			// Read response string
+			InputStream inputStream = response.readEntity(InputStream.class);
+			String fullPath = path + File.separator + DATE_TIME;
+			File file = new File(fullPath);
+			FileUtils.forceMkdir(file);
+			//parentPath = file.getAbsoluteFile().getAbsolutePath();
+			fullPath += File.separator + name;
+			outputStream = new FileOutputStream(fullPath);
+			byte[] buffer = new byte[1024];
+			int bytesRead;
+			while ((bytesRead = inputStream.read(buffer)) != -1) {
+				outputStream.write(buffer, 0, bytesRead);
+			}
+			log.info("Downloaded successfully at: " + fullPath);
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if(outputStream != null) {
+				try {
+					outputStream.close();
+				} catch (IOException e) {
+					log.error(e);
+				}
+			}
+		}
+	}
+
+	private void processErrorResponse(Response response) throws ClientException {
+		if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+			com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
+			if (error != null) {
+				throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
+			} else {
+				throw new ClientException(response.getStatus(), response.getStatusInfo().getReasonPhrase(), null);
+			}
+		}
+	}
+
+>>>>>>> upstream2/master
 	private static ClientException getConnectionException(ProcessingException pe) {
 		if (pe.getCause() instanceof ConnectException) {
 			return new ClientException(503, pe.getCause().getMessage(), pe.getCause());

@@ -126,6 +126,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 
     		deriveEARInformation(files[0]);
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
+<<<<<<< HEAD
     		RemoteDeployer deployer=null;
     		if (agentUser.length()>0)
     		{
@@ -135,6 +136,10 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		{
     			deployer = new RemoteDeployer(agentHost, agentPort);	
     		}
+=======
+
+    		RemoteDeployer deployer = new RemoteDeployer(agentHost, agentPort);
+>>>>>>> upstream2/master
     		deployer.setLog(getLog());
 
     		List<Agent> agents = deployer.getAgentInfo();
