@@ -128,6 +128,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
     		RemoteDeployer deployer=null;
+    		//bwagent with auth
     		if (agentUser.length()>0)
     		{
     			deployer = new RemoteDeployer(agentHost, agentPort,agentUser,agentPass);

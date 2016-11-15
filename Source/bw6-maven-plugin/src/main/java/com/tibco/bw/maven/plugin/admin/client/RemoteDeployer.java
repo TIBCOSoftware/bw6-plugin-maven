@@ -56,11 +56,12 @@ public class RemoteDeployer {
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
-
+		//bwagent with auth
 		if (user.length()>0)
 		{
 			 HttpAuthenticationFeature feature = HttpAuthenticationFeature.universalBuilder()
 					  .credentialsForBasic(user, pass)
+					  .credentialsForDigest(user, pass)
 				      .credentials(user, pass)
 				      .build();
 			 this.jerseyClient.register(feature);
@@ -90,7 +91,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	
+	//bwagent with auth
 	public RemoteDeployer(final String host, final String port,String user, String pass) {
 		if (host == null) {
 			throw new IllegalArgumentException("Host must not be null");

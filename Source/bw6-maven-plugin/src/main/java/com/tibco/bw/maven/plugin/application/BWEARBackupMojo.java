@@ -19,7 +19,7 @@ import com.tibco.bw.maven.plugin.admin.client.RemoteDeployer;
 import com.tibco.bw.maven.plugin.admin.dto.Agent;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 
-@Mojo(name = "bwbackupEAR", defaultPhase = LifecyclePhase.VERIFY)
+@Mojo(name = "bwbackupEAR")
 public class BWEARBackupMojo
 extends AbstractMojo
 
