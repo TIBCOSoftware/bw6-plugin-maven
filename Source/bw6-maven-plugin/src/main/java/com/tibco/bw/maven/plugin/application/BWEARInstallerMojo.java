@@ -129,12 +129,13 @@ public class BWEARInstallerMojo extends AbstractMojo {
 
     		RemoteDeployer deployer=null;
     		//bwagent with auth
-    		if (agentUser.length()>0)
+    		if (agentUser!=null)
     		{
     			deployer = new RemoteDeployer(agentHost, agentPort,agentUser,agentPass);
     		}
     		else
     		{
+    			getLog().info("RemoteDeployer Machine:"+agentHost +":"+agentPort);
     			deployer = new RemoteDeployer(agentHost, agentPort);	
     		}
 

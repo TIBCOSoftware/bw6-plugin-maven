@@ -57,7 +57,7 @@ public class RemoteDeployer {
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
 		//bwagent with auth
-		if (user.length()>0)
+		if (user!=null)
 		{
 			 HttpAuthenticationFeature feature = HttpAuthenticationFeature.universalBuilder()
 					  .credentialsForBasic(user, pass)
