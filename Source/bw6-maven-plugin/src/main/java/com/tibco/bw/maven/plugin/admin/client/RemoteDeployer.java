@@ -15,6 +15,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -51,6 +52,7 @@ public class RemoteDeployer {
 	private String user;
 	private String pass;
 	private ClientConfig clientConfig;
+	private Application application;
 
 	private void init() {
 		if (this.jerseyClient == null) {
@@ -369,7 +371,7 @@ public class RemoteDeployer {
 			builder.modificationDate(new Date(fileEntity.lastModified()));
 			filePart.setFormDataContentDisposition(builder.build());
 			multipart.bodyPart(filePart);
-
+			r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(multipart, multipart.getMediaType())).toString();
 			Response response = r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(multipart, multipart.getMediaType()));
 
 			if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
@@ -386,7 +388,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	private void deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile) throws ClientException {
+	private Application deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
@@ -399,12 +401,12 @@ public class RemoteDeployer {
 			if (profile != null) {
 				r = r.queryParam("profile", profile);
 			}
-
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
+			application = response.readEntity(Application.class);
 			log.debug("response.toString()"+response.toString());
 			
-			//return application;
+			return application;
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {

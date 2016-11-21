@@ -8,10 +8,13 @@
 
 package com.tibco.bw.maven.plugin.admin.dto;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
 import javax.xml.bind.annotation.XmlElement;
+
+import java.util.List;
 
 /**
  * @author <a href="mailto:tdiekman@tibco.com">Tim Diekmann</a>
@@ -20,6 +23,10 @@ import javax.xml.bind.annotation.XmlElement;
  */
 public class Property {
 	private String name;
+	private String moduleName;
+	private List<String> services;
+	private List<Reference> references;
+	private String processName;
 	private Object value;
 	private String description;
 	private String type;
@@ -195,5 +202,37 @@ public class Property {
 	 */
 	public void setRegex(final String regex) {
 		this.regex = regex;
+	}
+	
+	public String getModuleName() {
+		return moduleName;
+	}
+
+	public void setModuleName(String moduleName) {
+		this.moduleName = moduleName;
+	}
+
+	public List<Reference> getReferences() {
+		return references;
+	}
+
+	public void setReferences(List<Reference> references) {
+		this.references = references;
+	}
+
+	public String getProcessName() {
+		return processName;
+	}
+
+	public void setProcessName(String processName) {
+		this.processName = processName;
+	}
+
+	public List<String> getServices() {
+		return services;
+	}
+
+	public void setServices(List<String> services) {
+		this.services = services;
 	}
 }

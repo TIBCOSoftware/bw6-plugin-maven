@@ -59,6 +59,7 @@ public class Application {
     private Collection<Process>         processes;
 	private String 						message;
 	private String 						code;
+	private String						moduleName;
 
     public Application() {
         this.instances = new ArrayList<AppInstance>();
