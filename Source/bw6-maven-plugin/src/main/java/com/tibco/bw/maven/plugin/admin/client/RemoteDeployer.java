@@ -56,8 +56,8 @@ public class RemoteDeployer {
 		if (this.jerseyClient == null) {
 			clientConfig = new ClientConfig();
 
-			clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 20000);
-			clientConfig.property(ClientProperties.READ_TIMEOUT, 20000);
+			clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 120000);
+			clientConfig.property(ClientProperties.READ_TIMEOUT, 120000);
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
@@ -386,7 +386,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	private Application deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile) throws ClientException {
+	private void deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
@@ -401,18 +401,15 @@ public class RemoteDeployer {
 			}
 
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
-//			processErrorResponse(response);
-			Application application = response.readEntity(Application.class);
-
-			if(!application.getCode().isEmpty()) {
-				log.info("Application Code: " + application.getCode() + ": " + application.getMessage());
-				throw new ClientException(500, application.getCode() + ": " + application.getMessage(), null);
-			}
-			return application;
+			processErrorResponse(response);
+			log.debug("response.toString()"+response.toString());
+			
+			//return application;
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {
 			throw new ClientException(500, ex.getMessage(), ex);
+			
 		}
 	}
 
