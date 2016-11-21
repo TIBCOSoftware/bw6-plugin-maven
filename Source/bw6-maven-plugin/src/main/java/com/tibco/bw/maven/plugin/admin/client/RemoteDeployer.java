@@ -25,11 +25,8 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.glassfish.jersey.client.ClientConfig;
-<<<<<<< HEAD
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-=======
->>>>>>> upstream/master
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -51,16 +48,14 @@ public class RemoteDeployer {
 	private final String host;
 	private final int port;
 	private Log log;
-<<<<<<< HEAD
 	private String user;
 	private String pass;
-=======
->>>>>>> upstream/master
+	private ClientConfig clientConfig;
 
 	private void init() {
 		if (this.jerseyClient == null) {
-			ClientConfig clientConfig = new ClientConfig();
-<<<<<<< HEAD
+			clientConfig = new ClientConfig();
+
 			clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 20000);
 			clientConfig.property(ClientProperties.READ_TIMEOUT, 20000);
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
@@ -74,13 +69,10 @@ public class RemoteDeployer {
 					  .credentialsForDigest(user, pass)
 				      .credentials(user, pass)
 				      .build();
-			 this.jerseyClient.register(feature);
-		}
-=======
-			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
+			this.jerseyClient.register(feature);
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
->>>>>>> upstream/master
+
 	}
 
 	public RemoteDeployer(final String host, final String port) {
@@ -106,7 +98,7 @@ public class RemoteDeployer {
 		}
 	}
 
-<<<<<<< HEAD
+
 	//bwagent with auth
 	public RemoteDeployer(final String host, final String port,String user, String pass) {
 		if (host == null) {
@@ -122,8 +114,7 @@ public class RemoteDeployer {
 		this.pass = pass;
 	}
 	
-=======
->>>>>>> upstream/master
+
 	public List<Agent> getAgentInfo() throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
@@ -348,10 +339,6 @@ public class RemoteDeployer {
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
 		try {
-<<<<<<< HEAD
-			
-=======
->>>>>>> upstream/master
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("appnodes").path(appNodeName).path("start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 		} catch (ProcessingException pe) {
@@ -412,37 +399,15 @@ public class RemoteDeployer {
 			if (profile != null) {
 				r = r.queryParam("profile", profile);
 			}
-<<<<<<< HEAD
-			log.info("Ini deployApplication: "+new Date().toString());
-//			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
-//			processErrorResponse(response);
-//			Application application = response.readEntity(Application.class);
-			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName)
- 					.path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
- 			if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
- 				com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
- 				if (error != null) {
- 					throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
- 				} else {
- 					throw new ClientException(response.getStatus(), response.getStatusInfo().getReasonPhrase(), null);
- 				}
- 			}
- 
- 			Application application = response.readEntity(Application.class);
-			log.info("Application Code: " + application.getCode() + ": " + application.getMessage());
-			log.info("Fin deployApplication: "+new Date().toString());
-//			if(!application.getCode().isEmpty()) {
-//				log.info("Application Code: " + application.getCode() + ": " + application.getMessage());
-//				throw new ClientException(500, application.getCode() + ": " + application.getMessage(), null);
-//			}
-=======
+
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
-			processErrorResponse(response);
+//			processErrorResponse(response);
 			Application application = response.readEntity(Application.class);
+
 			if(!application.getCode().isEmpty()) {
+				log.info("Application Code: " + application.getCode() + ": " + application.getMessage());
 				throw new ClientException(500, application.getCode() + ": " + application.getMessage(), null);
 			}
->>>>>>> upstream/master
 			return application;
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
@@ -551,11 +516,8 @@ public class RemoteDeployer {
 		}
 	}
 
-<<<<<<< HEAD
+
 	public void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
-=======
-	private void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
->>>>>>> upstream/master
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
@@ -570,11 +532,7 @@ public class RemoteDeployer {
 		}
 	}
 
-<<<<<<< HEAD
 	public void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
-=======
-	private void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
->>>>>>> upstream/master
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
@@ -621,10 +579,6 @@ public class RemoteDeployer {
 
 	private void processErrorResponse(Response response) throws ClientException {
 		if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-<<<<<<< HEAD
-			log.debug(" response.getStatusInfo: " + response.getStatusInfo() + ": " + response.getStatus());
-=======
->>>>>>> upstream/master
 			com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
 			if (error != null) {
 				throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
@@ -644,8 +598,8 @@ public class RemoteDeployer {
 		}
 		return new ClientException(500, pe.getMessage(), pe);
 	}
-<<<<<<< HEAD
+
 }
-=======
-}
->>>>>>> upstream/master
+
+
+
