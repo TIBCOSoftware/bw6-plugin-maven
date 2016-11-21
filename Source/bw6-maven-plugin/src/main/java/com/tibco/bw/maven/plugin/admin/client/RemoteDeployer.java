@@ -15,6 +15,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -25,6 +26,8 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -46,13 +49,32 @@ public class RemoteDeployer {
 	private final String host;
 	private final int port;
 	private Log log;
+	private String user;
+	private String pass;
+	private ClientConfig clientConfig;
+	private Application application;
 
 	private void init() {
 		if (this.jerseyClient == null) {
-			ClientConfig clientConfig = new ClientConfig();
+			clientConfig = new ClientConfig();
+
+			clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 120000);
+			clientConfig.property(ClientProperties.READ_TIMEOUT, 120000);
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
+		//bwagent with auth
+		if (user!=null)
+		{
+			 HttpAuthenticationFeature feature = HttpAuthenticationFeature.universalBuilder()
+					  .credentialsForBasic(user, pass)
+					  .credentialsForDigest(user, pass)
+				      .credentials(user, pass)
+				      .build();
+			this.jerseyClient.register(feature);
+			this.jerseyClient = ClientBuilder.newClient(clientConfig);
+		}
+
 	}
 
 	public RemoteDeployer(final String host, final String port) {
@@ -77,6 +99,23 @@ public class RemoteDeployer {
 			this.jerseyClient = null;
 		}
 	}
+
+
+	//bwagent with auth
+	public RemoteDeployer(final String host, final String port,String user, String pass) {
+		if (host == null) {
+			throw new IllegalArgumentException("Host must not be null");
+		}
+		int p = Integer.parseInt(port);
+		if (p <= 0 | p > 65535) {
+			throw new IllegalArgumentException("Invalid port number");
+		}
+		this.host = host;
+		this.port = p;
+		this.user = user;
+		this.pass = pass;
+	}
+	
 
 	public List<Agent> getAgentInfo() throws ClientException {
 		init();
@@ -332,7 +371,7 @@ public class RemoteDeployer {
 			builder.modificationDate(new Date(fileEntity.lastModified()));
 			filePart.setFormDataContentDisposition(builder.build());
 			multipart.bodyPart(filePart);
-
+			r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(multipart, multipart.getMediaType())).toString();
 			Response response = r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(multipart, multipart.getMediaType()));
 
 			if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
@@ -364,15 +403,15 @@ public class RemoteDeployer {
 			}
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
-			Application application = response.readEntity(Application.class);
-			if(!application.getCode().isEmpty()) {
-				throw new ClientException(500, application.getCode() + ": " + application.getMessage(), null);
-			}
+			application = response.readEntity(Application.class);
+			log.debug("response.toString()"+response.toString());
+			
 			return application;
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {
 			throw new ClientException(500, ex.getMessage(), ex);
+			
 		}
 	}
 
@@ -476,7 +515,8 @@ public class RemoteDeployer {
 		}
 	}
 
-	private void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
+
+	public void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
@@ -491,7 +531,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	private void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
+	public void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
 		init();
 		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
 		WebTarget r = this.jerseyClient.target(u);
@@ -557,4 +597,8 @@ public class RemoteDeployer {
 		}
 		return new ClientException(500, pe.getMessage(), pe);
 	}
+
 }
+
+
+
