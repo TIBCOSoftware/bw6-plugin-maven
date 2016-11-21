@@ -46,12 +46,15 @@ public class BWEARInstallerMojo extends AbstractMojo {
 
 	@Parameter(property="agentPort")
 	private String agentPort;
+<<<<<<< HEAD
 	
 	@Parameter(property="agentUser")
 	private String agentUser;
 	
 	@Parameter(property="agentPass")
 	private String agentPass;
+=======
+>>>>>>> upstream/master
 
 	@Parameter(property="domain")
 	private String domain;
@@ -127,6 +130,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		deriveEARInformation(files[0]);
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
+<<<<<<< HEAD
     		RemoteDeployer deployer=null;
     		//bwagent with auth
     		if (agentUser!=null)
@@ -139,6 +143,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			deployer = new RemoteDeployer(agentHost, agentPort);	
     		}
 
+=======
+    		RemoteDeployer deployer = new RemoteDeployer(agentHost, agentPort);
+>>>>>>> upstream/master
     		deployer.setLog(getLog());
 
     		List<Agent> agents = deployer.getAgentInfo();
