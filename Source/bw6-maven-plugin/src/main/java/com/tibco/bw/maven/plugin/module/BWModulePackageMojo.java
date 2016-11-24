@@ -97,7 +97,7 @@ public class BWModulePackageMojo extends AbstractMojo {
             removeExternals();
 
             File pluginFile = getPluginJAR();
-            getLog().info("Created Plugin JAA with name " + pluginFile.toString());
+            getLog().info("Created Plugin JAR with name " + pluginFile.toString());
             FileSet set = getFileSet();
 
             getLog().info("Adding Maven Dependencies to the Plugin JAR file");

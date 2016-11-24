@@ -11,4 +11,6 @@ public interface Constants {
 	public static final String MODULE = "module";
 	public static final String SYMBOLIC_NAME = "symbolicName";
 	public static final String TECHNOLOGY_VERSION = "technologyVersion";
+	public static final String BASIC_AUTH = "BASIC";
+	public static final String DIGEST_AUTH = "DIGEST";
 }

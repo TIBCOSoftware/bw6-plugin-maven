@@ -5,12 +5,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
-import java.net.URI;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -24,7 +25,9 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
+import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -38,33 +41,81 @@ import com.tibco.bw.maven.plugin.admin.dto.AppSpace;
 import com.tibco.bw.maven.plugin.admin.dto.Application;
 import com.tibco.bw.maven.plugin.admin.dto.Archive;
 import com.tibco.bw.maven.plugin.admin.dto.Domain;
+import com.tibco.bw.maven.plugin.utils.Constants;
 
 public class RemoteDeployer {
 	private static final String DATE_TIME = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
 	private static final String CONTEXT_ROOT = "/bw/v1";
 	private Client jerseyClient;
+	private WebTarget r;
+	private String scheme = "http";
 	private final String host;
 	private final int port;
+	private final String agentAuth;
+	private final boolean agentSSL;
+	private final String username;
+	private final String password;
+	private final String trustPath;
+	private final String trustPassword;
+	private final String keyPath;
+	private final String keyPassword;
 	private Log log;
+
+	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword) {
+		this.host = host;
+		this.port = port;
+		this.agentAuth = agentAuthType;
+		this.username = username;
+		this.password = password;
+		this.agentSSL = agentSSL;
+		this.trustPath = trustFilePath;
+		this.trustPassword = trustPassword;
+		this.keyPath = keyFilePath;
+		this.keyPassword = keyPassword;
+	}
 
 	private void init() {
 		if (this.jerseyClient == null) {
 			ClientConfig clientConfig = new ClientConfig();
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
-			this.jerseyClient = ClientBuilder.newClient(clientConfig);
+			// Configuration for SSL enabled BWAgent
+			if(agentSSL) {
+				scheme = "https";
+				SslConfigurator sslConfig;
+				if(keyPath != null && !keyPath.isEmpty() && keyPassword != null && !keyPassword.isEmpty()) {
+					sslConfig = SslConfigurator.newInstance()
+					        .trustStoreFile(trustPath)
+					        .trustStorePassword(trustPassword)
+					        .keyStoreFile(keyPath)
+					        .keyPassword(keyPassword);
+				} else {
+					sslConfig = SslConfigurator.newInstance()
+					        .trustStoreFile(trustPath)
+					        .trustStorePassword(trustPassword);
+				}
+				this.jerseyClient = ClientBuilder.newBuilder()
+						.withConfig(clientConfig)
+						.sslContext(sslConfig.createSSLContext())
+						.hostnameVerifier(new HostnameVerifier() {
+						    @Override
+						    public boolean verify(String hostname, SSLSession session) {
+						        return true;
+						    }
+						})
+						.build();
+			} else {
+				this.jerseyClient = ClientBuilder.newClient(clientConfig);
+			}
+			// Configuration for Authentication enabled BWAgent (BASIC / DIGEST)
+			if(agentAuth != null && Constants.BASIC_AUTH.equalsIgnoreCase(agentAuth)) {
+				HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic(username, password);
+				this.jerseyClient.register(feature);
+			} else if(agentAuth != null && Constants.DIGEST_AUTH.equalsIgnoreCase(agentAuth)) {
+				HttpAuthenticationFeature feature = HttpAuthenticationFeature.digest(username, password);
+				this.jerseyClient.register(feature);
+			}
 		}
-	}
-
-	public RemoteDeployer(final String host, final String port) {
-		if (host == null) {
-			throw new IllegalArgumentException("Host must not be null");
-		}
-		int p = Integer.parseInt(port);
-		if (p <= 0 | p > 65535) {
-			throw new IllegalArgumentException("Invalid port number");
-		}
-		this.host = host;
-		this.port = p;
+		this.r = this.jerseyClient.target(UriBuilder.fromPath(CONTEXT_ROOT).scheme(this.scheme).host(this.host).port(this.port).build());
 	}
 
 	public void setLog(Log log) {
@@ -80,9 +131,6 @@ public class RemoteDeployer {
 
 	public List<Agent> getAgentInfo() throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
-
 		try {
 			Response response = r.path("/agents").path("info").request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
@@ -109,22 +157,11 @@ public class RemoteDeployer {
 
 	private Domain createDomain(final String name, final String description, final String owner, final String agent, final String home) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
-			if (description != null) {
-				r = r.queryParam("desc", description);
-			}
-			if (agent != null) {
-				r = r.queryParam("agent", agent);
-			}
-			if (owner != null) {
-				r = r.queryParam("owner", owner);
-			}
-			if (home != null) {
-				r = r.queryParam("home", home);
-			}
-
+			addQueryParam("desc", description);
+			addQueryParam("agent", agent);
+			addQueryParam("owner", owner);
+			addQueryParam("home", home);
 			Response response = r.path("/domains").path(name).request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 			Domain domain = response.readEntity(Domain.class);
@@ -138,13 +175,9 @@ public class RemoteDeployer {
 
 	private List<Domain> getDomains(final String filter, final boolean full, final boolean status) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			r = r.queryParam("full", full).queryParam("status", status);
-			if (filter != null) {
-				r = r.queryParam("filter", filter);
-			}
+			addQueryParam("filter", filter);
 			Response response = r.path("/browse").path("domains").request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
 			List<Domain> domains = response.readEntity(new GenericType<List<Domain>>() {});
@@ -160,11 +193,11 @@ public class RemoteDeployer {
 		List<AppSpace> appSpaces = getAppSpaces(domainName, null, false, true);
 		for(AppSpace appSpace : appSpaces) {
 			if(appSpace.getName().equals(appSpaceName)) {
-				log.info("AppSpace exists with Name -> " +  appSpaceName + " in Domain -> " + domainName);
+				log.info("AppSpace exists with Name -> " + appSpaceName + " in Domain -> " + domainName);
 				return appSpace;
 			}
 		}
-		log.info("Creating AppSpace with Name -> " +  appSpaceName + " in Domain -> "  + domainName);
+		log.info("Creating AppSpace with Name -> " + appSpaceName + " in Domain -> "  + domainName);
 		return createAppSpace(domainName, appSpaceName, true, 0, null, desc, "owner");
 	}
 
@@ -172,8 +205,8 @@ public class RemoteDeployer {
 		List<AppNode> nodes = getAppNodes(domainName, appSpaceName, null, true);
 		for(AppNode node : nodes) {
 			if(node.getName().equals(appNodeName)) {
-				log.info("AppNode exists with Name -> " +  appNodeName + " in Domain -> " + domainName  + " and in AppSpace -> " + appSpaceName);
-				log.info("AppNode HTTP Port  -> " +  httpPort + ". AppNode OSGi Port -> " + osgiPort);
+				log.info("AppNode exists with Name -> " + appNodeName + " in Domain -> " + domainName  + " and in AppSpace -> " + appSpaceName);
+				log.info("AppNode HTTP Port  -> " + httpPort + ". AppNode OSGi Port -> " + osgiPort);
 				return node;
 			}
 		}
@@ -209,13 +242,10 @@ public class RemoteDeployer {
 
 	private List<AppSpace> getAppSpaces(final String domainName, final String filter, final boolean full, final boolean status) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
-			r = r.queryParam("domain", domainName).queryParam("full", full).queryParam("status", status);
-			if (filter != null) {
-				r = r.queryParam("filter", filter);
-			}
+			addQueryParam("domain", domainName);
+			r = r.queryParam("full", full).queryParam("status", status);
+			addQueryParam("filter", filter);
 			Response response = r.path("/browse").path("appspaces").request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
 			List<AppSpace> appSpaces = response.readEntity(new GenericType<List<AppSpace>>() {});
@@ -229,19 +259,11 @@ public class RemoteDeployer {
 
 	private AppSpace createAppSpace(final String domainName, final String appSpaceName, final boolean elastic, final int minNodes, final String version, final String description, final String owner) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			r = r.queryParam("elastic", String.valueOf(elastic)).queryParam("minNodes", String.valueOf(minNodes));
-			if (version != null) {
-				r = r.queryParam("version", version);
-			}
-			if (description != null) {
-				r = r.queryParam("desc", description);
-			}
-			if (owner != null) {
-				r = r.queryParam("owner", owner);
-			}
+			addQueryParam("version", version);
+			addQueryParam("desc", description);
+			addQueryParam("owner", owner);
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 			AppSpace appSpace = response.readEntity(AppSpace.class);
@@ -256,8 +278,6 @@ public class RemoteDeployer {
 	public void startAppSpace(final String domainName, final String appSpaceName) throws ClientException {
 		init();
 		log.info("Starting AppSpace with name -> " + appSpaceName + " in Domain -> " + domainName);
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
@@ -270,21 +290,13 @@ public class RemoteDeployer {
 
 	private AppNode createAppNode(final String domainName, final String appSpaceName, final String appNodeName, final String agentName, final int httpPort, final int osgiPort, final String description) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
-			if (agentName != null) {
-				r = r.queryParam("agent", String.valueOf(agentName));
-			}
-			if (httpPort > 0) {
-				r = r.queryParam("httpport", String.valueOf(httpPort));
-			}
+			addQueryParam("agent", String.valueOf(agentName));
+			addQueryParam("httpport", String.valueOf(httpPort));
 			if (osgiPort > 0) {
 				r = r.queryParam("osgiport", String.valueOf(osgiPort));
 			}
-			if (description != null) {
-				r = r.queryParam("description", description);
-			}
+			addQueryParam("description", description);
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("appnodes").path(appNodeName).request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 			AppNode appNode = response.readEntity(AppNode.class);
@@ -299,8 +311,6 @@ public class RemoteDeployer {
 	@SuppressWarnings("unused")
 	private void startAppNode(final String domainName, final String appSpaceName, final String appNodeName) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("appnodes").path(appNodeName).path("start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
@@ -313,15 +323,10 @@ public class RemoteDeployer {
 
 	private void uploadArchive(final String domainName, final String path, final String file, final boolean replace) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
-
 		try (MultiPart multipart = new FormDataMultiPart()) {
 			r = r.path("/domains").path(domainName).path("archives");
 			r = r.queryParam("replace", replace);
-			if (path != null) {
-				r = r.queryParam("path", path);
-			}
+			addQueryParam("path", path);
 
 			File fileEntity = new File(file);
 			final FileDataBodyPart filePart = new FileDataBodyPart("file", fileEntity, MediaType.APPLICATION_OCTET_STREAM_TYPE);
@@ -351,21 +356,15 @@ public class RemoteDeployer {
 
 	private Application deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			r = r.queryParam("archivename", archiveName);
-			if (path != null) {
-				r = r.queryParam("path", path);
-			}
+			addQueryParam("path", path);
 			r = r.queryParam("startondeploy", String.valueOf(startOnDeploy)).queryParam("replace", String.valueOf(replace));
-			if (profile != null) {
-				r = r.queryParam("profile", profile);
-			}
+			addQueryParam("profile", profile);
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 			Application application = response.readEntity(Application.class);
-			if(!application.getCode().isEmpty()) {
+			if(application.getCode() != null && !application.getCode().isEmpty()) {
 				throw new ClientException(500, application.getCode() + ": " + application.getMessage(), null);
 			}
 			return application;
@@ -378,8 +377,6 @@ public class RemoteDeployer {
 
 	private void undeployApplication(final String domainName, final String appSpaceName, final String appName, final String version) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).request(MediaType.APPLICATION_JSON_TYPE).delete();
 			processErrorResponse(response);
@@ -393,12 +390,8 @@ public class RemoteDeployer {
 	@SuppressWarnings("unused")
 	private void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
-			if (appNodeName != null) {
-				r = r.queryParam("appnode", appNodeName);
-			}
+			addQueryParam("appnode", appNodeName);
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 		} catch (ProcessingException pe) {
@@ -410,13 +403,9 @@ public class RemoteDeployer {
 
 	private List<AppNode> getAppNodes(final String domainName, final String appSpaceName, final String filter, final boolean status) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			r = r.queryParam("domain", domainName).queryParam("appspace", appSpaceName).queryParam("status", status);
-			if (filter != null) {
-				r = r.queryParam("filter", filter);
-			}
+			addQueryParam("filter", filter);
 			Response response = r.path("/browse").path("appnodes").request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
 			List<AppNode> appSpaces = response.readEntity(new GenericType<List<AppNode>>() {});
@@ -431,16 +420,10 @@ public class RemoteDeployer {
 	@SuppressWarnings("unused")
 	private List<Archive> getArchives(final String domainName, final String path, final String filter) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			r = r.queryParam("domain", domainName);
-			if (path != null) {
-				r = r.queryParam("path", path);
-			}
-			if (filter != null) {
-				r = r.queryParam("filter", filter);
-			}
+			addQueryParam("path", path);
+			addQueryParam("filter", filter);
 			Response response = r.path("/browse").path("archives").request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
 			List<Archive> archives = response.readEntity(new GenericType<List<Archive>>() {});
@@ -454,16 +437,10 @@ public class RemoteDeployer {
 
 	private List<Application> getApplications(final String domainName, final String appSpace, final String filter, final boolean status) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
-			r = r.queryParam("domain", domainName);
-			if (appSpace != null) {
-				r = r.queryParam("appspace", appSpace);
-			}
-			if (filter != null) {
-				r = r.queryParam("filter", filter);
-			}
+			addQueryParam("domain", domainName);
+			addQueryParam("appspace", appSpace);
+			addQueryParam("filter", filter);
 			r = r.queryParam("status", status);
 			Response response = r.path("/browse").path("apps").request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
@@ -478,8 +455,6 @@ public class RemoteDeployer {
 
 	private void downloadArchive(final String domainName, final String path, final String name) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			Response response = r.path("/domains").path(domainName).path("archives").path(name).path("content").request().get();
 			processErrorResponse(response);
@@ -493,8 +468,6 @@ public class RemoteDeployer {
 
 	private void downloadProfileAplication(final String domainName, final String path, final String name, final String profileName) throws ClientException {
 		init();
-		URI u = UriBuilder.fromPath(CONTEXT_ROOT).scheme("http").host(this.host).port(this.port).build();
-		WebTarget r = this.jerseyClient.target(u);
 		try {
 			Response response = r.path("/domains").path(domainName).path("archives").path(name).path(profileName).request().get();
 			processErrorResponse(response);
@@ -538,6 +511,9 @@ public class RemoteDeployer {
 
 	private void processErrorResponse(Response response) throws ClientException {
 		if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+			if(response.getStatusInfo().getStatusCode() == 401) {
+				throw new ClientException(response.getStatus(),  response.getStatusInfo().getStatusCode() + ": " + response.getStatusInfo().getReasonPhrase(), null);
+			}
 			com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
 			if (error != null) {
 				throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
@@ -556,5 +532,11 @@ public class RemoteDeployer {
 			return new ClientException(503, pe.getCause().getMessage(), pe.getCause());
 		}
 		return new ClientException(500, pe.getMessage(), pe);
+	}
+
+	private void addQueryParam(final String name, final String value) {
+		if(value != null) {
+			r = r.queryParam(name, value);
+		}
 	}
 }

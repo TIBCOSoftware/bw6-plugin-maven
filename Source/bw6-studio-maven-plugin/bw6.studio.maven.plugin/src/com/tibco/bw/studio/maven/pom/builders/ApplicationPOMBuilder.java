@@ -71,6 +71,14 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.getProperties().remove("deployToAdmin");
 			model.getProperties().remove("agentHost");
 			model.getProperties().remove("agentPort");
+			model.getProperties().remove("agentAuth");
+			model.getProperties().remove("agentUsername");
+			model.getProperties().remove("agentPassword");
+			model.getProperties().remove("agentSSL");
+			model.getProperties().remove("truststorePath");
+			model.getProperties().remove("truststorePassword");
+			model.getProperties().remove("keystorePath");
+			model.getProperties().remove("keystorePassword");
 			model.getProperties().remove("domain");
 			model.getProperties().remove("domainDesc");
 			model.getProperties().remove("appSpace");
@@ -94,15 +102,55 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		model.addProperty("deployToAdmin", Boolean.toString(info.isDeployToAdmin()));
 		properties.put("deployToAdmin", Boolean.toString(info.isDeployToAdmin()));
 
-		Xpp3Dom agentHost  = new Xpp3Dom("agentHost");
+		Xpp3Dom agentHost = new Xpp3Dom("agentHost");
 		agentHost.setValue("${agentHost}");
-		model.addProperty("agentHost", info.getAgentHost());		
+		model.addProperty("agentHost", info.getAgentHost());
 		properties.put("agentHost", info.getAgentHost());
 
 		Xpp3Dom agentPort = new Xpp3Dom("agentPort");
 		agentPort.setValue("${agentPort}");
 		model.addProperty("agentPort", info.getAgentPort());
 		properties.put("agentPort", info.getAgentPort());
+
+		Xpp3Dom agentAuth = new Xpp3Dom("agentAuth");
+		agentAuth.setValue("${agentAuth}");
+		model.addProperty("agentAuth", info.getAgentAuth());
+		properties.put("agentAuth", info.getAgentAuth());
+
+		Xpp3Dom agentUsername  = new Xpp3Dom("agentUsername");
+		agentUsername.setValue("${agentUsername}");
+		model.addProperty("agentUsername", info.getAgentUsername());
+		properties.put("agentUsername", info.getAgentUsername());
+
+		Xpp3Dom agentPassword = new Xpp3Dom("agentPassword");
+		agentPassword.setValue("${agentPassword}");
+		model.addProperty("agentPassword", info.getAgentPassword());		
+		properties.put("agentPassword", info.getAgentPassword());
+
+		Xpp3Dom agentSSL = new Xpp3Dom("agentSSL");
+		agentSSL.setValue("${agentSSL}");
+		model.addProperty("agentSSL", Boolean.toString(info.isAgentSSL()));
+		properties.put("agentSSL", Boolean.toString(info.isAgentSSL()));
+
+		Xpp3Dom trustPath  = new Xpp3Dom("truststorePath");
+		trustPath.setValue("${truststorePath}");
+		model.addProperty("truststorePath", info.getTrustPath());
+		properties.put("truststorePath", info.getTrustPath());
+
+		Xpp3Dom trustPass  = new Xpp3Dom("truststorePassword");
+		trustPass.setValue("${truststorePassword}");
+		model.addProperty("truststorePassword", info.getTrustPassword());
+		properties.put("truststorePassword", info.getTrustPassword());
+
+		Xpp3Dom keyPath  = new Xpp3Dom("keystorePath");
+		keyPath.setValue("${keystorePath}");
+		model.addProperty("keystorePath", info.getKeyPath());
+		properties.put("keystorePath", info.getKeyPath());
+
+		Xpp3Dom keyPass  = new Xpp3Dom("keystorePassword");
+		keyPass.setValue("${keystorePassword}");
+		model.addProperty("keystorePassword", info.getKeyPassword());
+		properties.put("keystorePassword", info.getKeyPassword());
 
 		Xpp3Dom domain  = new Xpp3Dom("domain");
 		domain.setValue("${domain}");
@@ -167,6 +215,14 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		config.addChild(deployToAdmin);
 		config.addChild(agentHost);
 		config.addChild(agentPort);
+		config.addChild(agentAuth);
+		config.addChild(agentUsername);
+		config.addChild(agentPassword);
+		config.addChild(agentSSL);
+		config.addChild(trustPath);
+		config.addChild(trustPass);
+		config.addChild(keyPath);
+		config.addChild(keyPass);
 		config.addChild(domain);
 		config.addChild(domainDesc);
 		config.addChild(appspace);

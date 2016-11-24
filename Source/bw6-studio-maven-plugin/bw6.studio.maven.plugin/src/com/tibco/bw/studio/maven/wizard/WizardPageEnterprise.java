@@ -30,9 +30,16 @@ public class WizardPageEnterprise extends WizardPage {
 	private Composite container;
 	private BWProject project;
 	private String bwEdition;
-	//private Button deployToAdmin;
+	private Combo agentAuth;
 	private Text agentHost;
 	private Text agentPort;
+	private Text agentUser;
+	private Text agentPass;
+	private Button agentSSL;
+	private Text trustPath;
+	private Text trustPass;
+	private Text keyPath;
+	private Text keyPass;
 	private Text domain;
 	private Text domainDesc;
 	private Text appspace;	
@@ -47,6 +54,8 @@ public class WizardPageEnterprise extends WizardPage {
 	private Combo profile;
 	private BWModule appModule;
 	private BWDeploymentInfo info;
+	private static final String BASIC_AUTH = "BASIC";
+	private static final String DIGEST_AUTH = "DIGEST";
 
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
@@ -122,11 +131,35 @@ public class WizardPageEnterprise extends WizardPage {
 			errorMessage.append("[Backup Location value is required]");
 		}
 
+		boolean isValidCredential = true;
+		if(agentAuth.getText() != null && (BASIC_AUTH.equalsIgnoreCase(agentAuth.getText()) || DIGEST_AUTH.equalsIgnoreCase(agentAuth.getText()))) {
+			if(agentUser.getText() == null || agentUser.getText().isEmpty()) {
+				isValidCredential = false;
+				errorMessage.append("[Agent Username value is required]");
+			}
+			if(agentPass.getText() == null || agentPass.getText().isEmpty()) {
+				isValidCredential = false;
+				errorMessage.append("[Agent Password value is required]");
+			}
+		}
+
+		boolean isValidSSL = true;
+		if(agentSSL.getSelection()) {
+			if(trustPath.getText() == null || trustPath.getText().isEmpty()) {
+				isValidSSL = false;
+				errorMessage.append("[Truststore Path value is required]");
+			}
+			if(trustPass.getText() == null || trustPass.getText().isEmpty()) {
+				isValidSSL = false;
+				errorMessage.append("[Truststore Password value is required]");
+			}
+		}
+
 		if(!errorMessage.toString().isEmpty()) {
 			setErrorMessage(errorMessage.toString());
 			return false;
 		}
-		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc) {
+		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL) {
 			return true;
 		}
 		return false;
@@ -143,7 +176,7 @@ public class WizardPageEnterprise extends WizardPage {
 		bwEdition = "bw6";
 		try {
 			Map<String, String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
-			if (manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
+			if(manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
 				bwEdition = "bwcf";
 			} else {
 				bwEdition = "bw6";
@@ -160,8 +193,9 @@ public class WizardPageEnterprise extends WizardPage {
 
 	private void addNotes() {
 		Label label = new Label(container, SWT.NONE);
-		label.setText("Please Enter the Host and Port of the Machine where the BWAgent is running. \r\n"
-				+ "Please Enter the Domain, AppSpace and AppNode Information\r\n"
+		label.setText("Please enter the Host and Port of the Machine where the BWAgent is running. \r\n"
+				+ "Select the BWAgent Authentication Type (if applicable), and enter the Username, Password. \r\n"
+				+ "Enter the Domain, AppSpace and AppNode Information\r\n"
 				+ "Note* : If the Domain, Appspace and AppNode do not exist then they will be created.\r\n"
 				+ "EAR file will be started on deployment");
 		GridData versionData = new GridData();
@@ -181,6 +215,14 @@ public class WizardPageEnterprise extends WizardPage {
 				BWDeploymentInfo info = ((BWApplication)module).getDeploymentInfo();
 				info.setAgentHost(agentHost.getText());
 				info.setAgentPort(agentPort.getText());
+				info.setAgentAuth(agentAuth.getText());
+				info.setAgentUsername(agentUser.getText());
+				info.setAgentPassword(agentPass.getText());
+				info.setAgentSSL(agentSSL.getSelection());
+				info.setTrustPath(trustPath.getText());
+				info.setTrustPassword(trustPass.getText());
+				info.setKeyPath(keyPath.getText());
+				info.setKeyPassword(keyPass.getText());
 				info.setDomain(domain.getText());
 				info.setDomainDesc(domainDesc.getText());
 				info.setAppspace(appspace.getText());
@@ -215,7 +257,6 @@ public class WizardPageEnterprise extends WizardPage {
 	private void addAgentInfo() {
 		Label agentLabel = new Label(container, SWT.NONE);
 		agentLabel.setText("Agent Host");
-
 		agentHost = new Text(container, SWT.BORDER | SWT.SINGLE);
 		agentHost.setText(info.getAgentHost());
 		GridData agentData = new GridData(150, 15);
@@ -223,11 +264,122 @@ public class WizardPageEnterprise extends WizardPage {
 
 		Label agentPortLabel = new Label(container, SWT.NONE);
 		agentPortLabel.setText("Agent Port");
-
 		agentPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		agentPort.setText(info.getAgentPort());
-		GridData agentPortData = new GridData(150, 15);
-		agentPort.setLayoutData(agentPortData);
+		agentPort.setLayoutData(agentData);
+
+		Label agentAuthLabel = new Label(container, SWT.NONE);
+		agentAuthLabel.setText("Agent Authentication");
+		agentAuth = new Combo(container, SWT.BORDER | SWT.SINGLE);
+		agentAuth.add("");
+		agentAuth.add(BASIC_AUTH);
+		agentAuth.add(DIGEST_AUTH);
+		agentAuth.setText(info.getAgentAuth());
+		GridData agentAuthData = new GridData(135, 15);
+		agentAuthData.horizontalSpan = 3;
+		agentAuth.setLayoutData(agentAuthData);
+
+		Label agentUserLabel = new Label(container, SWT.NONE);
+		agentUserLabel.setText("Agent Username");
+		agentUser = new Text(container, SWT.BORDER | SWT.SINGLE);
+		agentUser.setText(info.getAgentUsername());
+		agentUser.setLayoutData(agentData);
+
+		Label agentPassLabel = new Label(container, SWT.NONE);
+		agentPassLabel.setText("Agent Password");
+		agentPass = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.PASSWORD);
+		agentPass.setText(info.getAgentPassword());
+		agentPass.setLayoutData(agentData);
+
+		if(info.getAgentAuth() == null || info.getAgentAuth().isEmpty()) {
+			agentUser.setText("");
+			agentUser.setEnabled(false);
+			agentPass.setText("");
+			agentPass.setEnabled(false);
+		}
+		
+		agentAuth.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if(agentAuth.getSelectionIndex() > 0) {
+					agentUser.setEnabled(true);
+					agentPass.setEnabled(true);
+				} else {
+					agentUser.setText("");
+					agentUser.setEnabled(false);
+					agentPass.setText("");
+					agentPass.setEnabled(false);
+				}
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		});
+
+		Label agentSslLabel = new Label(container, SWT.NONE);
+		agentSslLabel.setText("SSL Connection");
+		agentSSL = new Button(container, SWT.CHECK);
+		agentSSL.setSelection(info.isAgentSSL());
+		GridData sslData = new GridData(150, 15);
+		sslData.horizontalSpan = 3;
+		agentSSL.setLayoutData(sslData);
+
+		Label trustPathLabel = new Label(container, SWT.NONE);
+		trustPathLabel.setText("Truststore Path");
+		trustPath = new Text(container, SWT.BORDER | SWT.SINGLE);
+		trustPath.setText(info.getTrustPath());
+		trustPath.setLayoutData(agentData);
+
+		Label trustPassLabel = new Label(container, SWT.NONE);
+		trustPassLabel.setText("Truststore Password");
+		trustPass = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.PASSWORD);
+		trustPass.setText(info.getTrustPassword());
+		trustPass.setLayoutData(agentData);
+
+		Label keyPathLabel = new Label(container, SWT.NONE);
+		keyPathLabel.setText("Keystore Path");
+		keyPath = new Text(container, SWT.BORDER | SWT.SINGLE);
+		keyPath.setText(info.getKeyPath());
+		keyPath.setLayoutData(agentData);
+
+		Label keyPassLabel = new Label(container, SWT.NONE);
+		keyPassLabel.setText("Keystore Password");
+		keyPass = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.PASSWORD);
+		keyPass.setText(info.getKeyPassword());
+		keyPass.setLayoutData(agentData);
+
+		if(!info.isAgentSSL()) {
+			trustPath.setText("");
+			trustPath.setEnabled(false);
+			trustPass.setText("");
+			trustPass.setEnabled(false);
+			keyPath.setText("");
+			keyPath.setEnabled(false);
+			keyPass.setText("");
+			keyPass.setEnabled(false);
+		}
+
+		agentSSL.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if(agentSSL.getSelection()) {
+					trustPath.setEnabled(true);
+					trustPass.setEnabled(true);
+					keyPath.setEnabled(true);
+					keyPass.setEnabled(true);
+				} else {
+					trustPath.setText("");
+					trustPath.setEnabled(false);
+					trustPass.setText("");
+					trustPass.setEnabled(false);
+					keyPath.setText("");
+					keyPath.setEnabled(false);
+					keyPass.setText("");
+					keyPass.setEnabled(false);
+				}
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		});
 	}
 
 	private void addDomain() {
@@ -303,16 +455,14 @@ public class WizardPageEnterprise extends WizardPage {
 
 		httpPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		httpPort.setText(info.getHttpPort());
-		GridData httpData = new GridData(150, 15);
-		httpPort.setLayoutData(httpData);
+		httpPort.setLayoutData(appNodeData);
 
 		Label osgiPortLabel = new Label(container, SWT.NONE);
 		osgiPortLabel.setText("OSGI Port");
 
 		osgiPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		osgiPort.setText(info.getOsgiPort());
-		GridData agentData = new GridData(150, 15);
-		osgiPort.setLayoutData(agentData);
+		osgiPort.setLayoutData(appNodeData);
 	}
 
 	private void addProfile() {
@@ -329,7 +479,7 @@ public class WizardPageEnterprise extends WizardPage {
 			profile.select(index);	
 		}
 
-		GridData profileData = new GridData(136, 15);
+		GridData profileData = new GridData(135, 15);
 		profileData.horizontalSpan = 3;
 		profile.setLayoutData(profileData);
 		addRedeployBox();

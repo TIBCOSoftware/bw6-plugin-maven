@@ -120,11 +120,13 @@ public class WizardPageConfiguration extends WizardPage {
 			if(manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")){
 				String targetPlatform = ContainerPreferenceProject.getCurrentContainer().getLabel();
 				if(targetPlatform.equals("Cloud Foundry")){
-					  bwEdition="cf";
-				  }else{
-					  bwEdition="docker";
+					  bwEdition = "cf";
+				  } else {
+					  bwEdition = "docker";
 				  }
-			}else bwEdition="bw6";
+			} else {
+				bwEdition = "bw6";
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
