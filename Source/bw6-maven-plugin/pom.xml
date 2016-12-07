@@ -2,17 +2,15 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.tibco.plugins</groupId>
   <artifactId>bw6-maven-plugin</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <packaging>maven-plugin</packaging>
 
   <name>Plugin Code for Apache Maven and TIBCO BusinessWorks™</name>
-  
+
   <description>
     Plugin Code for Apache Maven and TIBCO BusinessWorks™.
     This is the Maven Plugin for BW6 Build. 
   </description>
-  
-  	
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -110,7 +108,6 @@
         <artifactId>jackson-annotations</artifactId>
         <version>2.6.1</version>
     </dependency>
-    
   </dependencies>
 
   <build>
@@ -146,9 +143,6 @@
           <target>1.7</target>
         </configuration>
       </plugin>
-      
     </plugins>
   </build>
-
-
 </project>
