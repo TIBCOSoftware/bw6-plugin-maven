@@ -56,11 +56,14 @@ public class BWProjectBuilder {
 		module.setGroupId("com.tibco.bw");
 		module.setArtifactId(application.getArtifactId() + ".parent");
 		module.setVersion(application.getVersion());
-		File parent = new File(application.getPomfileLocation().getParentFile().getParent() + "/" + application.getArtifactId() + ".parent");
+		File parent = new File(application.getPomfileLocation().getParentFile().getParent() + File.separator + application.getArtifactId() + ".parent");
 		if(application.isPomExists()) {
 			try {
 				String pom = application.getMavenModel().getParent().getRelativePath();
-				File pomFile = new File(application.getProject().getLocation().toFile().toString() + "/" + pom, "pom.xml");
+				if(pom.indexOf("\\") > 0) {
+					pom = pom.replace("\\", "/");
+				}
+				File pomFile = new File(application.getProject().getLocation().toFile().toString() + File.separator + pom, "pom.xml");
 				if(pomFile.getCanonicalFile().exists()) {
 					parent = pomFile.getCanonicalFile().getParentFile();
 					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(parent.getName());
@@ -232,11 +235,11 @@ public class BWProjectBuilder {
 
 	private void setRelativePaths(IProject project, BWModule module, BWApplication application) {
 		String projectLocation = project.getLocation().toFile().toString();
-		String parentLocation = application.getPomfileLocation().getParentFile().getParent() + "/" + application.getArtifactId() + ".parent";
+		String parentLocation = application.getPomfileLocation().getParentFile().getParent() + File.separator + application.getArtifactId() + ".parent";
 		if(application.isPomExists()) {
 			try {
 				String pom = application.getMavenModel().getParent().getRelativePath();
-				File pomFile = new File(application.getProject().getLocation().toFile().toString() + "/" + pom, "pom.xml ");
+				File pomFile = new File(application.getProject().getLocation().toFile().toString() + File.separator + pom, "pom.xml");
 				if(pomFile.getCanonicalFile().exists()) {
 					parentLocation = pomFile.getCanonicalFile().getParent();
 				}
