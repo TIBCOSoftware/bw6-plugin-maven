@@ -60,7 +60,7 @@ public class WizardPageEnterprise extends WizardPage {
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;		 
-		setTitle("Deployment Details for Apache Maven and TIBCO BusinessWorks�");
+		setTitle("Deployment Details for Apache Maven and TIBCO BusinessWorks™");
 		setDescription("Please Enter the Deployment details to Deploy the EAR file to BWAgent. \r\nThe EAR file will be deployed to the Agent provided below during the Maven \"install \" lifecycle phase.");	
 	}
 

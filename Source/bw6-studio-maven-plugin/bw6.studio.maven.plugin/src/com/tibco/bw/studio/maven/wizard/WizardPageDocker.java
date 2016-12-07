@@ -48,7 +48,7 @@ public class WizardPageDocker extends WizardPage{
 	{
 		super(pageName);
 		this.project = project;		 
-		setTitle("Docker Plugin for Apache Maven and TIBCO BusinessWorks Container Edition™");
+		setTitle("Docker Plugin for Apache Maven and TIBCO BusinessWorks Container Editionâ„¢");
 		setDescription("Enter Docker and Platform details for pushing and running docker image.");	
 	}
 

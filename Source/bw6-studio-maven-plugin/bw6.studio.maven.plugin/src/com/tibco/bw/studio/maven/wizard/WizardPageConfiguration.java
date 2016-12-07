@@ -48,7 +48,7 @@ public class WizardPageConfiguration extends WizardPage {
 	public WizardPageConfiguration(String pageName , BWProject project) {
 		super(pageName);
 		this.project = project;		 
-		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorks�");
+		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorks™");
 		setDescription("Enter the GroupId and ArtifactId for Maven POM File generation. \nThe POM files will be generated for Projects listed below and a Parent POM file will be generated aggregating the Projects");	
 	}
 
