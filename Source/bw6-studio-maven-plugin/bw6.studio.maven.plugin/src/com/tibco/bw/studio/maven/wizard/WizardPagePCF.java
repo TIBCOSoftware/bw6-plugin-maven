@@ -44,7 +44,7 @@ public class WizardPagePCF extends WizardPage
 	{
 		super(pageName);
 		this.project = project;		 
-		setTitle("CloudFoundry Plugin for Apache Maven and TIBCO BusinessWorks Container Edition™");
+		setTitle("CloudFoundry Plugin for Apache Maven and TIBCO BusinessWorks Container Edition");
 		setDescription("Enter CloudFoundry Platform details for pushing and running BWCE apps.");	
 	}
 
