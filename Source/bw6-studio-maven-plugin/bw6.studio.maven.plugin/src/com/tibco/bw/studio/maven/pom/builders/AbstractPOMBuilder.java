@@ -248,28 +248,17 @@ public abstract class AbstractPOMBuilder {
 		}
 	}
 
-	protected void addDockerK8SWithSkipMavenPlugin(Build build) {
-		Plugin plugin = new Plugin();
-		plugin.setGroupId("io.fabric8");
-		plugin.setArtifactId("fabric8-maven-plugin");
-		plugin.setVersion("2.2.102");
-		Xpp3Dom config=new Xpp3Dom("configuration");
-		Xpp3Dom child = new Xpp3Dom("skip");
-		child.setValue("true");
-		config.addChild(child);
-		plugin.setConfiguration(config);
-		build.addPlugin(plugin);
-	}
-
-	protected void addDockerK8SMavenPlugin(Build build) {
-		createK8SPropertiesFiles();
+	protected void addDockerK8SMavenPlugin(Build build, boolean skip) {
+		if(!skip) {
+			createK8SPropertiesFiles();
+		}
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("fabric8-maven-plugin");
 		plugin.setVersion("2.2.102");
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
-        child.setValue("false");
+        child.setValue(String.valueOf(skip));
         config.addChild(child);
         plugin.setConfiguration(config);
 		build.addPlugin(plugin);

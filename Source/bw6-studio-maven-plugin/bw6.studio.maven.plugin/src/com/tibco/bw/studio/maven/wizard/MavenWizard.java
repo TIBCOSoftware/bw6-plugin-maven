@@ -11,7 +11,6 @@ import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class MavenWizard extends Wizard {
-
 	protected WizardPageConfiguration configPage;
 	protected WizardPagePCF pcfPage;
 	protected WizardPageDocker dockerPage;

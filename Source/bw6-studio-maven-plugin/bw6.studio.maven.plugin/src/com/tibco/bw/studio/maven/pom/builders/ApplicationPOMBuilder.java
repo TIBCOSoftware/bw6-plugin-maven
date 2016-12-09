@@ -245,10 +245,9 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 				deploymentProperties.delete();
 			}
 
-			boolean fileCreated = false;
 			FileOutputStream fileOut = null;
 			try {
-				fileCreated = deploymentProperties.createNewFile();
+				deploymentProperties.createNewFile();
 				fileOut = new FileOutputStream(deploymentProperties);
 				String msg = "EAR Deployment Properties. Pass -DdeploymentConfig.file=<File Location/File Name> if you are running from Command Line. Otherwise add 'deploymentConfig.file' property to the POM File";
 				properties.store(fileOut, msg);
@@ -305,7 +304,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
         				build.removePlugin(plg);
         			}
         		}
-    			addDockerK8SMavenPlugin(build);
+    			addDockerK8SMavenPlugin(build, false);
     		}
     	}
     	model.setBuild(build);
