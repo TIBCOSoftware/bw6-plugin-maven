@@ -99,7 +99,7 @@ public abstract class AbstractPOMBuilder {
 		}
 		plugin.setGroupId("com.tibco.plugins");
 		plugin.setArtifactId("bw6-maven-plugin");
-		plugin.setVersion("1.1.0");
+		plugin.setVersion("1.2.0");
 		plugin.setExtensions("true");
 		addDeploymentDetails(plugin);
 	}
