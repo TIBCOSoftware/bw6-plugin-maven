@@ -201,7 +201,7 @@ public class RemoteDeployer {
 		return createAppSpace(domainName, appSpaceName, true, 0, null, desc, "owner");
 	}
 
-	public AppNode getOrCreateAppNode(final String domainName, final String appSpaceName, final String appNodeName, final int httpPort, final int osgiPort, final String description) throws ClientException {		
+	public AppNode getOrCreateAppNode(final String domainName, final String appSpaceName, final String appNodeName, final int httpPort, final int osgiPort, final String description, final String agentName) throws ClientException {		
 		List<AppNode> nodes = getAppNodes(domainName, appSpaceName, null, true);
 		for(AppNode node : nodes) {
 			if(node.getName().equals(appNodeName)) {
@@ -211,7 +211,7 @@ public class RemoteDeployer {
 			}
 		}
 		log.info("Creating AppNode with Name -> " +  appNodeName + " in Domain -> " + domainName  + " and in AppSpace -> " + appSpaceName);
-		return createAppNode(domainName, appSpaceName, appNodeName, null, httpPort, osgiPort, description);
+		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);
 	}
 
 	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation) throws ClientException {
