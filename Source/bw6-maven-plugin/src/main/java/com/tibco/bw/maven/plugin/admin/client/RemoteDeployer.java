@@ -198,10 +198,10 @@ public class RemoteDeployer {
 			}
 		}
 		log.info("Creating AppSpace with Name -> " + appSpaceName + " in Domain -> "  + domainName);
-		return createAppSpace(domainName, appSpaceName, true, 0, null, desc, "owner");
+		return createAppSpace(domainName, appSpaceName, true, 1, null, desc, "owner");
 	}
 
-	public AppNode getOrCreateAppNode(final String domainName, final String appSpaceName, final String appNodeName, final int httpPort, final int osgiPort, final String description) throws ClientException {		
+	public AppNode getOrCreateAppNode(final String domainName, final String appSpaceName, final String appNodeName, final String agentName, final int httpPort, final int osgiPort, final String description) throws ClientException {		
 		List<AppNode> nodes = getAppNodes(domainName, appSpaceName, null, true);
 		for(AppNode node : nodes) {
 			if(node.getName().equals(appNodeName)) {
@@ -211,7 +211,7 @@ public class RemoteDeployer {
 			}
 		}
 		log.info("Creating AppNode with Name -> " +  appNodeName + " in Domain -> " + domainName  + " and in AppSpace -> " + appSpaceName);
-		return createAppNode(domainName, appSpaceName, appNodeName, null, httpPort, osgiPort, description);
+		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);
 	}
 
 	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation) throws ClientException {
@@ -235,6 +235,7 @@ public class RemoteDeployer {
 			}
 		}
 		log.info("Uploading the Archive file -> " + earName);
+		
 		uploadArchive(domainName, null, file, true);
 		log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
 		deployApplication(domainName, appSpaceName, earName, null, true, replace, profile);
@@ -326,10 +327,14 @@ public class RemoteDeployer {
 		try (MultiPart multipart = new FormDataMultiPart()) {
 			r = r.path("/domains").path(domainName).path("archives");
 			r = r.queryParam("replace", replace);
-			addQueryParam("path", path);
+			/*addQueryParam("path", path);*/
+			
+			
+			
+			log.info("uploadArchiveMethod : " + r.toString());
 
 			File fileEntity = new File(file);
-			final FileDataBodyPart filePart = new FileDataBodyPart("file", fileEntity, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+			final FileDataBodyPart filePart = new FileDataBodyPart("file", fileEntity, MediaType.MULTIPART_FORM_DATA_TYPE);
 
 			FormDataContentDisposition.FormDataContentDispositionBuilder builder = FormDataContentDisposition.name("file");
 			builder.fileName(URLEncoder.encode(file, "UTF-8"));
@@ -337,6 +342,7 @@ public class RemoteDeployer {
 			builder.modificationDate(new Date(fileEntity.lastModified()));
 			filePart.setFormDataContentDisposition(builder.build());
 			multipart.bodyPart(filePart);
+			
 
 			Response response = r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(multipart, multipart.getMediaType()));
 
@@ -511,9 +517,6 @@ public class RemoteDeployer {
 
 	private void processErrorResponse(Response response) throws ClientException {
 		if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-			if(response.getStatusInfo().getStatusCode() == 401) {
-				throw new ClientException(response.getStatus(),  response.getStatusInfo().getStatusCode() + ": " + response.getStatusInfo().getReasonPhrase(), null);
-			}
 			com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
 			if (error != null) {
 				throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
@@ -522,6 +525,19 @@ public class RemoteDeployer {
 			}
 		}
 	}
+//	private void processErrorResponse(Response response) throws ClientException {
+//		if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+//			if(response.getStatusInfo().getStatusCode() == 401) {
+//				throw new ClientException(response.getStatus(),  response.getStatusInfo().getStatusCode() + ": " + response.getStatusInfo().getReasonPhrase(), null);
+//			}
+//			com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
+//			if (error != null) {
+//				throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
+//			} else {
+//				throw new ClientException(response.getStatus(), response.getStatusInfo().getReasonPhrase(), null);
+//			}
+//		}
+//	}
 
 	private static ClientException getConnectionException(ProcessingException pe) {
 		if (pe.getCause() instanceof ConnectException) {

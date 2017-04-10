@@ -38,6 +38,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.osgi.helpers.Version;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
 import com.tibco.bw.maven.plugin.utils.BWModulesParser;
@@ -90,6 +91,9 @@ public class BWEARPackagerMojo extends AbstractMojo {
     	    archiveConfiguration = new MavenArchiveConfiguration();
     	    moduleVersionMap = new HashMap<String, String>();
             manifest = ManifestParser.parseManifest(projectBasedir);
+            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            getLog().info("Updated the Manifest version ");
+            updateManifestVersion();
     	    getLog().info("Adding Modules to the EAR file");
     		addModules();
     		getLog().info("Adding EAR Information to the EAR File");
@@ -112,6 +116,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		File metainfFolder = getApplicationMetaInf();
 
 		//Add the files from the META-INF to the EAR File.
+		File manifestFile = ManifestWriter.updateManifest(project, manifest);
 		File appManifest = addFiletoEAR(metainfFolder);
 
 		File earFile = getArchiveFileName();
@@ -160,7 +165,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
                 //Add the JAR file to the EAR file
                 jarchiver.addFile(moduleJar, moduleJar.getName());
                 String version = BWProjectUtils.getModuleVersion(moduleJar);
-                getLog().debug("Adding Module JAR with name " + moduleJar.getName() + " with version " + version);
+                getLog().info("Adding Module JAR with name " + moduleJar.getName() + " with version " + version);
 
                 //Save the module version in the Version Map.
                 moduleVersionMap.put(artifact.getArtifactId(), version);
@@ -187,7 +192,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
         String archiveName = project.getArtifactId() + "_" + fullVersion + ".ear";
         File archiveFile = new File(outputDirectory, archiveName);
 
-        getLog().debug("The EAR file name for Application is " + archiveFile.toString());
+        getLog().info("The EAR file name for Application is " + archiveFile.toString());
         return archiveFile;
 	}
 
@@ -242,7 +247,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		// Update the Bundle Version
 		Attributes attr = mf.getMainAttributes();
 		attr.putValue(Constants.BUNDLE_VERSION, version);
-		getLog().debug("Manifest updated with Version " + version);
+		getLog().info("Manifest updated with Version " + version);
 
 		//Write the updated file and return the same.
 		FileOutputStream os = new FileOutputStream(tempManifest);
@@ -387,5 +392,14 @@ public class BWEARPackagerMojo extends AbstractMojo {
 			file.delete();
 		}
 		getLog().debug("cleaned up the temporary files.");
+    }
+    /**
+     *  Updated the Application manifest just like the module one
+     */
+    private void updateManifestVersion() {
+    	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+    	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
+    	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
+    	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
     }
 }
