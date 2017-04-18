@@ -91,6 +91,7 @@ public class BWModulePackageMojo extends AbstractMojo {
             manifest = ManifestParser.parseManifest(projectBasedir);
 
             getLog().info("Updated the Manifest version ");
+            File manifestFile = ManifestWriter.updateManifest(project, manifest);
             updateManifestVersion();
 
             getLog().info("Removing the externals entries if any. ");
@@ -111,7 +112,7 @@ public class BWModulePackageMojo extends AbstractMojo {
             archiver.getArchiver().addFileSet(set);
             archiver.setOutputFile(pluginFile);
 
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+           // File manifestFile = ManifestWriter.updateManifest(project, manifest);
 
             jarArchiver.setManifest(manifestFile);
 
@@ -274,7 +275,7 @@ public class BWModulePackageMojo extends AbstractMojo {
     private void updateManifestVersion() {
     	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
     	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
-    	getLog().debug("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
+    	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
     	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
     }
 

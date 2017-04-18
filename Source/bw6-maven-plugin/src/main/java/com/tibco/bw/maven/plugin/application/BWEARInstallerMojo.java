@@ -167,6 +167,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		} else {
     			getLog().info("AppSpace is Running.");
     		}
+    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
     		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation);
     		deployer.close();
     	} catch(Exception e) {
