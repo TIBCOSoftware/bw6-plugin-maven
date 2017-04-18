@@ -161,7 +161,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 
     		deployer.getOrCreateDomain(domain, domainDesc);
     		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
-    		deployer.getOrCreateAppNode(domain, appSpace, appNode, agentName, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc);
+    		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
     		if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
     			deployer.startAppSpace(domain, appSpace);
     		} else {

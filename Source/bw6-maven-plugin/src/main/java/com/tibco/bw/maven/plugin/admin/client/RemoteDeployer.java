@@ -201,7 +201,7 @@ public class RemoteDeployer {
 		return createAppSpace(domainName, appSpaceName, true, 1, null, desc, "owner");
 	}
 
-	public AppNode getOrCreateAppNode(final String domainName, final String appSpaceName, final String appNodeName, final String agentName, final int httpPort, final int osgiPort, final String description) throws ClientException {		
+	public AppNode getOrCreateAppNode(final String domainName, final String appSpaceName, final String appNodeName, final int httpPort, final int osgiPort, final String description, final String agentName) throws ClientException {		
 		List<AppNode> nodes = getAppNodes(domainName, appSpaceName, null, true);
 		for(AppNode node : nodes) {
 			if(node.getName().equals(appNodeName)) {

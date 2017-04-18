@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.Manifest;
 
-import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -13,7 +12,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.JarPackageFragmentRoot;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
