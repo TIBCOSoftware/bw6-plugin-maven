@@ -151,13 +151,15 @@ public class BWEARPackagerMojo extends AbstractMojo {
     private void addModules() throws Exception {
     	try {
         	getLog().debug("Adding Modules to the Application EAR");
-        	// The first artifact is an Application Module
-        	boolean isAppModuleArtifact = true;
+        	
+        	// Use manifest of project.basedir
+        	this.version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+        	
         	BWModulesParser parser = new BWModulesParser(session, project);
         	String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
         	parser.bwEdition = bwEdition;
+        	
         	List<Artifact> artifacts = parser.getModulesSet();
-
             for(Artifact artifact : artifacts) {
                 //Find the Module JAR file
                 File moduleJar = artifact.getFile();
@@ -169,10 +171,6 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
                 //Save the module version in the Version Map.
                 moduleVersionMap.put(artifact.getArtifactId(), version);
-                if(isAppModuleArtifact) {
-                	this.version = version;
-                	isAppModuleArtifact = false;
-                }
             }
     	} catch(Exception e) {
     		getLog().error("Failed to add modules to the Application");
