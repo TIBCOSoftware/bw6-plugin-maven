@@ -42,12 +42,12 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 			logger.error("Failed to clean the existing bwtemp group in Maven Repository.");
 		}
 
-		List<MavenProject> projects =  session.getProjects();
+		List<MavenProject> projects = session.getProjects();
 
 		for(MavenProject project : projects) {
 			if(project.getPackaging().equals("bwmodule")) {
 				logger.debug("Checking JAR dependencies for Project " + project.getName());
-				addJARToDependency(project);	
+				addJARToDependency(project);
 			}
 		}
 		super.afterProjectsRead(session);
@@ -55,15 +55,19 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 
 	public void addJARToDependency(MavenProject project) {
 		File baseDir = project.getBasedir();
-		File[] list = BWFileUtils.getFilesForTypeRec(baseDir,  project.getBuild().getDirectory() ,  ".jar");
+		File[] list = BWFileUtils.getFilesForTypeRec(baseDir, project.getBuild().getDirectory(), ".jar");
 		if(list == null || list.length == 0) {
 			return;
 		}
 		logger.debug("Found JAR dependencies for Project " + project.getName() + " Adding them to Local Maven Repo");
 		MvnInstallExecutor executor = new MvnInstallExecutor(logger);
 		for(File file : list) {
+			// Skip any jar which is inside a folder that starts with '.'
+			if(file.getParent().contains(File.separator + ".")) {
+				continue;
+			}
 			logger.debug("Adding JAR to Local Maven Repo " + file.toString()) ;
-			executor.execute(project.getModel() ,  file);
+			executor.execute(project.getModel(), file);
 		}
 	}
 

@@ -47,12 +47,38 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="agentPort")
 	private String agentPort;
 
+<<<<<<< HEAD
 	@Parameter(property="agentUser")
 	private String agentUser;
 	
 	@Parameter(property="agentPass")
 	private String agentPass;
 
+=======
+	@Parameter(property="agentAuth")
+	private String agentAuth;
+
+	@Parameter(property="agentUsername")
+	private String agentUsername;
+
+	@Parameter(property="agentPassword")
+	private String agentPassword;
+
+	@Parameter(property="agentSSL")
+	private boolean agentSSL;
+
+	@Parameter(property="truststorePath")
+	private String trustPath;
+
+	@Parameter(property="truststorePassword")
+	private String trustPassword;
+
+	@Parameter(property="keystorePath")
+	private String keyPath;
+
+	@Parameter(property="keystorePassword")
+	private String keyPassword;
+>>>>>>> upstream/master
 
 	@Parameter(property="domain")
 	private String domain;
@@ -96,7 +122,6 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	private String earLoc;
 	private String earName;
 	private String applicationName;
-	//private String applicationVersion;
 
     public void execute() throws MojoExecutionException {
     	try {    		
@@ -128,6 +153,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		deriveEARInformation(files[0]);
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
+<<<<<<< HEAD
 
     		RemoteDeployer deployer=null;
     		//bwagent with auth
@@ -141,6 +167,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			deployer = new RemoteDeployer(agentHost, agentPort);	
     		}
 
+=======
+    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword);
+>>>>>>> upstream/master
     		deployer.setLog(getLog());
 
     		List<Agent> agents = deployer.getAgentInfo();
@@ -149,20 +178,23 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		} else {
     			return;
     		}
-
+    		String agentName = null;
         	for(Agent agent : agents) {
-        		getLog().info("Agent Name -> " + agent.getName());
+        		agentName = agent.getName();
+        		getLog().info("Agent Name -> " + agentName);
         	}
 
     		deployer.getOrCreateDomain(domain, domainDesc);
     		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
-    		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc);
+    		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
     		if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
     			deployer.startAppSpace(domain, appSpace);
     		} else {
     			getLog().info("AppSpace is Running.");
     		}
-    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation);    		
+    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
+    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation);
+    		deployer.close();
     	} catch(Exception e) {
     		getLog().error(e);
     	}
@@ -210,6 +242,14 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		try {
 			agentHost = deployment.getProperty("agentHost");
 			agentPort = deployment.getProperty("agentPort");
+			agentAuth = deployment.getProperty("agentAuth");
+			agentUsername = deployment.getProperty("agentUsername");
+			agentPassword = deployment.getProperty("agentPassword");
+			agentSSL = Boolean.parseBoolean(deployment.getProperty("agentSSL"));
+			trustPath = deployment.getProperty("truststorePath");
+			trustPassword = deployment.getProperty("truststorePassword");
+			keyPath = deployment.getProperty("keystorePath");
+			keyPassword = deployment.getProperty("keystorePassword");
 			domain = deployment.getProperty("domain");
 			domainDesc = deployment.getProperty("domainDesc");
 			appSpace = deployment.getProperty("appSpace");
@@ -241,8 +281,10 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		try {
 			if(agentPort == null || agentPort.isEmpty()) {
 				errorMessage.append("[Agent Port value is required]");
-			} else if(Integer.parseInt(agentPort) < 0) {
+			} else if(Integer.parseInt(agentPort) <= 0) {
 				errorMessage.append("[Agent Port value must be an Integer]");
+			} else if(Integer.parseInt(agentPort) > 65535) {
+				errorMessage.append("[Agent Port value is invalid]");
 			} else {
 				isValidPort = true;
 			}
@@ -279,7 +321,6 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		}
 
 		boolean isValidOSGi = false;
-
 		try	{
 			if(osgiPort == null || osgiPort.isEmpty()) {
 				isValidOSGi = true;
@@ -299,12 +340,36 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			errorMessage.append("[Backup Location value is required]");
 		}
 
+		boolean isValidCredential = true;
+		if(agentAuth != null && (Constants.BASIC_AUTH.equalsIgnoreCase(agentAuth) || Constants.DIGEST_AUTH.equalsIgnoreCase(agentAuth))) {
+			if(agentUsername == null || agentUsername.isEmpty()) {
+				isValidCredential = false;
+				errorMessage.append("[Agent Username value is required]");
+			}
+			if(agentPassword == null || agentPassword.isEmpty()) {
+				isValidCredential = false;
+				errorMessage.append("[Agent Password value is required]");
+			}
+		}
+
+		boolean isValidSSL = true;
+		if(agentSSL) {
+			if(trustPath == null || trustPath.isEmpty()) {
+				isValidSSL = false;
+				errorMessage.append("[Truststore File Path value is required]");
+			}
+			if(trustPassword == null || trustPassword.isEmpty()) {
+				isValidSSL = false;
+				errorMessage.append("[Truststore Password value is required]");
+			}
+		}
+
 		if(!errorMessage.toString().isEmpty()) {
 			getLog().error(errorMessage.toString());
 			return false;
 		}
 
-		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc) {
+		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL) {
 			return true;
 		}
 		return false;

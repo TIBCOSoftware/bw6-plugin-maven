@@ -7,6 +7,14 @@ public class BWDeploymentInfo {
 	private boolean deployToAdmin = false;
 	private String agentHost = "";
 	private String agentPort = "";
+	private String agentAuth = "";
+	private String agentUsername = "";
+	private String agentPassword = "";
+	private boolean agentSSL = false;
+	private String trustPath = "";
+	private String trustPassword = "";
+	private String keyPath = "";
+	private String keyPassword = "";
 	private String domain = "";
 	private String appspace = "";
 	private String appNode = "";
@@ -147,5 +155,69 @@ public class BWDeploymentInfo {
 
 	public void setBackupLocation(String backupLocation) {
 		this.backupLocation = backupLocation;
+	}
+
+	public String getAgentUsername() {
+		return agentUsername;
+	}
+
+	public void setAgentUsername(String agentUsername) {
+		this.agentUsername = agentUsername;
+	}
+
+	public String getAgentPassword() {
+		return agentPassword;
+	}
+
+	public void setAgentPassword(String agentPassword) {
+		this.agentPassword = agentPassword;
+	}
+
+	public String getAgentAuth() {
+		return agentAuth;
+	}
+
+	public void setAgentAuth(String agentAuth) {
+		this.agentAuth = agentAuth;
+	}
+
+	public boolean isAgentSSL() {
+		return agentSSL;
+	}
+
+	public void setAgentSSL(boolean agentSSL) {
+		this.agentSSL = agentSSL;
+	}
+
+	public String getTrustPath() {
+		return trustPath;
+	}
+
+	public void setTrustPath(String trustPath) {
+		this.trustPath = trustPath;
+	}
+
+	public String getTrustPassword() {
+		return trustPassword;
+	}
+
+	public void setTrustPassword(String trustPassword) {
+		this.trustPassword = trustPassword;
+	}
+
+	public String getKeyPath() {
+		return keyPath;
+	}
+
+	public void setKeyPath(String keyPath) {
+		this.keyPath = keyPath;
+	}
+
+	public String getKeyPassword() {
+		return keyPassword;
+	}
+
+	public void setKeyPassword(String keyPassword) {
+		this.keyPassword = keyPassword;
 	}
 }
