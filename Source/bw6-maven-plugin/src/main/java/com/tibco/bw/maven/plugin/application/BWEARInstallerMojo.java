@@ -171,7 +171,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation);
     		deployer.close();
     	} catch(Exception e) {
-    		getLog().error(e);
+		throw new MojoExecutionException("Failed to install BW EAR application -> ", e);
     	}
     }
 
