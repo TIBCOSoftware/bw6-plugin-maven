@@ -8,7 +8,6 @@ import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
-import com.tibco.plugins.MyMojo;
 
 public class BWEARResourceExportMojoTest extends AbstractMojoTestCase{
 
@@ -22,7 +21,7 @@ public class BWEARResourceExportMojoTest extends AbstractMojoTestCase{
 	        BWEARResourceExportMojo myMojo;
 			try {
 				myMojo = (BWEARResourceExportMojo) lookupMojo( "bwexport", pom );
-				File delete = new File( "target/test-harness/project-to-test/perro.properties" );
+				File delete = new File( "target/perro.properties" );
 				delete.delete();
 				
 		        assertNotNull( myMojo );

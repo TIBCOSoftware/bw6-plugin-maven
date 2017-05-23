@@ -8,8 +8,6 @@ import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
-import com.tibco.plugins.MyMojo;
-
 public class BWEARResourceImportMojoTest extends AbstractMojoTestCase{
 
 	@Test

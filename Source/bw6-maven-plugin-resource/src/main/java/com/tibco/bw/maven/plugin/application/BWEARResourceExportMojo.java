@@ -1,52 +1,31 @@
 package com.tibco.bw.maven.plugin.application;
 
 
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
-import com.tibco.bw.maven.plugin.osgi.helpers.Version;
-import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.BWFileUtils;
-import com.tibco.bw.maven.plugin.utils.BWModulesParser;
-import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
-import com.tibco.bw.maven.plugin.utils.Constants;
-
-
-import com.tibco.bw.maven.plugin.utils.FileUtilsProject;
-import org.apache.commons.io.FileUtils;
-import org.apache.maven.archiver.MavenArchiveConfiguration;
-import org.apache.maven.archiver.MavenArchiver;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.archiver.jar.JarArchiver;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+
+/**
+ * Goal which bwexport file export properties.
+ * mvn com.tibco.plugins:bw6-maven-plugin-resource:bwexport
+ * -Dprofile=ProfileNameFile
+ * -Dpropertyfile=propertyFile
+ * @phase N/A
+ */
 
 @Mojo(name = "bwexport" )
 public class BWEARResourceExportMojo extends AbstractMojo {
@@ -113,7 +92,7 @@ public class BWEARResourceExportMojo extends AbstractMojo {
     		 
     		 
 		} catch (Exception e1) {
-			throw new MojoExecutionException("Failed to create BW EAR Archive ", e1);
+			throw new MojoExecutionException("Failed to Export BW property file ", e1);
 		}
 	}
 

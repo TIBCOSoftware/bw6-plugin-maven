@@ -33,7 +33,7 @@
         </executions>
         <configuration>
           <!-- Specify the MyMojo parameter -->
-          <outputDirectory>target/test-harness/project-to-test</outputDirectory>
+          <outputDirectory>target</outputDirectory>
           <projectBasedir>src/test/resources/unit/BWEARResourceImportMojo</projectBasedir>
           <profile>default.substvar</profile>
           <propertyfile>perro.properties</propertyfile>

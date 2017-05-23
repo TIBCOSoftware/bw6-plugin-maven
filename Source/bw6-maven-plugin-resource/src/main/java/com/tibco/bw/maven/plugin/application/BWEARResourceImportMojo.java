@@ -1,19 +1,14 @@
 package com.tibco.bw.maven.plugin.application;
 
 
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
-import com.tibco.bw.maven.plugin.osgi.helpers.Version;
-import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.BWModulesParser;
-import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
-import com.tibco.bw.maven.plugin.utils.Constants;
-import com.tibco.bw.maven.plugin.utils.FileUtilsProject;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.maven.archiver.MavenArchiveConfiguration;
-import org.apache.maven.archiver.MavenArchiver;
-import org.apache.maven.artifact.Artifact;
+import java.io.File;
+import java.io.FileFilter;
+import java.util.Properties;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -22,28 +17,17 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.tibco.bw.maven.plugin.utils.FileUtilsProject;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.util.Properties;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-
+/**
+ * Display bwimport information on bw6-maven-plugin-resource.      
+ * Call mvn com.tibco.plugins:bw6-maven-plugin-resource:bwimport -Dprofile=ProfileNameFile -Dpropertyfile=propertyFile
+ * @phase N/A
+ */
 @Mojo(name = "bwimport" ,defaultPhase = LifecyclePhase.INSTALL)
 public class BWEARResourceImportMojo extends AbstractMojo {
 
@@ -120,7 +104,7 @@ public class BWEARResourceImportMojo extends AbstractMojo {
 
     		 getLog().info("bwresourceImport Mojo finished execution");
 		} catch (Exception e1) {
-			throw new MojoExecutionException("Failed to create BW EAR Archive ", e1);
+			throw new MojoExecutionException("Failed to Import BW property file ", e1);
 		}
 	}
 

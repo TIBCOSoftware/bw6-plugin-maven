@@ -1,9 +1,8 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
-<repository xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns = "http://www.tibco.com/xmlns/repo/types/2002">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><repository xmlns="http://www.tibco.com/xmlns/repo/types/2002" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<globalVariables>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//BW.APPNODE.NAME</name>
-			<value></value>
+			<value/>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -12,7 +11,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//BW.DOMAIN.NAME</name>
-			<value></value>
+			<value/>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -30,7 +29,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//BW.MODULE.VERSION</name>
-			<value></value>
+			<value/>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -39,7 +38,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//BW.DEPLOYMENTUNIT.NAME</name>
-			<value></value>
+			<value/>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -48,7 +47,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//BW.DEPLOYMENTUNIT.VERSION</name>
-			<value></value>
+			<value/>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -57,7 +56,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//BW.APPSPACE.NAME</name>
-			<value></value>
+			<value/>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -66,7 +65,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//BW.DEPLOYMENTUNIT.TYPE</name>
-			<value></value>
+			<value/>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -75,7 +74,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//BW.MODULE.NAME</name>
-			<value></value>
+			<value/>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -111,7 +110,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//Output_File_1</name>
-			<value>c:/tmp/RestBasic/Books_Invoke.log</value>
+			<value>c:/TEST/tmp/RestBasic/Books_Invoke.log</value>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
@@ -120,7 +119,7 @@
 		</globalVariable>
 		<globalVariable>
 			<name>//tibco.bw.sample.binding.rest.Basic//Input_File</name>
-			<value>/samples/binding/rest/Basic/books.json</value>
+			<value>/TEST/samples/binding/rest/Basic/books.json</value>
 			<deploymentSettable>false</deploymentSettable>
 			<serviceSettable>false</serviceSettable>
 			<type>String</type>
