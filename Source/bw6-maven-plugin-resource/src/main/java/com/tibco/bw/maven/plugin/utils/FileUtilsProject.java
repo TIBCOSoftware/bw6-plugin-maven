@@ -69,7 +69,15 @@ public class FileUtilsProject {
 				return false;
 			}
 		});
-       return fileList[0];
+		if (fileList.length > 0) {
+		    
+		    return fileList[0];
+		}
+		else
+		{
+			return null;
+		}
+       
 	}
 	
 	

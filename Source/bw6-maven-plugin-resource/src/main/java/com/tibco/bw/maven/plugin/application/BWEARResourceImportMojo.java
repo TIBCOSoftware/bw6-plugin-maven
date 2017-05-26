@@ -44,10 +44,10 @@ public class BWEARResourceImportMojo extends AbstractMojo {
 	private File projectBasedir;
 
     
-	@Parameter(property="profile")
+	@Parameter(property="profile",required=true)
 	private String profile;
 	
-	@Parameter(property="propertyfile",required=false)
+	@Parameter(property="propertyfile",required=true)
 	private String propertyfile;
 
     
@@ -100,8 +100,7 @@ public class BWEARResourceImportMojo extends AbstractMojo {
     			 
     		 }
     		 
-    		 
-
+    		
     		 getLog().info("bwresourceImport Mojo finished execution");
 		} catch (Exception e1) {
 			throw new MojoExecutionException("Failed to Import BW property file ", e1);

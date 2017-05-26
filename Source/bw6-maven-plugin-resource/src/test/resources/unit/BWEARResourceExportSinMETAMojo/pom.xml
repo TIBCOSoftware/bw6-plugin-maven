@@ -34,7 +34,7 @@
         <configuration>
           <!-- Specify the MyMojo parameter -->
           <outputDirectory>target</outputDirectory>
-          <projectBasedir>src/test/resources/unit/BWEARResourceExportMojo</projectBasedir>
+          <projectBasedir>src/test/resources/unit/BWEARResourceExportSinMETAMojo</projectBasedir>
           <profile>default.substvar</profile>
           <propertyfile>perro.properties</propertyfile>
         </configuration>

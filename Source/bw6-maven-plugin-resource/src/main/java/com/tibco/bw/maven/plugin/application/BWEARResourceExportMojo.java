@@ -36,17 +36,17 @@ public class BWEARResourceExportMojo extends AbstractMojo {
     @Component
     private MavenProject project;
 	
-	@Parameter(property="project.build.directory")
+	@Parameter(property="project.build.directory",defaultValue="target")
     private File outputDirectory;
 
 	@Parameter(property="project.basedir")
 	private File projectBasedir;
 
     
-	@Parameter(property="profile")
+	@Parameter(property="profile",required=true)
 	private String profile;
 	
-	@Parameter(property="propertyfile")
+	@Parameter(property="propertyfile",required=true)
 	private String propertyfile;
 
     
@@ -61,8 +61,10 @@ public class BWEARResourceExportMojo extends AbstractMojo {
     		 getLog().info("bwresourceExport Mojo started execution");
     		 getLog().info("Loading property file -->" + propertyfile);
     		 getLog().info("update  profile -->" + profile);
-    		 getLog().info(outputDirectory.getAbsolutePath());
+    		 getLog().info(projectBasedir.getAbsolutePath());
     		 Properties prop = new Properties();
+    		 if (com.tibco.bw.maven.plugin.utils.FileUtilsProject.getApplicationMetaInf(projectBasedir)!=null)
+    		 {
     		 
 			if (new File(com.tibco.bw.maven.plugin.utils.FileUtilsProject.getApplicationMetaInf(projectBasedir).getAbsolutePath() + "/TIBCO.xml").exists()) {
 				
@@ -89,7 +91,11 @@ public class BWEARResourceExportMojo extends AbstractMojo {
     		 
 			com.tibco.bw.maven.plugin.utils.FileUtilsProject.setSavePropertyOrder(prop,outputDirectory+"/"+propertyfile);
     		 
-    		 
+    		 }
+    		 else
+    		 {
+    			 getLog().info("bwresourceExport: Skip Export profile");
+    		 }
     		 
 		} catch (Exception e1) {
 			throw new MojoExecutionException("Failed to Export BW property file ", e1);

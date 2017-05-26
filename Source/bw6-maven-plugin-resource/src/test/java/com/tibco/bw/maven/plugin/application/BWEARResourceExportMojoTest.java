@@ -14,7 +14,7 @@ public class BWEARResourceExportMojoTest extends AbstractMojoTestCase{
 	@Test
 	public void testExecute() {
 
-	        File pom = getTestFile( "src/test/resources/unit/BWEARResourceExportMojo/pom.xml" );
+	        File pom = new File("src/test/resources/unit/BWEARResourceExportMojo/pom.xml");
 	        //assertNotNull( pom );
 	        assertTrue( pom.exists() );
 
@@ -38,7 +38,56 @@ public class BWEARResourceExportMojoTest extends AbstractMojoTestCase{
 	 
 	    }
 	
+	@Test
+	public void testExecuteSinMetaINF() {
 
+	        File pom = new File( "src/test/resources/unit/BWEARResourceExportSinMETAMojo/pom.xml" );
+	        //assertNotNull( pom );
+	        assertTrue( pom.exists() );
+
+	        BWEARResourceExportMojo myMojo;
+			try {
+				myMojo = (BWEARResourceExportMojo) lookupMojo( "bwexport", pom );
+								
+		        assertNotNull( myMojo );
+		        myMojo.execute();
+		        
+		        
+		        
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+
+	 
+	    }
+
+
+	@Test
+	public void testExecuteSinDefaul() {
+
+	        File pom = new File( "src/test/resources/unit/BWEARResourceExportSinDefaultMojo/pom.xml" );
+	        //assertNotNull( pom );
+	        assertTrue( pom.exists() );
+
+	        BWEARResourceExportMojo myMojo;
+			try {
+				myMojo = (BWEARResourceExportMojo) lookupMojo( "bwexport", pom );
+				
+		        assertNotNull( myMojo );
+		        myMojo.execute();
+		        
+		        
+		        
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+
+	 
+	    }
 }
 
 
