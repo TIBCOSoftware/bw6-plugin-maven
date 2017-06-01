@@ -88,9 +88,14 @@ public class BWEARResourceExportMojo extends AbstractMojo {
     			 
     		 }
     		 
-    		 
-			com.tibco.bw.maven.plugin.utils.FileUtilsProject.setSavePropertyOrder(prop,outputDirectory+"/"+propertyfile);
-    		 
+				if (prop.size() > 0) {
+					com.tibco.bw.maven.plugin.utils.FileUtilsProject.setSavePropertyOrder(prop,
+							outputDirectory + "/" + propertyfile);
+				}
+				else
+				{
+					getLog().info("bwresourceExport: Skip Export File property.Profile Not exists.");
+				}
     		 }
     		 else
     		 {

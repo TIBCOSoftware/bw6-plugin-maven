@@ -48,7 +48,7 @@ public class BWEARResourceExportMojoTest extends AbstractMojoTestCase{
 	        BWEARResourceExportMojo myMojo;
 			try {
 				myMojo = (BWEARResourceExportMojo) lookupMojo( "bwexport", pom );
-								
+				
 		        assertNotNull( myMojo );
 		        myMojo.execute();
 		        
@@ -74,12 +74,12 @@ public class BWEARResourceExportMojoTest extends AbstractMojoTestCase{
 	        BWEARResourceExportMojo myMojo;
 			try {
 				myMojo = (BWEARResourceExportMojo) lookupMojo( "bwexport", pom );
-				
+				File delete = new File( "target/BWEARResourceExportSinMETAMojo.properties" );
 		        assertNotNull( myMojo );
 		        myMojo.execute();
 		        
 		        
-		        
+		        assertFalse(delete.exists());
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

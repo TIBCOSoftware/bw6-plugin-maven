@@ -36,7 +36,7 @@
           <outputDirectory>target</outputDirectory>
           <projectBasedir>src/test/resources/unit/BWEARResourceExportSinDefaultMojo</projectBasedir>
           <profile>default.substvar</profile>
-          <propertyfile>perro.properties</propertyfile>
+          <propertyfile>BWEARResourceExportSinDefaultMojo.properties</propertyfile>
         </configuration>
       </plugin>
     </plugins>

@@ -27,16 +27,16 @@
           <execution>
             <phase>compile</phase>
             <goals>
-              <goal>bwexport</goal>
+              <goal>bwimport</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <!-- Specify the MyMojo parameter -->
           <outputDirectory>target</outputDirectory>
-          <projectBasedir>src/test/resources/unit/BWEARResourceExportSinMETAMojo</projectBasedir>
+          <projectBasedir>src/test/resources/unit/BWEARResourceImportSinDefaultMojo</projectBasedir>
           <profile>default.substvar</profile>
-          <propertyfile>BWEARResourceExportSinMETAMojo.properties</propertyfile>
+          <propertyfile>perro.properties</propertyfile>
         </configuration>
       </plugin>
     </plugins>

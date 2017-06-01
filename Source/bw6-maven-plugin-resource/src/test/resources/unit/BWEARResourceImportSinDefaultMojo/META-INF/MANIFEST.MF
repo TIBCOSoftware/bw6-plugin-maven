@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Tibco Bw Sample Binding Rest Basic Application
+Bundle-SymbolicName: tibco.bw.sample.binding.rest.Basic.application
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: TIBCO Software Inc.
+TIBCO-BW-Application: META-INF/TIBCO.xml
+TIBCO-BW-ConfigProfile: META-INF/WindowsProfile.substvar
+TIBCO-BW-Version: 1.2.0 V18 2014-09-27

@@ -64,42 +64,49 @@ public class BWEARResourceImportMojo extends AbstractMojo {
     		 getLog().info("Loading property file -->" + propertyfile);
     		 getLog().info("update  profile -->" + profile);
     		 
-    		 for (File file : getApplicationMetaInf().listFiles()) {
-    			 
-    			 if (file.getName().equals(profile.toString()))
-    			 { 
-    				 getLog().info("backup file "+file.getName() + " to " + file.getName()+".backup");
-    				 FileUtilsProject.copyFile(file,new File(file.getAbsolutePath()+".backup"));
-    				 Properties prop = FileUtilsProject.LoadProperties(FileUtilsProject.getApplicationMSrcResources(projectBasedir).getAbsolutePath()+"/"+propertyfile );
-    				 //Properties prop = FileUtilsProject.LoadProperties(projectBasedir+"/"+propertyfile);
-    				 getLog().info("Properties loaded : "+propertyfile);
-    				 
-    				 
-    					DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    					DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-    					Document doc = docBuilder.parse(file);
-
-    					NodeList globalVariableList = doc.getElementsByTagName("globalVariable");
-    					
-    					
-    					
-    					for (int i = 0; i < globalVariableList.getLength(); ++i) {
-
-			                  Element node = (Element) globalVariableList.item(i);
-
-			                  FileUtilsProject.setvalueNode(node,prop);
-			        			
-    					}
-
-				
-    				FileUtilsProject.setUpdatePropertyXML(file, doc);
-	
-	 				getLog().info("Done "+profile+" updating.");
-    			 }
-
-    			 
-    		 }
     		 
+    		 
+    		 if (com.tibco.bw.maven.plugin.utils.FileUtilsProject.getApplicationMetaInf(projectBasedir)!=null)
+    		 {
+    		 
+				for (File file : getApplicationMetaInf().listFiles()) {
+
+					if (file.getName().equals(profile.toString())) {
+						getLog().info("backup file " + file.getName() + " to " + file.getName() + ".backup");
+						FileUtilsProject.copyFile(file, new File(file.getAbsolutePath() + ".backup"));
+						Properties prop = FileUtilsProject.LoadProperties(
+								FileUtilsProject.getApplicationMSrcResources(projectBasedir).getAbsolutePath() + "/"
+										+ propertyfile);
+						// Properties prop =
+						// FileUtilsProject.LoadProperties(projectBasedir+"/"+propertyfile);
+						getLog().info("Properties loaded : " + propertyfile);
+
+						DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+						DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+						Document doc = docBuilder.parse(file);
+
+						NodeList globalVariableList = doc.getElementsByTagName("globalVariable");
+
+						for (int i = 0; i < globalVariableList.getLength(); ++i) {
+
+							Element node = (Element) globalVariableList.item(i);
+
+							FileUtilsProject.setvalueNode(node, prop);
+
+						}
+
+						FileUtilsProject.setUpdatePropertyXML(file, doc);
+
+						getLog().info("Done " + profile + " updating.");
+					}
+
+				}
+    		 
+    		 }
+    		 else
+    		 {
+    			 getLog().info("bwresourceImport: Skip Import properties");
+    		 }
     		
     		 getLog().info("bwresourceImport Mojo finished execution");
 		} catch (Exception e1) {
