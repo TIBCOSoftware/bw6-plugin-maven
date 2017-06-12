@@ -198,7 +198,7 @@ public class RemoteDeployer {
 			}
 		}
 		log.info("Creating AppSpace with Name -> " + appSpaceName + " in Domain -> "  + domainName);
-		return createAppSpace(domainName, appSpaceName, true, 1, null, desc, "owner");
+		return createAppSpace(domainName, appSpaceName, true, 0, null, desc, "owner");
 	}
 
 	public AppNode getOrCreateAppNode(final String domainName, final String appSpaceName, final String appNodeName, final int httpPort, final int osgiPort, final String description, final String agentName) throws ClientException {		
@@ -235,7 +235,6 @@ public class RemoteDeployer {
 			}
 		}
 		log.info("Uploading the Archive file -> " + earName);
-		
 		uploadArchive(domainName, null, file, true);
 		log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
 		deployApplication(domainName, appSpaceName, earName, null, true, replace, profile);
@@ -327,14 +326,10 @@ public class RemoteDeployer {
 		try (MultiPart multipart = new FormDataMultiPart()) {
 			r = r.path("/domains").path(domainName).path("archives");
 			r = r.queryParam("replace", replace);
-			/*addQueryParam("path", path);*/
-			
-			
-			
-			log.info("uploadArchiveMethod : " + r.toString());
+			addQueryParam("path", path);
 
 			File fileEntity = new File(file);
-			final FileDataBodyPart filePart = new FileDataBodyPart("file", fileEntity, MediaType.MULTIPART_FORM_DATA_TYPE);
+			final FileDataBodyPart filePart = new FileDataBodyPart("file", fileEntity, MediaType.APPLICATION_OCTET_STREAM_TYPE);
 
 			FormDataContentDisposition.FormDataContentDispositionBuilder builder = FormDataContentDisposition.name("file");
 			builder.fileName(URLEncoder.encode(file, "UTF-8"));
@@ -342,7 +337,6 @@ public class RemoteDeployer {
 			builder.modificationDate(new Date(fileEntity.lastModified()));
 			filePart.setFormDataContentDisposition(builder.build());
 			multipart.bodyPart(filePart);
-			
 
 			Response response = r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(multipart, multipart.getMediaType()));
 
@@ -517,6 +511,9 @@ public class RemoteDeployer {
 
 	private void processErrorResponse(Response response) throws ClientException {
 		if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+			if(response.getStatusInfo().getStatusCode() == 401) {
+				throw new ClientException(response.getStatus(),  response.getStatusInfo().getStatusCode() + ": " + response.getStatusInfo().getReasonPhrase(), null);
+			}
 			com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
 			if (error != null) {
 				throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
@@ -525,19 +522,6 @@ public class RemoteDeployer {
 			}
 		}
 	}
-//	private void processErrorResponse(Response response) throws ClientException {
-//		if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-//			if(response.getStatusInfo().getStatusCode() == 401) {
-//				throw new ClientException(response.getStatus(),  response.getStatusInfo().getStatusCode() + ": " + response.getStatusInfo().getReasonPhrase(), null);
-//			}
-//			com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
-//			if (error != null) {
-//				throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
-//			} else {
-//				throw new ClientException(response.getStatus(), response.getStatusInfo().getReasonPhrase(), null);
-//			}
-//		}
-//	}
 
 	private static ClientException getConnectionException(ProcessingException pe) {
 		if (pe.getCause() instanceof ConnectException) {

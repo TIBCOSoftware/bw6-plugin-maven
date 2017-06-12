@@ -16,8 +16,15 @@ public class ManifestWriter {
         Attributes attributes = mf.getMainAttributes();
         System.out.println("UpdateManifest Method in");
         System.out.println("Update Attribute");
-    	attributes.put(Name.MANIFEST_VERSION, project.getVersion());
-        attributes.putValue("Bundle-Version", project.getVersion());
+        
+        String projectVersion = project.getVersion();
+        if( projectVersion.indexOf("-SNAPSHOT") != -1 )
+        {
+        	projectVersion = projectVersion.replace("-SNAPSHOT", ".qualifier");
+        }
+        
+    	attributes.put(Name.MANIFEST_VERSION, projectVersion);
+        attributes.putValue("Bundle-Version", projectVersion );
         
 //        if((attributes.getValue(Name.MANIFEST_VERSION) == null || attributes.getValue(Name.MANIFEST_VERSION).equals("1.0")) && project.getVersion().equals("1.0.0-SNAPSHOT")) {
 //        	System.out.println("Update Attribute");
