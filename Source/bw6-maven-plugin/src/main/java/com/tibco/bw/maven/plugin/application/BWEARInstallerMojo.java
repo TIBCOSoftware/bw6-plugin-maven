@@ -172,6 +172,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		deployer.close();
     	} catch(Exception e) {
     		getLog().error(e);
+    		throw new MojoExecutionException("Failed to deploy BW Application ", e);
     	}
     }
 
