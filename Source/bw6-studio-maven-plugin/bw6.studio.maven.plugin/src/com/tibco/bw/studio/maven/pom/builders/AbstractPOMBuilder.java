@@ -99,7 +99,7 @@ public abstract class AbstractPOMBuilder {
 		}
 		plugin.setGroupId("com.tibco.plugins");
 		plugin.setArtifactId("bw6-maven-plugin");
-		plugin.setVersion("1.2.2");
+		plugin.setVersion("1.3.0");
 		plugin.setExtensions("true");
 		addDeploymentDetails(plugin);
 	}
@@ -255,7 +255,7 @@ public abstract class AbstractPOMBuilder {
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("fabric8-maven-plugin");
-		plugin.setVersion("2.2.102");
+		plugin.setVersion("3.4.1");
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
         child.setValue(String.valueOf(skip));
@@ -268,7 +268,7 @@ public abstract class AbstractPOMBuilder {
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("docker-maven-plugin");
-		plugin.setVersion("0.14.2");
+		plugin.setVersion("0.21.0");
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
 		child.setValue("true");
@@ -285,7 +285,7 @@ public abstract class AbstractPOMBuilder {
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("docker-maven-plugin");
-		plugin.setVersion("0.14.2");
+		plugin.setVersion("0.21.0");
 
 		Xpp3Dom config = new Xpp3Dom("configuration");
 
