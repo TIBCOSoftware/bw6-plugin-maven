@@ -91,7 +91,8 @@ public class BWEARPackagerMojo extends AbstractMojo {
     	    archiveConfiguration = new MavenArchiveConfiguration();
     	    moduleVersionMap = new HashMap<String, String>();
             manifest = ManifestParser.parseManifest(projectBasedir);
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            //File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            ManifestWriter.updateManifest(project, manifest);
             getLog().info("Updated the Manifest version ");
             updateManifestVersion();
     	    getLog().info("Adding Modules to the EAR file");
@@ -116,7 +117,8 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		File metainfFolder = getApplicationMetaInf();
 
 		//Add the files from the META-INF to the EAR File.
-		File manifestFile = ManifestWriter.updateManifest(project, manifest);
+		//File manifestFile = ManifestWriter.updateManifest(project, manifest);
+		ManifestWriter.updateManifest(project, manifest);
 		File appManifest = addFiletoEAR(metainfFolder);
 
 		File earFile = getArchiveFileName();

@@ -52,8 +52,8 @@ public class WizardPageK8S extends WizardPage {
 
 	private void setK8SPOMFields() {
 		Label lLabel = new Label(container, SWT.NONE);
-		lLabel.setText("Kubernetes configuration:");
-		GridData lData = new GridData(150, 15);
+		lLabel.setText("Kubernetes/Openshift config:");
+		GridData lData = new GridData(200, 15);
 		lData.horizontalSpan = 4;
 		lLabel.setLayoutData(lData);
 
@@ -64,7 +64,7 @@ public class WizardPageK8S extends WizardPage {
 		l1Label.setLayoutData(l1Data);
 
 		Label rcLabel = new Label(container, SWT.NONE);
-		rcLabel.setText("RC Name");
+		rcLabel.setText("Replication Controler Name");
 
 		rcName = new Text(container, SWT.BORDER | SWT.SINGLE);
 		rcName.setText("bwce-sample");
@@ -96,7 +96,7 @@ public class WizardPageK8S extends WizardPage {
 		containerPort.setLayoutData(contPortData);
 
 		Label namespaceLabel = new Label(container, SWT.NONE);
-		namespaceLabel.setText("K8S Namespace");
+		namespaceLabel.setText("K8S Namespace/Openshift Project");
 
 		k8sNamespace = new Text(container, SWT.BORDER | SWT.SINGLE);
 		k8sNamespace.setText("default");
@@ -108,7 +108,7 @@ public class WizardPageK8S extends WizardPage {
 		envVarsLabel.setText("Env Vars");
 
 		k8sEnvVars = new Text(container, SWT.BORDER | SWT.SINGLE);
-		k8sEnvVars.setText("APP_CONFIG_PROFILE=docker, abc=xyz");
+		k8sEnvVars.setText("APP_CONFIG_PROFILE=docker, key=value");
 		GridData envvarData = new GridData(400, 15);
 		envvarData.horizontalSpan = 3;
 		k8sEnvVars.setLayoutData(envvarData);

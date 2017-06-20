@@ -181,7 +181,7 @@ public class WizardPageConfiguration extends WizardPage {
 		if (bwEdition.equals("cf")) {
 			label.setText("Deploy EAR to Cloud Foundry");
 		} else if (bwEdition.equals("docker")) {
-			label.setText("Deploy EAR to Docker");
+			label.setText("Deploy EAR to Docker based platform (docker,kubernetes, openshift)");
 		} else {
 			label.setText("Deploy EAR to BW Administrator");
 		}
@@ -223,6 +223,7 @@ public class WizardPageConfiguration extends WizardPage {
 		appVersion.setEditable(false);
 	}
 
+	@SuppressWarnings("incomplete-switch")
 	private void createModulesTable() {
 		Table table = new Table(container, SWT.MULTI | SWT.BORDER
 				| SWT.FULL_SELECTION);
@@ -281,6 +282,7 @@ public class WizardPageConfiguration extends WizardPage {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void addCheckBox(Table table, TableItem item, BWModule module) {
 		int minWidth = 0;
 		item.setText(3, "Override");

@@ -6,6 +6,8 @@ public class BWK8SModule {
 
 	private String rcName;
 	
+	private String deploymentName;
+	
 	private String numOfReplicas;
 	
 	private String serviceName;
@@ -19,7 +21,10 @@ public class BWK8SModule {
 	public String getRcName() {
 		return rcName;
 	}
-
+	public String getDeploymentName() {
+		return deploymentName;
+	}
+	
 	public void setRcName(String rcName) {
 		this.rcName = rcName;
 	}

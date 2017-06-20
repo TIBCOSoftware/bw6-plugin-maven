@@ -249,19 +249,135 @@ public abstract class AbstractPOMBuilder {
 	}
 
 	protected void addDockerK8SMavenPlugin(Build build, boolean skip) {
+		if(skip) {
+			Plugin plugin = new Plugin();
+			plugin.setGroupId("io.fabric8");
+			plugin.setArtifactId("fabric8-maven-plugin");
+			plugin.setVersion("3.4.1");
+			Xpp3Dom config = new Xpp3Dom("configuration");
+			Xpp3Dom child = new Xpp3Dom("skip");
+	        child.setValue(String.valueOf(skip));
+	        config.addChild(child);
+    		plugin.setConfiguration(config);
+        	build.addPlugin(plugin);
+		}
+
 		if(!skip) {
 			createK8SPropertiesFiles();
+			Plugin plugin = new Plugin();
+			plugin.setGroupId("io.fabric8");
+			plugin.setArtifactId("fabric8-maven-plugin");
+			plugin.setVersion("3.4.1");
+			Xpp3Dom config = new Xpp3Dom("configuration");
+			Xpp3Dom child = new Xpp3Dom("skip");
+	        child.setValue(String.valueOf(skip));
+	        config.addChild(child);
+        	child = new Xpp3Dom("dockerHost");
+            child.setValue("${bwdocker.host}");
+            config.addChild(child);
+
+            child = new Xpp3Dom("certPath");
+            child.setValue("${bwdocker.certPath}");
+            config.addChild(child);
+
+            child = new Xpp3Dom("images");
+            Xpp3Dom imageChild = new Xpp3Dom("image");
+    		Xpp3Dom child1 = new Xpp3Dom("alias");
+    		child1.setValue("${bwdocker.containername}");
+    		imageChild.addChild(child1);
+
+    		child1 = new Xpp3Dom("name");
+    		child1.setValue("${docker.image}");
+    		imageChild.addChild(child1);
+
+    		Xpp3Dom buildchild = new Xpp3Dom("build");
+    		Xpp3Dom child2 = new Xpp3Dom("from");
+    		child2.setValue("${bwdocker.from}");
+    		buildchild.addChild(child2);
+
+    		child2 = new Xpp3Dom("maintainer");
+    		child2.setValue("${bwdocker.maintainer}");
+    		buildchild.addChild(child2);
+
+    		Xpp3Dom assemblychild = new Xpp3Dom("assembly");
+    		Xpp3Dom child22 = new Xpp3Dom("basedir");
+    		child22.setValue("/");
+    		assemblychild.addChild(child22);
+
+    		child22 = new Xpp3Dom("descriptorRef");
+    		child22.setValue("artifact");
+    		assemblychild.addChild(child22);
+    		buildchild.addChild(assemblychild);
+
+    		Xpp3Dom tagchild = new Xpp3Dom("tags");
+    		Xpp3Dom child23 = new Xpp3Dom("tag");
+    		child23.setValue("latest");
+    		tagchild.addChild(child23);
+
+    		buildchild.addChild(tagchild);
+
+    		Xpp3Dom portchild = new Xpp3Dom("ports");
+    		Xpp3Dom child24 = new Xpp3Dom("port");
+    		child24.setValue("8080");
+    		portchild.addChild(child24);
+
+    		buildchild.addChild(portchild);
+
+    		// IF Volume exist
+    		List<String> volumes = module.getBwDockerModule().getDockerVolumes();
+    		if(volumes != null && volumes.size() > 0) {
+    			Xpp3Dom volchild = new Xpp3Dom("volumes");
+    			for(int i = 0; i < volumes.size(); i++) {
+    				Xpp3Dom child25 = new Xpp3Dom("volume");
+    				child25.setValue("${bwdocker.volume.v"+i+"}");
+    				volchild.addChild(child25);
+    			}
+    			buildchild.addChild(volchild);
+    		}
+    		imageChild.addChild(buildchild);
+
+    		Xpp3Dom runchild = new Xpp3Dom("run");
+    		Xpp3Dom child3 = new Xpp3Dom("namingStrategy");
+    		child3.setValue("alias");
+    		runchild.addChild(child3);
+
+    		// IF Ports exist
+    		List<String> ports = module.getBwDockerModule().getDockerPorts();
+    		if(ports != null && ports.size() > 0) {
+    			Xpp3Dom runportchild = new Xpp3Dom("ports");
+    			for(int i = 0; i < ports.size(); i++) {
+    				Xpp3Dom child31 = new Xpp3Dom("port");
+    				child31.setValue("${bwdocker.port.p"+i+"}");
+    				runportchild.addChild(child31);
+    			}
+    			runchild.addChild(runportchild);
+    		}
+
+    		// IF Links exist
+    		List<String> links = module.getBwDockerModule().getDockerLinks();
+    		if(links != null && links.size() > 0) {
+    			Xpp3Dom linkchild = new Xpp3Dom("links");
+    			for(int i = 0; i < links.size(); i++) {
+    				Xpp3Dom child32 = new Xpp3Dom("link");
+    				child32.setValue("${bwdocker.link.l"+i+"}");
+    				linkchild.addChild(child32);
+    			}
+    			runchild.addChild(linkchild);
+    		}
+    				
+    		//IF env variable exist
+    		if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0) {
+    			createDockerEnvVarPropertiesFiles();
+    			Xpp3Dom envVarChild = new Xpp3Dom("envPropertyFile");
+    			envVarChild.setValue("${docker.env.property.file}");
+    			runchild.addChild(envVarChild);
+    		}
+    		imageChild.addChild(runchild);
+    		child.addChild(imageChild);
+    		//config.addChild(child);
+    		plugin.setConfiguration(config);
+        	build.addPlugin(plugin);
 		}
-		Plugin plugin = new Plugin();
-		plugin.setGroupId("io.fabric8");
-		plugin.setArtifactId("fabric8-maven-plugin");
-		plugin.setVersion("3.4.1");
-		Xpp3Dom config = new Xpp3Dom("configuration");
-		Xpp3Dom child = new Xpp3Dom("skip");
-        child.setValue(String.valueOf(skip));
-        config.addChild(child);
-        plugin.setConfiguration(config);
-		build.addPlugin(plugin);
 	}
 
 	protected void addDockerWithSkipMavenPlugin(Build build) {
