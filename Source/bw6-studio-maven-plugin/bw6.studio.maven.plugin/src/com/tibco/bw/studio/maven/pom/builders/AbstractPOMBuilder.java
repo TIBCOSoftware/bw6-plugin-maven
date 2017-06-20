@@ -249,6 +249,7 @@ public abstract class AbstractPOMBuilder {
 	}
 
 	protected void addDockerK8SMavenPlugin(Build build, boolean skip) {
+		createDockerPropertiesFiles();
 		if(skip) {
 			Plugin plugin = new Plugin();
 			plugin.setGroupId("io.fabric8");
@@ -268,72 +269,72 @@ public abstract class AbstractPOMBuilder {
 			plugin.setGroupId("io.fabric8");
 			plugin.setArtifactId("fabric8-maven-plugin");
 			plugin.setVersion("3.4.1");
-			Xpp3Dom config = new Xpp3Dom("configuration");
-			Xpp3Dom child = new Xpp3Dom("skip");
-	        child.setValue(String.valueOf(skip));
-	        config.addChild(child);
-        	child = new Xpp3Dom("dockerHost");
-            child.setValue("${bwdocker.host}");
-            config.addChild(child);
+				Xpp3Dom config = new Xpp3Dom("configuration");
+					Xpp3Dom child = new Xpp3Dom("skip");
+					child.setValue("true");
+				config.addChild(child);
+					child = new Xpp3Dom("dockerHost");
+					child.setValue("${bwdocker.host}");
+				config.addChild(child);
 
-            child = new Xpp3Dom("certPath");
-            child.setValue("${bwdocker.certPath}");
-            config.addChild(child);
+					child = new Xpp3Dom("certPath");
+					child.setValue("${bwdocker.certPath}");
+				config.addChild(child);
 
-            child = new Xpp3Dom("images");
-            Xpp3Dom imageChild = new Xpp3Dom("image");
-    		Xpp3Dom child1 = new Xpp3Dom("alias");
-    		child1.setValue("${bwdocker.containername}");
-    		imageChild.addChild(child1);
+					child = new Xpp3Dom("images");
+						Xpp3Dom imageChild = new Xpp3Dom("image");
+							Xpp3Dom child1 = new Xpp3Dom("alias");
+							child1.setValue("${bwdocker.containername}");
+						imageChild.addChild(child1);
 
-    		child1 = new Xpp3Dom("name");
-    		child1.setValue("${docker.image}");
-    		imageChild.addChild(child1);
+							child1 = new Xpp3Dom("name");
+							child1.setValue("${docker.image}");
+						imageChild.addChild(child1);
 
-    		Xpp3Dom buildchild = new Xpp3Dom("build");
-    		Xpp3Dom child2 = new Xpp3Dom("from");
-    		child2.setValue("${bwdocker.from}");
-    		buildchild.addChild(child2);
+						Xpp3Dom buildchild = new Xpp3Dom("build");
+							Xpp3Dom child2 = new Xpp3Dom("from");
+							child2.setValue("${bwdocker.from}");
+						buildchild.addChild(child2);
 
-    		child2 = new Xpp3Dom("maintainer");
-    		child2.setValue("${bwdocker.maintainer}");
-    		buildchild.addChild(child2);
+							child2 = new Xpp3Dom("maintainer");
+							child2.setValue("${bwdocker.maintainer}");
+						buildchild.addChild(child2);
 
-    		Xpp3Dom assemblychild = new Xpp3Dom("assembly");
-    		Xpp3Dom child22 = new Xpp3Dom("basedir");
-    		child22.setValue("/");
-    		assemblychild.addChild(child22);
+							Xpp3Dom assemblychild = new Xpp3Dom("assembly");
+								Xpp3Dom child22 = new Xpp3Dom("basedir");
+								child22.setValue("/");
+							assemblychild.addChild(child22);
+	
+								child22 = new Xpp3Dom("descriptorRef");
+								child22.setValue("artifact");
+							assemblychild.addChild(child22);
+						buildchild.addChild(assemblychild);
 
-    		child22 = new Xpp3Dom("descriptorRef");
-    		child22.setValue("artifact");
-    		assemblychild.addChild(child22);
-    		buildchild.addChild(assemblychild);
-
-    		Xpp3Dom tagchild = new Xpp3Dom("tags");
-    		Xpp3Dom child23 = new Xpp3Dom("tag");
-    		child23.setValue("latest");
-    		tagchild.addChild(child23);
-
-    		buildchild.addChild(tagchild);
-
-    		Xpp3Dom portchild = new Xpp3Dom("ports");
-    		Xpp3Dom child24 = new Xpp3Dom("port");
-    		child24.setValue("8080");
-    		portchild.addChild(child24);
-
-    		buildchild.addChild(portchild);
-
-    		// IF Volume exist
-    		List<String> volumes = module.getBwDockerModule().getDockerVolumes();
-    		if(volumes != null && volumes.size() > 0) {
-    			Xpp3Dom volchild = new Xpp3Dom("volumes");
-    			for(int i = 0; i < volumes.size(); i++) {
-    				Xpp3Dom child25 = new Xpp3Dom("volume");
-    				child25.setValue("${bwdocker.volume.v"+i+"}");
-    				volchild.addChild(child25);
-    			}
-    			buildchild.addChild(volchild);
-    		}
+	    		Xpp3Dom tagchild = new Xpp3Dom("tags");
+	    		Xpp3Dom child23 = new Xpp3Dom("tag");
+	    		child23.setValue("latest");
+	    		tagchild.addChild(child23);
+	
+	    		buildchild.addChild(tagchild);
+	
+	    		Xpp3Dom portchild = new Xpp3Dom("ports");
+	    		Xpp3Dom child24 = new Xpp3Dom("port");
+	    		child24.setValue("8080");
+	    		portchild.addChild(child24);
+	
+	    		buildchild.addChild(portchild);
+	
+	    		// IF Volume exist
+	    		List<String> volumes = module.getBwDockerModule().getDockerVolumes();
+	    		if(volumes != null && volumes.size() > 0) {
+	    			Xpp3Dom volchild = new Xpp3Dom("volumes");
+	    			for(int i = 0; i < volumes.size(); i++) {
+	    				Xpp3Dom child25 = new Xpp3Dom("volume");
+	    				child25.setValue("${bwdocker.volume.v"+i+"}");
+	    				volchild.addChild(child25);
+	    			}
+	    			buildchild.addChild(volchild);
+	    		}
     		imageChild.addChild(buildchild);
 
     		Xpp3Dom runchild = new Xpp3Dom("run");
@@ -374,7 +375,70 @@ public abstract class AbstractPOMBuilder {
     		}
     		imageChild.addChild(runchild);
     		child.addChild(imageChild);
-    		//config.addChild(child);
+    		config.addChild(child);
+    		
+
+//                <!-- Name of the replication controller, which will have a sane default (container alisa, mvn coords, ..) -->
+//                <name>${project.artifactId}</name>
+//                <!-- Replica count-->
+//                <replicas>1</replicas>
+//                <!-- Container to include in the POD template. By default all with a "build" section in the
+//                     "images" configuration will be add to the POD. However, they can be configured separately, too.
+//                    -->
+//                <containers>
+//                  <container>
+//                    <!-- Alias name correlating with the same named "image" configuration above. Can be ommitted
+//                         if there is only a single image added -->
+//                    <alias>camel-service</alias>
+//                    <ports>
+//                      <!-- Ports to expose in the pod specs -->
+//                      <port>8778</port>
+//                    </ports>
+//                    <mounts>
+//                      <scratch>/var/scratch</scratch>
+//                    </mounts>
+//                  </container>
+//                </containers>
+//                <!-- Volumes used in the replicaSet -->
+//                <volumes>
+//                  <volume>
+//                    <name>scratch</name>
+//                    <type>emptyDir</type>
+//                  </volume>
+//                </volumes>
+//              </deployment>
+//              <!-- Dedicated section for (multiple) services to define -->
+//              <services>
+//                <service>
+//                  <name>${project.artifactId}</name>
+//                  <headless>true</headless>
+//                </service>
+//              </services>
+//</resources>
+    		child = new Xpp3Dom("resources");
+				Xpp3Dom resourcesChild = new Xpp3Dom("labels");
+					Xpp3Dom labelchild = new Xpp3Dom("group");
+					labelchild.setValue("${fabric8.label.group}");
+				resourcesChild.addChild(labelchild);
+				
+				resourcesChild = new Xpp3Dom("deployment");
+					Xpp3Dom deploymentchild = new Xpp3Dom("name");
+					deploymentchild.setValue("${fabric8.replicationController.name}");
+				resourcesChild.addChild(deploymentchild);
+					deploymentchild = new Xpp3Dom("replicas");
+					deploymentchild.setValue("${fabric8.replicas}");
+				resourcesChild.addChild(deploymentchild);
+					deploymentchild = new Xpp3Dom("containers");
+						Xpp3Dom containerschild = new Xpp3Dom("container");
+						Xpp3Dom containerchild = new Xpp3Dom("alias");
+						containerchild.setValue("${bwdocker.containername}");
+						containerschild.addChild(containerchild);
+						containerchild = new Xpp3Dom("ports");
+						containerschild.addChild(containerchild);
+					deploymentchild.addChild(containerschild);
+				resourcesChild.addChild(deploymentchild);
+				
+			config.addChild(child);
     		plugin.setConfiguration(config);
         	build.addPlugin(plugin);
 		}
@@ -556,6 +620,12 @@ public abstract class AbstractPOMBuilder {
 			//Add platform properties
 
 			String platform = module.getBwDockerModule().getPlatform();
+			if(platform.equals("K8S")) {
+				properties.setProperty("fabric8.mode", "kubernetes");
+			}
+			if(platform.equals("OC")) {
+				properties.setProperty("fabric8.mode", "openshift");
+			}
 			properties.setProperty("fabric8.template", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.replicationController.name", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.replicas", module.getBwk8sModule().getNumOfReplicas());

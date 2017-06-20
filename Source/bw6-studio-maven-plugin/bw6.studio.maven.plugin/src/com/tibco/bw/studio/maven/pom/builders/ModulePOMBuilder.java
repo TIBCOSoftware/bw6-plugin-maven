@@ -139,7 +139,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 						platform = module.getBwDockerModule().getPlatform();
 					}
 				}
-				if (platform.equals("K8S")) {
+				if (platform.equals("K8S") || platform.equals("OC")) {
 					addDockerK8SMavenPlugin(build, true);
 				} else if (platform.equals("Mesos")) {
 

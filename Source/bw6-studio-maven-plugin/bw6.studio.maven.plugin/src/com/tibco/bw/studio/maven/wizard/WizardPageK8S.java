@@ -32,7 +32,7 @@ public class WizardPageK8S extends WizardPage {
 	protected WizardPageK8S(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;
-		setTitle("Kubernetes Plugin for Apache Maven and TIBCO BusinessWorks Container Edition");
+		setTitle("Kubernetes/Openshift Plugin for Apache Maven and TIBCO BusinessWorks Container Edition");
 		setDescription("Enter Kubernetes Platform details for pushing and running BWCE apps.");
 	}
 

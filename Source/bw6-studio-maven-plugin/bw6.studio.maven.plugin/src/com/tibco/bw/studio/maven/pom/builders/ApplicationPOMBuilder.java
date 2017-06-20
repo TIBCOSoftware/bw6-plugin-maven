@@ -295,9 +295,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
     				build.removePlugin(plg);
     			}
     		}
-    		addDockerMavenPlugin(build);
 
-    		if("K8S".equals(platform)) {
+    		if("K8S".equals(platform) || "OC".equals(platform)) {
     			for(int i = 0; i < plugins.size(); i++) {
         			Plugin plg = plugins.get(i);
         			if(plg.getArtifactId().equals("fabric8-maven-plugin")) {
@@ -305,6 +304,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
         			}
         		}
     			addDockerK8SMavenPlugin(build, false);
+    		}else {
+    			addDockerMavenPlugin(build);
     		}
     	}
     	model.setBuild(build);

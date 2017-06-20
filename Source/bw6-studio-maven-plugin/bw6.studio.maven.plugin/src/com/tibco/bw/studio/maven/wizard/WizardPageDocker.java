@@ -27,11 +27,10 @@ import com.tibco.bw.studio.maven.modules.model.BWProject;
 public class WizardPageDocker extends WizardPage {
 	private Composite container;
 	private BWProject project;
-	private Text dockerHost;
-	private Combo dockerHosts;
+	private Combo dockerHost;
 	private Text dockerHostCertPath;
-	private Text dockerImageName;
-	private Text dockerImageFrom;
+	private Combo dockerImageName;
+	private Combo dockerImageFrom;
 	private Text dockerImageMaintainer;
 	private Text dockerAppName;
 	private Text dockerVolume;
@@ -105,14 +104,45 @@ public class WizardPageDocker extends WizardPage {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
+		
+		Composite innerContainer2 = new Composite(container, SWT.NONE);
+
+		GridLayout layout2 = new GridLayout();
+		innerContainer2.setLayout(layout2);
+		layout2.numColumns = 2;
+		
+		final Button oc = new Button(innerContainer2, SWT.CHECK);
+		oc.setSelection(false);
+
+		oc.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (oc.getSelection()) {
+					platform.setText("OC");
+					container.layout();
+					MavenWizardContext.INSTANCE.getNextButton().setEnabled(true);
+				} else {
+					MavenWizardContext.INSTANCE.getNextButton().setEnabled(false);
+					platform.setText("");
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
 
 		Label k8slabel = new Label(innerContainer, SWT.NONE);
-		k8slabel.setText("Kubernetes / Openshift");
+		k8slabel.setText("Kubernetes");
+		
+		Label oclabel = new Label(innerContainer2, SWT.NONE);
+		oclabel.setText("Openshift");
 	}
 
 	@Override
 	public IWizardPage getNextPage() {
-		if (platform.getText().equals("K8S")) {
+		if (platform.getText().equals("K8S") || platform.getText().equals("OC")) {
 			k8sPage = new WizardPageK8S("Kubernetes/Openshift config", project);
 			k8sPage.setWizard(getWizard());
 			return k8sPage;
@@ -124,30 +154,34 @@ public class WizardPageDocker extends WizardPage {
 	private void setApplicationDockerBuildPOMFields() {
 		Label lLabel = new Label(container, SWT.NONE);
 		lLabel.setText("Docker host build configuration:");
-		GridData lData = new GridData(300, 15);
+		GridData lData = new GridData(350, 15);
 		lData.horizontalSpan = 4;
 		lLabel.setLayoutData(lData);
+		
+		Label l2Label = new Label(container, SWT.NONE);
+		l2Label.setText("(Do not forget to generate authentification token for some docker registry)");
+		GridData l2Data = new GridData(350, 15);
+		l2Data.horizontalSpan = 4;
+		l2Label.setLayoutData(l2Data);
 
 		Label l1Label = new Label(container, SWT.NONE);
 		l1Label.setText("");
-		GridData l1Data = new GridData(300, 15);
+		GridData l1Data = new GridData(350, 15);
 		l1Data.horizontalSpan = 4;
 		l1Label.setLayoutData(l1Data);
 
 		Label targetLabel = new Label(container, SWT.NONE);
 		targetLabel.setText("Docker Host");
 
-		//dockerHost = new Text(container, SWT.BORDER | SWT.SINGLE);
-		//dockerHost.setText("unix:///var/run/docker.sock");
-		dockerHosts = new Combo(container, SWT.NONE);
-		dockerHosts.add("unix:///var/run/docker.sock");
-		dockerHosts.add("tcp://127.0.0.1:2375");
-		dockerHosts.add("tcp://127.0.0.1:2376");
-		dockerHosts.add("tcp://0.0.0.0:2375");
-		dockerHosts.add("npipe:////./pipe/docker_engine");
+		dockerHost = new Combo(container, SWT.NONE);
+		dockerHost.add(" ");
+		dockerHost.add("unix:///var/run/docker.sock");
+		dockerHost.add("tcp://127.0.0.1:2375");
+		dockerHost.add("tcp://127.0.0.1:2376");
+		dockerHost.add("tcp://0.0.0.0:2375");
+		dockerHost.add("npipe:////./pipe/docker_engine");
 		GridData dockerHostData = new GridData(200, 25);
-		//dockerHost.setLayoutData(dockerHostData);
-		dockerHosts.setLayoutData(dockerHostData);
+		dockerHost.setLayoutData(dockerHostData);
 		
 		Label certLabel = new Label(container, SWT.NONE);
 		certLabel.setText("Cert Path");
@@ -160,17 +194,21 @@ public class WizardPageDocker extends WizardPage {
 		Label imgNameLabel = new Label(container, SWT.NONE);
 		imgNameLabel.setText("Image Name (to be created/pushed)");
 
-		dockerImageName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageName.setText("gcr.io/<project_id>/<image-name>");
-		GridData dockerImgNameData = new GridData(200, 15);
+		dockerImageName = new Combo(container, SWT.BORDER | SWT.SINGLE);
+		dockerImageName.add(" ");
+		dockerImageName.add("gcr.io/<project_id>/<image-name>");
+		dockerImageName.add("<aws_account_id>.dkr.ecr.<region>.amazonaws.com/<repository>/<image-name>");
+		dockerImageName.add("<registryName>.azurecr.io");
+		GridData dockerImgNameData = new GridData(200, 25);
 		dockerImageName.setLayoutData(dockerImgNameData);
 
 		Label imgFromLabel = new Label(container, SWT.NONE);
 		imgFromLabel.setText("BWCE Base Image");
 
-		dockerImageFrom = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageFrom.setText("tibco/bwce");
-		GridData imgFromData = new GridData(100, 15);
+		dockerImageFrom = new Combo(container, SWT.BORDER | SWT.SINGLE);
+		dockerImageFrom.add(" ");
+		dockerImageFrom.add("tibco/bwce");
+		GridData imgFromData = new GridData(200, 25);
 		dockerImageFrom.setLayoutData(imgFromData);
 
 		Label maintainerLabel = new Label(container, SWT.NONE);
@@ -281,7 +319,7 @@ public class WizardPageDocker extends WizardPage {
 			bwdocker = new BWDockerModule();
 		}
 
-		bwdocker.setDockerHost(dockerHosts.getText());
+		bwdocker.setDockerHost(dockerHost.getText());
 		bwdocker.setDockerHostCertPath(dockerHostCertPath.getText());
 		bwdocker.setDockerImageName(dockerImageName.getText());
 		bwdocker.setDockerImageFrom(dockerImageFrom.getText());
@@ -333,7 +371,7 @@ public class WizardPageDocker extends WizardPage {
 		for (BWModule module : project.getModules()) {
 			if (module.getType() == BWModuleType.Application) {
 				module.setBwDockerModule(setBWCEDockerValues(module));
-				if (platform.getText().equals("K8S")) {
+				if (platform.getText().equals("K8S") || platform.getText().equals("OC")) {
 					module.setBwk8sModule(k8sPage.setBWCEK8SValues(module));
 				}
 			}
