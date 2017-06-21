@@ -9,7 +9,19 @@ It is provided as a sample plug-in to support use-cases of integrating TIBCO Act
 1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the Path.
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
 2. TIBCO ActiveMatrix BusinessWorks™ 6.3.0 or higher should be installed.
-3. 
+
+## Os X pre-req 
+
+install oc client, kubernetes client, and xhyve virt with brew
+
+get brew here : https://brew.sh/index_fr.html
+
+$ brew install docker-machine-driver-xhyve kubernetes-cli openshift-cli
+# docker-machine-driver-xhyve need root owner and uid
+$ sudo chown root:wheel $(brew --prefix)/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+$ sudo chmod u+s $(brew --prefix)/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+
+the fabric8:install goal will take care of the rest.
 
 ## Installation
 
@@ -176,7 +188,7 @@ Docker and Kubernetes / Openshift -
  - initialize fabric8:resource (creates the necessary yaml objects for k8s/openshift)
  - initialize fabric8:deploy (apply the resources against k8s/openshift)
 
-#### Docker Maven plugin info :
+### Docker Maven plugin info :
 
 Guide docker plugin only (when you select docker run config options) : https://dmp.fabric8.io/
 Sources: https://github.com/fabric8io/docker-maven-plugin
@@ -202,9 +214,10 @@ Sources: https://github.com/fabric8io/docker-maven-plugin
 
 * The **[User Manual](https://fabric8io.github.io/docker-maven-plugin)** [[PDF](https://fabric8io.github.io/docker-maven-plugin/docker-maven-plugin.pdf)] has a detailed reference for all and everything.
 
-#### fabric8-maven-plugin infos :
+### fabric8-maven-plugin infos :
 
-The full documentation can be found in the [User Manual](http://maven.fabric8.io) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]. It supports the following goals:
+#### Goals
+It supports the following goals:
 
 | Goal                                          | Description                           |
 | --------------------------------------------- | ------------------------------------- |
@@ -214,7 +227,10 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 | [`fabric8:deploy`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:deploy) | Deploy Kubernetes / OpenShift resource objects to a cluster  |
 | [`fabric8:watch`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:watch) | Watch for doing rebuilds and restarts |
 
-#### GCP notes
+#### Documentation
+The full documentation can be found in the [User Manual](http://maven.fabric8.io) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]. 
+
+### GCP notes
 Docker authorize for GCP docker repo before trying fabric8:push or docker:push
 
 --- Windows ---
@@ -244,6 +260,8 @@ imagePullSecrets:
 - name: myregistrykey
 4.Update the service account 
 kubectl replace serviceaccount default -f ./sa.yaml
+
+
 
 
 l. You can try other goals from studio, by creating new Maven Run Configurations for different goals , or from terminal pointing to your workspace using 'mvn initialize cf:command -Dpcf.property.file=pcfdev.properties'
