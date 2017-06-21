@@ -18,6 +18,8 @@ public class BWK8SModule {
 	
 	private Map<String, String> k8sEnvVariables;
 
+	private String subk8splatform;
+
 	public String getRcName() {
 		return rcName;
 	}
@@ -69,5 +71,12 @@ public class BWK8SModule {
 		this.k8sEnvVariables = k8sEnvVariables;
 	}
 	
+	public String getSubK8sPlatform() {
+		return subk8splatform;
+	}
+
+	public void setSubK8sPlatform(String subk8splatform) {
+		this.subk8splatform = subk8splatform;
+	}
 	
 }

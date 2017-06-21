@@ -13,6 +13,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Combo;
 
 import com.tibco.bw.studio.maven.modules.model.BWK8SModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
@@ -28,6 +29,7 @@ public class WizardPageK8S extends WizardPage {
 	private Text containerPort;
 	private Text k8sNamespace;
 	private Text k8sEnvVars;
+	private Combo subplatform;
 
 	protected WizardPageK8S(String pageName, BWProject project) {
 		super(pageName);
@@ -62,6 +64,15 @@ public class WizardPageK8S extends WizardPage {
 		GridData l1Data = new GridData(20, 15);
 		l1Data.horizontalSpan = 4;
 		l1Label.setLayoutData(l1Data);
+		
+		Label subplatformLabel = new Label(container, SWT.READ_ONLY);
+		subplatformLabel.setText("Orchestrator type");
+		subplatform = new Combo(container, SWT.BORDER | SWT.SINGLE);
+		subplatform.add(" ");
+		subplatform.add("openshift");
+		subplatform.add("kubernetes");
+		GridData subplatformData = new GridData(200, 25);
+		subplatform.setLayoutData(subplatformData);
 
 		Label rcLabel = new Label(container, SWT.NONE);
 		rcLabel.setText("Replication Controler Name");
@@ -119,7 +130,8 @@ public class WizardPageK8S extends WizardPage {
 		if (bwk8s == null) {
 			bwk8s = new BWK8SModule();
 		}
-
+		
+		bwk8s.setSubK8sPlatform(subplatform.getText());
 		bwk8s.setRcName(rcName.getText());
 		bwk8s.setNumOfReplicas(numOfReplicas.getText());
 		bwk8s.setServiceName(serviceName.getText());

@@ -85,6 +85,13 @@ public class WizardPageDocker extends WizardPage {
 
 		final Button k8s = new Button(innerContainer, SWT.CHECK);
 		k8s.setSelection(false);
+		
+/*		Composite innerContainer2 = new Composite(container, SWT.NONE);
+		GridLayout layout2 = new GridLayout();
+		innerContainer2.setLayout(layout2);
+		layout2.numColumns = 2;
+		final Button oc = new Button(innerContainer2, SWT.CHECK);
+		oc.setSelection(false);*/
 
 		k8s.addSelectionListener(new SelectionListener() {
 
@@ -105,16 +112,7 @@ public class WizardPageDocker extends WizardPage {
 			}
 		});
 		
-		Composite innerContainer2 = new Composite(container, SWT.NONE);
-
-		GridLayout layout2 = new GridLayout();
-		innerContainer2.setLayout(layout2);
-		layout2.numColumns = 2;
-		
-		final Button oc = new Button(innerContainer2, SWT.CHECK);
-		oc.setSelection(false);
-
-		oc.addSelectionListener(new SelectionListener() {
+/*		oc.addSelectionListener(new SelectionListener() {
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -131,18 +129,18 @@ public class WizardPageDocker extends WizardPage {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
-		});
+		});*/
 
 		Label k8slabel = new Label(innerContainer, SWT.NONE);
-		k8slabel.setText("Kubernetes");
+		k8slabel.setText("Kubernetes/Openshift");
 		
-		Label oclabel = new Label(innerContainer2, SWT.NONE);
-		oclabel.setText("Openshift");
+/*		Label oclabel = new Label(innerContainer2, SWT.NONE);
+		oclabel.setText("Openshift");*/
 	}
 
 	@Override
 	public IWizardPage getNextPage() {
-		if (platform.getText().equals("K8S") || platform.getText().equals("OC")) {
+		if (platform.getText().equals("K8S")) {
 			k8sPage = new WizardPageK8S("Kubernetes/Openshift config", project);
 			k8sPage.setWizard(getWizard());
 			return k8sPage;
@@ -159,10 +157,16 @@ public class WizardPageDocker extends WizardPage {
 		lLabel.setLayoutData(lData);
 		
 		Label l2Label = new Label(container, SWT.NONE);
-		l2Label.setText("(Do not forget to generate authentification token for some docker registry)");
+		l2Label.setText("(Dont forget to regenerate auth token for docker registries)");
 		GridData l2Data = new GridData(350, 15);
 		l2Data.horizontalSpan = 4;
 		l2Label.setLayoutData(l2Data);
+		
+		Label l3Label = new Label(container, SWT.NONE);
+		l3Label.setText("Mandatory fields with a *");
+		GridData l3Data = new GridData(350, 15);
+		l3Data.horizontalSpan = 4;
+		l3Label.setLayoutData(l3Data);
 
 		Label l1Label = new Label(container, SWT.NONE);
 		l1Label.setText("");
@@ -171,7 +175,7 @@ public class WizardPageDocker extends WizardPage {
 		l1Label.setLayoutData(l1Data);
 
 		Label targetLabel = new Label(container, SWT.NONE);
-		targetLabel.setText("Docker Host");
+		targetLabel.setText("Docker Host *");
 
 		dockerHost = new Combo(container, SWT.NONE);
 		dockerHost.add(" ");
@@ -184,7 +188,7 @@ public class WizardPageDocker extends WizardPage {
 		dockerHost.setLayoutData(dockerHostData);
 		
 		Label certLabel = new Label(container, SWT.NONE);
-		certLabel.setText("Cert Path");
+		certLabel.setText("Cert Path *");
 
 		dockerHostCertPath = new Text(container, SWT.BORDER | SWT.SINGLE);
 		dockerHostCertPath.setText("</home/user/machine/>");
@@ -192,7 +196,7 @@ public class WizardPageDocker extends WizardPage {
 		dockerHostCertPath.setLayoutData(dockerHostCertData);
 
 		Label imgNameLabel = new Label(container, SWT.NONE);
-		imgNameLabel.setText("Image Name (to be created/pushed)");
+		imgNameLabel.setText("Image Name (to be created/pushed) *");
 
 		dockerImageName = new Combo(container, SWT.BORDER | SWT.SINGLE);
 		dockerImageName.add(" ");
@@ -203,7 +207,7 @@ public class WizardPageDocker extends WizardPage {
 		dockerImageName.setLayoutData(dockerImgNameData);
 
 		Label imgFromLabel = new Label(container, SWT.NONE);
-		imgFromLabel.setText("BWCE Base Image");
+		imgFromLabel.setText("BWCE Base Image *");
 
 		dockerImageFrom = new Combo(container, SWT.BORDER | SWT.SINGLE);
 		dockerImageFrom.add(" ");
@@ -212,7 +216,7 @@ public class WizardPageDocker extends WizardPage {
 		dockerImageFrom.setLayoutData(imgFromData);
 
 		Label maintainerLabel = new Label(container, SWT.NONE);
-		maintainerLabel.setText("Maintainer");
+		maintainerLabel.setText("Maintainer *");
 
 		dockerImageMaintainer = new Text(container, SWT.BORDER | SWT.SINGLE);
 		dockerImageMaintainer.setText("username@company.com");
@@ -256,7 +260,7 @@ public class WizardPageDocker extends WizardPage {
 		});
 
 		Label dkrlabel = new Label(container, SWT.NONE);
-		dkrlabel.setText("Run on docker host");
+		dkrlabel.setText("Run config for the docker host");
 	}
 
 	private void setApplicationDockerRunPOMFields() {
@@ -371,7 +375,7 @@ public class WizardPageDocker extends WizardPage {
 		for (BWModule module : project.getModules()) {
 			if (module.getType() == BWModuleType.Application) {
 				module.setBwDockerModule(setBWCEDockerValues(module));
-				if (platform.getText().equals("K8S") || platform.getText().equals("OC")) {
+				if (platform.getText().equals("K8S")) {
 					module.setBwk8sModule(k8sPage.setBWCEK8SValues(module));
 				}
 			}

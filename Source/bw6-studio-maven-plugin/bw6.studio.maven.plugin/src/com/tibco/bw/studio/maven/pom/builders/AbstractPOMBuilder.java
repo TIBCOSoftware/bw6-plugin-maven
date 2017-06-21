@@ -123,7 +123,7 @@ public abstract class AbstractPOMBuilder {
 		build.addPlugin(plugin);
 	}
 
-	protected void addBWCEPropertiesPlugin(Build build, String bwEdition, String platfrom) {
+	protected void addBWCEPropertiesPlugin(Build build, String bwEdition, String platform) {
 		Plugin plugin = null;
 		List<Plugin> plugins = build.getPlugins();
 		for(int i = 0; i < plugins.size(); i++) {
@@ -160,7 +160,7 @@ public abstract class AbstractPOMBuilder {
 					fileChild1.setValue("${docker.env.property.file}");
 					child.addChild(fileChild1);
 				}
-				if(platfrom.equals("K8S")) {
+				if(platform.equals("K8S")) {
 					Xpp3Dom fileChild2 = new Xpp3Dom("file");
 					fileChild2.setValue("${k8s.property.file}");
 					child.addChild(fileChild2);
@@ -230,7 +230,7 @@ public abstract class AbstractPOMBuilder {
 							}
 						}
 
-						if(platfrom.equals("K8S")) {
+						if(platform.equals("K8S")) {
 							if(!k8sfound) {
 								Xpp3Dom fileChild = new Xpp3Dom("file");
 								fileChild.setValue("${k8s.property.file}");
@@ -249,7 +249,7 @@ public abstract class AbstractPOMBuilder {
 	}
 
 	protected void addDockerK8SMavenPlugin(Build build, boolean skip) {
-		createDockerPropertiesFiles();
+		//createDockerPropertiesFiles();
 		if(skip) {
 			Plugin plugin = new Plugin();
 			plugin.setGroupId("io.fabric8");
@@ -377,44 +377,6 @@ public abstract class AbstractPOMBuilder {
     		child.addChild(imageChild);
     		config.addChild(child);
     		
-
-//                <!-- Name of the replication controller, which will have a sane default (container alisa, mvn coords, ..) -->
-//                <name>${project.artifactId}</name>
-//                <!-- Replica count-->
-//                <replicas>1</replicas>
-//                <!-- Container to include in the POD template. By default all with a "build" section in the
-//                     "images" configuration will be add to the POD. However, they can be configured separately, too.
-//                    -->
-//                <containers>
-//                  <container>
-//                    <!-- Alias name correlating with the same named "image" configuration above. Can be ommitted
-//                         if there is only a single image added -->
-//                    <alias>camel-service</alias>
-//                    <ports>
-//                      <!-- Ports to expose in the pod specs -->
-//                      <port>8778</port>
-//                    </ports>
-//                    <mounts>
-//                      <scratch>/var/scratch</scratch>
-//                    </mounts>
-//                  </container>
-//                </containers>
-//                <!-- Volumes used in the replicaSet -->
-//                <volumes>
-//                  <volume>
-//                    <name>scratch</name>
-//                    <type>emptyDir</type>
-//                  </volume>
-//                </volumes>
-//              </deployment>
-//              <!-- Dedicated section for (multiple) services to define -->
-//              <services>
-//                <service>
-//                  <name>${project.artifactId}</name>
-//                  <headless>true</headless>
-//                </service>
-//              </services>
-//</resources>
     		child = new Xpp3Dom("resources");
 				Xpp3Dom resourcesChild = new Xpp3Dom("labels");
 					Xpp3Dom labelchild = new Xpp3Dom("group");
@@ -430,14 +392,15 @@ public abstract class AbstractPOMBuilder {
 				resourcesChild.addChild(deploymentchild);
 					deploymentchild = new Xpp3Dom("containers");
 						Xpp3Dom containerschild = new Xpp3Dom("container");
-						Xpp3Dom containerchild = new Xpp3Dom("alias");
-						containerchild.setValue("${bwdocker.containername}");
-						containerschild.addChild(containerchild);
-						containerchild = new Xpp3Dom("ports");
-						containerschild.addChild(containerchild);
+							Xpp3Dom subcontchild = new Xpp3Dom("alias");
+							subcontchild.setValue("${bwdocker.containername}");
+						containerschild.addChild(subcontchild);
+							subcontchild = new Xpp3Dom("ports");
+							subcontchild.setValue("${fabric8.service.containerPort}");
+						containerschild.addChild(subcontchild);
 					deploymentchild.addChild(containerschild);
 				resourcesChild.addChild(deploymentchild);
-				
+			child.addChild(resourcesChild);	
 			config.addChild(child);
     		plugin.setConfiguration(config);
         	build.addPlugin(plugin);
@@ -457,6 +420,9 @@ public abstract class AbstractPOMBuilder {
 		build.addPlugin(plugin);
 	}
 	
+	protected void callcreateDockerPropertiesFiles() {
+		createDockerPropertiesFiles();
+	}
 	protected void addDockerMavenPlugin(Build build) {
 		//Create properties file for Dev and Prod environment
 		createDockerPropertiesFiles();
@@ -620,11 +586,15 @@ public abstract class AbstractPOMBuilder {
 			//Add platform properties
 
 			String platform = module.getBwDockerModule().getPlatform();
-			if(platform.equals("K8S")) {
-				properties.setProperty("fabric8.mode", "kubernetes");
-			}
-			if(platform.equals("OC")) {
-				properties.setProperty("fabric8.mode", "openshift");
+			String subplatform = module.getBwk8sModule().getSubK8sPlatform();
+			if (platform.equals("K8S")) {
+				if (subplatform.equals("openshift")) {
+					properties.setProperty("fabric8.mode", "openshift");
+				} else if (subplatform.equals("kubernetes")) {
+					properties.setProperty("fabric8.mode", "kubernetes");
+				} else {
+					properties.setProperty("fabric8.mode", "auto");
+				}
 			}
 			properties.setProperty("fabric8.template", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.replicationController.name", module.getBwk8sModule().getRcName());
