@@ -73,6 +73,12 @@ public class WizardPageK8S extends WizardPage {
 		subplatform.add("kubernetes");
 		GridData subplatformData = new GridData(200, 25);
 		subplatform.setLayoutData(subplatformData);
+		
+		Label lSpaceLabel = new Label(container, SWT.NONE);
+		lSpaceLabel.setText("");
+		GridData lSpaceData = new GridData(20, 15);
+		lSpaceData.horizontalSpan = 4;
+		lSpaceLabel.setLayoutData(lSpaceData);
 
 		Label rcLabel = new Label(container, SWT.NONE);
 		rcLabel.setText("Replication Controler Name");

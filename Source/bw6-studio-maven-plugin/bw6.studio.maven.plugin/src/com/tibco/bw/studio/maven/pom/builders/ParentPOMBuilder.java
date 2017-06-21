@@ -85,7 +85,8 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 				}
 
 				if (platform.equals("K8S")) {
-					addDockerK8SMavenPlugin(build, true);
+					//addDockerK8SMavenPlugin(build, true);
+					addDockerK8SMavenParentPlugin(build);
 				} else if (platform.equals("Mesos")) {
 
 				} else if (platform.equals("Swarm")) {

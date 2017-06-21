@@ -248,6 +248,21 @@ public abstract class AbstractPOMBuilder {
 		}
 	}
 
+	protected void addDockerK8SMavenParentPlugin(Build build) {
+		
+		Plugin plugin = new Plugin();
+		plugin.setGroupId("io.fabric8");
+		plugin.setArtifactId("fabric8-maven-plugin");
+		plugin.setVersion("3.4.1");
+		Xpp3Dom config = new Xpp3Dom("configuration");
+		Xpp3Dom child = new Xpp3Dom("skip");
+        child.setValue("false");
+        config.addChild(child);
+		plugin.setConfiguration(config);
+    	build.addPlugin(plugin);
+		
+	}
+	
 	protected void addDockerK8SMavenPlugin(Build build, boolean skip) {
 		//createDockerPropertiesFiles();
 		if(skip) {
@@ -382,26 +397,35 @@ public abstract class AbstractPOMBuilder {
 					Xpp3Dom labelchild = new Xpp3Dom("group");
 					labelchild.setValue("${fabric8.label.group}");
 				resourcesChild.addChild(labelchild);
+				child.addChild(resourcesChild);
+				config.addChild(child);
 				
-				resourcesChild = new Xpp3Dom("deployment");
-					Xpp3Dom deploymentchild = new Xpp3Dom("name");
-					deploymentchild.setValue("${fabric8.replicationController.name}");
-				resourcesChild.addChild(deploymentchild);
-					deploymentchild = new Xpp3Dom("replicas");
-					deploymentchild.setValue("${fabric8.replicas}");
-				resourcesChild.addChild(deploymentchild);
-					deploymentchild = new Xpp3Dom("containers");
-						Xpp3Dom containerschild = new Xpp3Dom("container");
-							Xpp3Dom subcontchild = new Xpp3Dom("alias");
-							subcontchild.setValue("${bwdocker.containername}");
-						containerschild.addChild(subcontchild);
-							subcontchild = new Xpp3Dom("ports");
-							subcontchild.setValue("${fabric8.service.containerPort}");
-						containerschild.addChild(subcontchild);
-					deploymentchild.addChild(containerschild);
-				resourcesChild.addChild(deploymentchild);
-			child.addChild(resourcesChild);	
-			config.addChild(child);
+/*
+ * Because of issue 813 : Cannot find 'deployment' in class io.fabric8.maven.core.config.ResourceConfig 
+ * see : https://github.com/fabric8io/fabric8-maven-plugin/issues/813. This will be enabled later (deployment object to be pass to kubernetes)
+*/				
+				
+				
+/*				resourcesChild = new Xpp3Dom("deployment");
+ * 					Xpp3Dom deploymentchild = new Xpp3Dom("name");
+ *					deploymentchild.setValue("${fabric8.replicationController.name}");
+ *				resourcesChild.addChild(deploymentchild);
+ *					deploymentchild = new Xpp3Dom("replicas");
+ *					deploymentchild.setValue("${fabric8.replicas}");
+ *				resourcesChild.addChild(deploymentchild);
+ *					deploymentchild = new Xpp3Dom("containers");
+ *						Xpp3Dom containerschild = new Xpp3Dom("container");
+ *							Xpp3Dom subcontchild = new Xpp3Dom("alias");
+ *							subcontchild.setValue("${bwdocker.containername}");
+ *						containerschild.addChild(subcontchild);
+ *							subcontchild = new Xpp3Dom("ports");
+ *							subcontchild.setValue("${fabric8.service.containerPort}");
+ *						containerschild.addChild(subcontchild);
+ *					deploymentchild.addChild(containerschild);
+ *				resourcesChild.addChild(deploymentchild);
+ *			child.addChild(resourcesChild);	
+ *			config.addChild(child);
+*/
 			
 			
 			child = new Xpp3Dom("executions");
