@@ -402,6 +402,21 @@ public abstract class AbstractPOMBuilder {
 				resourcesChild.addChild(deploymentchild);
 			child.addChild(resourcesChild);	
 			config.addChild(child);
+			
+			
+			child = new Xpp3Dom("executions");
+				Xpp3Dom executionsChild = new Xpp3Dom("execution");
+					Xpp3Dom execChild = new Xpp3Dom("goals");
+						Xpp3Dom goalsChild = new Xpp3Dom("goal");
+						goalsChild.setValue("resource");
+						execChild.addChild(goalsChild);
+						goalsChild = new Xpp3Dom("goal");
+						goalsChild.setValue("build");
+						execChild.addChild(goalsChild);
+					executionsChild.addChild(execChild);
+				child.addChild(executionsChild);
+				config.addChild(child);
+				
     		plugin.setConfiguration(config);
         	build.addPlugin(plugin);
 		}
