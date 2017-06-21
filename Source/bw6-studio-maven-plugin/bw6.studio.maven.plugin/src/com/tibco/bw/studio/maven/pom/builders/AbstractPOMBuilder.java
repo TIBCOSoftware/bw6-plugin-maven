@@ -394,11 +394,18 @@ public abstract class AbstractPOMBuilder {
     		
     		child = new Xpp3Dom("resources");
 				Xpp3Dom resourcesChild = new Xpp3Dom("labels");
-					Xpp3Dom labelchild = new Xpp3Dom("group");
-					labelchild.setValue("${fabric8.label.group}");
-				resourcesChild.addChild(labelchild);
+					Xpp3Dom labelchild = new Xpp3Dom("all");
+						Xpp3Dom subchild = new Xpp3Dom("property");
+							Xpp3Dom sub1child = new Xpp3Dom("name");
+							sub1child.setValue("Label");
+							Xpp3Dom sub2child = new Xpp3Dom("value");
+							sub2child.setValue("${fabric8.label.group}");
+							subchild.addChild(sub1child);
+							subchild.addChild(sub2child);
+						labelchild.addChild(subchild);
+					resourcesChild.addChild(labelchild);
 				child.addChild(resourcesChild);
-				config.addChild(child);
+			config.addChild(child);
 				
 /*
  * Because of issue 813 : Cannot find 'deployment' in class io.fabric8.maven.core.config.ResourceConfig 
