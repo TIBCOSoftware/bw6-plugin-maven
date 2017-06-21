@@ -286,7 +286,7 @@ public abstract class AbstractPOMBuilder {
 			plugin.setVersion("3.4.1");
 				Xpp3Dom config = new Xpp3Dom("configuration");
 					Xpp3Dom child = new Xpp3Dom("skip");
-					child.setValue("true");
+					child.setValue(String.valueOf(skip));
 				config.addChild(child);
 					child = new Xpp3Dom("dockerHost");
 					child.setValue("${bwdocker.host}");
@@ -392,25 +392,28 @@ public abstract class AbstractPOMBuilder {
     		child.addChild(imageChild);
     		config.addChild(child);
     		
-    		child = new Xpp3Dom("resources");
-				Xpp3Dom resourcesChild = new Xpp3Dom("labels");
-					Xpp3Dom labelchild = new Xpp3Dom("all");
-						Xpp3Dom subchild = new Xpp3Dom("property");
-							Xpp3Dom sub1child = new Xpp3Dom("name");
-							sub1child.setValue("Label");
-							Xpp3Dom sub2child = new Xpp3Dom("value");
-							sub2child.setValue("${fabric8.label.group}");
-							subchild.addChild(sub1child);
-							subchild.addChild(sub2child);
-						labelchild.addChild(subchild);
-					resourcesChild.addChild(labelchild);
-				child.addChild(resourcesChild);
-			config.addChild(child);
+    		/*
+    		 * Because of issue 813 : Cannot find 'deployment' in class io.fabric8.maven.core.config.ResourceConfig 
+    		 * see : https://github.com/fabric8io/fabric8-maven-plugin/issues/813. This will be enabled later (deployment object to be pass to kubernetes)
+    		*/	
+    		
+/*    		child = new Xpp3Dom("resources");
+ *				Xpp3Dom resourcesChild = new Xpp3Dom("labels");
+ *					Xpp3Dom labelchild = new Xpp3Dom("all");
+ *						Xpp3Dom subchild = new Xpp3Dom("property");
+ *							Xpp3Dom sub1child = new Xpp3Dom("name");
+ *							sub1child.setValue("Label");
+ *							Xpp3Dom sub2child = new Xpp3Dom("value");
+ *							sub2child.setValue("${fabric8.label.group}");
+ *							subchild.addChild(sub1child);
+ *							subchild.addChild(sub2child);
+ *						labelchild.addChild(subchild);
+ *					resourcesChild.addChild(labelchild);
+ *				child.addChild(resourcesChild);
+ *			config.addChild(child);
+*/
 				
-/*
- * Because of issue 813 : Cannot find 'deployment' in class io.fabric8.maven.core.config.ResourceConfig 
- * see : https://github.com/fabric8io/fabric8-maven-plugin/issues/813. This will be enabled later (deployment object to be pass to kubernetes)
-*/				
+			
 				
 				
 /*				resourcesChild = new Xpp3Dom("deployment");
@@ -642,6 +645,7 @@ public abstract class AbstractPOMBuilder {
 					properties.setProperty("fabric8.mode", "auto");
 				}
 			}
+			properties.setProperty("fabric8.build.strategy","docker");
 			properties.setProperty("fabric8.template", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.replicationController.name", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.replicas", module.getBwk8sModule().getNumOfReplicas());
