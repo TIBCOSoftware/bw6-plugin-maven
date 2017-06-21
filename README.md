@@ -180,13 +180,23 @@ k. In the 'Goal' enter the goal to be executed.
 CloudFoundry - cf:push , cf:scale etc
 http://docs.run.pivotal.io/buildpacks/java/build-tool-int.html
 
-Docker and Kubernetes / Openshift - 
+#### Docker and Kubernetes / Openshift - 
 
  - clean package initialize fabric8:build (package the EAR file into a docker image)
  - initialize fabric8:push (package the EAR file into a docker image and push to an docker registry)
  - initialize fabric8:install fabric8:cluster-start -Dfabric8.mode=<openshift|kubernetes> (before push make sure you generate token and authorize your docker host for GCP/AWS/Azure repo, follow steps below) (the mode start a local minishift or minikube for quick testing)
  - initialize fabric8:resource (creates the necessary yaml objects for k8s/openshift)
  - initialize fabric8:deploy (apply the resources against k8s/openshift)
+
+ #### One-liner tricks :
+
+ Start a local cluster (minishift or minikube)
+
+ - mvn initialize fabric8:cluster-start package fabric8:build fabric8:push fabric8:resource fabric8:deploy
+
+ Stop the cluster
+
+- mvn initialize fabric8:cluster-stop
 
 ### Docker Maven plugin info :
 
