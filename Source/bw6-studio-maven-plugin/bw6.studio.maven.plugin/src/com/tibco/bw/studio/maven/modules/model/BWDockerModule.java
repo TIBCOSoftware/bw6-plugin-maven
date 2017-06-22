@@ -27,6 +27,8 @@ public class BWDockerModule {
 	
 	private String platform;
 	
+	private String subk8splatform;
+	
 	
 
 	public String getDockerHost() {
@@ -123,7 +125,13 @@ public class BWDockerModule {
 		this.platform = platform;
 	}
 
+	public String getSubK8sPlatform() {
+		return subk8splatform;
+	}
 
+	public void setSubK8sPlatform(String subk8splatform) {
+		this.subk8splatform = subk8splatform;
+	}
 	
 	
 }

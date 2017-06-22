@@ -23,7 +23,6 @@ public class BWFileUtils {
 	    return files;	
 	}
 
-	@SuppressWarnings("unchecked")
 	public static File[] getFilesForTypeRec(final File target, String filterDir, final String extension) {
 		String[] extensions = new String[] {"jar"};
 		List<File> files = (List<File>) FileUtils.listFiles(target, extensions, true);

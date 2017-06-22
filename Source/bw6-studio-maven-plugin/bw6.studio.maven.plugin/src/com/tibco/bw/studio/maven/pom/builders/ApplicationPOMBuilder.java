@@ -295,8 +295,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
     				build.removePlugin(plg);
     			}
     		}
-    		addDockerMavenPlugin(build);
-
+    		//addDockerMavenPlugin(build);
     		if("K8S".equals(platform)) {
     			for(int i = 0; i < plugins.size(); i++) {
         			Plugin plg = plugins.get(i);
@@ -304,7 +303,10 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
         				build.removePlugin(plg);
         			}
         		}
+    			callcreateDockerPropertiesFiles();
     			addDockerK8SMavenPlugin(build, false);
+    		}else {
+    			addDockerMavenPlugin(build);
     		}
     	}
     	model.setBuild(build);

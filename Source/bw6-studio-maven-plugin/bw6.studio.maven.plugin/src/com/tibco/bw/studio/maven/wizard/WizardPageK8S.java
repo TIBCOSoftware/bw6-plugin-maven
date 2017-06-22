@@ -13,6 +13,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Combo;
 
 import com.tibco.bw.studio.maven.modules.model.BWK8SModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
@@ -28,11 +29,12 @@ public class WizardPageK8S extends WizardPage {
 	private Text containerPort;
 	private Text k8sNamespace;
 	private Text k8sEnvVars;
+	private Combo subplatform;
 
 	protected WizardPageK8S(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;
-		setTitle("Kubernetes Plugin for Apache Maven and TIBCO BusinessWorks Container Edition");
+		setTitle("Kubernetes/Openshift Plugin for Apache Maven and TIBCO BusinessWorks Container Edition");
 		setDescription("Enter Kubernetes Platform details for pushing and running BWCE apps.");
 	}
 
@@ -52,8 +54,8 @@ public class WizardPageK8S extends WizardPage {
 
 	private void setK8SPOMFields() {
 		Label lLabel = new Label(container, SWT.NONE);
-		lLabel.setText("Kubernetes configuration:");
-		GridData lData = new GridData(150, 15);
+		lLabel.setText("Kubernetes/Openshift config:");
+		GridData lData = new GridData(200, 15);
 		lData.horizontalSpan = 4;
 		lLabel.setLayoutData(lData);
 
@@ -62,9 +64,24 @@ public class WizardPageK8S extends WizardPage {
 		GridData l1Data = new GridData(20, 15);
 		l1Data.horizontalSpan = 4;
 		l1Label.setLayoutData(l1Data);
+		
+		Label subplatformLabel = new Label(container, SWT.READ_ONLY);
+		subplatformLabel.setText("Orchestrator type");
+		subplatform = new Combo(container, SWT.BORDER | SWT.SINGLE);
+		subplatform.add(" ");
+		subplatform.add("openshift");
+		subplatform.add("kubernetes");
+		GridData subplatformData = new GridData(200, 25);
+		subplatform.setLayoutData(subplatformData);
+		
+		Label lSpaceLabel = new Label(container, SWT.NONE);
+		lSpaceLabel.setText("");
+		GridData lSpaceData = new GridData(20, 15);
+		lSpaceData.horizontalSpan = 4;
+		lSpaceLabel.setLayoutData(lSpaceData);
 
 		Label rcLabel = new Label(container, SWT.NONE);
-		rcLabel.setText("RC Name");
+		rcLabel.setText("Replication Controler Name");
 
 		rcName = new Text(container, SWT.BORDER | SWT.SINGLE);
 		rcName.setText("bwce-sample");
@@ -96,7 +113,7 @@ public class WizardPageK8S extends WizardPage {
 		containerPort.setLayoutData(contPortData);
 
 		Label namespaceLabel = new Label(container, SWT.NONE);
-		namespaceLabel.setText("K8S Namespace");
+		namespaceLabel.setText("K8S Namespace/Openshift Project");
 
 		k8sNamespace = new Text(container, SWT.BORDER | SWT.SINGLE);
 		k8sNamespace.setText("default");
@@ -108,7 +125,7 @@ public class WizardPageK8S extends WizardPage {
 		envVarsLabel.setText("Env Vars");
 
 		k8sEnvVars = new Text(container, SWT.BORDER | SWT.SINGLE);
-		k8sEnvVars.setText("APP_CONFIG_PROFILE=docker, abc=xyz");
+		k8sEnvVars.setText("APP_CONFIG_PROFILE=docker, key=value");
 		GridData envvarData = new GridData(400, 15);
 		envvarData.horizontalSpan = 3;
 		k8sEnvVars.setLayoutData(envvarData);
@@ -119,7 +136,8 @@ public class WizardPageK8S extends WizardPage {
 		if (bwk8s == null) {
 			bwk8s = new BWK8SModule();
 		}
-
+		
+		bwk8s.setSubK8sPlatform(subplatform.getText());
 		bwk8s.setRcName(rcName.getText());
 		bwk8s.setNumOfReplicas(numOfReplicas.getText());
 		bwk8s.setServiceName(serviceName.getText());

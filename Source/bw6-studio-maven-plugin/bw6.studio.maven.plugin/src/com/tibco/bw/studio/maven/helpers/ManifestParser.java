@@ -15,6 +15,7 @@ import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.pde.internal.core.project.PDEProject;
 import org.osgi.framework.BundleException;
 
+@SuppressWarnings("restriction")
 public class ManifestParser 
 {
 	

@@ -30,6 +30,7 @@ import com.tibco.bw.studio.maven.modules.model.BWPluginModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWSharedModule;
 
+@SuppressWarnings("restriction")
 public class BWProjectBuilder {
 	List<BWModuleParser.BWModuleData> moduleData;
 	List<BWModule> moduleList = new ArrayList<BWModule>();

@@ -45,6 +45,7 @@ import com.tibco.bw.studio.maven.plugin.Activator;
 import com.tibco.bw.studio.maven.wizard.MavenWizard;
 import com.tibco.bw.studio.maven.wizard.MavenWizardDialog;
 
+@SuppressWarnings("restriction")
 public class MavenPOMProcessor implements IObjectActionDelegate {
 	private Shell shell;
 	private IProject selectedProject;
@@ -120,7 +121,8 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 		List<MavenProjectInfo> projects = projectScanner.getProjects();
 		ProjectImportConfiguration importConfiguration = new ProjectImportConfiguration();
 	    List<IWorkingSet> workingSets = new ArrayList<IWorkingSet>(); // ignore any preselected working set
-	    ImportMavenProjectsJob job = new ImportMavenProjectsJob(projects, workingSets, importConfiguration);
+	    @SuppressWarnings("restriction")
+		ImportMavenProjectsJob job = new ImportMavenProjectsJob(projects, workingSets, importConfiguration);
 	    job.setRule(MavenPlugin.getProjectConfigurationManager().getRule());
 	    job.schedule();
 	}

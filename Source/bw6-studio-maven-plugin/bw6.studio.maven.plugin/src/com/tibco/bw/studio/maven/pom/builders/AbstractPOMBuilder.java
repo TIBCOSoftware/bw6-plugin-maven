@@ -99,7 +99,7 @@ public abstract class AbstractPOMBuilder {
 		}
 		plugin.setGroupId("com.tibco.plugins");
 		plugin.setArtifactId("bw6-maven-plugin");
-		plugin.setVersion("1.2.2");
+		plugin.setVersion("1.3.0");
 		plugin.setExtensions("true");
 		addDeploymentDetails(plugin);
 	}
@@ -123,7 +123,7 @@ public abstract class AbstractPOMBuilder {
 		build.addPlugin(plugin);
 	}
 
-	protected void addBWCEPropertiesPlugin(Build build, String bwEdition, String platfrom) {
+	protected void addBWCEPropertiesPlugin(Build build, String bwEdition, String platform) {
 		Plugin plugin = null;
 		List<Plugin> plugins = build.getPlugins();
 		for(int i = 0; i < plugins.size(); i++) {
@@ -160,7 +160,7 @@ public abstract class AbstractPOMBuilder {
 					fileChild1.setValue("${docker.env.property.file}");
 					child.addChild(fileChild1);
 				}
-				if(platfrom.equals("K8S")) {
+				if(platform.equals("K8S")) {
 					Xpp3Dom fileChild2 = new Xpp3Dom("file");
 					fileChild2.setValue("${k8s.property.file}");
 					child.addChild(fileChild2);
@@ -230,7 +230,7 @@ public abstract class AbstractPOMBuilder {
 							}
 						}
 
-						if(platfrom.equals("K8S")) {
+						if(platform.equals("K8S")) {
 							if(!k8sfound) {
 								Xpp3Dom fileChild = new Xpp3Dom("file");
 								fileChild.setValue("${k8s.property.file}");
@@ -248,27 +248,219 @@ public abstract class AbstractPOMBuilder {
 		}
 	}
 
-	protected void addDockerK8SMavenPlugin(Build build, boolean skip) {
-		if(!skip) {
-			createK8SPropertiesFiles();
-		}
+	protected void addDockerK8SMavenParentPlugin(Build build) {
+		
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("fabric8-maven-plugin");
-		plugin.setVersion("2.2.102");
+		plugin.setVersion("3.4.1");
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
-        child.setValue(String.valueOf(skip));
+        child.setValue("false");
         config.addChild(child);
-        plugin.setConfiguration(config);
-		build.addPlugin(plugin);
+		plugin.setConfiguration(config);
+    	build.addPlugin(plugin);
+		
+	}
+	
+	protected void addDockerK8SMavenPlugin(Build build, boolean skip) {
+		//createDockerPropertiesFiles();
+		if(skip) {
+			Plugin plugin = new Plugin();
+			plugin.setGroupId("io.fabric8");
+			plugin.setArtifactId("fabric8-maven-plugin");
+			plugin.setVersion("3.4.1");
+			Xpp3Dom config = new Xpp3Dom("configuration");
+			Xpp3Dom child = new Xpp3Dom("skip");
+	        child.setValue(String.valueOf(skip));
+	        config.addChild(child);
+    		plugin.setConfiguration(config);
+        	build.addPlugin(plugin);
+		}
+
+		if(!skip) {
+			createK8SPropertiesFiles();
+			Plugin plugin = new Plugin();
+			plugin.setGroupId("io.fabric8");
+			plugin.setArtifactId("fabric8-maven-plugin");
+			plugin.setVersion("3.4.1");
+				Xpp3Dom config = new Xpp3Dom("configuration");
+					Xpp3Dom child = new Xpp3Dom("skip");
+					child.setValue(String.valueOf(skip));
+				config.addChild(child);
+					child = new Xpp3Dom("dockerHost");
+					child.setValue("${bwdocker.host}");
+				config.addChild(child);
+
+					child = new Xpp3Dom("certPath");
+					child.setValue("${bwdocker.certPath}");
+				config.addChild(child);
+
+					child = new Xpp3Dom("images");
+						Xpp3Dom imageChild = new Xpp3Dom("image");
+							Xpp3Dom child1 = new Xpp3Dom("alias");
+							child1.setValue("${bwdocker.containername}");
+						imageChild.addChild(child1);
+
+							child1 = new Xpp3Dom("name");
+							child1.setValue("${docker.image}");
+						imageChild.addChild(child1);
+
+						Xpp3Dom buildchild = new Xpp3Dom("build");
+							Xpp3Dom child2 = new Xpp3Dom("from");
+							child2.setValue("${bwdocker.from}");
+						buildchild.addChild(child2);
+
+							child2 = new Xpp3Dom("maintainer");
+							child2.setValue("${bwdocker.maintainer}");
+						buildchild.addChild(child2);
+
+							Xpp3Dom assemblychild = new Xpp3Dom("assembly");
+								Xpp3Dom child22 = new Xpp3Dom("basedir");
+								child22.setValue("/");
+							assemblychild.addChild(child22);
+	
+								child22 = new Xpp3Dom("descriptorRef");
+								child22.setValue("artifact");
+							assemblychild.addChild(child22);
+						buildchild.addChild(assemblychild);
+
+	    		Xpp3Dom tagchild = new Xpp3Dom("tags");
+	    		Xpp3Dom child23 = new Xpp3Dom("tag");
+	    		child23.setValue("latest");
+	    		tagchild.addChild(child23);
+	
+	    		buildchild.addChild(tagchild);
+	
+	    		Xpp3Dom portchild = new Xpp3Dom("ports");
+	    		Xpp3Dom child24 = new Xpp3Dom("port");
+	    		child24.setValue("8080");
+	    		portchild.addChild(child24);
+	
+	    		buildchild.addChild(portchild);
+	
+	    		// IF Volume exist
+	    		List<String> volumes = module.getBwDockerModule().getDockerVolumes();
+	    		if(volumes != null && volumes.size() > 0) {
+	    			Xpp3Dom volchild = new Xpp3Dom("volumes");
+	    			for(int i = 0; i < volumes.size(); i++) {
+	    				Xpp3Dom child25 = new Xpp3Dom("volume");
+	    				child25.setValue("${bwdocker.volume.v"+i+"}");
+	    				volchild.addChild(child25);
+	    			}
+	    			buildchild.addChild(volchild);
+	    		}
+    		imageChild.addChild(buildchild);
+
+    		Xpp3Dom runchild = new Xpp3Dom("run");
+    		Xpp3Dom child3 = new Xpp3Dom("namingStrategy");
+    		child3.setValue("alias");
+    		runchild.addChild(child3);
+
+    		// IF Ports exist
+    		List<String> ports = module.getBwDockerModule().getDockerPorts();
+    		if(ports != null && ports.size() > 0) {
+    			Xpp3Dom runportchild = new Xpp3Dom("ports");
+    			for(int i = 0; i < ports.size(); i++) {
+    				Xpp3Dom child31 = new Xpp3Dom("port");
+    				child31.setValue("${bwdocker.port.p"+i+"}");
+    				runportchild.addChild(child31);
+    			}
+    			runchild.addChild(runportchild);
+    		}
+
+    		// IF Links exist
+    		List<String> links = module.getBwDockerModule().getDockerLinks();
+    		if(links != null && links.size() > 0) {
+    			Xpp3Dom linkchild = new Xpp3Dom("links");
+    			for(int i = 0; i < links.size(); i++) {
+    				Xpp3Dom child32 = new Xpp3Dom("link");
+    				child32.setValue("${bwdocker.link.l"+i+"}");
+    				linkchild.addChild(child32);
+    			}
+    			runchild.addChild(linkchild);
+    		}
+    				
+    		//IF env variable exist
+    		if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0) {
+    			createDockerEnvVarPropertiesFiles();
+    			Xpp3Dom envVarChild = new Xpp3Dom("envPropertyFile");
+    			envVarChild.setValue("${docker.env.property.file}");
+    			runchild.addChild(envVarChild);
+    		}
+    		imageChild.addChild(runchild);
+    		child.addChild(imageChild);
+    		config.addChild(child);
+    		
+    		/*
+    		 * Because of issue 813 : Cannot find 'deployment' in class io.fabric8.maven.core.config.ResourceConfig 
+    		 * see : https://github.com/fabric8io/fabric8-maven-plugin/issues/813. This will be enabled later (deployment object to be pass to kubernetes)
+    		*/	
+    		
+/*    		child = new Xpp3Dom("resources");
+ *				Xpp3Dom resourcesChild = new Xpp3Dom("labels");
+ *					Xpp3Dom labelchild = new Xpp3Dom("all");
+ *						Xpp3Dom subchild = new Xpp3Dom("property");
+ *							Xpp3Dom sub1child = new Xpp3Dom("name");
+ *							sub1child.setValue("Label");
+ *							Xpp3Dom sub2child = new Xpp3Dom("value");
+ *							sub2child.setValue("${fabric8.label.group}");
+ *							subchild.addChild(sub1child);
+ *							subchild.addChild(sub2child);
+ *						labelchild.addChild(subchild);
+ *					resourcesChild.addChild(labelchild);
+ *				child.addChild(resourcesChild);
+ *			config.addChild(child);
+*/
+				
+			
+				
+				
+/*				resourcesChild = new Xpp3Dom("deployment");
+ * 					Xpp3Dom deploymentchild = new Xpp3Dom("name");
+ *					deploymentchild.setValue("${fabric8.replicationController.name}");
+ *				resourcesChild.addChild(deploymentchild);
+ *					deploymentchild = new Xpp3Dom("replicas");
+ *					deploymentchild.setValue("${fabric8.replicas}");
+ *				resourcesChild.addChild(deploymentchild);
+ *					deploymentchild = new Xpp3Dom("containers");
+ *						Xpp3Dom containerschild = new Xpp3Dom("container");
+ *							Xpp3Dom subcontchild = new Xpp3Dom("alias");
+ *							subcontchild.setValue("${bwdocker.containername}");
+ *						containerschild.addChild(subcontchild);
+ *							subcontchild = new Xpp3Dom("ports");
+ *							subcontchild.setValue("${fabric8.service.containerPort}");
+ *						containerschild.addChild(subcontchild);
+ *					deploymentchild.addChild(containerschild);
+ *				resourcesChild.addChild(deploymentchild);
+ *			child.addChild(resourcesChild);	
+ *			config.addChild(child);
+*/
+			
+			
+			child = new Xpp3Dom("executions");
+				Xpp3Dom executionsChild = new Xpp3Dom("execution");
+					Xpp3Dom execChild = new Xpp3Dom("goals");
+						Xpp3Dom goalsChild = new Xpp3Dom("goal");
+						goalsChild.setValue("resource");
+						execChild.addChild(goalsChild);
+						goalsChild = new Xpp3Dom("goal");
+						goalsChild.setValue("build");
+						execChild.addChild(goalsChild);
+					executionsChild.addChild(execChild);
+				child.addChild(executionsChild);
+				config.addChild(child);
+				
+    		plugin.setConfiguration(config);
+        	build.addPlugin(plugin);
+		}
 	}
 
 	protected void addDockerWithSkipMavenPlugin(Build build) {
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("docker-maven-plugin");
-		plugin.setVersion("0.14.2");
+		plugin.setVersion("0.21.0");
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
 		child.setValue("true");
@@ -277,6 +469,9 @@ public abstract class AbstractPOMBuilder {
 		build.addPlugin(plugin);
 	}
 	
+	protected void callcreateDockerPropertiesFiles() {
+		createDockerPropertiesFiles();
+	}
 	protected void addDockerMavenPlugin(Build build) {
 		//Create properties file for Dev and Prod environment
 		createDockerPropertiesFiles();
@@ -285,7 +480,7 @@ public abstract class AbstractPOMBuilder {
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("docker-maven-plugin");
-		plugin.setVersion("0.14.2");
+		plugin.setVersion("0.21.0");
 
 		Xpp3Dom config = new Xpp3Dom("configuration");
 
@@ -440,6 +635,17 @@ public abstract class AbstractPOMBuilder {
 			//Add platform properties
 
 			String platform = module.getBwDockerModule().getPlatform();
+			String subplatform = module.getBwk8sModule().getSubK8sPlatform();
+			if (platform.equals("K8S")) {
+				if (subplatform.equals("openshift")) {
+					properties.setProperty("fabric8.mode", "openshift");
+				} else if (subplatform.equals("kubernetes")) {
+					properties.setProperty("fabric8.mode", "kubernetes");
+				} else {
+					properties.setProperty("fabric8.mode", "auto");
+				}
+			}
+			properties.setProperty("fabric8.build.strategy","docker");
 			properties.setProperty("fabric8.template", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.replicationController.name", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.replicas", module.getBwk8sModule().getNumOfReplicas());

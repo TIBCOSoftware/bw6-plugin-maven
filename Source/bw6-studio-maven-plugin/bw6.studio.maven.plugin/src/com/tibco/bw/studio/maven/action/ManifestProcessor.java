@@ -31,6 +31,7 @@ import com.tibco.bw.studio.maven.helpers.ProjectHelper;
 import com.tibco.bw.studio.maven.modules.BWModuleParser;
 import com.tibco.bw.studio.maven.plugin.Activator;
 
+@SuppressWarnings("restriction")
 public class ManifestProcessor implements IObjectActionDelegate 
 {
 
@@ -168,6 +169,7 @@ public class ManifestProcessor implements IObjectActionDelegate
 		StringBuffer buffer = new StringBuffer();
 		String mavenRepo = MavenPlugin.getRepositoryRegistry().getLocalRepository().getBasedir().toString();	
 				
+		@SuppressWarnings("unused")
 		IMavenProjectFacade mavenProject = ProjectHelper.getMavenProject(project);
 
 		IJavaElement [] elements = javaProject.getChildren();

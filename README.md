@@ -10,6 +10,19 @@ It is provided as a sample plug-in to support use-cases of integrating TIBCO Act
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
 2. TIBCO ActiveMatrix BusinessWorks™ 6.3.0 or higher should be installed.
 
+## Os X pre-req 
+
+install oc client, kubernetes client, and xhyve virt with brew
+
+get brew here : https://brew.sh/index_fr.html
+
+$ brew install docker-machine-driver-xhyve kubernetes-cli openshift-cli
+# docker-machine-driver-xhyve need root owner and uid
+$ sudo chown root:wheel $(brew --prefix)/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+$ sudo chmod u+s $(brew --prefix)/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+
+the fabric8:install goal will take care of the rest.
+
 ## Installation
 
 
@@ -17,7 +30,7 @@ a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
 
 b. Navigate to the Installer Folder.
 
-c. Download TIB_BW_Maven_Plugin_1.1.0.zip
+c. Download TIB_BW_Maven_Plugin_1.3.0.zip
 
 d. Unzip the file in a folder on local drive.
 
@@ -67,13 +80,13 @@ If you'd like to contribute to this plug-in, please reach out to integration-pm@
 
 This plug-in is subject to the license shared as part of the repository. Kindly review the license before using or downloading this plug-in.
 
-It is provided as a sample plug-in to support use-cases of integrating TIBCO BusinessWorks™ Container Edition 1.0.0 and higher with Apache Maven.
+It is provided as a sample plug-in to support use-cases of integrating TIBCO BusinessWorks™ Container Edition 2.0.0 and higher with Apache Maven.
 
 ## Prerequisites
 
 1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the Path.
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
-2. TIBCO BusinessWorks™ Container Edition 1.0.0 or higher should be installed.
+2. TIBCO BusinessWorks™ Container Edition 2.0.0 or higher should be installed.
 
 ## Installation
 
@@ -82,7 +95,7 @@ a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
 
 b. Navigate to the Installer Folder.
 
-c. Download TIB_BW_Maven_Plugin_1.0.0.zip (for BWCE 1.0.1 having on PCF) or TIB_BW_Maven_Plugin_1.1.0.zip (for BWCE 2.0 having both Docker and PCF)
+c. Download TIB_BW_Maven_Plugin_1.1.0.zip (for BWCE 1.0.1 having on PCF) or TIB_BW_Maven_Plugin_1.3.0.zip (for BWCE 2.0+ having both Docker and PCF)
 
 d. Unzip the file in a folder on local drive.
 
@@ -129,7 +142,7 @@ f. Enter your PCF instance configuration details here and Click Finish.
        8. Env Var (add environment variabled as key=value with comma seperated) 
        9. Select Services (Button where you login to PCF and select required services you want to bind to your app)
 
-g. Enter Docker + Kubernetes details 
+g. Enter Docker + Kubernetes / Openshift details 
 
        1. Docker Host 
        2. Docker Cert Path
@@ -142,7 +155,7 @@ g. Enter Docker + Kubernetes details
        9. No. of replicas (how many pods/instances on kubernetes)
        10. Service name (by default we are exposing service on LoadBalancer)
        11. Container port
-       12. Namespace (Kubernetes namespace)
+       12. Namespace (Kubernetes namespace - Openshift project)
        13. Env Variables (key=value comma seperated)
 
 h. The Project will be converted to Maven (Eclipse Project) nature. Note the workspace will index after generating POM files for the first time and may take some time. You can continue with the steps below by allowing this indexing to run in the background.
@@ -167,18 +180,68 @@ k. In the 'Goal' enter the goal to be executed.
 CloudFoundry - cf:push , cf:scale etc
 http://docs.run.pivotal.io/buildpacks/java/build-tool-int.html
 
-Docker and Kubernetes - 
+#### Docker and Kubernetes / Openshift - 
 
- - clean package initialize docker:build 
- - initialize docker:start
- - initialize docker:push (before push make sure you generate token and authorize your docker host for GCP repo, follow step)
- - initialize fabric8:json 
- - initialize fabric8:apply
+ - clean package initialize fabric8:build (package the EAR file into a docker image)
+ - initialize fabric8:push (package the EAR file into a docker image and push to an docker registry)
+ - initialize fabric8:install fabric8:cluster-start -Dfabric8.mode=<openshift|kubernetes> (before push make sure you generate token and authorize your docker host for GCP/AWS/Azure repo, follow steps below) (the mode start a local minishift or minikube for quick testing)
+ - initialize fabric8:resource (creates the necessary yaml objects for k8s/openshift)
+ - initialize fabric8:deploy (apply the resources against k8s/openshift)
 
-http://fabric8io.github.io/docker-maven-plugin/index.html
-http://fabric8.io/guide/mavenPlugin.html
+ #### One-liner tricks :
 
-Docker authorize for GCP docker repo before trying docker:push
+ Start a local cluster (minishift or minikube)
+
+ - mvn initialize fabric8:cluster-start package fabric8:build fabric8:push fabric8:resource fabric8:deploy
+
+ Stop the cluster
+
+- mvn initialize fabric8:cluster-stop
+
+### Docker Maven plugin info :
+
+Guide docker plugin only (when you select docker run config options) : https://dmp.fabric8.io/
+Sources: https://github.com/fabric8io/docker-maven-plugin
+
+
+#### Goals
+
+| Goal                                                                                            | Description                                      | Default Lifecycle Phase |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------- |
+| [`docker:start`](https://fabric8io.github.io/docker-maven-plugin/#docker:start)                 | Create and start containers                      | pre-integration-test    |
+| [`docker:stop`](https://fabric8io.github.io/docker-maven-plugin/#docker:stop)                   | Stop and destroy containers                      | post-integration-test   |
+| [`docker:build`](https://fabric8io.github.io/docker-maven-plugin/#docker:build)                 | Build images                                     | install                 |
+| [`docker:watch`](https://fabric8io.github.io/docker-maven-plugin/#docker:watch)                 | Watch for doing rebuilds and restarts            |                         |
+| [`docker:push`](https://fabric8io.github.io/docker-maven-plugin/#docker:push)                   | Push images to a registry                        | deploy                  |
+| [`docker:remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:remove)               | Remove images from local docker host             | post-integration-test   |
+| [`docker:logs`](https://fabric8io.github.io/docker-maven-plugin/#docker:logs)                   | Show container logs                              |                         |
+| [`docker:source`](https://fabric8io.github.io/docker-maven-plugin/#docker:source)               | Attach docker build archive to Maven project     | package                 |
+| [`docker:save`](https://fabric8io.github.io/docker-maven-plugin/#docker:save)                   | Save image to a file                             |                         |
+| [`docker:volume-create`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-create) | Create a volume to share data between containers | pre-integration-test    |
+| [`docker:volume-remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-remove) | Remove a created volume                          | post-integration-test   |
+
+#### Documentation
+
+* The **[User Manual](https://fabric8io.github.io/docker-maven-plugin)** [[PDF](https://fabric8io.github.io/docker-maven-plugin/docker-maven-plugin.pdf)] has a detailed reference for all and everything.
+
+### fabric8-maven-plugin infos :
+
+#### Goals
+It supports the following goals:
+
+| Goal                                          | Description                           |
+| --------------------------------------------- | ------------------------------------- |
+| [`fabric8:resource`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:resource) | Create Kubernetes and OpenShift resource descriptors |
+| [`fabric8:build`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:build) | Build Docker images |
+| [`fabric8:push`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:push) | Push Docker images to a registry  |
+| [`fabric8:deploy`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:deploy) | Deploy Kubernetes / OpenShift resource objects to a cluster  |
+| [`fabric8:watch`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:watch) | Watch for doing rebuilds and restarts |
+
+#### Documentation
+The full documentation can be found in the [User Manual](http://maven.fabric8.io) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]. 
+
+### GCP notes
+Docker authorize for GCP docker repo before trying fabric8:push or docker:push
 
 --- Windows ---
 gcloud auth print-access-token
@@ -186,6 +249,29 @@ docker login -u _token -p "your token" https://gcr.io
 
 --- Linux/OSX ----
 docker login -u _token -p "$(gcloud auth print-access-token)" https://gcr.io
+
+#### AWS ECR notes
+Docker authorize for AWS ECR docker repo before trying fabric8:push or docker:push
+
+--- Linux/OsX ----
+aws ecr get-login --no-include-email --region <region> | sh -
+
+
+#### kubernetes notes
+
+1.Create your secret key 
+kubectl create secret docker-registry myregistrykey --docker-server=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-password=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL
+secret "myregistrykey" created.
+Then add the newly created key to your Kubernetes service account.
+2. Retrieve the current service account
+kubectl get serviceaccounts default -o yaml > ./sa.yaml
+3.Edit sa.yaml and add the ImagePullSecret after Secrets
+imagePullSecrets:
+- name: myregistrykey
+4.Update the service account 
+kubectl replace serviceaccount default -f ./sa.yaml
+
+
 
 
 l. You can try other goals from studio, by creating new Maven Run Configurations for different goals , or from terminal pointing to your workspace using 'mvn initialize cf:command -Dpcf.property.file=pcfdev.properties'
