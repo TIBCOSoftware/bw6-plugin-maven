@@ -15,6 +15,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
@@ -42,7 +43,7 @@ public class WizardPageEnterprise extends WizardPage {
 	private Text keyPass;
 	private Text domain;
 	private Text domainDesc;
-	private Text appspace;	
+	private Text appspace;
 	private Text appspaceDesc;
 	private Text appNode;
 	private Text appNodeDesc;
@@ -67,66 +68,66 @@ public class WizardPageEnterprise extends WizardPage {
 	public boolean validate() {
 		StringBuffer errorMessage = new StringBuffer();
 		boolean isValidHost = !agentHost.getText().isEmpty();
-		if(!isValidHost) {
+		if (!isValidHost) {
 			errorMessage.append("[Agent Host value is required]");
 		}
 		boolean isValidPort = false;
 		try {
-			if(agentPort.getText().isEmpty()) {
+			if (agentPort.getText().isEmpty()) {
 				errorMessage.append("[Agent Port value is required]");
-			} else if(Integer.parseInt(agentPort.getText()) < 0) {
+			} else if (Integer.parseInt(agentPort.getText()) < 0) {
 				errorMessage.append("[Agent Port value must be an Integer]");
 			} else {
 				isValidPort = true;
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			errorMessage.append("[Agent Port value must be an Integer]");
 		}
 
 		boolean isValidDomain = !domain.getText().isEmpty();
-		if(!isValidDomain) {
+		if (!isValidDomain) {
 			errorMessage.append("[Domain value is required]");
 		}
 
-		boolean isValidAppSpace = !appspace.getText().isEmpty(); 
-		if(!isValidAppSpace) {
+		boolean isValidAppSpace = !appspace.getText().isEmpty();
+		if (!isValidAppSpace) {
 			errorMessage.append("[AppSpace value is required]");
 		}
 
 		boolean isValidAppNode = !appNode.getText().isEmpty();
-		if(!isValidAppNode) {
+		if (!isValidAppNode) {
 			errorMessage.append("[AppNode value is required]");
 		}
 
 		boolean isValidHTTPPort = false;
 		try {
-			if(httpPort.getText().isEmpty()) {
+			if (httpPort.getText().isEmpty()) {
 				errorMessage.append("[HTTP Port value is required]");
-			} else if(Integer.parseInt(httpPort.getText()) < 0) {
+			} else if (Integer.parseInt(httpPort.getText()) < 0) {
 				errorMessage.append("[HTTP Port value must be an Integer]");
 			} else {
 				isValidHTTPPort = true;
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			errorMessage.append("[HTTP Port value must be an Integer]");
 		}
 
 		boolean isValidOSGi = false;
 		try {
-			if(osgiPort.getText().isEmpty()) {
+			if (osgiPort.getText().isEmpty()) {
 				isValidOSGi = true;
-			} else if(Integer.parseInt(osgiPort.getText()) < 0) {
+			} else if (Integer.parseInt(osgiPort.getText()) < 0) {
 				isValidOSGi = false;
 				errorMessage.append("[OSGi Port value must be an Integer]");
 			} else {
 				isValidOSGi = true;
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			errorMessage.append("[OSGi Port value must be an Integer]");
 		}
 
 		boolean isValidBackupLoc = true;
-		if(backup.getSelection() && backupLocation.getText().isEmpty()) {
+		if (backup.getSelection() && backupLocation.getText().isEmpty()) {
 			isValidBackupLoc = false;
 			errorMessage.append("[Backup Location value is required]");
 		}
@@ -159,7 +160,10 @@ public class WizardPageEnterprise extends WizardPage {
 			setErrorMessage(errorMessage.toString());
 			return false;
 		}
-		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL) {
+
+		if (isValidHost && isValidPort && isValidDomain && isValidAppSpace
+				&& isValidAppNode && isValidHTTPPort && isValidOSGi
+				&& isValidBackupLoc) {
 			return true;
 		}
 		return false;
@@ -172,14 +176,17 @@ public class WizardPageEnterprise extends WizardPage {
 		container.setLayout(layout);
 		layout.numColumns = 4;
 		appModule = ModuleHelper.getAppModule(project.getModules());
-		info = ((BWApplication)ModuleHelper.getApplication(project.getModules())).getDeploymentInfo();
+		info = ((BWApplication) ModuleHelper.getApplication(project
+				.getModules())).getDeploymentInfo();
 		bwEdition = "bw6";
 		try {
-			Map<String, String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
-			if(manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
-				bwEdition = "bwcf";
+			Map<String, String> manifest = ManifestParser.parseManifest(project
+					.getModules().get(0).getProject());
+			if (manifest.containsKey("TIBCO-BW-Edition")
+					&& manifest.get("TIBCO-BW-Edition").equals("bwcf")) { //$NON-NLS-1$
+				bwEdition = "bwcf"; //$NON-NLS-1$
 			} else {
-				bwEdition = "bw6";
+				bwEdition = "bw6";//$NON-NLS-1$
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -197,22 +204,26 @@ public class WizardPageEnterprise extends WizardPage {
 				+ "Select the BWAgent Authentication Type (if applicable), and enter the Username, Password. \r\n"
 				+ "Enter the Domain, AppSpace and AppNode Information\r\n"
 				+ "Note* : If the Domain, Appspace and AppNode do not exist then they will be created.\r\n"
-				+ "EAR file will be started on deployment");
+				+ "The EAR file will be started on deployment");
 		GridData versionData = new GridData();
 		versionData.horizontalSpan = 4;
 		label.setLayoutData(versionData);
 	}
 
 	private void addSeperator(Composite parent) {
-		Label horizontalLine = new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL | SWT.LINE_DASH);
-		horizontalLine.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 4, 1));
+		Label horizontalLine = new Label(container, SWT.SEPARATOR
+				| SWT.HORIZONTAL | SWT.LINE_DASH);
+		horizontalLine.setLayoutData(new GridData(GridData.FILL, GridData.FILL,
+				true, false, 4, 1));
 		horizontalLine.setFont(parent.getFont());
 	}
 
 	public BWProject getUpdatedProject() {
 		for (BWModule module : project.getModules()) {
-			if(bwEdition.equals("bw6") && module.getType() == BWModuleType.Application) {
-				BWDeploymentInfo info = ((BWApplication)module).getDeploymentInfo();
+			if (bwEdition.equals("bw6") //$NON-NLS-1$
+					&& module.getType() == BWModuleType.Application) {
+				BWDeploymentInfo info = ((BWApplication) module)
+						.getDeploymentInfo();
 				info.setAgentHost(agentHost.getText());
 				info.setAgentPort(agentPort.getText());
 				info.setAgentAuth(agentAuth.getText());
@@ -387,10 +398,10 @@ public class WizardPageEnterprise extends WizardPage {
 		domainLabel.setText("Domain");
 
 		domain = new Text(container, SWT.BORDER | SWT.SINGLE);
-		if(info.getDomain() != null && !info.getDomain().isEmpty()) {
+		if (info.getDomain() != null && !info.getDomain().isEmpty()) {
 			domain.setText(info.getDomain());
 		} else {
-			domain.setText(appModule.getArtifactId() + "-Domain");	
+			domain.setText(appModule.getArtifactId() + "-Domain"); //$NON-NLS-1$
 		}
 
 		GridData domainData = new GridData(150, 15);
@@ -407,13 +418,13 @@ public class WizardPageEnterprise extends WizardPage {
 
 	private void addAppSpace() {
 		Label appspaceLabel = new Label(container, SWT.NONE);
-		appspaceLabel.setText("AppSpace");
+		appspaceLabel.setText("AppSpace"); //$NON-NLS-1$
 
 		appspace = new Text(container, SWT.BORDER | SWT.SINGLE);
-		if(info.getAppspace() != null && !info.getAppspace().isEmpty()) {
+		if (info.getAppspace() != null && !info.getAppspace().isEmpty()) {
 			appspace.setText(info.getAppspace());
 		} else {
-			appspace.setText(appModule.getArtifactId() + "-AppSpace");	
+			appspace.setText(appModule.getArtifactId() + "-AppSpace"); //$NON-NLS-1$
 		}
 
 		GridData appspaceData = new GridData(150, 15);
@@ -430,13 +441,13 @@ public class WizardPageEnterprise extends WizardPage {
 
 	private void addAppNode() {
 		Label appNodeLabel = new Label(container, SWT.NONE);
-		appNodeLabel.setText("AppNode");
+		appNodeLabel.setText("AppNode"); //$NON-NLS-1$
 
 		appNode = new Text(container, SWT.BORDER | SWT.SINGLE);
-		if(info.getAppNode() != null && !info.getAppNode().isEmpty()) {
+		if (info.getAppNode() != null && !info.getAppNode().isEmpty()) {
 			appNode.setText(info.getAppNode());
 		} else {
-			appNode.setText(appModule.getArtifactId() + "-AppNode");	
+			appNode.setText(appModule.getArtifactId() + "-AppNode"); //$NON-NLS-1$
 		}
 
 		GridData appNodeData = new GridData(150, 15);
@@ -470,13 +481,13 @@ public class WizardPageEnterprise extends WizardPage {
 		profileLabel.setText("Profile");
 
 		profile = new Combo(container, SWT.BORDER | SWT.SINGLE);
-		List<String> profiles = getProfiles(); 
-		for(String name : profiles) {
+		List<String> profiles = getProfiles();
+		for (String name : profiles) {
 			profile.add(name);
 		}
 		int index = getSelectedProfile(profiles);
-		if(index != -1) {
-			profile.select(index);	
+		if (index != -1) {
+			profile.select(index);
 		}
 
 		GridData profileData = new GridData(135, 15);
@@ -504,7 +515,7 @@ public class WizardPageEnterprise extends WizardPage {
 	private void addBackupEarBox() {
 		backup = new Button(container, SWT.CHECK);
 		backup.setSelection(info.isBackup());
-		backup.setToolTipText("If this is checked, then the Application EAR will be backed up if exists.");
+		backup.setToolTipText("If this option is selected, then the Application EAR file will be backed up, if it already exists.");
 		Label backupLabel = new Label(container, SWT.NONE);
 		backupLabel.setText("Backup Application EAR if exists.");
 		backupLabel.setToolTipText("Backup Application EAR if exists.");
@@ -522,59 +533,68 @@ public class WizardPageEnterprise extends WizardPage {
 		backup.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if(backup.getSelection()) {
+				if (backup.getSelection()) {
 					backupLocation.setEnabled(true);
 				} else {
-					backupLocation.setText("");
+					backupLocation.setText(""); //$NON-NLS-1$
 					backupLocation.setEnabled(false);
 				}
 			}
+
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {}
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
 		});
 	}
 
 	private int getSelectedProfile(List<String> profiles) {
-		if(info.getProfile() != null && !info.getProfile().isEmpty()) {
-			if(profiles.contains(info.getProfile())) {
-				return profiles.indexOf(info.getProfile());	
+		if (info.getProfile() != null && !info.getProfile().isEmpty()) {
+			if (profiles.contains(info.getProfile())) {
+				return profiles.indexOf(info.getProfile());
 			}
 		}
-		String os = System.getProperty("os.name");
+		String os = System.getProperty("os.name"); //$NON-NLS-1$
 		boolean isWindows = false;
-		if (os.indexOf("Windows") != -1) {
+		if (os.indexOf("Windows") != -1) { //$NON-NLS-1$
 			isWindows = true;
 		}
 
-		if(isWindows && profiles.contains("WindowsProfile.substvar")) {
-			return profiles.indexOf("WindowsProfile.substvar");
-		} else if(!isWindows && profiles.contains("UnixProfile.substvar")) {
-			return profiles.indexOf("UnixProfile.substvar");
-		} else if(profiles.size() == 1) {
+		if (isWindows && profiles.contains("WindowsProfile.substvar")) { //$NON-NLS-1$
+			return profiles.indexOf("WindowsProfile.substvar"); //$NON-NLS-1$
+		} else if (!isWindows && profiles.contains("UnixProfile.substvar")) { //$NON-NLS-1$
+			return profiles.indexOf("UnixProfile.substvar"); //$NON-NLS-1$
+		} else if (profiles.size() == 1) {
 			return 0;
 		} else {
-			if(profiles.contains("default.substvar")) {
-				return profiles.indexOf("default.substvar");	
+			if (profiles.contains("default.substvar")) { //$NON-NLS-1$
+				return profiles.indexOf("default.substvar"); //$NON-NLS-1$
 			}
 		}
 		return -1;
 	}
 
 	private List<String> getProfiles() {
-		File appProject = new File(ModuleHelper.getApplication(project.getModules()).getProject().getLocationURI());
-		File metainf = new File (appProject, "META-INF");
+		File appProject = new File(ModuleHelper
+				.getApplication(project.getModules()).getProject()
+				.getLocationURI());
+		File metainf = new File(appProject, "META-INF"); //$NON-NLS-1$
 		File[] files = metainf.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
-				if (pathname.getName().indexOf(".substvar") != -1) {
-        			return true;
+				if (pathname.getName().indexOf(".substvar") != -1) { //$NON-NLS-1$
+					return true;
 				}
 				return false;
 			}
 		});
 		List<String> list = new ArrayList<String>();
-		for(File file : files) {
+		for (File file : files) {
 			list.add(file.getName());
 		}
 		return list;
+	}
+
+	@Override
+	public void performHelp() {
+		getControl().notifyListeners(SWT.Help, new Event());
 	}
 }

@@ -50,6 +50,7 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 	private IProject selectedProject;
 	private BWProject project;
 	
+	
 	public MavenPOMProcessor() {
 		super();
 	}
@@ -57,6 +58,7 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 	/**
 	 * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
 	 */
+	
 	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
 		shell = targetPart.getSite().getShell();
 	}
@@ -64,21 +66,27 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 	/**
 	 * @see IActionDelegate#run(IAction)
 	 */
+
 	public void run(IAction action) {
 		try {
 			selectedProject = getCurrentSelectedProject();
 			BWProjectBuilder builder = new BWProjectBuilder();
 			project = builder.build(selectedProject);
+			
 			MavenWizard wizard = new MavenWizard(project);
 			MavenWizardDialog wizardDialog = new MavenWizardDialog(shell, wizard);
-			if (wizardDialog.open() == Window.OK) {
+			
+			wizardDialog.setHelpAvailable(true);
+			
+			if (wizardDialog.open() == Window.OK) 
+			{
 				project = wizard.getProject();
+				
 				parentProjectExistsCreate();
 				generatePOMs();
 				addMavenNature();
 				refreshProjects();
 				addParentProjectToWS();
-			} else {  //No need to generate the POM files. Return.
 				return;
 			}
 		} catch(Exception e) {

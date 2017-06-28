@@ -11,6 +11,7 @@ import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class MavenWizard extends Wizard {
+
 	protected WizardPageConfiguration configPage;
 	protected WizardPagePCF pcfPage;
 	protected WizardPageDocker dockerPage;
@@ -22,14 +23,18 @@ public class MavenWizard extends Wizard {
 		super();
 		this.project = project;
 		setNeedsProgressMonitor(true);
+		setWindowTitle("Generate POM File");
 	}
 
 	@Override
 	public void addPages() {
 		try {
-			Map<String, String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
-			if (manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
-				String targetPlatform = ContainerPreferenceProject.getCurrentContainer().getLabel();
+			Map<String, String> manifest = ManifestParser.parseManifest(project
+					.getModules().get(0).getProject());
+			if (manifest.containsKey("TIBCO-BW-Edition")
+					&& manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
+				String targetPlatform = ContainerPreferenceProject
+						.getCurrentContainer().getLabel();
 				if (targetPlatform.equals("Cloud Foundry")) {
 					bwEdition = "cf";
 				} else {
@@ -44,10 +49,16 @@ public class MavenWizard extends Wizard {
 
 		configPage = new WizardPageConfiguration("POM Configuration", project);
 		pcfPage = new WizardPagePCF("PCF Deployment Configuration", project);
-		enterprisePage = new WizardPageEnterprise("Deployment Configuration", project);
-		dockerPage = new WizardPageDocker("Docker Deployment Configuration", project);
+		enterprisePage = new WizardPageEnterprise("Deployment Configuration",
+				project);
+		dockerPage = new WizardPageDocker("Docker Deployment Configuration",
+				project);
 
 		addPage(configPage);
+
+		// Zoher - Just for UI changes. To be removed before checkin
+		bwEdition = "docker";
+
 		if (bwEdition.equals("bw6")) {
 			addPage(enterprisePage);
 		} else if (bwEdition.equals("cf")) {
@@ -59,7 +70,12 @@ public class MavenWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
+
 		project = configPage.getUpdatedProject();
+
+		// Zoher - Just for UI changes. To be removed before checkin
+		bwEdition = "docker";
+
 		if (bwEdition.equals("bw6")) {
 			if (((BWApplication) ModuleHelper.getApplication(project
 					.getModules())).getDeploymentInfo().isDeployToAdmin()) {
@@ -68,16 +84,20 @@ public class MavenWizard extends Wizard {
 				} else {
 					return false;
 				}
+
 			}
+
 		} else if (bwEdition.equals("cf")) {
 			pcfPage.getUpdatedProject();
 		} else if (bwEdition.equals("docker")) {
 			dockerPage.getUpdatedProject();
 		}
+
 		return true;
 	}
 
 	public BWProject getProject() {
 		return project;
 	}
+
 }
