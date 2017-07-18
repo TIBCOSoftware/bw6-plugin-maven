@@ -112,10 +112,16 @@ public class BWModulePackageMojo extends AbstractMojo {
 
             projectHelper.attachArtifact(project, "jar", classifier, pluginFile);
 
-            //Add Code for BWCE//
-            String bwEdition = manifest.getMainAttributes().getValue("TIBCO-BW-Edition");
-            if (bwEdition != null && bwEdition.equals("bwcf")) {
-                session.getAllProjects().set(1, project);
+            // Code for BWCE
+            String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
+            if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
+                List<MavenProject> projs = session.getAllProjects();
+                for(int i = 0; i < projs.size(); i++) {
+                    MavenProject proj = projs.get(i);
+                    if(proj.getArtifactId().equals(project.getArtifactId())) {
+                        session.getAllProjects().set(i, project);
+                    }
+                }
             }
 
             getLog().info("BW Module Packager Mojo finished execution. ");
