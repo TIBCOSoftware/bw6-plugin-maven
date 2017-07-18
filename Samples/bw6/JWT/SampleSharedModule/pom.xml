@@ -8,10 +8,7 @@
     <version>1.0.2-SNAPSHOT</version>
   </parent>
   <artifactId>SampleSharedModule</artifactId>
-  <packaging>bwmodule</packaging>
-  <properties>
-    <maven.jar.classifier>bw-sharedmodule</maven.jar.classifier>
-  </properties>
+  <packaging>bw-sharedmodule</packaging>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <outputDirectory>target/classes</outputDirectory>

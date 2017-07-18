@@ -49,21 +49,23 @@ import java.util.jar.Manifest;
 @Mojo(name = "resolve-studio-project-lib", requiresDependencyResolution = ResolutionScope.COMPILE)
 public class TibcoStudioMojo extends AbstractMojo {
 
-    public static final String BWMODULE = "bwmodule";
-
     private static final String STUDIO_PROJECT_JAR_LIB = "lib";
 
     @Parameter(defaultValue = "${project}", required = true)
     private MavenProject project;
     @Parameter(property = "project.basedir")
     private File projectBasedir;
-    @Parameter(property = "maven.jar.classifier")
+
     private String classifier="";
+
     @Parameter(property = "studio.jar.excludelist")
     private String studioJarExcludeList="";
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if (!project.getPackaging().equals(BWMODULE)) return;
+        if (!project.getPackaging().equals(Constants.BW_APPMODULE) && !project.getPackaging().equals(Constants.BW_SHAREDMODULE) &&
+                !project.getPackaging().equals(Constants.OSGI_BUNDLE)) return;
+
+        classifier = project.getPackaging();
 
         String jarLibPath = project.getBasedir() + File.separator + STUDIO_PROJECT_JAR_LIB;
         File jarLib = new File(jarLibPath);
@@ -88,8 +90,8 @@ public class TibcoStudioMojo extends AbstractMojo {
 
             // clear out module lib if it exists..
             if (classifier == null) {
-                throw new MojoFailureException("The user property 'maven.jar.classifier' must be set" +
-                        " (to bw-sharedmodule or bw-appmodule) for all projects with 'bwmodule' packaging type..");
+                throw new MojoFailureException("packaging type must be set" +
+                        " (to bw-sharedmodule, bw-appmodule or osgi-bundle");
             }
 
             // Build Bundle-Classpath (also copies .m2 jars into local project 'lib' folder for Studio..

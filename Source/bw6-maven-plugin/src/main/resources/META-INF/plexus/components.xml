@@ -4,13 +4,37 @@
   
     <component>
       <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
-      <role-hint>bwmodule</role-hint>
+      <role-hint>bw-sharedmodule</role-hint>
       <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
       <configuration>
-        <type>bwmodule</type>
+        <type>bw-sharedmodule</type>
         <extension>jar</extension>
         <language>java</language>
-        <packaging>bwmodule</packaging>        
+        <packaging>bw-sharedmodule</packaging>        
+      </configuration>
+    </component>
+    
+    <component>
+      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+      <role-hint>bw-appmodule</role-hint>
+      <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
+      <configuration>
+        <type>bw-appmodule</type>
+        <extension>jar</extension>
+        <language>java</language>
+        <packaging>bw-appmodule</packaging>        
+      </configuration>
+    </component>
+    
+    <component>
+      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+      <role-hint>osgi-bundle</role-hint>
+      <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
+      <configuration>
+        <type>osgi-bundle</type>
+        <extension>jar</extension>
+        <language>java</language>
+        <packaging>osgi-bundle</packaging>        
       </configuration>
     </component>
     
@@ -28,7 +52,7 @@
 
     <component>
       <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
-      <role-hint>bwmodule</role-hint>
+      <role-hint>bw-sharedmodule</role-hint>
       <implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
       <configuration>
         <phases>
@@ -37,7 +61,43 @@
           <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
           <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
           <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
-          <package>com.tibco.plugins:bw6-maven-plugin:bwmodule</package>
+          <package>com.tibco.plugins:bw6-maven-plugin:bw-sharedmodule</package>
+          <install>org.apache.maven.plugins:maven-install-plugin:install</install>
+          <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
+        </phases>
+      </configuration>
+    </component>
+    
+    <component>
+      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+      <role-hint>bw-appmodule</role-hint>
+      <implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
+      <configuration>
+        <phases>
+          <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>          
+          <compile>com.tibco.plugins:bw6-maven-plugin:resolve-studio-project-lib, org.apache.maven.plugins:maven-compiler-plugin:compile</compile>
+          <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
+          <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
+          <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
+          <package>com.tibco.plugins:bw6-maven-plugin:bw-appmodule</package>
+          <install>org.apache.maven.plugins:maven-install-plugin:install</install>
+          <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
+        </phases>
+      </configuration>
+    </component>
+    
+    <component>
+      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+      <role-hint>osgi-bundle</role-hint>
+      <implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
+      <configuration>
+        <phases>
+          <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>          
+          <compile>com.tibco.plugins:bw6-maven-plugin:resolve-studio-project-lib, org.apache.maven.plugins:maven-compiler-plugin:compile</compile>
+          <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
+          <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
+          <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
+          <package>com.tibco.plugins:bw6-maven-plugin:osgi-bundle</package>
           <install>org.apache.maven.plugins:maven-install-plugin:install</install>
           <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
         </phases>

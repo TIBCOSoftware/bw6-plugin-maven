@@ -27,14 +27,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.jar.Manifest;
 
-
-@Mojo(name = "bwmodule", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class BWModulePackageMojo extends AbstractMojo {
+public abstract class AbstractBWModulePackageMojo extends AbstractMojo {
     @Parameter
     private MavenArchiveConfiguration archiveConfiguration;
-
-    @Parameter(property = "maven.jar.classifier", defaultValue = "")
-    private String classifier;
+    
+    protected String classifier;
 
     /**
      * Location of the file.
@@ -59,16 +56,16 @@ public class BWModulePackageMojo extends AbstractMojo {
     @Component(role = Archiver.class, hint = "jar")
     private JarArchiver jarArchiver;
 
-    public void execute()
+    protected void executeInternal()
             throws MojoExecutionException {
         try {
             getLog().info("Module Packager Mojo started for Module " + project.getName() + " ...");
 
             if (classifier == null || !(classifier.equals(Constants.BW_SHAREDMODULE) ||
-                    classifier.equals(Constants.BW_APPMODULE) || 
+                    classifier.equals(Constants.BW_APPMODULE) ||
 					classifier.equals(Constants.OSGI_BUNDLE))) {
                 throw new MojoFailureException(
-                        "maven.jar.classifier must be set to 'bw-sharedmodule', 'bw-appmodule' or 'osgi-bundle'..");
+                        "packaging must be set to 'bw-sharedmodule', 'bw-appmodule' or 'osgi-bundle'..");
             }
 
             MavenArchiver archiver = new MavenArchiver();

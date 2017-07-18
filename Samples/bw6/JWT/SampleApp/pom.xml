@@ -8,10 +8,7 @@
     <version>1.0.2-SNAPSHOT</version>
   </parent>
   <artifactId>SampleApp</artifactId>
-  <packaging>bwmodule</packaging>
-  <properties>
-    <maven.jar.classifier>bw-appmodule</maven.jar.classifier>
-  </properties>
+  <packaging>bw-appmodule</packaging>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <outputDirectory>target/classes</outputDirectory>
