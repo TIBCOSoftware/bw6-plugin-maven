@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-SymbolicName: SampleApp
+Require-Bundle: SampleSharedModule;bundle-version="1.0.2"
+Bundle-ManifestVersion: 2
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-Vendor: TIBCO Software Inc.
+TIBCO-BW-ModuleSharedVariables: META-INF/module.msv
+Require-Capability: com.tibco.bw.module; filter:="(&(name=SampleShared
+ Module)(version=1.0.2))",com.tibco.bw.model; filter:="(name=bwext)",c
+ om.tibco.bw.palette; filter:="(name=bw.generalactivities)",com.tibco.
+ bw.palette; filter:="(name=bw.file)",com.tibco.bw.palette; filter:="(
+ name=bw.xml)"
+TIBCO-BW-ConfigProfile: META-INF/default.substvar
+TIBCO-BW-Version: 6.3.1 V12 2016-01-27
+Bundle-Name: SampleApp Module
+Bundle-Version: 1.0.2.qualifier
+Bundle-ClassPath: .
+TIBCO-BW-ApplicationModule: META-INF/module.bwm
+TIBCO-BW-JobSharedVariables: META-INF/module.jsv
+

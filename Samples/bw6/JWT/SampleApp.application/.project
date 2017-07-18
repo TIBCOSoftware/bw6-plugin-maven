@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>SampleApp.application</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>com.tibco.xpd.validation.validationBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>com.tibco.zion.dc.ValidationBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>com.tibco.zion.dc.ApplicationNature</nature>
+		<nature>com.tibco.xpd.resources.xpdNature</nature>
+	</natures>
+</projectDescription>

@@ -1,24 +1,10 @@
 package com.tibco.bw.maven.plugin.application;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
+import com.tibco.bw.maven.plugin.utils.Constants;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import com.tibco.bw.maven.plugin.utils.JarUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
@@ -26,384 +12,493 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
-import com.tibco.bw.maven.plugin.osgi.helpers.Version;
-import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.BWModulesParser;
-import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
-import com.tibco.bw.maven.plugin.utils.Constants;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.*;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
-@Mojo(name = "bwear", defaultPhase = LifecyclePhase.PACKAGE)
+/**
+ * For bwear
+ * - update Bundle-Version in META-INF/MANIFEST.MF
+ * - update modules/module elements to list bwmodule packages with classifiers bw-sharedmodule and bw-appmodule as
+ * dependencies in META-INF/TIBCO.xml
+ * <p>
+ * - Gather up all of the needed modules and packaging constructs and build the ear..
+ */
+@Mojo(name = "bwear", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class BWEARPackagerMojo extends AbstractMojo {
-	@Parameter(property="project.build.directory")
-    private File outputDirectory;
 
-	@Parameter(property="project.basedir")
-	private File projectBasedir;
-
-    @Component
-    private MavenSession session;
-
-    @Component
-    private MavenProject project;
-
-    private List<File> tempFiles;
-
-    private Manifest manifest;
-
-    //This is the actual JAR file which will be created in the EAR file.
-    JarArchiver jarchiver;
-
-    //This will create the EAR file
-    MavenArchiver archiver;
+    public static final String BWEAR = "bwear";
 
     //Archive Configuration. This will set the Configuration for the Archive.
-    protected MavenArchiveConfiguration archiveConfiguration;
-
-    //This map is required for maintaining the module name vs module version which needs to be updated in the TibcoXML at a later stage.    
-    Map<String, String> moduleVersionMap;
-
-    //The version to be updated in the Application Manifest. 
-    String version;
+    private MavenArchiveConfiguration archiveConfiguration;
+    //This is the actual JAR file which will be created in the EAR file.
+    private JarArchiver jarchiver;
+    //This will create the EAR file
+    private MavenArchiver archiver;
+    private List<File> tempFiles;
+    @Parameter(property = "project.build.directory")
+    private File outputDirectory;
+    @Parameter(property = "project.basedir")
+    private File projectBasedir;
+    @Component
+    private MavenSession session;
+    @Parameter(defaultValue = "${project}", required = true)
+    private MavenProject project;
+    //This map is required for maintaining the module name vs is version which needs
+    //to be updated in the TibcoXML at the later stage.
+    private Map<String, String> sharedModuleVersionMap;
+    private Map<String, String> appModuleVersionMap;
+	private Map<String, String> osgiBundleModuleVersionMap;
+    private ArrayList<File> filesToCleanup = new ArrayList<File>();
 
     /**
      * Execute Method.
-     * 
      */
     public void execute() throws MojoExecutionException {
-    	try {
-    		getLog().info("BWEARPackager Mojo started ...");
-    	    tempFiles = new ArrayList<File>();
-    	    jarchiver = new JarArchiver();
-    	    archiver = new MavenArchiver();
-    	    archiveConfiguration = new MavenArchiveConfiguration();
-    	    moduleVersionMap = new HashMap<String, String>();
-            manifest = ManifestParser.parseManifest(projectBasedir);
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
-            getLog().info("Updated the Manifest version ");
-            updateManifestVersion();
-    	    getLog().info("Adding Modules to the EAR file");
-    		addModules();
-    		getLog().info("Adding EAR Information to the EAR File");
-    		addApplication();
-    		cleanup();
-    		getLog().info("BWEARPackager Mojo finished execution");
-		} catch (Exception e1) {
-			throw new MojoExecutionException("Failed to create BW EAR Archive ", e1);
-		}
-	}
+        try {
+            getLog().info("BWEARPackager Mojo started ...");
+            initialize();
 
-	/**
-	 * Add the Application related files to the EAR.
-	 * 
-	 * @throws Exception
-	 */
-	private void addApplication() throws Exception {
-		getLog().debug("Adding Application specific files...");
-		// Get the META-INF Folder for the Application Project
-		File metainfFolder = getApplicationMetaInf();
+            jarchiver = new JarArchiver();
 
-		//Add the files from the META-INF to the EAR File.
-		File manifestFile = ManifestWriter.updateManifest(project, manifest);
-		File appManifest = addFiletoEAR(metainfFolder);
+            archiver = new MavenArchiver();
 
-		File earFile = getArchiveFileName();
-		archiver.setArchiver(jarchiver);
+            archiveConfiguration = new MavenArchiveConfiguration();
 
-		archiver.setOutputFile(earFile);
+            Manifest manifest = ManifestParser.parseManifest(projectBasedir);
 
-		// Set the MANIFEST.MF to the JAR Archiver
-		jarchiver.setManifest(appManifest);
+            getLog().info("Adding Module Dependencies to the EAR file ");
+            addDependentModules();
 
-		// Set the MANIFEST.MF to the Archive Configuration
-		archiveConfiguration.setManifestFile(appManifest);
+            getLog().info("Adding EAR Information to the EAR File.");
+            addAdditionalEARSupportingFiles();
 
-		archiveConfiguration.setAddMavenDescriptor(true);
+            getLog().info("BWEARPackager Mojo finished execution.");
 
-		//Create the Archive.
-		archiver.createArchive(session, project, archiveConfiguration);
+        } catch (Exception e1) {
+            throw new MojoExecutionException("Failed to create BW EAR Archive ", e1);
+        } finally {
+            cleanup();
+        }
 
-		project.getArtifact().setFile(earFile);
-
-		//Move Archive
-		//TODO: Need to move the Archive to the User defined location.
-	}    
+    }
 
     /**
-     * Adds the Modules included in the Application to the EAR file. 
-     * It will also maintain a Module vs Version map which will be used later by the Application 
-     * to populate the TIBCO.xml
-     *  
+     * Add the Application related files to the EAR.
+     *
      * @throws Exception
      */
-    private void addModules() throws Exception {
-    	try {
-        	getLog().debug("Adding Modules to the Application EAR");
-        	// The first artifact is an Application Module
-        	//boolean isAppModuleArtifact = true;
+    private void addAdditionalEARSupportingFiles() throws Exception {
 
-        	// Use manifest of project.basedir
-        	this.version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+        getLog().debug("Adding Application specific files...");
+        // Get the META-INF Folder for the Application Project
+        File metainfFolder = getApplicationMetaInf();
 
-        	BWModulesParser parser = new BWModulesParser(session, project);
-        	String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-        	parser.bwEdition = bwEdition;
-        	List<Artifact> artifacts = parser.getModulesSet();
+        //Add the files from the META-INF to the EAR File.
+        addFiletoEAR(metainfFolder);
 
-            for(Artifact artifact : artifacts) {
+        File earFile = getArchiveFileName();
+        archiver.setArchiver(jarchiver);
+        archiver.setOutputFile(earFile);
+        archiveConfiguration.setAddMavenDescriptor(true);
+
+        //Create the Archive.
+        archiver.createArchive(session, project, archiveConfiguration);
+
+        //Cleanup
+        for (File nextFile : filesToCleanup) {
+            if (nextFile.isDirectory()){
+                try {
+                    FileUtils.deleteDirectory(nextFile);
+                }
+                catch(Exception e){
+                    Thread.sleep(100);
+                    FileUtils.deleteDirectory(nextFile);
+                }
+            } else {
+                FileUtils.forceDelete(nextFile);
+            }
+
+        }
+
+        project.getArtifact().setFile(earFile);
+    }
+
+    /**
+     * Adds the Modules included in the Application to the EAR file.
+     * It will also maintain a Module vs Version map which will be used later by the Application
+     * to populate the TIBCO.xml
+     *
+     * @throws Exception
+     */
+    private void addDependentModules() throws Exception {
+        try {
+            // store off unique version+timestamp for each artifact..
+            initModuleVersionMap(project, true);
+
+            getLog().debug("Adding Modules to the Application EAR");
+
+            for (Artifact artifact : project.getArtifacts()) {
                 //Find the Module JAR file
                 File moduleJar = artifact.getFile();
 
-                //Add the JAR file to the EAR file
-                jarchiver.addFile(moduleJar, moduleJar.getName());
-                String version = BWProjectUtils.getModuleVersion(moduleJar);
-                getLog().info("Adding Module JAR with name " + moduleJar.getName() + " with version " + version);
+                getLog().info("\nAdding Module to EAR: " + moduleJar.getName());
 
-                //Save the module version in the Version Map.
-                moduleVersionMap.put(artifact.getArtifactId(), version);
-                /*if(isAppModuleArtifact) {
-                	this.version = version;
-                	isAppModuleArtifact = false;
-                }*/
+                String classifier = artifact.getClassifier();
+
+                if ((classifier != null) && (classifier.equals(Constants.BW_SHAREDMODULE) || 
+											classifier.equals(Constants.BW_APPMODULE) || 
+											classifier.equals(Constants.OSGI_BUNDLE))) {
+                    // update META-INF for each module to tag timestamp onto the Bundle-Version
+                    String versionPlusTime = artifact.getVersion();
+					if (classifier.equals(Constants.OSGI_BUNDLE)) {
+                        versionPlusTime = osgiBundleModuleVersionMap.get(artifact.getArtifactId());
+                    }else if (classifier.equals(Constants.BW_SHAREDMODULE)) {
+                        versionPlusTime = sharedModuleVersionMap.get(artifact.getArtifactId());
+                    } else {
+                        versionPlusTime = appModuleVersionMap.get(artifact.getArtifactId());
+                    }
+                    moduleJar = updateBundleVersion(moduleJar, versionPlusTime);
+                    filesToCleanup.add(moduleJar);
+                }
+
+                // Add the updated JAR file to the EAR file
+                jarchiver.addFile(moduleJar, moduleJar.getName());
             }
-    	} catch(Exception e) {
-    		getLog().error("Failed to add modules to the Application");
-    		throw e;
-    	}
+        } catch (Exception e) {
+            getLog().error("Failed to add modules to the Application");
+            throw e;
+        }
     }
 
-	/**
-	 * Returns the Archive file name and location. The Archive file is created in the Target directory 
-	 * with the name same as application project which is also the artifactId for the Application project. 
-	 * @return
-	 */
-	private File getArchiveFileName() {
-		Version version = VersionParser.parseVersion(manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
-		String fullVersion = version.getMajor() + "." + version.getMinor() + "." + version.getMicro();
+    /**
+     * open up the jar, update the Bundle-Version in the META-INF/MANIFEST.MF and re-write the jar returning the new File
+     *
+     * @param moduleJar
+     * @param versionPlusTime
+     * @return
+     */
+    private File updateBundleVersion(File moduleJar, String versionPlusTime) throws Exception {
+        getLog().info("updateBundleVersion: started adding timestamp to Bundle-Version in jar manifest: " + versionPlusTime);
+        String[] nameParts = moduleJar.getName().split("\\.jar");
+        String newJarName = nameParts[0] + "." + versionPlusTime + ".jar";
 
-        String archiveName = project.getArtifactId() + "_" + fullVersion + ".ear";
+        File extractedJarFolder = null;
+        File newModule = null;
+
+        try {
+            // Extract the jar to dedicated folder target/[jar name]..
+            extractedJarFolder = JarUtil.extractJarToTargetFolder(getLog(), projectBasedir.getAbsolutePath(),
+                    moduleJar, newJarName);
+        } catch (Exception e) {
+            getLog().error("Failed to explode jar to folder for manifest update: " + moduleJar.getName(), e);
+            throw new MojoFailureException("Failed to update manifest file for folder: " + moduleJar.getName(), e);
+        }
+
+        try {
+            // update the manifest file in place..
+            Manifest currentJarManifest = ManifestParser.parseManifest(extractedJarFolder);
+            currentJarManifest.getMainAttributes().putValue("Bundle-Version", versionPlusTime);
+
+            ManifestWriter.updateManifest(extractedJarFolder.getAbsolutePath() + File.separator + "META-INF", currentJarManifest);
+        } catch (Exception e) {
+            getLog().error("Failed to update manifest file for folder: " + extractedJarFolder.getAbsolutePath(), e);
+            throw new MojoFailureException("Failed to update manifest file for folder: " + extractedJarFolder.getAbsolutePath(), e);
+        }
+
+        try {
+            // repackage the jar; use JarUtil so that we're writing everything as-is to the zip....
+            newModule = JarUtil.jarUpFolderContents(getLog(), extractedJarFolder.getAbsolutePath(), projectBasedir.getAbsolutePath() +
+                    File.separator + "target" + File.separator + newJarName);
+        } catch (Exception e) {
+            getLog().error("Failed to re-jar after manifest update: " + extractedJarFolder.getAbsolutePath(), e);
+            throw new MojoFailureException("Failed to re-zip after manifest update:" + extractedJarFolder.getAbsolutePath(), e);
+        }
+
+        filesToCleanup.add(extractedJarFolder);
+
+        getLog().info("updateBundleVersion: finished adding timestamp to Bundle-Version in jar manifest: " + versionPlusTime);
+        return newModule;
+    }
+
+    /**
+     * Returns the Archive file name and location. The Archive file is created in the Target directory
+     * with the name same as application project which is also the artifactId for the Application project.
+     *
+     * @return
+     */
+
+    private File getArchiveFileName() throws Exception {
+
+        String archiveName = project.getArtifactId() + "_" + project.getVersion() + ".ear";
         File archiveFile = new File(outputDirectory, archiveName);
 
-        getLog().info("The EAR file name for Application is " + archiveFile.toString());
+        getLog().debug("The EAR file name for Application is " + archiveFile.toString());
+
         return archiveFile;
-	}
+    }
 
     /**
      * Adds the from the META-INF folder to the EAR file.
      * The META-INF folder needs to be copied as it is.
-     * 
+     *
      * @param metainf the META-INF folder location for the Application project.
-     * 
      * @return the NANIFEST.MF file for the Application project.
-     * 
      * @throws Exception
      */
-	private File addFiletoEAR(File metainf) throws Exception {
-		File manifestFile = null;
-	    File [] fileList = metainf.listFiles();
-	    getLog().debug("Adding files to META-INF folder of EAR. ");
-	    for(int i = 0; i < fileList.length; i++) {
-	    	if(fileList[i].getName().indexOf("MANIFEST") != -1) { // If the File is MANIFEST.MF then the Version needs to be updated in the File and added to the Archiver
-    		   manifestFile = getUpdatedManifest (fileList[i]);
-    		   jarchiver.addFile(manifestFile, "META-INF/" + fileList[i].getName());
-    	    } else if(fileList[i].getName().indexOf("TIBCO.xml") != -1) { // If the File is TIBCO.xml then the each Module Version needs to be updated in the File.
-    	    	File tibcoXML = getUpdatedTibcoXML(fileList[i]);
-    	    	jarchiver.addFile(tibcoXML, "META-INF/" + fileList[i].getName());
-    	    } else if(fileList[i].getName().indexOf(".substvar") != -1) { // The substvar files need to be added as it is.
-    	    	jarchiver.addFile(fileList[i], "META-INF/" + fileList[i].getName());
-    	    } else { // The rest of the files can be ignored.
-    	    	continue;
-    	    }
-	    }
-	    return manifestFile;
-	}
+    private void addFiletoEAR(File metainf) throws Exception {
+        File tmpManifestFile = null;
 
-	/**
-	 * Updates the MANIFEST.MF with the Module Version number.
-	 * 
-	 * @param manifest the MANIFEST.MF file
-	 * 
-	 * @return the updated MANIFEST.MF file
-	 * 
-	 * @throws Exception
-	 */
-	private File getUpdatedManifest(File manifest) throws Exception {
-		//Copy the MANIFEST.MF to a temporary location.
-		File tempManifest = File.createTempFile("bwear", "mf");
-		FileUtils.copyFile(manifest, tempManifest);
+        File[] fileList = metainf.listFiles();
 
-		FileInputStream is = new FileInputStream(tempManifest);
-		Manifest mf = new Manifest(new FileInputStream(tempManifest));
-		is.close();
+        getLog().debug("Adding files to META-INF folder of EAR. ");
 
-		// Update the Bundle Version
-		Attributes attr = mf.getMainAttributes();
-		attr.putValue(Constants.BUNDLE_VERSION, version);
-		getLog().info("Manifest updated with Version " + version);
+        assert fileList != null;
+        for (int i = 0; i < fileList.length; i++) {
+            String nextFileName = fileList[i].getName();
 
-		//Write the updated file and return the same.
-		FileOutputStream os = new FileOutputStream(tempManifest);
-		mf.write(os);
-		os.close();
+            // If the File is MANIFEST.MF then the mvn-version needs to be updated in the File
+            // and added to the Archiver
+            if (nextFileName.indexOf("MANIFEST") != -1) {
+                // update for EAR, use timestamps instead of 'qualifier'
+                tmpManifestFile = getUpdatedManifest(fileList[i], true);
+                jarchiver.addFile(tmpManifestFile, "META-INF" + File.separator + nextFileName);
+                // Set the MANIFEST.MF to the JAR Archiver
+                jarchiver.setManifest(tmpManifestFile);
+                // Set the MANIFEST.MF to the Archive Configuration
+                archiveConfiguration.setManifestFile(tmpManifestFile);
 
-		tempFiles.add(tempManifest);
-		getLog().debug("Manifest added to temp location at " + tempManifest.toString());
-		return tempManifest;
-	}
+                // update on disk, use 'qualifier'
+                File manifestFile = getUpdatedManifest(fileList[i], false);
+                getLog().info("Updating the META-INF/MANIFEST.MF on disk.. ");
+                FileUtils.copyFile(manifestFile, new File(projectBasedir + File.separator + "META-INF" + File.separator + "MANIFEST.MF"));
+            }
+
+            // If the File is TIBCO.xml then each Module mvn-version needs to be updated in the File.
+            else if (nextFileName.indexOf("TIBCO.xml") != -1) {
+                // Update for EAR, use timestamps instead of 'qualifier'
+                File tmpTibcoXML = getUpdatedTibcoXML(fileList[i]);
+                jarchiver.addFile(tmpTibcoXML, "META-INF" + File.separator + nextFileName);
+
+                // Update for project/src.. use 'qualifier'
+                initModuleVersionMap(project, false);
+                File tibcoXML = getUpdatedTibcoXML(fileList[i]);
+                getLog().info("Updating the META-INF/TIBCO.xml on disk.. ");
+                FileUtils.copyFile(tibcoXML, new File(projectBasedir + File.separator + "META-INF" + File.separator + "TIBCO.xml"));
+            }
+
+            // The substvar files needs to be added as it is.
+            else if (nextFileName.indexOf(".substvar") != -1) {
+                jarchiver.addFile(fileList[i], "META-INF" + File.separator + nextFileName);
+            }
+
+        }
+    }
+
+    /**
+     * Updates the MANIFEST.MF with the Module mvn-version.
+     *
+     * @param manifest the MANIFEST.MF file
+     * @return the updated MANIFEST.MF file
+     * @throws Exception
+     */
+    private File getUpdatedManifest(File manifest, boolean useTimestamps) throws Exception {
+        //Copy the MANIFEST.MF to a temporary location.
+        File tempManifest = File.createTempFile(BWEAR, "mf");
+        FileUtils.copyFile(manifest, tempManifest);
+
+        FileInputStream is = new FileInputStream(tempManifest);
+        Manifest mf = new Manifest(new FileInputStream(tempManifest));
+        is.close();
+
+        // Update the Bundle with mvn-version
+        Attributes attr = mf.getMainAttributes();
+        String version = BWProjectUtils.convertMvnVersionToOSGI(getLog(), project.getVersion(), true, useTimestamps);
+        attr.putValue("Bundle-Version", version);
+
+        getLog().debug("Manifest updated with Version " + version);
+
+        //Write the updated file and return the same.
+        FileOutputStream os = new FileOutputStream(tempManifest);
+        mf.write(os);
+        os.close();
+
+        tempFiles.add(tempManifest);
+
+        getLog().debug("manifest added to temp location at " + tempManifest.toString());
+
+        return tempManifest;
+    }
 
     /**
      * Finds the folder name META-INF inside the Application Project.
-     * 
+     *
      * @return the META-INF folder
-     * 
      * @throws Exception
      */
-	private File getApplicationMetaInf() throws Exception {
-		File[] fileList = projectBasedir.listFiles(new FileFilter() {
-			public boolean accept(File pathname) {
-				if(pathname.getName().indexOf("META-INF") != -1) {
-        			return true;
-				}
-				return false;
-			}
-		});
-       return fileList[0];
-	}
-    
-//    /**
-//     * Finds the JAR file for the Module.
-//     * 
-//     * @param target the Module Output directory which is the target directory.
-//     * 
-//     * @return the Module JAR.
-//     * 
-//     * @throws Exception
-//     */
-//	private File getModuleJar(File target) throws Exception {
-//      File[] files = BWFileUtils.getFilesForType(target, ".jar");
-//      files = BWFileUtils.sortFilesByDateDesc(files);
-//      if(files.length == 0) {
-//       	throw new Exception("Module is not built yet. Please check your Application PO for the Module entry.");
-//      }
-//      return files[0];
-//	}
+    private File getApplicationMetaInf() {
+        File[] fileList = projectBasedir.listFiles(new FileFilter() {
 
-	/**
-	 * Gets the Tibco XML file with the updated Module versions.
-	 * 
-	 * @param tibcoxML the Application Project TIBCO.xml file
-	 *  
-	 * @return the updated TIBCO.xml file.
-	 * 
-	 * @throws Exception
-	 */
-	private File getUpdatedTibcoXML(File tibcoxML) throws Exception {
-		getLog().debug("Updating the TibcoXML file with the module versions ");
-		Document doc = loadTibcoXML(tibcoxML);
-		doc = updateTibcoXMLVersion(doc);
-		File file = saveTibcoXML(doc);
-		return file;
-	}
+            public boolean accept(File pathname) {
+                return pathname.getName().contains("META-INF");
+            }
+        });
 
-	/**
-	 * Loads the TibcoXMLfile in a Document object (DOM)
-	 * 
-	 * @param file the TIBCO.xml file
-	 * 
-	 * @return the root Document object for the TIBCO.xml file
-	 * 
-	 * @throws Exception
-	 */
-	private Document loadTibcoXML(File file) throws Exception {
-		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-		docFactory.setNamespaceAware(true);
-		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-		Document doc = docBuilder.parse(file);
-		getLog().debug("Loaded Tibco.xml file");
-		return doc;
-	}
-	
-	/**
-	 * Updates the document with the Module Version for the Modules.
-	 * 
-	 * @param doc the Root document object.
-	 * 
-	 * @return the Document updated with the Module versions.
-	 * 
-	 * @throws Exception
-	 */
-	private Document updateTibcoXMLVersion(Document doc) throws Exception	{
-		// The modules are listed under the Modules tag with name as "module"
-		NodeList nList = doc.getElementsByTagNameNS(Constants.PACKAGING_MODEL_NAMESPACE_URI, Constants.MODULE);
-		for(int i = 0; i < nList.getLength(); i++) {
-			Element node = (Element)nList.item(i);
-			// The Symbolic name is the Module name. The version for this needs to be updated under the tag technologyVersion 
-			NodeList childList = node.getElementsByTagNameNS(Constants.PACKAGING_MODEL_NAMESPACE_URI, Constants.SYMBOLIC_NAME);
-			String module = childList.item(0).getTextContent();		
-			NodeList technologyVersionList = node.getElementsByTagNameNS(Constants.PACKAGING_MODEL_NAMESPACE_URI, Constants.TECHNOLOGY_VERSION);
-			Node technologyVersion = technologyVersionList.item(0);
-			//Get the version from the Module from the Map and set it in the Document. 
-			technologyVersion.setTextContent(moduleVersionMap.get(module));
-		}
-		getLog().debug("Updated Module versions in the Tibcoxml file");
-		return doc;
-	}
-	
-	/**
-	 * Save the TibcoXML file to a temporary file with the new changes.
-	 * 
-	 * @param doc the root Document
-	 * 
-	 * @return the updated TIBCO.xml file location
-	 * 
-	 * @throws Exception
-	 */
-	private File saveTibcoXML(Document doc) throws Exception {
-		File tempXml = File.createTempFile("bwear", "xml");
-		doc.getDocumentElement().normalize();
+        return fileList[0];
 
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-
-        DOMSource source = new DOMSource(doc);
-
-        StreamResult result = new StreamResult(tempXml);
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.transform(source, result);
-        tempFiles.add(tempXml);
-
-        getLog().debug("Updated TibcoXML file to temp location " + tempXml.toString());
-        return tempXml;
-	}
-
-	/**
-	 * Clean the updated MANIFEST.MF and TIBCO.xml files
-	 */
-    private void cleanup() {
-		for(File file : tempFiles) {
-			file.delete();
-		}
-		getLog().debug("cleaned up the temporary files.");
     }
+
+    private void initialize() {
+        tempFiles = new ArrayList<File>();
+    }
+
     /**
-     *  Updated the Application manifest just like the module one
+     * Gets the Tibco XML file with the updated Module versions.
+     *
+     * @param tibcoxML the Application Project TIBCO.xml file
+     * @return the updated TIBCO.xml file.
+     * @throws Exception
      */
-    private void updateManifestVersion() {
-    	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-    	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
-    	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
-    	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
+    private File getUpdatedTibcoXML(File tibcoxML) throws Exception {
+        getLog().debug("Updating the TibcoXML file with the module versions ");
+        Document doc = BWProjectUtils.loadXML(getLog(), tibcoxML);
+        doc = updateTibcoXMLVersion(doc);
+        File tmpFile = BWProjectUtils.saveXML(getLog(), BWEAR, doc, 2, false);
+        tempFiles.add(tmpFile);
+        return tmpFile;
+    }
+
+    /**
+     * @throws Exception
+     */
+    private void initModuleVersionMap(MavenProject project, boolean useTimestamps) throws Exception {
+
+        appModuleVersionMap = new HashMap<String, String>();
+        sharedModuleVersionMap = new HashMap<String, String>();
+		osgiBundleModuleVersionMap = new HashMap<String, String>();
+
+        Iterator<Artifact> artifacts = project.getArtifacts().iterator();
+
+        while (artifacts.hasNext()) {
+            Artifact artifact = artifacts.next();
+            String classifier = BWProjectUtils.getClassifierOrEmptyString(artifact);
+
+            String moduleVersion = artifact.getVersion();
+            getLog().debug("BWEARPackager:    moduleVersion pre-osgi-conversion - artifact id/version: " +
+                    artifact.getArtifactId() + "/" + moduleVersion);
+
+            if (Constants.BW_APPMODULE.equals(classifier) || 
+					Constants.BW_SHAREDMODULE.equals(classifier) ||
+					Constants.OSGI_BUNDLE.equals(classifier)) {
+                moduleVersion = BWProjectUtils.convertMvnVersionToOSGI(getLog(), artifact.getVersion(), true, useTimestamps);
+            }
+
+            getLog().debug("BWEARPackager:    Adding to moduleVersionMap - artifact id/version: " +
+                    artifact.getArtifactId() + "/" + moduleVersion);
+
+            String artifactName = artifact.getFile().getName();
+
+            if (artifact.getFile() != null) {
+                if (classifier.equals(Constants.BW_SHAREDMODULE)) {
+                    getLog().debug("BWEARPackager:    Adding to sharedModuleVersionMap - artifact id/version: " +
+                            artifact.getArtifactId() + "/" + moduleVersion);
+                    sharedModuleVersionMap.put(artifact.getArtifactId(), moduleVersion);
+                } else if (classifier.equals(Constants.BW_APPMODULE)) {
+                    getLog().debug("BWEARPackager:    Adding to appModuleVersionMap - artifact id/version: " +
+                            artifact.getArtifactId() + "/" + moduleVersion);
+                    appModuleVersionMap.put(artifact.getArtifactId(), moduleVersion);
+                } else if (classifier.equals(Constants.OSGI_BUNDLE)) {
+                    getLog().debug("BWEARPackager:    Adding to osgiBundleModuleVersionMap - artifact id/version: " +
+                            artifact.getArtifactId() + "/" + moduleVersion);
+                    osgiBundleModuleVersionMap.put(artifact.getArtifactId(), moduleVersion);
+                }
+            }
+        }
+        if (appModuleVersionMap.entrySet().size() > 1) {
+            throw new MojoFailureException("bwear only allows 1 dependency with classifier=bw-appmodule");
+        }
+    }
+
+    /**
+     * Updates the document with the Module mvn-version for the Modules.
+     *
+     * @param doc the Root document object.
+     * @return the Document updated with the Module mvn-versions.
+     * @throws Exception
+     */
+    private Document updateTibcoXMLVersion(Document doc) {
+        // The modules are listed under the Modules tag with name as "module"
+        NodeList modulesList = doc.getElementsByTagNameNS("http://schemas.tibco.com/tra/model/core/PackagingModel", "modules");
+        NodeList moduleList = doc.getElementsByTagNameNS("http://schemas.tibco.com/tra/model/core/PackagingModel", "module");
+
+        Element modulesElement = (Element) modulesList.item(0);
+
+        // clear out existing modules
+        while (modulesElement.hasChildNodes())
+            modulesElement.removeChild(modulesElement.getFirstChild());
+
+        // add in bw-appmodule entry
+        addModule(doc, modulesElement, appModuleVersionMap, Constants.BW_APPMODULE);
+
+        // add in bw-sharedmodule entries..
+        addModule(doc, modulesElement, sharedModuleVersionMap, Constants.BW_SHAREDMODULE);
+
+		// add in osgi-bundle entries..
+        addModule(doc, modulesElement, osgiBundleModuleVersionMap, Constants.OSGI_BUNDLE);
+		
+        getLog().debug("Updated Module versions in the Tibcoxml file");
+
+        return doc;
+
+    }
+
+    private void addModule(Document doc, Element modulesElement, Map<String, String> moduleMap, String moduleType) {
+        // add an entry for each specified by maven..
+        for (Map.Entry<String, String> nextEntry : moduleMap.entrySet()) {
+            Element newModule = doc.createElement("packaging:module");
+
+            Element symbolicName = doc.createElement("packaging:symbolicName");
+            symbolicName.setTextContent(nextEntry.getKey());
+            newModule.appendChild(symbolicName);
+
+            Element technologyType = doc.createElement("packaging:technologyType");
+			if (moduleType.equals(Constants.OSGI_BUNDLE)) {
+				technologyType.setTextContent("osgi-bundle");
+			} else {
+				technologyType.setTextContent("osgi-bundle," + moduleType);
+			}
+            newModule.appendChild(technologyType);
+
+            Element technologyVersion = doc.createElement("packaging:technologyVersion");
+            technologyVersion.setTextContent(nextEntry.getValue());
+            newModule.appendChild(technologyVersion);
+
+            modulesElement.appendChild(newModule);
+            getLog().debug("Added 'module' element: " + moduleType + " " + nextEntry.getKey() + " " + nextEntry.getValue());
+        }
+    }
+
+
+    /**
+     * Clean the updated MANIFEST.MF and TIBCO.xml files
+     */
+    private void cleanup() {
+        for (File file : tempFiles) {
+            file.delete();
+        }
+
+        getLog().debug("cleaned up the temporary files. ");
     }
 }

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/JUnit"
+	xmlns:tns="http://www.example.org/JUnit" elementFormDefault="qualified">
+
+	<element name="testsuite" type="tns:testsuiteType" />
+
+	<complexType name="testsuiteType">
+		<sequence>
+			<element name="properties">
+				<complexType>
+					<sequence>
+						<element name="property" minOccurs="0"
+							maxOccurs="unbounded">
+							<complexType>
+								<attribute name="name" use="required">
+									<simpleType>
+										<restriction base="token">
+											<minLength value="1" />
+										</restriction>
+									</simpleType>
+								</attribute>
+								<attribute name="value" type="string"
+									use="required" />
+							</complexType>
+						</element>
+					</sequence>
+				</complexType>
+			</element>
+			<element name="testcase" minOccurs="0"
+				maxOccurs="unbounded">
+				<complexType>
+					<choice minOccurs="0">
+						<element name="error">
+							<complexType>
+								<attribute name="message"
+									type="string">
+								</attribute>
+								<attribute name="type" type="string"
+									use="required">
+								</attribute>
+							</complexType>
+						</element>
+						<element name="failure">
+							<complexType>
+								<attribute name="message"
+									type="string">
+								</attribute>
+								<attribute name="type" type="string"
+									use="required">
+								</attribute>
+							</complexType>
+						</element>
+					</choice>
+					<attribute name="name" type="token"
+						use="required">
+					</attribute>
+					<attribute name="classname" type="token"
+						use="required">
+					</attribute>
+					<attribute name="time" type="decimal"
+						use="required">
+					</attribute>
+				</complexType>
+			</element>
+			<element name="system-out" type="string"></element>
+			<element name="system-err" type="string"></element>
+		</sequence>
+		<attribute name="name" use="required">
+			<simpleType>
+				<restriction base="token">
+					<minLength value="1" />
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="timestamp" type="string" use="required"></attribute>
+		<attribute name="hostname" use="required">
+			<simpleType>
+				<restriction base="token">
+					<minLength value="1" />
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="tests" type="int" use="required">
+		</attribute>
+		<attribute name="failures" type="int" use="required">
+		</attribute>
+		<attribute name="errors" type="int" use="required">
+		</attribute>
+		<attribute name="time" type="decimal" use="required">
+		</attribute>
+	</complexType>
+</schema>
