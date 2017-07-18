@@ -16,7 +16,7 @@ Uncheck 'Use default location' Specify the JWT folder.
 
 Use Editor: Create JWT/SampleSharedModule/pom.xml
 - reference parent pom
-- include property maven.jar.classifier=bw-sharedmodule
+- include packaging=bw-sharedmodule
 - and add in JWT dependencies
 
 
@@ -27,7 +27,7 @@ From Studio: Create a new BW Application Module
 Uncheck 'Use default location' Specify the JWT folder.
 
 Use Editor: Create JWT/SampleApp/pom.xml
-- include property maven.jar.classifier=bw-appmodule
+- include packaging=bw-appmodule
 - add in dependency for SampleSharedModule
 Use Editor: Create JWT/SampleApp.application/pom.xml
 - add in dependency for SampleApp
