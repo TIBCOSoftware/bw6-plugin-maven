@@ -26,7 +26,6 @@
       </configuration>
     </component>
 
-    
     <component>
       <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
       <role-hint>bwmodule</role-hint>
@@ -34,7 +33,7 @@
       <configuration>
         <phases>
           <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>          
-          <compile>org.apache.maven.plugins:maven-compiler-plugin:compile</compile>
+          <compile>com.tibco.plugins:bw6-maven-plugin:resolve-studio-project-lib, org.apache.maven.plugins:maven-compiler-plugin:compile</compile>
           <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
           <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
           <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
@@ -44,7 +43,6 @@
         </phases>
       </configuration>
     </component>
-    
     
     <component>
       <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
@@ -57,28 +55,12 @@
           <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
           <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
           <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
-          <package>com.tibco.plugins:bw6-maven-plugin:bwear</package>                    
+          <package>com.tibco.plugins:bw6-maven-plugin:bwear</package>
           <install>org.apache.maven.plugins:maven-install-plugin:install,com.tibco.plugins:bw6-maven-plugin:bwinstall</install>
           <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
         </phases>
       </configuration>
     </component>
-    
-    <component>
-		<role>org.apache.maven.AbstractMavenLifecycleParticipant</role>
-		<implementation>
-			com.tibco.bw.maven.plugin.lifecycle.BWProjectLifeCycleListener
-		</implementation>
-		<role-hint>default</role-hint>
-		<isolated-realm>false</isolated-realm>
-			<requirements>
-			<requirement>
-				<role>org.codehaus.plexus.logging.Logger</role>
-				<role-hint>default</role-hint>
-				<field-name>logger</field-name>
-			</requirement>
-		</requirements>
-	</component>
     
   </components>
 </component-set>

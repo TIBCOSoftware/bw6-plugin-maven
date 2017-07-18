@@ -1,0 +1,33 @@
+{
+	"id": "ee385ebf-9e89-8f68-2c70-5e59664f1038",
+	"name": "SampleApp",
+	"description": "",
+	"order": [
+		"1dd8f606-1459-1f66-7eb5-5d946998c0fb"
+	],
+	"folders": [],
+	"timestamp": 1460667776972,
+	"owner": 0,
+	"remoteLink": "",
+	"public": false,
+	"requests": [
+		{
+			"id": "1dd8f606-1459-1f66-7eb5-5d946998c0fb",
+			"headers": "Cache-Control: no-cache\nAccept: application/xml\nAuthorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImlzcyI6Imh0dHBzOi8vb3BlbmlkLmMyaWQuY29tIiwiYXVkIjoiY2xpZW50LTEyMzQ1Iiwibm9uY2UiOiJuLTBTNl9XekEyTWoiLCJhdXRoX3RpbWUiOjE0NTg5MjIzMzAsImFjciI6ImMyaWQubG9hLmhpc2VjIiwiaWF0IjoyMDU4OTkyMzMwLCJleHAiOjIwNTg5OTIzMzAsImNsaWVudElEIjoiMDEyMzQ1NiIsInNjb3BlcyI6WyJzY29wZTEiLCJzY29wZTIiXX0.vExAP7h6GgSIT7s7f5gsVdarPva2dIe6iszQ414svEw\n",
+			"url": "http://localhost:7010/runtest",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1460668599353,
+			"name": "GET to verify and return JWT",
+			"description": "",
+			"collectionId": "ee385ebf-9e89-8f68-2c70-5e59664f1038"
+		}
+	]
+}

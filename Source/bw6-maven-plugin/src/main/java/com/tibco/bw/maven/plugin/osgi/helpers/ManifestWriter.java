@@ -8,36 +8,34 @@ import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
 
-import org.apache.maven.project.MavenProject;
-
+@SuppressWarnings("ThrowFromFinallyBlock")
 public class ManifestWriter {
 
-    public static File updateManifest(MavenProject project , Manifest mf) throws IOException {
+    /**
+     * uses the Maven artifact version to populate OSGI Bundle-Version
+     *
+     * @param outputDir
+     * @param mf
+     * @return
+     * @throws IOException
+     */
+    public static File updateManifest(String outputDir, Manifest mf) throws IOException {
         Attributes attributes = mf.getMainAttributes();
-        String projectVersion = project.getVersion();
-        if( projectVersion.indexOf("-SNAPSHOT") != -1 ) {
-        	projectVersion = projectVersion.replace("-SNAPSHOT", ".qualifier");
+
+        if (attributes.getValue(Name.MANIFEST_VERSION) == null) {
+            attributes.put(Name.MANIFEST_VERSION, "1.0");
         }
 
-    	attributes.put(Name.MANIFEST_VERSION, projectVersion);
-        attributes.putValue("Bundle-Version", projectVersion );
-
-//      if((attributes.getValue(Name.MANIFEST_VERSION) == null || attributes.getValue(Name.MANIFEST_VERSION).equals("1.0")) && project.getVersion().equals("1.0.0-SNAPSHOT")) {
-//        	System.out.println("Update Attribute");
-//        	attributes.put(Name.MANIFEST_VERSION, project.getVersion());
-//          attributes.putValue("Bundle-Version", project.getVersion());
-//      }
-
-        File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
+        File mfile = new File(outputDir, "MANIFEST.MF");
         mfile.getParentFile().mkdirs();
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
         try {
             mf.write(os);
         } finally {
-        	if(os != null) {
-        		os.close();	
-        	}
+            os.close();
         }
+
         return mfile;
     }
+
 }

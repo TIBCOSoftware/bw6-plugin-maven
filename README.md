@@ -53,6 +53,10 @@ j. Select the goal as "package" for creating the EAR file. This will create the 
 
 k. Select the goal as "install" for creating the EAR file and installing it to local Maven Repository.
 
+## Sample BW6 Project with poms setup to make use of bw6-maven-plugin
+See (Samples/bw6/JWT/README.md)[bw6-maven-plugin/blob/master/Samples/bw6/JWT/README.md] for a somewhat complex example BW6 application that has a BW6 shared module dependency which in turn has third-party lib depencies - fully managed by Maven.
+
+
 ## Contributing to the Plug-in
 
 If you'd like to contribute to this plug-in, please reach out to integration-pm@tibco.com

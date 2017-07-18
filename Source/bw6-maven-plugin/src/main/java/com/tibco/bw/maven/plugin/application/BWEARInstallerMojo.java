@@ -2,7 +2,13 @@ package com.tibco.bw.maven.plugin.application;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 import java.util.Properties;
 import java.util.jar.Manifest;
@@ -39,7 +45,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	private File projectBasedir;
 
 	@Parameter(property="deployToAdmin")
-	private boolean deployToAdmin; 
+	private boolean deployToAdmin;
 
 	@Parameter(property="agentHost")
 	private String agentHost;
@@ -110,12 +116,17 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="deploymentConfigfile")
 	private String deploymentConfigfile;
 
-	private String earLoc;
+    // override to default behaviour of using ear in target.. specify URL to ear (artifactory, etc)
+    @Parameter(property = "earUrl")
+    private String earUrl;
+
+
+    private String earLoc;
 	private String earName;
 	private String applicationName;
 
     public void execute() throws MojoExecutionException {
-    	try {    		
+    	try {
     		getLog().info("BWEAR Installer Mojo started ...");
     		Manifest manifest = ManifestParser.parseManifest(projectBasedir);
     		String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
@@ -136,12 +147,21 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			return;
     		}
 
-    		File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
-    		if(files.length == 0) {
-    			throw new Exception("EAR file not found for the Application");
-    		}
+            File earFile = null;
 
-    		deriveEARInformation(files[0]);
+            if (earUrl == null) {
+                // read from target folder (build output)
+                File[] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+                if (files.length == 0) {
+                    throw new Exception("EAR file not found for the Application");
+                }
+                earFile = files[0];
+            } else {
+                // read from url
+                earFile = getEarFromUrl(earUrl);
+            }
+
+    		deriveEARInformation(earFile);
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
     		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword);
@@ -167,8 +187,8 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		} else {
     			getLog().info("AppSpace is Running.");
     		}
-    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation);
+    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + earFile.getAbsolutePath());
+    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, earFile.getAbsolutePath(), redeploy, profile, backup, backupLocation);
     		deployer.close();
     	} catch(Exception e) {
     		getLog().error(e);
@@ -176,7 +196,31 @@ public class BWEARInstallerMojo extends AbstractMojo {
     	}
     }
 
-	private void deriveEARInformation(File file) {
+    private File getEarFromUrl(String earUrlString) {
+        URL earUrl;
+
+        String[] urlParts = earUrlString.replace("\\", "/").split("/");
+        String earName = urlParts[urlParts.length - 1];
+        String prefix = earName.substring(0, earName.lastIndexOf(".ear"));
+        String suffix = ".ear";
+        File returnEarFile = null;
+
+        try {
+            getLog().info("Getting ear from: " + earUrlString);
+            earUrl = new URL(earUrlString);
+            ReadableByteChannel rbc = Channels.newChannel(earUrl.openStream());
+            returnEarFile = File.createTempFile(prefix, suffix);
+            FileOutputStream fos = new FileOutputStream(returnEarFile);
+            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            getLog().info("Finished getting ear.. temp location: " + returnEarFile.getAbsolutePath());
+        } catch (Exception e) {
+            getLog().error("Failed to get file from URL: " + earUrlString, e);
+        }
+
+        return returnEarFile;
+    }
+
+    private void deriveEARInformation(File file) {
 		earLoc = file.getAbsolutePath();
 		earLoc = earLoc.replace("\\", "/");
 		earName = file.getName();
@@ -203,7 +247,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		FileInputStream stream = null;
 		try {
 			stream = new FileInputStream(file);
-			deployment.load(stream);	
+			deployment.load(stream);
 		} catch(Exception e) {
 			getLog().info("Failed to load Propeties from Deployment Config File");
 		} finally {
@@ -239,6 +283,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			redeploy = Boolean.parseBoolean(deployment.getProperty("redeploy"));
 			backup = Boolean.parseBoolean(deployment.getProperty("backup"));
 			backupLocation = deployment.getProperty("backupLocation");
+            earUrl = deployment.getProperty("earUrl");
 		} catch(Exception e) {
 			deployToAdmin = false;
 			getLog().error(e);
@@ -273,7 +318,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			errorMessage.append("[Domain Value is required]");
 		}
 
-		boolean isValidAppSpace = appSpace != null && !appSpace.isEmpty(); 
+		boolean isValidAppSpace = appSpace != null && !appSpace.isEmpty();
 		if(!isValidAppSpace) {
 			errorMessage.append("[AppSpace Value is required]");
 		}
@@ -340,12 +385,29 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			}
 		}
 
+        boolean isValidEarUrl = false;
+        try {
+            if (earUrl == null || "".equals(earUrl)) {
+                isValidEarUrl = true;
+            } else {
+                URL testUrl = new URL(earUrl);
+                try {
+                    testUrl.toURI(); // checks the syntax.. just creating a URL only checks protocol
+                    isValidEarUrl = true;
+                } catch (URISyntaxException use){
+                    errorMessage.append("[Ear URL must be an valid URL format]");
+                }
+            }
+        } catch (MalformedURLException e) {
+            errorMessage.append("[Ear URL must be an valid URL format]");
+        }
+
 		if(!errorMessage.toString().isEmpty()) {
 			getLog().error(errorMessage.toString());
 			return false;
 		}
 
-		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL) {
+		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL && isValidEarUrl) {
 			return true;
 		}
 		return false;

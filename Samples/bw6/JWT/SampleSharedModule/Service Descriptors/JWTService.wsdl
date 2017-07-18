@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:tns="http://xmlns.example.com/20160414154836" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="JWTService" targetNamespace="http://xmlns.example.com/20160414154836">
+  <wsdl:types>
+    <xsd:schema xmlns:extns="http://tns.tibco.com/bw/json/1458918623730" elementFormDefault="unqualified" targetNamespace="http://xmlns.example.com/20160414154836">
+            <xsd:import namespace="http://tns.tibco.com/bw/json/1458918623730"/>
+            <xsd:element name="validateTokenRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="authHeader" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="validateTokenResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+                        <xsd:element name="xmlString" type="xsd:string"/>
+                    </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="validateTokenFault">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="fault" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="validateTokenRequest">
+    <wsdl:part element="tns:validateTokenRequest" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="validateTokenResponse">
+    <wsdl:part element="tns:validateTokenResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="validateTokenFault">
+    <wsdl:part element="tns:validateTokenFault" name="parameters"/>
+  </wsdl:message>
+  <wsdl:portType name="Service">
+    <wsdl:operation name="validateToken">
+      <wsdl:input message="tns:validateTokenRequest" name="operationInput"/>
+      <wsdl:output message="tns:validateTokenResponse" name="operationOutput"/>
+      <wsdl:fault message="tns:validateTokenFault" name="Fault"/>
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>
