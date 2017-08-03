@@ -10,23 +10,30 @@ import java.util.jar.Manifest;
 
 import org.apache.maven.project.MavenProject;
 
+import com.tibco.bw.maven.plugin.utils.Constants;
+
 public class ManifestWriter {
 
     public static File updateManifest(MavenProject project , Manifest mf) throws IOException {
         Attributes attributes = mf.getMainAttributes();
+        System.out.println("UpdateManifest Method in");
+        System.out.println("Update Attribute");
+        
         String projectVersion = project.getVersion();
-        if( projectVersion.indexOf("-SNAPSHOT") != -1 ) {
+        if( projectVersion.indexOf("-SNAPSHOT") != -1 )
+        {
         	projectVersion = projectVersion.replace("-SNAPSHOT", ".qualifier");
+        	projectVersion = getManifestVersion(mf, projectVersion);
         }
-
+        
     	attributes.put(Name.MANIFEST_VERSION, projectVersion);
         attributes.putValue("Bundle-Version", projectVersion );
-
-//      if((attributes.getValue(Name.MANIFEST_VERSION) == null || attributes.getValue(Name.MANIFEST_VERSION).equals("1.0")) && project.getVersion().equals("1.0.0-SNAPSHOT")) {
+        
+//        if((attributes.getValue(Name.MANIFEST_VERSION) == null || attributes.getValue(Name.MANIFEST_VERSION).equals("1.0")) && project.getVersion().equals("1.0.0-SNAPSHOT")) {
 //        	System.out.println("Update Attribute");
 //        	attributes.put(Name.MANIFEST_VERSION, project.getVersion());
-//          attributes.putValue("Bundle-Version", project.getVersion());
-//      }
+//            attributes.putValue("Bundle-Version", project.getVersion());
+//        }
 
         File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
         mfile.getParentFile().mkdirs();
@@ -40,4 +47,10 @@ public class ManifestWriter {
         }
         return mfile;
     }
+    
+    private static String getManifestVersion( Manifest manifest , String version) 
+    {    	
+    	return VersionParser.getcalculatedOSGiVersion(version);
+    }
+
 }

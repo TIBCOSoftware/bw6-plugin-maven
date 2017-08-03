@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -64,6 +65,16 @@ public class BWModulesParser {
 			projects = session.getProjects();
 		}
 
+		
+		Set<Artifact> depArtifacts = project.getDependencyArtifacts();
+		for( Artifact depArtifact : depArtifacts )
+		{
+			if( depArtifact.getArtifactId().equals(module))
+			{
+				return depArtifact;
+			}
+		}
+		
 		for(MavenProject project : projects) {
 			if(project.getArtifactId().equals(module)) {
 				Artifact artifact = project.getArtifact();
