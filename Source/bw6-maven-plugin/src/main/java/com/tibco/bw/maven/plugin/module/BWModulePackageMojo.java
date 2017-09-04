@@ -42,6 +42,7 @@ import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwmodule", defaultPhase = LifecyclePhase.PACKAGE)
@@ -258,6 +259,17 @@ public class BWModulePackageMojo extends AbstractMojo {
         if(includes.contains("target/")) {
         	includes.remove("target/");
         }
+        
+        if(isSharedModule()){
+        	//Ensure .project and .config are added
+        	if(!includes.contains(".config")){
+        		includes.add(".config");
+        	}
+        	if(!includes.contains(".project")){
+        		includes.add(".project");
+        	}
+        }
+        
         if (includes.isEmpty()) {
             fileSet.setIncludes(new String[] { "" });
         } else {
@@ -271,6 +283,11 @@ public class BWModulePackageMojo extends AbstractMojo {
         fileSet.setExcludes(allExcludes.toArray(new String[allExcludes.size()]));
         return fileSet;
     }
+    
+    protected boolean isSharedModule(){
+    	return manifest.getMainAttributes().getValue(Constants.TIBCO_SHARED_MODULE) == null ? false : true;
+    }
+    
 
     private void updateManifestVersion() {
     	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);

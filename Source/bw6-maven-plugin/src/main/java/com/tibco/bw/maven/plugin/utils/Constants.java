@@ -13,4 +13,5 @@ public interface Constants {
 	public static final String TECHNOLOGY_VERSION = "technologyVersion";
 	public static final String BASIC_AUTH = "BASIC";
 	public static final String DIGEST_AUTH = "DIGEST";
+	public static final String TIBCO_SHARED_MODULE = "TIBCO-BW-SharedModule";
 }
