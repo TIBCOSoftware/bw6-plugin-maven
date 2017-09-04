@@ -62,4 +62,14 @@ public class ModuleHelper
 		
 		return null;
 	}
+	
+	public static BWModule getSharedModule(List<BWModule>modules){
+		for(BWModule module : modules){
+			if(module.getType() == BWModuleType.SharedModule){
+				return module;
+			}
+		}
+		
+		return null;
+	}
 }

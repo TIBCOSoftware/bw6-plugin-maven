@@ -7,13 +7,22 @@ import java.util.Map;
 
 public class BWProject 
 {
-
+	
 	private BWParent parent;
 
 	private List<BWModule> modules;
 	
 	private Map<String, List<String>> dependencies = new HashMap<String, List<String>>();
 
+	private BWProjectType type;
+	
+	public BWProject() {
+		this.type = BWProjectType.Application;
+	}
+	
+	public BWProject(BWProjectType type){
+		this.type = type;
+	}
 	
 	public List<BWModule> getModules() 
 	{
@@ -50,6 +59,8 @@ public class BWProject
 		this.parent = parent;
 	}
 
-
-	
+	public BWProjectType getType(){
+		return this.type;
+	}
 }
+

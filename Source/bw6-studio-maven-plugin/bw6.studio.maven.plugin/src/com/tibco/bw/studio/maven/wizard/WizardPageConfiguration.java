@@ -33,6 +33,7 @@ import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWParent;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class WizardPageConfiguration extends WizardPage {
@@ -49,7 +50,9 @@ public class WizardPageConfiguration extends WizardPage {
 		super(pageName);
 		this.project = project;
 		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorks");
-		setDescription("Enter the GroupId and ArtifactId for Maven POM File generation.\nPOM files will be generated for Projects listed below and Parent POM file will be generated aggregating the Projects");
+		if(project.getType() == BWProjectType.Application){
+			setDescription("Enter the GroupId and ArtifactId for Maven POM File generation.\nPOM files will be generated for Projects listed below and Parent POM file will be generated aggregating the Projects");
+		}
 	}
 
 	@Override
@@ -114,16 +117,19 @@ public class WizardPageConfiguration extends WizardPage {
 		addSeperator(parent);
 		setApplicationPOMFields();
 		addSeperator(parent);
-		setDeploymentCheckBox();
-		addSeperator(parent);
-
-		Label label = new Label(container, SWT.NONE);
-		label.setText("Note* : The POM File will be generated/updated (if exists) for following Projects");
-		GridData versionData = new GridData();
-		versionData.horizontalSpan = 4;
-		label.setLayoutData(versionData);
-
-		createModulesTable();
+		if(project.getType() == BWProjectType.Application){
+			setDeploymentCheckBox();
+			addSeperator(parent);
+		
+			Label label = new Label(container, SWT.NONE);
+			label.setText("Note* : The POM File will be generated/updated (if exists) for following Projects");
+			GridData versionData = new GridData();
+			versionData.horizontalSpan = 4;
+			label.setLayoutData(versionData);
+	
+			createModulesTable();
+		}
+		
 		setControl(container);
 		setPageComplete(true);
 	}
@@ -192,33 +198,55 @@ public class WizardPageConfiguration extends WizardPage {
 
 		GridLayout layout = new GridLayout();
 		innerContainer.setLayout(layout);
-		layout.numColumns = 4;
+		layout.numColumns = 2;
 
-		BWParent parent = ModuleHelper.getParentModule(project.getModules());
-
+		BWModule module;
+		switch(project.getType()){
+			
+			case SharedModule:{
+				module = ModuleHelper.getSharedModule(project.getModules());
+				break;
+			}
+		
+			case Application:
+				default:{
+				module = ModuleHelper.getParentModule(project.getModules());
+				break;
+			}
+		}
+		
 		Label groupLabel = new Label(innerContainer, SWT.NONE);
-		groupLabel.setText("Group Id");
+		groupLabel.setText("Group Id:");
 
 		appGroupId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-		appGroupId.setText(parent.getGroupId());
+		appGroupId.setText(module.getGroupId());
 		GridData groupData = new GridData(200, 15);
 		appGroupId.setLayoutData(groupData);
 
 		Label artifactLabel = new Label(innerContainer, SWT.NONE);
-		artifactLabel.setText("Parent ArtifactId");
+		String label;
+		if(project.getType() == BWProjectType.SharedModule){
+			label = "Artifact Id:";
+		}else{
+			label = "Parent Artifact Id";
+		}
+		artifactLabel.setText(label);
 
 		appArtifactId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-		appArtifactId.setText(parent.getArtifactId());
+		appArtifactId.setText(module.getArtifactId());
 		GridData artifactData = new GridData(200, 15);
 		appArtifactId.setLayoutData(artifactData);
-
+		if(project.getType() == BWProjectType.SharedModule){
+			appArtifactId.setEditable(false);
+		}
+		
 		Label versionLabel = new Label(innerContainer, SWT.NONE);
-		versionLabel.setText("Version");
+		versionLabel.setText("Version:");
 
 		appVersion = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-		appVersion.setText(parent.getVersion());
+		appVersion.setText(module.getVersion());
 		GridData versionData = new GridData(120, 15);
-		versionData.horizontalSpan = 3;
+//		versionData.horizontalSpan = 3;
 		appVersion.setLayoutData(versionData);
 		appVersion.setEditable(false);
 	}
@@ -319,11 +347,13 @@ public class WizardPageConfiguration extends WizardPage {
 			// );
 		}
 
-		BWModule parent = ModuleHelper.getParentModule(project.getModules());
-
-		if (!parent.getArtifactId().equals(appArtifactId.getText()) || !parent.getGroupId().equals(appGroupId.getText())) {
-			parent.setArtifactId(appArtifactId.getText());
-			((BWParent) parent).setValueChanged(true);
+		if(project.getType() == BWProjectType.Application){
+			BWModule parent = ModuleHelper.getParentModule(project.getModules());
+	
+			if (!parent.getArtifactId().equals(appArtifactId.getText()) || !parent.getGroupId().equals(appGroupId.getText())) {
+				parent.setArtifactId(appArtifactId.getText());
+				((BWParent) parent).setValueChanged(true);
+			}
 		}
 		return project;
 	}

@@ -17,7 +17,7 @@ import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder {
-	private String bwEdition;
+	protected String bwEdition;
 
 	@Override
 	public void build(BWProject project, BWModule module) throws Exception {
