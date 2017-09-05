@@ -72,12 +72,6 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		
 		for(Dependency dependency : dependencyList){
 			
-//			String dependencyId = dependency.getGroupId() + "." + dependency.getArtifactId();
-//			String version = dependency.getVersion();
-//			if(isDependencyCreated(dependencyId, version)){
-//				continue;
-//			}
-			
 			File jarFile = getDependencyFile(dependency);
 			if(isSharedModule(jarFile)){
 				jarDependencies.add(jarFile);
@@ -87,7 +81,9 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		List<IProject> projects = new ArrayList<IProject>();
 		for(File file : jarDependencies){
 			IProject p = createProjectFromJar(file);
-			projects.add(p);
+			if(p != null){
+				projects.add(p);
+			}
 		}
 		
 		addModulesToProjectDependencies(projects, project);
