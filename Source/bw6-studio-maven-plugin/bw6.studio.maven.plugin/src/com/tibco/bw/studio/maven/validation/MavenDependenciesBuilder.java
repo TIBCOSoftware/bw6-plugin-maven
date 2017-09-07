@@ -25,6 +25,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.embedder.IMavenConfiguration;
 import org.eclipse.m2e.core.internal.embedder.MavenImpl;
@@ -36,6 +38,7 @@ import com.tibco.bw.design.util.ModelHelper;
 import com.tibco.bw.studio.maven.helpers.POMHelper;
 import com.tibco.xpd.resources.XpdProjectResourceFactory;
 import com.tibco.xpd.resources.XpdResourcesPlugin;
+import com.tibco.zion.common.util.EditingDomainUtil;
 
 public class MavenDependenciesBuilder extends BWAbstractBuilder{
 	
@@ -87,6 +90,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 		
 		addModulesToProjectDependencies(projects, project);
+		addModulesToApplication(projects, project);
 		
 	}
 	
@@ -260,9 +264,24 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 	}
 
 	
-	protected void addModulesToProjectDependencies(List<IProject> modules, IProject sourceProject){
+	protected void addModulesToProjectDependencies(final List<IProject> modules, final IProject sourceProject){
 		for(IProject module : modules){
-			ModelHelper.INSTANCE.addModuleProvideCapabilities(module, sourceProject);
+			ModelHelper.INSTANCE.addModuleRequireCapabilities(module, sourceProject);
+		}					
+	}
+	
+	protected void addModulesToApplication(List<IProject> modules, IProject sourceProject){
+		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
+		if(editingDomain != null){
+			
+			RecordingCommand command = new RecordingCommand(editingDomain) {
+				@Override
+				protected void doExecute() {
+					ModelHelper.INSTANCE.addModulesToApplication(modules, sourceProject);
+				}
+			};
+
+			editingDomain.getCommandStack().execute(command);
 		}
 	}
 }
