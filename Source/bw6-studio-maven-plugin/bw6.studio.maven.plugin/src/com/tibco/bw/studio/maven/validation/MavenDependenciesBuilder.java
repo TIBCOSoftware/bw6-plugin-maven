@@ -2,11 +2,10 @@ package com.tibco.bw.studio.maven.validation;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -14,6 +13,8 @@ import java.util.jar.Manifest;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -36,16 +37,13 @@ import org.eclipse.pde.internal.core.PDECore;
 import com.tibco.bw.design.api.BWAbstractBuilder;
 import com.tibco.bw.design.util.ModelHelper;
 import com.tibco.bw.studio.maven.helpers.POMHelper;
-import com.tibco.xpd.resources.XpdProjectResourceFactory;
-import com.tibco.xpd.resources.XpdResourcesPlugin;
 import com.tibco.zion.common.util.EditingDomainUtil;
 
+@SuppressWarnings("restriction")
 public class MavenDependenciesBuilder extends BWAbstractBuilder{
 	
 	protected IMaven maven;
-	
-	protected static Map<String, String> dependenciesMap;
-	
+		
 	public static final String MAVEN_NATURE_ID = "org.eclipse.m2e.core.maven2Nature";
 	
 	@Override
@@ -63,35 +61,43 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 			return;
 		}
 		
-		File pomFileAbs = getPOMFile(project);
-
-		if(pomFileAbs == null || !pomFileAbs.exists()){
+		Model mavenModel = getMavenModel(project);//POMHelper.readModelFromPOM(pomFileAbs);
+		
+		if(mavenModel == null){
 			return;
 		}
 		
-		Model mavenModel = POMHelper.readModelFromPOM(pomFileAbs);
 		List<Dependency> dependencyList = mavenModel.getDependencies();
-		List<File> jarDependencies = new ArrayList<File>();
-		
+		List<IProject> projects = new ArrayList<IProject>();
+
 		for(Dependency dependency : dependencyList){
 			
 			File jarFile = getDependencyFile(dependency);
 			if(isSharedModule(jarFile)){
-				jarDependencies.add(jarFile);
-			}
-		}
-		
-		List<IProject> projects = new ArrayList<IProject>();
-		for(File file : jarDependencies){
-			IProject p = createProjectFromJar(file);
-			if(p != null){
-				projects.add(p);
+				IProject p = createProjectFromDependency(dependency, jarFile);
+				if(p != null){
+					projects.add(p);
+				}
 			}
 		}
 		
 		addModulesToProjectDependencies(projects, project);
 		addModulesToApplication(projects, project);
 		
+	}
+	
+	protected boolean isMavenProject(IProject project){
+		boolean isMavenProject = false;
+		try {
+			IProjectNature nature = project.getNature(MAVEN_NATURE_ID);
+			if(nature != null){
+				isMavenProject = true;
+			}
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+		
+		return isMavenProject;
 	}
 	
 	protected boolean isLocalProject(IProject project){
@@ -109,28 +115,29 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		return isLocal;
 	}
 	
-	protected boolean isMavenProject(IProject project){
-		boolean isMavenProject = false;
-		try {
-			IProjectNature nature = project.getNature(MAVEN_NATURE_ID);
-			if(nature != null){
-				isMavenProject = true;
-			}
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
-		
-		return isMavenProject;
-	}
-	
-	protected File getPOMFile(IProject project){
+	protected Model getMavenModel(IProject project){
 		IFile pomFile = project.getFile("/pom.xml");
 		
 		if(!pomFile.exists()){
 			return null;
 		}
-		
-		return pomFile.getRawLocation().toFile();
+		Model mavenModel = null;
+		try{
+			 File f = pomFile.getRawLocation().toFile();
+			 mavenModel = POMHelper.readModelFromPOM(f);
+		}catch(Exception e){
+			//File is not in the workspace, it may come from a zip package
+			URI uri = pomFile.getLocationURI();
+			try {
+				IFileStore store = EFS.getStore(uri);
+				InputStream is = store.openInputStream(EFS.NONE, null);
+				mavenModel = POMHelper.readModelFromPOM(is);
+				is.close();
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+		}
+		return mavenModel;
 	}
 	
 	protected File getDependencyFile(Dependency dependency){
@@ -180,38 +187,33 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		return false;
 	}
 
-	protected boolean isDependencyCreated(String dependencyID, String version){
-		if(dependenciesMap == null){
-			dependenciesMap = new HashMap<String, String>();
-			return false;
-		}else{
-			String key = dependencyID + "-" + version;
-			if(dependenciesMap.containsKey(key)){
-				String projectName = dependenciesMap.get(key);
-				IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-				if(project.exists()){
-					return true;
-				}
-			}
-		}
-		
-		return false;
-	}
-
-	protected IProject createProjectFromJar(File jarFile){
-		if(jarFile == null){
+	protected IProject createProjectFromDependency(Dependency dependency, File jarFile){
+		if(jarFile == null || dependency == null){
 			return null;
 		}
-		//For TEST ONLY
-		String p1 = "C:/BW/extSM-1.0.0.jar";
-		jarFile = new File(p1);
-    	
+		
 		String projectName = getProjectName(jarFile);
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		IProject jarProject = root.getProject(projectName);
 		
 		if(jarProject.exists()){
-			return null;
+			//Validates if the existing project is the same version as the dependency
+			
+			Model mavenModel = getMavenModel(jarProject);
+			String projectVersion = mavenModel.getVersion();
+			String dependencyVersion = dependency.getVersion();
+			
+			if(projectVersion.equals(dependencyVersion)){
+				return null;
+			}else{
+				//Deletes old project. So the project for the new version can be created
+				try {
+					jarProject.delete(false, true, null);
+					jarProject = root.getProject(projectName);
+				} catch (CoreException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		
 		String location = jarFile.toPath().toString();
@@ -231,7 +233,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 				jarProject.open(progressMonitor);
 				jarProject.setPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY, PDECore.BINARY_PROJECT_VALUE);
 									
-				XpdProjectResourceFactory factory = XpdResourcesPlugin.getDefault().getXpdProjectResourceFactory(jarProject);
+//				XpdProjectResourceFactory factory = XpdResourcesPlugin.getDefault().getXpdProjectResourceFactory(jarProject);
 				
 				return jarProject;
 	    	}catch(Exception e){
@@ -241,7 +243,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 	    
 	    return null;
 	}
-
+	
 	protected String getProjectName(File file){
 		String projectName = "";
 		if(file != null){
@@ -263,7 +265,6 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		return projectName;
 	}
 
-	
 	protected void addModulesToProjectDependencies(final List<IProject> modules, final IProject sourceProject){
 		for(IProject module : modules){
 			ModelHelper.INSTANCE.addModuleRequireCapabilities(module, sourceProject);
