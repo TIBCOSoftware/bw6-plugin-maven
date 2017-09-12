@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,8 +32,13 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
+import org.eclipse.aether.graph.Dependency;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -60,6 +66,9 @@ public class BWEARPackagerMojo extends AbstractMojo {
     @Component
     private MavenProject project;
 
+    @Component
+    ProjectDependenciesResolver resolver;
+    
     private List<File> tempFiles;
 
     private Manifest manifest;
@@ -79,6 +88,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
     //The version to be updated in the Application Manifest. 
     String version;
 
+    protected String pluginsToIgnore[] = null;
     /**
      * Execute Method.
      * 
@@ -181,10 +191,92 @@ public class BWEARPackagerMojo extends AbstractMojo {
                 	isAppModuleArtifact = false;
                 }*/
             }
+            
+    		List<MavenProject> projects = parser.getModulesProjectSet();
+    		for(MavenProject project : projects){
+    			
+    			Set<Artifact> dependencyArtifacts = project.getDependencyArtifacts();
+    			Set<File> artifactFiles = new HashSet<File>(); 
+
+    			for(Artifact artifact : dependencyArtifacts) {
+    				if(artifact.getVersion().equals("0.0.0")) { //$NON-NLS-1$
+    					continue;
+    				}
+    				
+    				if(moduleVersionMap.containsKey(artifact.getArtifactId())){
+    					continue;
+    				}
+    				
+					artifactFiles.add(artifact.getFile());
+    			}
+
+    			//This code allows dependencies delared in a Module to make it to the root level of the ear file
+    			//This is necessary for the ear file to run properly
+    	        DependencyResolutionResult resolutionResult = getDependenciesResolutionResult();
+
+    	        if (resolutionResult != null) {
+    	        	for(Dependency dependency : resolutionResult.getDependencies()) {
+    	    			if(dependency.getArtifact().getVersion().equals("0.0.0")) { //$NON-NLS-1$
+    	    				continue;
+    	    			}
+    	    			
+    	    			if(moduleVersionMap.containsKey(dependency.getArtifact().getArtifactId())){
+    	    				continue;
+    	    			}
+    	    			
+    	                String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
+    	                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
+    					artifactFiles.add(dependency.getArtifact().getFile());
+    	        	}
+    	        }  
+    	        
+    			for(File file : artifactFiles) {
+    				if(isPluginToIgnore(file.getName())){//if(file.getName().indexOf("com.tibco.bw.palette.shared") != -1 || file.getName().indexOf("com.tibco.xml.cxf.common") != -1 || file.getName().indexOf("tempbw") != -1) {
+    					continue;
+    				}
+    				jarchiver.addFile(file, file.getName());
+    			}
+    		}
     	} catch(Exception e) {
     		getLog().error("Failed to add modules to the Application");
     		throw e;
     	}
+    }
+    
+	private DependencyResolutionResult getDependenciesResolutionResult() {
+		DependencyResolutionResult resolutionResult = null;
+        try {
+        	getLog().debug("Looking up dependency tree for the current project => " +  project + " and the current session => " + session);
+            DefaultDependencyResolutionRequest resolution = new DefaultDependencyResolutionRequest(project, session.getRepositorySession());
+            resolutionResult = resolver.resolve(resolution);
+        } catch (DependencyResolutionException e) {
+        	getLog().debug("Caught DependencyResolutionException for the project => " + e.getMessage() + " with cause => " + e.getCause());
+        	e.printStackTrace();
+            resolutionResult = e.getResult();
+        }
+		return resolutionResult;
+	}
+    
+    protected String[] getPluginsToIgnore(){
+    	if(pluginsToIgnore == null){
+    		pluginsToIgnore = new String[]{
+    				"com.tibco.bw.palette.shared",
+    				"com.tibco.xml.cxf.common",
+    				"tempbw"
+    		};
+    	}
+    	
+    	return pluginsToIgnore;
+    }
+    
+    protected boolean isPluginToIgnore(String pluginName){
+    	for(String toIgnore : getPluginsToIgnore()){
+    		if(pluginName.startsWith(toIgnore)){
+    			return true;
+    		}
+    	}
+    	
+    	return false;
     }
 
 	/**
