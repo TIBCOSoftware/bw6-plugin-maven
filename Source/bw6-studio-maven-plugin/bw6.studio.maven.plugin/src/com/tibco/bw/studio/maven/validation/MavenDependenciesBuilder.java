@@ -36,16 +36,16 @@ import org.eclipse.m2e.core.internal.preferences.MavenConfigurationImpl;
 import org.eclipse.pde.internal.core.PDECore;
 
 import com.tibco.bw.design.api.BWAbstractBuilder;
+import com.tibco.bw.design.ext.dependencies.ExternalDependenciesRegistry;
 import com.tibco.bw.design.util.ModelHelper;
 import com.tibco.bw.studio.maven.helpers.POMHelper;
+import com.tibco.bw.studio.maven.util.BW6MavenConstants;
 import com.tibco.zion.common.util.EditingDomainUtil;
 
 @SuppressWarnings("restriction")
 public class MavenDependenciesBuilder extends BWAbstractBuilder{
 	
 	protected IMaven maven;
-		
-	public static final String MAVEN_NATURE_ID = "org.eclipse.m2e.core.maven2Nature";
 	
 	@Override
 	public void doBuild(int kind, IProject project, IProgressMonitor monitor) {
@@ -62,7 +62,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 			return;
 		}
 		
-		Model mavenModel = getMavenModel(project);//POMHelper.readModelFromPOM(pomFileAbs);
+		Model mavenModel = getMavenModel(project);
 		
 		if(mavenModel == null){
 			return;
@@ -85,12 +85,13 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		addModulesToProjectDependencies(projects, project);
 		addModulesToApplication(projects, project);
 		
+		registerDependencies(projects, project);
 	}
 	
 	protected boolean isMavenProject(IProject project){
 		boolean isMavenProject = false;
 		try {
-			IProjectNature nature = project.getNature(MAVEN_NATURE_ID);
+			IProjectNature nature = project.getNature(BW6MavenConstants.MAVEN_NATURE_ID);
 			if(nature != null){
 				isMavenProject = true;
 			}
@@ -117,7 +118,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 	}
 	
 	protected Model getMavenModel(IProject project){
-		IFile pomFile = project.getFile("/pom.xml");
+		IFile pomFile = project.getFile(BW6MavenConstants.POM_XML_LOCATION);
 		
 		if(!pomFile.exists()){
 			return null;
@@ -174,9 +175,9 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 				Manifest manifest = jarFile.getManifest();
 				if(manifest != null){	
 					Attributes attr = manifest.getMainAttributes();
-					String value = attr.getValue("TIBCO-BW-SharedModule");
+					String value = attr.getValue(BW6MavenConstants.HEADER_BW_SHARED_MODULE);
 					jarFile.close();
-					if(value != null && value.equals("META-INF/module.bwm")){
+					if(value != null && value.equals(BW6MavenConstants.HEADER_BW_SHARED_MODULE_VALUE)){
 						return true;
 					}
 				}
@@ -220,11 +221,11 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		String location = jarFile.toPath().toString();
 		IPath jarPath = new Path(location);
 		
-	    if("jar".equalsIgnoreCase(jarPath.getFileExtension())){
+	    if("jar".equalsIgnoreCase(jarPath.getFileExtension())){ //$NON-NLS-1$
 	    	try {
                 String path = jarFile.getAbsolutePath();
-                path = path.replace("\\", "/");
-                URI zipURI = new URI("zip:/?file:/" + path);
+                path = path.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
+                URI zipURI = new URI(BW6MavenConstants.EXTERNAL_SM_URI_SCHEME + path);
                 
                 IProjectDescription desc = ResourcesPlugin.getWorkspace().newProjectDescription(projectName);
                 desc.setLocationURI(zipURI);
@@ -233,7 +234,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 				jarProject.create(desc , progressMonitor);
 				jarProject.open(progressMonitor);
 				jarProject.setPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY, PDECore.BINARY_PROJECT_VALUE);
-				jarProject.setPersistentProperty(new QualifiedName("PLUGIN_ID", "SHARED_MODULE_TYPE"), "EXT_SM"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				jarProject.setPersistentProperty(BW6MavenConstants.PLUGIN_PROPERTY_EXTERNAL_SM, BW6MavenConstants.PLUGIN_PROPERTY_VALUE_EXTERNAL_SM);
 									
 //				XpdProjectResourceFactory factory = XpdResourcesPlugin.getDefault().getXpdProjectResourceFactory(jarProject);
 				
@@ -247,14 +248,14 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 	}
 	
 	protected String getProjectName(File file){
-		String projectName = "";
+		String projectName = ""; //$NON-NLS-1$
 		if(file != null){
 			try {
 				JarFile jarFile = new JarFile(file);
 				Manifest manifest = jarFile.getManifest();
 				if(manifest != null){	
 					Attributes attr = manifest.getMainAttributes();
-					String value = attr.getValue("Bundle-SymbolicName"); //$NON-NLS-1$
+					String value = attr.getValue(BW6MavenConstants.HEADER_BUNDLE_NAME);
 					jarFile.close();
 					if(value != null ){
 						 projectName = value;
@@ -285,6 +286,13 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 			};
 
 			editingDomain.getCommandStack().execute(command);
+		}
+	}
+
+	protected void registerDependencies(List<IProject>dependencies, IProject hostProject){
+		ExternalDependenciesRegistry registry = ModelHelper.INSTANCE.getExternalDependenciesRegistry();
+		for(IProject dependency : dependencies){
+			registry.addDependency(hostProject, dependency);
 		}
 	}
 }
