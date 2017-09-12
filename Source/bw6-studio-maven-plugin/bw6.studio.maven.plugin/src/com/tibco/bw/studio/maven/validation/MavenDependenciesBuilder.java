@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.m2e.core.embedder.IMaven;
@@ -232,6 +233,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 				jarProject.create(desc , progressMonitor);
 				jarProject.open(progressMonitor);
 				jarProject.setPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY, PDECore.BINARY_PROJECT_VALUE);
+				jarProject.setPersistentProperty(new QualifiedName("PLUGIN_ID", "SHARED_MODULE_TYPE"), "EXT_SM"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 									
 //				XpdProjectResourceFactory factory = XpdResourcesPlugin.getDefault().getXpdProjectResourceFactory(jarProject);
 				
