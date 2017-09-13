@@ -85,7 +85,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		addModulesToProjectDependencies(projects, project);
 		addModulesToApplication(projects, project);
 		
-		registerDependencies(projects, project);
+//		registerDependencies(projects, project);
 	}
 	
 	protected boolean isMavenProject(IProject project){
@@ -289,10 +289,10 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 	}
 
-	protected void registerDependencies(List<IProject>dependencies, IProject hostProject){
-		ExternalDependenciesRegistry registry = ModelHelper.INSTANCE.getExternalDependenciesRegistry();
-		for(IProject dependency : dependencies){
-			registry.addDependency(hostProject, dependency);
-		}
-	}
+//	protected void registerDependencies(List<IProject>dependencies, IProject hostProject){
+//		ExternalDependenciesRegistry registry = ModelHelper.INSTANCE.getExternalDependenciesRegistry();
+//		for(IProject dependency : dependencies){
+//			registry.addDependency(hostProject, dependency);
+//		}
+//	}
 }
