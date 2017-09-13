@@ -274,7 +274,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		}					
 	}
 	
-	protected void addModulesToApplication(List<IProject> modules, IProject sourceProject){
+	protected void addModulesToApplication(final List<IProject> modules, final IProject sourceProject){
 		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
 		if(editingDomain != null){
 			
