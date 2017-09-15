@@ -61,9 +61,9 @@
  <extension
        point="com.tibco.bw.design.BWBuilder">
     <builder
-          configClass="com.tibco.bw.studio.maven.validation.MavenDependenciesBuilder"
-          id="bw6.studio.maven.plugin.mavenDependenciesBuilder"
-          name="MavenDependencyBuilder">
+          configClass="com.tibco.bw.studio.maven.validation.BWMavenDependenciesBuilder"
+          id="bw6.studio.maven.plugin.bwMavenDependenciesBuilder"
+          name="BWMavenDependencyBuilder">
     </builder>
  </extension>
 

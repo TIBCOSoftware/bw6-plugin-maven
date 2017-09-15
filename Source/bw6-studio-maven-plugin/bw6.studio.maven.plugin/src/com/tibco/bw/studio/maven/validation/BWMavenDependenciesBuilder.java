@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.Attributes;
@@ -36,14 +37,15 @@ import org.eclipse.m2e.core.internal.preferences.MavenConfigurationImpl;
 import org.eclipse.pde.internal.core.PDECore;
 
 import com.tibco.bw.design.api.BWAbstractBuilder;
-import com.tibco.bw.design.ext.dependencies.ExternalDependenciesRegistry;
+import com.tibco.bw.design.external.dependencies.BWExternalDependenciesHelper;
+import com.tibco.bw.design.external.dependencies.BWExternalDependenciesRegistry;
 import com.tibco.bw.design.util.ModelHelper;
 import com.tibco.bw.studio.maven.helpers.POMHelper;
-import com.tibco.bw.studio.maven.util.BW6MavenConstants;
+import com.tibco.bw.studio.maven.util.BWMavenConstants;
 import com.tibco.zion.common.util.EditingDomainUtil;
 
 @SuppressWarnings("restriction")
-public class MavenDependenciesBuilder extends BWAbstractBuilder{
+public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 	
 	protected IMaven maven;
 	
@@ -85,13 +87,13 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		addModulesToProjectDependencies(projects, project);
 		addModulesToApplication(projects, project);
 		
-//		registerDependencies(projects, project);
+		registerDependencies(projects, project);
 	}
 	
 	protected boolean isMavenProject(IProject project){
 		boolean isMavenProject = false;
 		try {
-			IProjectNature nature = project.getNature(BW6MavenConstants.MAVEN_NATURE_ID);
+			IProjectNature nature = project.getNature(BWMavenConstants.MAVEN_NATURE_ID);
 			if(nature != null){
 				isMavenProject = true;
 			}
@@ -118,7 +120,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 	}
 	
 	protected Model getMavenModel(IProject project){
-		IFile pomFile = project.getFile(BW6MavenConstants.POM_XML_LOCATION);
+		IFile pomFile = project.getFile(BWMavenConstants.POM_XML_LOCATION);
 		
 		if(!pomFile.exists()){
 			return null;
@@ -175,9 +177,9 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 				Manifest manifest = jarFile.getManifest();
 				if(manifest != null){	
 					Attributes attr = manifest.getMainAttributes();
-					String value = attr.getValue(BW6MavenConstants.HEADER_BW_SHARED_MODULE);
+					String value = attr.getValue(BWMavenConstants.HEADER_BW_SHARED_MODULE);
 					jarFile.close();
-					if(value != null && value.equals(BW6MavenConstants.HEADER_BW_SHARED_MODULE_VALUE)){
+					if(value != null && value.equals(BWMavenConstants.HEADER_BW_SHARED_MODULE_VALUE)){
 						return true;
 					}
 				}
@@ -195,54 +197,72 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 		
 		String projectName = getProjectName(jarFile);
-		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		IProject jarProject = root.getProject(projectName);
+		String dependencyVersion = dependency.getVersion();
 		
-		if(jarProject.exists()){
-			//Validates if the existing project is the same version as the dependency
-			
-			Model mavenModel = getMavenModel(jarProject);
-			String projectVersion = mavenModel.getVersion();
-			String dependencyVersion = dependency.getVersion();
-			
-			if(projectVersion.equals(dependencyVersion)){
-				return null;
-			}else{
-				//Deletes old project. So the project for the new version can be created
-				try {
-					jarProject.delete(false, true, null);
-					jarProject = root.getProject(projectName);
-				} catch (CoreException e) {
-					e.printStackTrace();
-				}
+		String pathStr = jarFile.getAbsolutePath();
+		Path jarPath = new Path(pathStr);
+		
+		if("jar".equalsIgnoreCase(jarPath.getFileExtension())){	
+			pathStr = pathStr.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
+			try {
+				URI zipURI = new URI(BWMavenConstants.EXTERNAL_SM_URI_SCHEME + pathStr);
+				BWMavenDependencyHandler handler = new BWMavenDependencyHandler(projectName, dependencyVersion, zipURI);
+				IProject dependencyProject = BWExternalDependenciesHelper.INSTANCE.createExternalProjectDependency(handler);
+				return dependencyProject;
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
 			}
 		}
 		
-		String location = jarFile.toPath().toString();
-		IPath jarPath = new Path(location);
-		
-	    if("jar".equalsIgnoreCase(jarPath.getFileExtension())){ //$NON-NLS-1$
-	    	try {
-                String path = jarFile.getAbsolutePath();
-                path = path.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
-                URI zipURI = new URI(BW6MavenConstants.EXTERNAL_SM_URI_SCHEME + path);
-                
-                IProjectDescription desc = ResourcesPlugin.getWorkspace().newProjectDescription(projectName);
-                desc.setLocationURI(zipURI);
-
-				IProgressMonitor progressMonitor = new NullProgressMonitor();
-				jarProject.create(desc , progressMonitor);
-				jarProject.open(progressMonitor);
-				jarProject.setPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY, PDECore.BINARY_PROJECT_VALUE);
-				jarProject.setPersistentProperty(BW6MavenConstants.PLUGIN_PROPERTY_EXTERNAL_SM, BW6MavenConstants.PLUGIN_PROPERTY_VALUE_EXTERNAL_SM);
-									
+//		String projectName = getProjectName(jarFile);
+//		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+//		IProject jarProject = root.getProject(projectName);
+//		
+//		if(jarProject.exists()){
+//			//Validates if the existing project is the same version as the dependency
+//			
+//			Model mavenModel = getMavenModel(jarProject);
+//			String projectVersion = mavenModel.getVersion();
+//			String dependencyVersion = dependency.getVersion();
+//			
+//			if(projectVersion.equals(dependencyVersion)){
+//				return null;
+//			}else{
+//				//Deletes old project. So the project for the new version can be created
+//				try {
+//					jarProject.delete(false, true, null);
+//					jarProject = root.getProject(projectName);
+//				} catch (CoreException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		}
+//		
+//		String location = jarFile.toPath().toString();
+//		IPath jarPath = new Path(location);
+//		
+//	    if("jar".equalsIgnoreCase(jarPath.getFileExtension())){ //$NON-NLS-1$
+//	    	try {
+//                String path = jarFile.getAbsolutePath();
+//                path = path.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
+//                URI zipURI = new URI(BW6MavenConstants.EXTERNAL_SM_URI_SCHEME + path);
+//                
+//                IProjectDescription desc = ResourcesPlugin.getWorkspace().newProjectDescription(projectName);
+//                desc.setLocationURI(zipURI);
+//
+//				IProgressMonitor progressMonitor = new NullProgressMonitor();
+//				jarProject.create(desc , progressMonitor);
+//				jarProject.open(progressMonitor);
+//				jarProject.setPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY, PDECore.BINARY_PROJECT_VALUE);
+//				jarProject.setPersistentProperty(BW6MavenConstants.PLUGIN_PROPERTY_EXTERNAL_SM, BW6MavenConstants.PLUGIN_PROPERTY_VALUE_EXTERNAL_SM);
+//									
 //				XpdProjectResourceFactory factory = XpdResourcesPlugin.getDefault().getXpdProjectResourceFactory(jarProject);
-				
-				return jarProject;
-	    	}catch(Exception e){
-	    		e.printStackTrace();
-	    	}
-	    }
+//				
+//				return jarProject;
+//	    	}catch(Exception e){
+//	    		e.printStackTrace();
+//	    	}
+//	    }
 	    
 	    return null;
 	}
@@ -255,7 +275,7 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 				Manifest manifest = jarFile.getManifest();
 				if(manifest != null){	
 					Attributes attr = manifest.getMainAttributes();
-					String value = attr.getValue(BW6MavenConstants.HEADER_BUNDLE_NAME);
+					String value = attr.getValue(BWMavenConstants.HEADER_BUNDLE_NAME);
 					jarFile.close();
 					if(value != null ){
 						 projectName = value;
@@ -289,10 +309,10 @@ public class MavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 	}
 
-//	protected void registerDependencies(List<IProject>dependencies, IProject hostProject){
-//		ExternalDependenciesRegistry registry = ModelHelper.INSTANCE.getExternalDependenciesRegistry();
-//		for(IProject dependency : dependencies){
-//			registry.addDependency(hostProject, dependency);
-//		}
-//	}
+	protected void registerDependencies(List<IProject>dependencies, IProject hostProject){
+		BWExternalDependenciesRegistry registry = BWExternalDependenciesRegistry.INSTANCE;
+		for(IProject dependency : dependencies){
+			registry.addDependency(hostProject, dependency);
+		}
+	}
 }
