@@ -213,57 +213,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 				e.printStackTrace();
 			}
 		}
-		
-//		String projectName = getProjectName(jarFile);
-//		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-//		IProject jarProject = root.getProject(projectName);
-//		
-//		if(jarProject.exists()){
-//			//Validates if the existing project is the same version as the dependency
-//			
-//			Model mavenModel = getMavenModel(jarProject);
-//			String projectVersion = mavenModel.getVersion();
-//			String dependencyVersion = dependency.getVersion();
-//			
-//			if(projectVersion.equals(dependencyVersion)){
-//				return null;
-//			}else{
-//				//Deletes old project. So the project for the new version can be created
-//				try {
-//					jarProject.delete(false, true, null);
-//					jarProject = root.getProject(projectName);
-//				} catch (CoreException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		}
-//		
-//		String location = jarFile.toPath().toString();
-//		IPath jarPath = new Path(location);
-//		
-//	    if("jar".equalsIgnoreCase(jarPath.getFileExtension())){ //$NON-NLS-1$
-//	    	try {
-//                String path = jarFile.getAbsolutePath();
-//                path = path.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
-//                URI zipURI = new URI(BW6MavenConstants.EXTERNAL_SM_URI_SCHEME + path);
-//                
-//                IProjectDescription desc = ResourcesPlugin.getWorkspace().newProjectDescription(projectName);
-//                desc.setLocationURI(zipURI);
-//
-//				IProgressMonitor progressMonitor = new NullProgressMonitor();
-//				jarProject.create(desc , progressMonitor);
-//				jarProject.open(progressMonitor);
-//				jarProject.setPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY, PDECore.BINARY_PROJECT_VALUE);
-//				jarProject.setPersistentProperty(BW6MavenConstants.PLUGIN_PROPERTY_EXTERNAL_SM, BW6MavenConstants.PLUGIN_PROPERTY_VALUE_EXTERNAL_SM);
-//									
-//				XpdProjectResourceFactory factory = XpdResourcesPlugin.getDefault().getXpdProjectResourceFactory(jarProject);
-//				
-//				return jarProject;
-//	    	}catch(Exception e){
-//	    		e.printStackTrace();
-//	    	}
-//	    }
-	    
+
 	    return null;
 	}
 	
