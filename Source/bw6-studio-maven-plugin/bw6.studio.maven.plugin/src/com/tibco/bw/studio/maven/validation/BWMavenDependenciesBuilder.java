@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -18,16 +19,10 @@ import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.m2e.core.embedder.IMaven;
@@ -37,6 +32,7 @@ import org.eclipse.m2e.core.internal.preferences.MavenConfigurationImpl;
 import org.eclipse.pde.internal.core.PDECore;
 
 import com.tibco.bw.design.api.BWAbstractBuilder;
+import com.tibco.bw.design.external.dependencies.BWExternalDependencyRecord;
 import com.tibco.bw.design.external.dependencies.BWExternalDependenciesHelper;
 import com.tibco.bw.design.external.dependencies.BWExternalDependenciesRegistry;
 import com.tibco.bw.design.util.ModelHelper;
@@ -71,23 +67,31 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 		
 		List<Dependency> dependencyList = mavenModel.getDependencies();
-		List<IProject> projects = new ArrayList<IProject>();
+		List<BWExternalDependencyRecord> handlers = new ArrayList<BWExternalDependencyRecord>();
 
+		//1. Remove dependencies
+		removeDependencies(project, dependencyList);
+		
+		//2. Create the new dependencies
 		for(Dependency dependency : dependencyList){
 			
 			File jarFile = getDependencyFile(dependency);
 			if(isSharedModule(jarFile)){
-				IProject p = createProjectFromDependency(dependency, jarFile);
-				if(p != null){
-					projects.add(p);
+				BWExternalDependencyRecord handler = createProjectFromDependency(dependency, jarFile);
+				if(handler != null && handler.isCreated()){
+					handlers.add(handler);
 				}
 			}
 		}
 		
-		addModulesToProjectDependencies(projects, project);
-		addModulesToApplication(projects, project);
+		//3. Add new modules to project dependencies section
+		addModulesToProjectDependencies(handlers, project);
 		
-		registerDependencies(projects, project);
+		//4. Add new modules to application dependencies section
+		addModulesToApplication(handlers, project);
+		
+		//5. Register new dependencies
+		registerDependencies(handlers, project);
 	}
 	
 	protected boolean isMavenProject(IProject project){
@@ -191,12 +195,13 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		return false;
 	}
 
-	protected IProject createProjectFromDependency(Dependency dependency, File jarFile){
+	protected BWExternalDependencyRecord createProjectFromDependency(Dependency dependency, File jarFile){
 		if(jarFile == null || dependency == null){
 			return null;
 		}
 		
 		String projectName = getProjectName(jarFile);
+		String dependencyId = dependency.getGroupId() + "." + dependency.getArtifactId();
 		String dependencyVersion = dependency.getVersion();
 		
 		String pathStr = jarFile.getAbsolutePath();
@@ -206,9 +211,9 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			pathStr = pathStr.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
 			try {
 				URI zipURI = new URI(BWMavenConstants.EXTERNAL_SM_URI_SCHEME + pathStr);
-				BWMavenDependencyHandler handler = new BWMavenDependencyHandler(projectName, dependencyVersion, zipURI);
-				IProject dependencyProject = BWExternalDependenciesHelper.INSTANCE.createExternalProjectDependency(handler);
-				return dependencyProject;
+				BWExternalDependencyRecord handler = new BWExternalDependencyRecord(projectName, dependencyId, dependencyVersion, zipURI);
+				handler = BWExternalDependenciesHelper.INSTANCE.createExternalProjectDependency(handler);
+				return handler;
 			} catch (URISyntaxException e) {
 				e.printStackTrace();
 			}
@@ -238,20 +243,27 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		return projectName;
 	}
 
-	protected void addModulesToProjectDependencies(final List<IProject> modules, final IProject sourceProject){
-		for(IProject module : modules){
-			ModelHelper.INSTANCE.addModuleRequireCapabilities(module, sourceProject);
+	protected void addModulesToProjectDependencies(final List<BWExternalDependencyRecord> modules, IProject sourceProject){
+		for(BWExternalDependencyRecord handler : modules){
+			IProject project = handler.getProject();
+			ModelHelper.INSTANCE.addModuleRequireCapabilities(project, sourceProject);
 		}					
 	}
 	
-	protected void addModulesToApplication(final List<IProject> modules, final IProject sourceProject){
+	protected void addModulesToApplication(List<BWExternalDependencyRecord> modules, final IProject sourceProject){
+		
+		final List<IProject> projects = new ArrayList<>();
+		for(BWExternalDependencyRecord handler : modules){
+			projects.add(handler.getProject());
+		}
+		
 		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
 		if(editingDomain != null){
 			
 			RecordingCommand command = new RecordingCommand(editingDomain) {
 				@Override
 				protected void doExecute() {
-					ModelHelper.INSTANCE.addModulesToApplication(modules, sourceProject);
+					ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
 				}
 			};
 
@@ -259,10 +271,38 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 	}
 
-	protected void registerDependencies(List<IProject>dependencies, IProject hostProject){
+	protected void registerDependencies(List<BWExternalDependencyRecord>records, IProject hostProject){
 		BWExternalDependenciesRegistry registry = BWExternalDependenciesRegistry.INSTANCE;
-		for(IProject dependency : dependencies){
-			registry.addDependency(hostProject, dependency);
+		for(BWExternalDependencyRecord record : records){
+			registry.addDependencyRecord(hostProject, record);
 		}
+	}
+	
+	protected void removeDependencies(IProject hostProject, List<Dependency> dependencies){
+		Iterator<BWExternalDependencyRecord> records = BWExternalDependenciesRegistry.INSTANCE.getDependencyRecordsForProject(hostProject);
+		List<BWExternalDependencyRecord> toRemove = new ArrayList<>();
+		while(records.hasNext()){
+			BWExternalDependencyRecord record = records.next();
+			boolean remove = true;
+			for(Dependency dep : dependencies){
+				String depId = dep.getGroupId() + "." + dep.getArtifactId();
+				String depVersion = dep.getVersion();
+				
+				if(record.getDependencyId().equals(depId) && record.getDependencyVersion().equals(depVersion)){
+					dependencies.remove(dep);
+					remove = false;
+					break;
+				}
+			}
+			if(remove){
+				toRemove.add(record);
+			}
+			
+		}
+		
+		for(BWExternalDependencyRecord record : toRemove){
+			BWExternalDependenciesRegistry.INSTANCE.removeDependencyRecord(hostProject, record);
+		}
+		
 	}
 }
