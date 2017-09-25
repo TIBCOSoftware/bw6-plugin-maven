@@ -33,6 +33,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
+import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -99,6 +100,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
     		addModules();
     		getLog().info("Adding EAR Information to the EAR File");
     		addApplication();
+
     		cleanup();
     		getLog().info("BWEARPackager Mojo finished execution");
 		} catch (Exception e1) {
@@ -120,8 +122,11 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		File manifestFile = ManifestWriter.updateManifest(project, manifest);
 		File appManifest = addFiletoEAR(metainfFolder);
 
+
 		File earFile = getArchiveFileName();
 		archiver.setArchiver(jarchiver);
+
+		addDiagrams();
 
 		archiver.setOutputFile(earFile);
 
@@ -185,6 +190,28 @@ public class BWEARPackagerMojo extends AbstractMojo {
     		getLog().error("Failed to add modules to the Application");
     		throw e;
     	}
+    }
+    
+    
+    
+    private void addDiagrams()
+    {
+        DefaultFileSet fileSet = new DefaultFileSet();
+        fileSet.setDirectory(projectBasedir);
+        if( containsDiagrams())
+        {
+        	String [] includes = new String [] { "resources/"};
+        	fileSet.setIncludes(includes);
+        	archiver.getArchiver().addFileSet(fileSet);
+        }
+        
+
+    }
+    
+    private boolean containsDiagrams()
+    {
+    	return new File( projectBasedir , "resources").exists();
+    	
     }
 
 	/**
