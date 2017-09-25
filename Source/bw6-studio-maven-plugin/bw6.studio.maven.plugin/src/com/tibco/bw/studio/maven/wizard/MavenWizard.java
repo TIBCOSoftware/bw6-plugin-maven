@@ -8,6 +8,7 @@ import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class MavenWizard extends Wizard {
@@ -43,38 +44,46 @@ public class MavenWizard extends Wizard {
 		}
 
 		configPage = new WizardPageConfiguration("POM Configuration", project);
-		pcfPage = new WizardPagePCF("PCF Deployment Configuration", project);
-		enterprisePage = new WizardPageEnterprise("Deployment Configuration", project);
-		dockerPage = new WizardPageDocker("Docker Deployment Configuration", project);
-
 		addPage(configPage);
-		if (bwEdition.equals("bw6")) {
-			addPage(enterprisePage);
-		} else if (bwEdition.equals("cf")) {
-			addPage(pcfPage);
-		} else if (bwEdition.equals("docker")) {
-			addPage(dockerPage);
+		
+		if(project.getType() == BWProjectType.Application){
+			pcfPage = new WizardPagePCF("PCF Deployment Configuration", project);
+			enterprisePage = new WizardPageEnterprise("Deployment Configuration", project);
+			dockerPage = new WizardPageDocker("Docker Deployment Configuration", project);
+			
+			if (bwEdition.equals("bw6")) {
+				addPage(enterprisePage);
+			} else if (bwEdition.equals("cf")) {
+				addPage(pcfPage);
+			} else if (bwEdition.equals("docker")) {
+				addPage(dockerPage);
+			}
 		}
 	}
 
 	@Override
 	public boolean performFinish() {
 		project = configPage.getUpdatedProject();
-		if (bwEdition.equals("bw6")) {
-			if (((BWApplication) ModuleHelper.getApplication(project
-					.getModules())).getDeploymentInfo().isDeployToAdmin()) {
-				if (((WizardPageEnterprise) enterprisePage).validate()) {
-					enterprisePage.getUpdatedProject();
-				} else {
-					return false;
+		if(project.getType() == BWProjectType.SharedModule){
+			return true;
+		}else{
+			
+			if (bwEdition.equals("bw6")) {
+				if (((BWApplication) ModuleHelper.getApplication(project
+						.getModules())).getDeploymentInfo().isDeployToAdmin()) {
+					if (((WizardPageEnterprise) enterprisePage).validate()) {
+						enterprisePage.getUpdatedProject();
+					} else {
+						return false;
+					}
 				}
+			} else if (bwEdition.equals("cf")) {
+				pcfPage.getUpdatedProject();
+			} else if (bwEdition.equals("docker")) {
+				dockerPage.getUpdatedProject();
 			}
-		} else if (bwEdition.equals("cf")) {
-			pcfPage.getUpdatedProject();
-		} else if (bwEdition.equals("docker")) {
-			dockerPage.getUpdatedProject();
+			return true;
 		}
-		return true;
 	}
 
 	public BWProject getProject() {

@@ -14,5 +14,57 @@
           class="com.tibco.bw.studio.maven.extension.MavenDebugLauncher">
     </Name>
  </extension>
+ <extension point="org.eclipse.ui.commands">
+ 	<command
+        defaultHandler="com.tibco.bw.studio.maven.action.SharedModulePOMActionHandler"
+        description="Generate POM for Shared Module"
+        id="com.tibco.bw.studio.maven.commands.generateSharedModulePom"
+        name="Generate POM for Shared Module">
+	</command>
+ </extension>
+ <extension
+       point="org.eclipse.ui.menus">
+        <menuContribution
+              allPopups="false"
+              locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu?after=com.tibco.bw.binding.rest.design.project.atmos.pushToCloudMenu">
+         <command
+               commandId="com.tibco.bw.studio.maven.commands.generateSharedModulePom"
+               id="com.tibco.bw.studio.maven.menu.generateSMPom"
+               label="Generate POM for Shared Module"
+               style="push">   
+               <visibleWhen
+                  checkEnabled="false">
+               <iterate
+                     ifEmpty="false">
+                  <or>
+                     <test
+                           forcePluginActivation="true"
+                           property="com.tibco.bw.studio.maven.sharedModuleProjectTester">
+                     </test>
+                  </or>
+               </iterate>
+            </visibleWhen>          
+         </command>
+         
+         </menuContribution>
+ </extension>
+ <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="com.tibco.bw.studio.maven.tester.SharedModuleProjectTester"
+            id="com.tibco.bw.studio.maven.sharedModuleProjectTester"
+            namespace="com.tibco.bw.studio.maven"
+            properties="sharedModuleProjectTester"
+            type="java.lang.Object">
+      </propertyTester>
+ </extension>
+ <extension
+       point="com.tibco.bw.design.BWBuilder">
+    <builder
+          configClass="com.tibco.bw.studio.maven.validation.BWMavenDependenciesBuilder"
+          id="bw6.studio.maven.plugin.bwMavenDependenciesBuilder"
+          name="BWMavenDependencyBuilder">
+    </builder>
+ </extension>
 
 </plugin>

@@ -28,12 +28,31 @@ import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWParent;
 import com.tibco.bw.studio.maven.modules.model.BWPluginModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 import com.tibco.bw.studio.maven.modules.model.BWSharedModule;
 
 public class BWProjectBuilder {
 	List<BWModuleParser.BWModuleData> moduleData;
 	List<BWModule> moduleList = new ArrayList<BWModule>();
 	private Map<String, List<String>> dependencies = new HashMap<String, List<String>>();
+	
+	public BWProject buildSMProject(IProject smProject) throws Exception{
+		BWSharedModule module = new BWSharedModule();
+		
+		Map<String,String> headers = ManifestParser.parseManifest(smProject);
+		buildCommonInfo(smProject, module, headers, null);
+		if(headers.get("Require-Capability") != null) {
+			computeDependencies(headers.get("Require-Capability"), module);	
+		}
+		module.setDepModules(dependencies.get(module.getArtifactId()));		
+		moduleList.add(module);
+		
+		BWProject project = new BWProject(BWProjectType.SharedModule);
+		project.setDependencies(dependencies);
+		project.setModules(moduleList);
+
+		return project;
+	}
 	
 	public BWProject build(IProject applicationProject) throws Exception {
 		buildModuleData(applicationProject);
@@ -229,7 +248,9 @@ public class BWProjectBuilder {
 			module.setMavenModel(POMHelper.readModelFromPOM(pomFileAbs));
 		}
 		module.setPomfileLocation(pomFileAbs);
-		setRelativePaths(project, module, application);
+		if(application != null){
+			setRelativePaths(project, module, application);
+		}
 		return module;
 	}
 
