@@ -178,8 +178,6 @@ public class BWEARPackagerMojo extends AbstractMojo {
         	parser.bwEdition = bwEdition;
         	List<Artifact> artifacts = parser.getModulesSet();
 
-       	
-       	
             for(Artifact artifact : artifacts) {
                 //Find the Module JAR file
                 File moduleJar = artifact.getFile();
@@ -191,19 +189,24 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
                 //Save the module version in the Version Map.
                 moduleVersionMap.put(artifact.getArtifactId(), version);
-                /*if(isAppModuleArtifact) {
-                	this.version = version;
-                	isAppModuleArtifact = false;
-                }*/
             }
             
+            
+			//This code allows dependencies declared in a Module to make it to the root level of the ear file
+			//This is necessary for the ear file to run properly
     		List<MavenProject> projects = parser.getModulesProjectSet();
+			Set<File> artifactFiles = new HashSet<File>(); 
     		for(MavenProject project : projects){
     			
     			Set<Artifact> dependencyArtifacts = project.getDependencyArtifacts();
-    			Set<File> artifactFiles = new HashSet<File>(); 
 
     			for(Artifact artifact : dependencyArtifacts) {
+    				
+    				File f = artifact.getFile();
+    				if(isPluginToIgnore(f.getName())){
+    					continue;
+    				}
+    				
     				if(artifact.getVersion().equals("0.0.0")) { //$NON-NLS-1$
     					continue;
     				}
@@ -212,36 +215,34 @@ public class BWEARPackagerMojo extends AbstractMojo {
     					continue;
     				}
     				
+    				String dependencyVersion = BWProjectUtils.getModuleVersion(artifact.getFile());
+    				moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
 					artifactFiles.add(artifact.getFile());
     			}
-
-    			//This code allows dependencies delared in a Module to make it to the root level of the ear file
-    			//This is necessary for the ear file to run properly
-    	        DependencyResolutionResult resolutionResult = getDependenciesResolutionResult();
-
-    	        if (resolutionResult != null) {
-    	        	for(Dependency dependency : resolutionResult.getDependencies()) {
-    	    			if(dependency.getArtifact().getVersion().equals("0.0.0")) { //$NON-NLS-1$
-    	    				continue;
-    	    			}
-    	    			
-    	    			if(moduleVersionMap.containsKey(dependency.getArtifact().getArtifactId())){
-    	    				continue;
-    	    			}
-    	    			
-    	                String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
-    	                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
-    					artifactFiles.add(dependency.getArtifact().getFile());
-    	        	}
-    	        }  
-    	        
-    			for(File file : artifactFiles) {
-    				if(isPluginToIgnore(file.getName())){//if(file.getName().indexOf("com.tibco.bw.palette.shared") != -1 || file.getName().indexOf("com.tibco.xml.cxf.common") != -1 || file.getName().indexOf("tempbw") != -1) {
-    					continue;
-    				}
-    				jarchiver.addFile(file, file.getName());
-    			}
     		}
+    		
+			//This code takes dependencies in the application project and adds them to the EAR file root level
+	        DependencyResolutionResult resolutionResult = getDependenciesResolutionResult();
+	        if (resolutionResult != null) {
+	        	for(Dependency dependency : resolutionResult.getDependencies()) {
+	    			if(dependency.getArtifact().getVersion().equals("0.0.0")) { //$NON-NLS-1$
+	    				continue;
+	    			}
+	    			
+	    			if(moduleVersionMap.containsKey(dependency.getArtifact().getArtifactId())){
+	    				continue;
+	    			}
+	    			
+	                String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
+	                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
+					artifactFiles.add(dependency.getArtifact().getFile());
+	        	}
+	        }  
+	        
+			for(File file : artifactFiles) {
+				jarchiver.addFile(file, file.getName());
+			}
+    		
     	} catch(Exception e) {
     		getLog().error("Failed to add modules to the Application");
     		throw e;
