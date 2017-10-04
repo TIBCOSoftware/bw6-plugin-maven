@@ -17,6 +17,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.pde.internal.core.project.PDEProject;
 
+import com.tibco.bw.design.external.dependencies.BWExternalDependenciesHelper;
 import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.POMHelper;
@@ -194,6 +195,14 @@ public class BWProjectBuilder {
 
 	private void buildModules(BWApplication application) throws Exception {
 		for(BWModuleParser.BWModuleData data : moduleData) {
+			
+			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(data.getModuleName());
+			
+			//When a module is an external Shared Module, it should be ignored.
+			if(BWExternalDependenciesHelper.INSTANCE.isExternalProject(project)){
+				continue;
+			}
+			
 			BWModule module = null;
 			switch(data.getModuleType()) {
 			case AppModule:
@@ -210,7 +219,6 @@ public class BWProjectBuilder {
 				break;
 			}
 
-			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(data.getModuleName());
 			Map<String,String> headers = ManifestParser.parseManifest(project);
 			buildCommonInfo(project, module, headers, application);
 			if(headers.get("Require-Capability") != null) {
