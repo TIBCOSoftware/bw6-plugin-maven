@@ -278,7 +278,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 	}
 	
-	protected void removeDependencies(IProject hostProject, List<Dependency> dependencies){
+	protected void removeDependencies(final IProject hostProject, List<Dependency> dependencies){
 		Iterator<BWExternalDependencyRecord> records = BWExternalDependenciesRegistry.INSTANCE.getDependencyRecordsForProject(hostProject);
 		List<BWExternalDependencyRecord> toRemove = new ArrayList<>();
 		while(records.hasNext()){
@@ -301,6 +301,32 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 		
 		for(BWExternalDependencyRecord record : toRemove){
+			
+			final IProject moduleToRemove = record.getProject();
+			
+			TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
+			if(editingDomain != null){
+				
+				RecordingCommand command = new RecordingCommand(editingDomain) {
+					@Override
+					protected void doExecute() {
+						ModelHelper.INSTANCE.removeModuleRequireCapabilities(moduleToRemove, hostProject);
+						ModelHelper.INSTANCE.removeModuleFromApplications(moduleToRemove, hostProject);
+					}
+				};
+
+				editingDomain.getCommandStack().execute(command);
+				
+//				RecordingCommand command2 = new RecordingCommand(editingDomain) {
+//					@Override
+//					protected void doExecute() {
+//						ModelHelper.INSTANCE.removeModuleFromApplications(moduleToRemove, hostProject);
+//					}
+//				};
+//
+//				editingDomain.getCommandStack().execute(command2);
+			}
+			
 			BWExternalDependenciesRegistry.INSTANCE.removeDependencyRecord(hostProject, record);
 		}
 		
