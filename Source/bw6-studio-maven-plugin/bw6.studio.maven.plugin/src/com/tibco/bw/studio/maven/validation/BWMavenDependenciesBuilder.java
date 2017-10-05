@@ -316,15 +316,6 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 				};
 
 				editingDomain.getCommandStack().execute(command);
-				
-//				RecordingCommand command2 = new RecordingCommand(editingDomain) {
-//					@Override
-//					protected void doExecute() {
-//						ModelHelper.INSTANCE.removeModuleFromApplications(moduleToRemove, hostProject);
-//					}
-//				};
-//
-//				editingDomain.getCommandStack().execute(command2);
 			}
 			
 			BWExternalDependenciesRegistry.INSTANCE.removeDependencyRecord(hostProject, record);
