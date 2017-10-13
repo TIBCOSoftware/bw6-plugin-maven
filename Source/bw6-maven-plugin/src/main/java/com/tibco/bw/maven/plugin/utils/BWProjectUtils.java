@@ -15,7 +15,7 @@ public class BWProjectUtils {
 	
 	public enum MODULE
 	{
-		APPMODULE, SHAREDMODUKE, APPLICATION, CUSTOMXPATH
+		APPMODULE, SHAREDMODULE, APPLICATION, CUSTOMXPATH
 	}
 
 	public static String getModuleVersion( File jarFile ) throws Exception {
@@ -26,8 +26,7 @@ public class BWProjectUtils {
 	}
 	
 	
-	public static MODULE getModuleType( File jarFile )
-	{
+	public static MODULE getModuleType( File jarFile ){
 		
 		Manifest manifest =  null;
 		try
@@ -43,33 +42,27 @@ public class BWProjectUtils {
 			return null;
 		}
  
-		Attributes attributes = manifest.getMainAttributes();
-		if( attributes.containsKey("TIBCO-BW-ApplicationModule") )
-		{
-			return MODULE.APPMODULE;
-		}
-		
-		else if( attributes.containsKey("TIBCO-BW-SharedModule"))
-		{
-		return MODULE.SHAREDMODUKE;	
-		}
-		
-		else if( attributes.containsKey("TIBCO-BW-Application") )
-		{
-			return MODULE.APPLICATION;
-		}
-//		
-//		else if( attributes.containsKey("TIBCO-BW-Application") )
-//		{
-//			return MODULE.APPLICATION;
-//		}
-
-		
-		
-		return null;
-			
+		return getModuleType(manifest);		
 	}
 
+	public static MODULE getModuleType(Manifest manifest){
+		if(manifest != null){
+			Attributes attributes = manifest.getMainAttributes();
+			
+			if( attributes.getValue("TIBCO-BW-ApplicationModule") != null){
+				return MODULE.APPMODULE;
+			}
+			
+			else if( attributes.getValue("TIBCO-BW-SharedModule") != null){
+				return MODULE.SHAREDMODULE;	
+			}
+			else if( attributes.getValue("TIBCO-BW-Application") != null){
+				return MODULE.APPLICATION;
+			}
+		}
+		
+		return null;
+	}
 	
 	
 	public static String getAdminExecutable() {

@@ -3,11 +3,14 @@ package com.tibco.bw.studio.maven.validation;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -22,7 +25,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.m2e.core.embedder.IMaven;
@@ -32,18 +37,23 @@ import org.eclipse.m2e.core.internal.preferences.MavenConfigurationImpl;
 import org.eclipse.pde.internal.core.PDECore;
 
 import com.tibco.bw.design.api.BWAbstractBuilder;
+import com.tibco.bw.design.componenttype.util.AddProjectDependenciesOp;
+import com.tibco.bw.design.componenttype.util.RemoveProjectDependenciesOp;
 import com.tibco.bw.design.external.dependencies.BWExternalDependencyRecord;
 import com.tibco.bw.design.external.dependencies.BWExternalDependenciesHelper;
 import com.tibco.bw.design.external.dependencies.BWExternalDependenciesRegistry;
 import com.tibco.bw.design.util.ModelHelper;
 import com.tibco.bw.studio.maven.helpers.POMHelper;
+import com.tibco.bw.studio.maven.plugin.Activator;
 import com.tibco.bw.studio.maven.util.BWMavenConstants;
+import com.tibco.xpd.resources.util.ProjectUtil;
 import com.tibco.zion.common.util.EditingDomainUtil;
 
 @SuppressWarnings("restriction")
 public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 	
 	protected IMaven maven;
+	public static final String PLUGIN_PROPERTY_VALUE_MAVEN_ESM = "MAVEN_ESM"; //$NON-NLS-1$
 	
 	@Override
 	public void doBuild(int kind, IProject project, IProgressMonitor monitor) {
@@ -70,7 +80,8 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		List<BWExternalDependencyRecord> handlers = new ArrayList<BWExternalDependencyRecord>();
 
 		//1. Remove dependencies
-		removeDependencies(project, dependencyList);
+		Set<IProject> projectsToValidate = new HashSet<IProject>(); 
+		removeDependencies(project, dependencyList, projectsToValidate);
 		
 		//2. Create the new dependencies
 		for(Dependency dependency : dependencyList){
@@ -80,6 +91,11 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 				BWExternalDependencyRecord handler = createProjectFromDependency(dependency, jarFile);
 				if(handler != null && handler.isCreated()){
 					handlers.add(handler);
+					if(handler.getProject() != null){
+						if(!projectsToValidate.contains(handler.getProject())){
+							projectsToValidate.add(handler.getProject());
+						}
+					}
 				}
 			}
 		}
@@ -92,6 +108,19 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		
 		//5. Register new dependencies
 		registerDependencies(handlers, project);
+		
+		//6. Register project dependencies in hostProject
+		addProjectDependencies(project, handlers);
+		
+		//7. Add project itself to validations if there is other projects to validate
+		if(!projectsToValidate.isEmpty() && !projectsToValidate.contains(project)){
+			projectsToValidate.add(project);
+		}
+		
+		//8. Run builder on projects that depend from newly created ESM
+		if(!projectsToValidate.isEmpty()){
+			validateProjects(projectsToValidate);
+		}
 	}
 	
 	protected boolean isMavenProject(IProject project){
@@ -212,6 +241,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			try {
 				URI zipURI = new URI(BWMavenConstants.EXTERNAL_SM_URI_SCHEME + pathStr);
 				BWExternalDependencyRecord handler = new BWExternalDependencyRecord(projectName, dependencyId, dependencyVersion, zipURI);
+				handler.setESMPropertValue(PLUGIN_PROPERTY_VALUE_MAVEN_ESM);
 				handler = BWExternalDependenciesHelper.INSTANCE.createExternalProjectDependency(handler);
 				return handler;
 			} catch (URISyntaxException e) {
@@ -278,7 +308,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 	}
 	
-	protected void removeDependencies(final IProject hostProject, List<Dependency> dependencies){
+	protected void removeDependencies(final IProject hostProject, List<Dependency> dependencies, Set<IProject> projectsToValidate){
 		Iterator<BWExternalDependencyRecord> records = BWExternalDependenciesRegistry.INSTANCE.getDependencyRecordsForProject(hostProject);
 		List<BWExternalDependencyRecord> toRemove = new ArrayList<>();
 		while(records.hasNext()){
@@ -300,9 +330,46 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			
 		}
 		
+		//Remove referenced projects from hostProject
+		List<IProject> projectsToRemove = new ArrayList<IProject>();
+		Set<IProject> referencedProjects = ProjectUtil.getReferencedProjectsHierarchy(hostProject, null);
+		for(BWExternalDependencyRecord record : toRemove){
+			if(referencedProjects != null){
+				if(referencedProjects.contains(record.getProject())){
+					projectsToRemove.add(record.getProject());
+				}
+			}
+		}
+		
+		if(projectsToRemove.size() > 0){
+			IProject[] referencedProjectsToRemove = projectsToRemove.toArray(new IProject[projectsToRemove.size()]);
+			RemoveProjectDependenciesOp op = new RemoveProjectDependenciesOp(hostProject, referencedProjectsToRemove);
+			try {
+				op.run(null);
+			} catch (InvocationTargetException e) {
+				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
+			} catch (InterruptedException e) {
+				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
+			}
+			
+		}
+		
+		
 		for(BWExternalDependencyRecord record : toRemove){
 			
 			final IProject moduleToRemove = record.getProject();
+			
+			//Add projects interested in the module to remove to the list of projects to validate
+			List<IProject> interestedProjects = ModelHelper.INSTANCE.getInterestedInProject(moduleToRemove, true, true, false);
+			for(IProject interestedProject : interestedProjects){
+				//Do not add itself
+				if(interestedProject.equals(moduleToRemove)){
+					continue;
+				}
+				if(!projectsToValidate.contains(interestedProject)){
+					projectsToValidate.add(interestedProject);
+				}
+			}
 			
 			TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
 			if(editingDomain != null){
@@ -319,6 +386,37 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			}
 			
 			BWExternalDependenciesRegistry.INSTANCE.removeDependencyRecord(hostProject, record);
+		}
+		
+		return;
+	}
+	
+	protected void validateProjects(Set<IProject> projectsToValidate){
+		BWMavenValidationJob.schedule(projectsToValidate, 1000);
+	}
+	
+	protected void addProjectDependencies(IProject hostProject, List<BWExternalDependencyRecord >records){
+		List<IProject> projectsToAdd = new ArrayList<IProject>();
+		Set<IProject> referencedProjects = ProjectUtil.getReferencedProjectsHierarchy(hostProject, null);
+		for(BWExternalDependencyRecord record : records){
+			if(referencedProjects != null){
+				if(!referencedProjects.contains(record.getProject())){
+					projectsToAdd.add(record.getProject());
+				}
+			}
+		}
+		
+		//Add projects to the reference
+		if(projectsToAdd.size() > 0){
+			IProject[] referencedProjectsToAdd = projectsToAdd.toArray(new IProject[projectsToAdd.size()]);
+			AddProjectDependenciesOp addDependenciesOp = new AddProjectDependenciesOp(hostProject, referencedProjectsToAdd);
+			try {
+				addDependenciesOp.run(null);
+			} catch (InvocationTargetException e) {
+				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
+			} catch (InterruptedException e) {
+				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
+			}
 		}
 		
 	}
