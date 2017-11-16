@@ -39,10 +39,11 @@ import org.eclipse.aether.graph.Dependency;
 
 import com.tibco.bw.maven.plugin.build.BuildProperties;
 import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
+//import com.tibco.bw.maven.plugin.classpath.ClassPathFile;
+//import com.tibco.bw.maven.plugin.classpath.ClassPathFileParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwmodule", defaultPhase = LifecyclePhase.PACKAGE)
@@ -269,6 +270,16 @@ public class BWModulePackageMojo extends AbstractMojo {
         	if(!includes.contains(".project")){
         		includes.add(".project");
         	}
+        	
+//        	ClassPathFile cf = ClassPathFileParser.parse(projectBasedir);
+//        	if(!cf.getSourceEntries().isEmpty()){
+//        		includes.add(".classpath");
+//        		for(String srcFolder : cf.getSourceEntries()){
+//        			if(!includes.contains(srcFolder)){
+//        				includes.add(srcFolder);
+//        			}
+//        		}
+//        	}
         }
         
         if (includes.isEmpty()) {
@@ -288,7 +299,6 @@ public class BWModulePackageMojo extends AbstractMojo {
     protected boolean isSharedModule(){
     	return manifest.getMainAttributes().getValue(Constants.TIBCO_SHARED_MODULE) == null ? false : true;
     }
-    
 
     private void updateManifestVersion() {
     	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
