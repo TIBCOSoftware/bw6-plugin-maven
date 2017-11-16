@@ -2,31 +2,53 @@ package com.tibco.bw.maven.plugin.utils;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-
-import org.apache.commons.io.FileUtils;
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
 
 public class BWFileUtils {
+	private static List<File> listFiles(final File target, final String extension, final boolean recursive) {
+		try {
+			final List<File> files = new LinkedList<>();
+			Files.walkFileTree(target.toPath(), new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+					Objects.requireNonNull(dir);
+					Objects.requireNonNull(attrs);
+					if (attrs.isSymbolicLink()) {
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					if (!attrs.isSymbolicLink() && file.endsWith(extension)) {
+						files.add(file.toFile());
+					}
+					return FileVisitResult.CONTINUE;
+				}
+			});
+			return files;
+		} catch (IOException ioex) {
+			ioex.printStackTrace();
+		}
+		return new LinkedList<>();
+	}
+
 	public static File[] getFilesForType(final File target, final String extension) {
 	    File[] files = target.listFiles( new FileFilter() {
 			public boolean accept(File pathname) {
-				if (pathname.getName().indexOf( extension ) != -1 )
-				{
-      			return true;
-				}
-				return false;
+				return pathname.getName().indexOf( extension ) != -1;
 			}
 		});
-	    return files;	
+	    return files;
 	}
 
 	@SuppressWarnings("unchecked")
 	public static File[] getFilesForTypeRec(final File target, String filterDir, final String extension) {
-		String[] extensions = new String[] {"jar"};
-		List<File> files = (List<File>) FileUtils.listFiles(target, extensions, true);
+		List<File> files = listFiles(target, "jar", true);
 		List<File> filesSel = new ArrayList<File>();
 		for(File file : files) {
 			if(file.getPath().indexOf(filterDir) == -1) {

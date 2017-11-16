@@ -23,7 +23,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
@@ -479,6 +478,29 @@ public class RemoteDeployer {
 		}
 	}
 
+	private static void forceMkdir(final File directory) throws IOException {
+		if (directory.exists()) {
+			if (!directory.isDirectory()) {
+				final String message =
+						"File "
+								+ directory
+								+ " exists and is "
+								+ "not a directory. Unable to create directory.";
+				throw new IOException(message);
+			}
+		} else {
+			if (!directory.mkdirs()) {
+				// Double-check that some other thread or process hasn't made
+				// the directory in the background
+				if (!directory.isDirectory()) {
+					final String message =
+							"Unable to create directory " + directory;
+					throw new IOException(message);
+				}
+			}
+		}
+	}
+
 	private void saveArchive(Response response, final String path, final String name) throws IOException {
 		FileOutputStream outputStream = null;
 		try {
@@ -486,7 +508,8 @@ public class RemoteDeployer {
 			InputStream inputStream = response.readEntity(InputStream.class);
 			String fullPath = path + File.separator + DATE_TIME;
 			File file = new File(fullPath);
-			FileUtils.forceMkdir(file);
+			//FileUtils.forceMkdir(file);
+			forceMkdir(file);
 			//parentPath = file.getAbsoluteFile().getAbsolutePath();
 			fullPath += File.separator + name;
 			outputStream = new FileOutputStream(fullPath);

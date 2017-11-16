@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,7 +23,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
@@ -363,7 +364,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 	private File getUpdatedManifest(File manifest) throws Exception {
 		//Copy the MANIFEST.MF to a temporary location.
 		File tempManifest = File.createTempFile("bwear", "mf");
-		FileUtils.copyFile(manifest, tempManifest);
+		Files.copy(manifest.toPath(), tempManifest.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
 		FileInputStream is = new FileInputStream(tempManifest);
 		Manifest mf = new Manifest(new FileInputStream(tempManifest));
