@@ -18,11 +18,6 @@ public class ManifestWriter {
 
     public static File updateManifest(MavenProject project , Manifest mf) throws IOException {
         
-        //Updating provide capability for Shared Modules
-        if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
-        	String updatedProvide = ManifestParser.getUpdatedProvideCapabilities(mf, projectVersion);
-        	attributes.putValue(Constants.BUNDLE_PROVIDE_CAPABILITY, updatedProvide);
-        }
         File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
         mfile.getParentFile().mkdirs();
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
@@ -52,6 +47,12 @@ public class ManifestWriter {
         
     	attributes.put(Name.MANIFEST_VERSION, projectVersion);
         attributes.putValue("Bundle-Version", projectVersion );
+
+        //Updating provide capability for Shared Modules
+        if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
+        	String updatedProvide = ManifestParser.getUpdatedProvideCapabilities(mf, projectVersion);
+        	attributes.putValue(Constants.BUNDLE_PROVIDE_CAPABILITY, updatedProvide);
+        }
 
     }
     
