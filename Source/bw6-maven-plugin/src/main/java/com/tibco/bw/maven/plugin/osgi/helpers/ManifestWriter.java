@@ -15,19 +15,6 @@ import com.tibco.bw.maven.plugin.utils.Constants;
 public class ManifestWriter {
 
     public static File updateManifest(MavenProject project , Manifest mf) throws IOException {
-        Attributes attributes = mf.getMainAttributes();
-        System.out.println("UpdateManifest Method in");
-        System.out.println("Update Attribute");
-        
-        String projectVersion = project.getVersion();
-        if( projectVersion.indexOf("-SNAPSHOT") != -1 )
-        {
-        	projectVersion = projectVersion.replace("-SNAPSHOT", ".qualifier");
-        	projectVersion = getManifestVersion(mf, projectVersion);
-        }
-        
-    	attributes.put(Name.MANIFEST_VERSION, projectVersion);
-        attributes.putValue("Bundle-Version", projectVersion );
         
 //        if((attributes.getValue(Name.MANIFEST_VERSION) == null || attributes.getValue(Name.MANIFEST_VERSION).equals("1.0")) && project.getVersion().equals("1.0.0-SNAPSHOT")) {
 //        	System.out.println("Update Attribute");
@@ -46,6 +33,25 @@ public class ManifestWriter {
         	}
         }
         return mfile;
+    }
+    
+    
+    public static void updateManifestVersion(MavenProject project , Manifest mf)
+    {
+        Attributes attributes = mf.getMainAttributes();
+        System.out.println("UpdateManifest Method in");
+        System.out.println("Update Attribute");
+        
+        String projectVersion = project.getVersion();
+        if( projectVersion.indexOf("-SNAPSHOT") != -1 )
+        {
+        	projectVersion = projectVersion.replace("-SNAPSHOT", ".qualifier");
+        	projectVersion = getManifestVersion(mf, projectVersion);
+        }
+        
+    	attributes.put(Name.MANIFEST_VERSION, projectVersion);
+        attributes.putValue("Bundle-Version", projectVersion );
+
     }
     
     private static String getManifestVersion( Manifest manifest , String version) 

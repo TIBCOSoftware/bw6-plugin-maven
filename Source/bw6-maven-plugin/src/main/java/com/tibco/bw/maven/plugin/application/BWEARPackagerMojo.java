@@ -216,6 +216,13 @@ public class BWEARPackagerMojo extends AbstractMojo {
     				}
     				
     				String dependencyVersion = BWProjectUtils.getModuleVersion(artifact.getFile());
+    				
+    				Manifest mf = ManifestParser.parseManifestFromJAR( f);
+    				if( !mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+    				{
+    					continue;
+    				}
+    				
     				moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
 					artifactFiles.add(artifact.getFile());
     			}
@@ -233,7 +240,13 @@ public class BWEARPackagerMojo extends AbstractMojo {
 	    				continue;
 	    			}
 	    			
-	                String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
+	    			Manifest mf = ManifestParser.parseManifestFromJAR( dependency.getArtifact().getFile() );
+	    			
+    				if( !mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+    				{
+    					continue;
+    				}
+	    			String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
 	                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
 					artifactFiles.add(dependency.getArtifact().getFile());
 	        	}

@@ -92,9 +92,10 @@ public class BWModulePackageMojo extends AbstractMojo {
             manifest = ManifestParser.parseManifest(projectBasedir);
 
             getLog().info("Updated the Manifest version ");
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            
+            ManifestWriter.updateManifestVersion(project, manifest);
             updateManifestVersion();
-
+            
             getLog().info("Removing the externals entries if any. ");
             removeExternals();
 
@@ -113,8 +114,8 @@ public class BWModulePackageMojo extends AbstractMojo {
             archiver.getArchiver().addFileSet(set);
             archiver.setOutputFile(pluginFile);
 
-           // File manifestFile = ManifestWriter.updateManifest(project, manifest);
-
+            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            
             jarArchiver.setManifest(manifestFile);
 
             getLog().info("Creating the Plugin JAR file");
