@@ -17,6 +17,23 @@ import com.tibco.bw.maven.plugin.utils.Constants;
 public class ManifestWriter {
 
     public static File updateManifest(MavenProject project , Manifest mf) throws IOException {
+        
+        File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
+        mfile.getParentFile().mkdirs();
+        BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
+        try {
+            mf.write(os);
+        } finally {
+        	if(os != null) {
+        		os.close();	
+        	}
+        }
+        return mfile;
+    }
+    
+    
+    public static void updateManifestVersion(MavenProject project , Manifest mf)
+    {
         Attributes attributes = mf.getMainAttributes();
         System.out.println("UpdateManifest Method in");
         System.out.println("Update Attribute");
@@ -30,23 +47,13 @@ public class ManifestWriter {
         
     	attributes.put(Name.MANIFEST_VERSION, projectVersion);
         attributes.putValue("Bundle-Version", projectVersion );
-        
+
         //Updating provide capability for Shared Modules
         if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
         	String updatedProvide = ManifestParser.getUpdatedProvideCapabilities(mf, projectVersion);
         	attributes.putValue(Constants.BUNDLE_PROVIDE_CAPABILITY, updatedProvide);
         }
-        File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
-        mfile.getParentFile().mkdirs();
-        BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
-        try {
-            mf.write(os);
-        } finally {
-        	if(os != null) {
-        		os.close();	
-        	}
-        }
-        return mfile;
+
     }
     
     private static String getManifestVersion( Manifest manifest , String version) 
