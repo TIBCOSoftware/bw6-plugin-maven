@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
+import com.tibco.bw.studio.maven.MavenPluginConstants;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
@@ -40,18 +41,6 @@ import com.tibco.zion.project.core.ContainerPreferenceProject;
  * The Class WizardPageConfiguration.
  */
 public class WizardPageConfiguration extends WizardPage {
-
-	private static final String BW6 = "bw6";
-
-	private static final String DOCKER = "docker";
-
-	private static final String CF = "cf";
-
-	private static final String CLOUD_FOUNDRY_PLATFORM_NAME = "Cloud Foundry";
-
-	private static final String BWCF = "bwcf";
-
-	private static final String TIBCO_BW_EDITION = "TIBCO-BW-Edition";
 
 	/** The project. */
 	private BWProject project;
@@ -125,7 +114,6 @@ public class WizardPageConfiguration extends WizardPage {
 				try {
 					Thread.sleep(300);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
@@ -167,17 +155,19 @@ public class WizardPageConfiguration extends WizardPage {
 		try {
 			Map<String, String> manifest = ManifestParser.parseManifest(project
 					.getModules().get(0).getProject());
-			if (manifest.containsKey(TIBCO_BW_EDITION)
-					&& manifest.get(TIBCO_BW_EDITION).equals(BWCF)) {
+			if (manifest.containsKey(MavenPluginConstants.TIBCO_BW_EDITION)
+					&& manifest.get(MavenPluginConstants.TIBCO_BW_EDITION)
+							.equals(MavenPluginConstants.BWCF)) {
 				String targetPlatform = ContainerPreferenceProject
 						.getCurrentContainer().getLabel();
-				if (targetPlatform.equals(CLOUD_FOUNDRY_PLATFORM_NAME)) {
-					bwEdition = CF;
+				if (targetPlatform
+						.equals(MavenPluginConstants.CLOUD_FOUNDRY_PLATFORM_NAME)) {
+					bwEdition = MavenPluginConstants.CF;
 				} else {
-					bwEdition = DOCKER;
+					bwEdition = MavenPluginConstants.DOCKER;
 				}
 			} else
-				bwEdition = BW6;
+				bwEdition = MavenPluginConstants.BW6;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -186,13 +176,12 @@ public class WizardPageConfiguration extends WizardPage {
 
 		GridLayout layout = new GridLayout(1, false);
 		container.setLayout(layout);
-		GridData data = new GridData(SWT.CENTER, SWT.TOP, true, true);
 
 		// addNotes();
 		// addSeperator(parent);
 
 		Group pomFieldsGroup = new Group(container, SWT.NONE);
-		data = new GridData(SWT.FILL, SWT.TOP, true, true);
+		GridData data = new GridData(SWT.FILL, SWT.TOP, true, false);
 		pomFieldsGroup.setLayoutData(data);
 		pomFieldsGroup.setLayout(new GridLayout());
 		pomFieldsGroup.setText("Application Details");
@@ -296,9 +285,9 @@ public class WizardPageConfiguration extends WizardPage {
 
 		Label label = new Label(innerContainer, SWT.NONE);
 
-		if (bwEdition.equals(CF)) {
+		if (bwEdition.equals(MavenPluginConstants.CF)) {
 			label.setText("Deploy EAR to Cloud Foundry");
-		} else if (bwEdition.equals(DOCKER)) {
+		} else if (bwEdition.equals(MavenPluginConstants.DOCKER)) {
 			label.setText("Deploy EAR to Docker");
 		} else {
 			label.setText("Deploy EAR to BW Administrator");
@@ -318,6 +307,9 @@ public class WizardPageConfiguration extends WizardPage {
 		pomFieldsComposite.setLayout(layout);
 		layout.numColumns = 3;
 
+		GridData data = new GridData(SWT.FILL, SWT.TOP, true, false);
+		pomFieldsComposite.setLayoutData(data);
+
 		BWParent parent = ModuleHelper.getParentModule(project.getModules());
 
 		// Row #1
@@ -325,8 +317,8 @@ public class WizardPageConfiguration extends WizardPage {
 		groupLabel.setText("Group Id :");
 		appGroupId = new Text(pomFieldsComposite, SWT.BORDER | SWT.SINGLE);
 		appGroupId.setText(parent.getGroupId());
-		GridData groupData = new GridData(200, 15);
-		appGroupId.setLayoutData(groupData);
+		data = new GridData(SWT.FILL, SWT.FILL, true, true);
+		appGroupId.setLayoutData(data);
 		Label message1 = new Label(pomFieldsComposite, SWT.NONE);
 		message1.setText("");
 
@@ -336,8 +328,9 @@ public class WizardPageConfiguration extends WizardPage {
 
 		appArtifactId = new Text(pomFieldsComposite, SWT.BORDER | SWT.SINGLE);
 		appArtifactId.setText(parent.getArtifactId());
-		GridData artifactData = new GridData(200, 15);
-		appArtifactId.setLayoutData(artifactData);
+		data = new GridData(SWT.FILL, SWT.FILL, true, true);
+		appArtifactId.setLayoutData(data);
+
 		Label message2 = new Label(pomFieldsComposite, SWT.NONE);
 		message2.setText("same as Bundle-SymbolicName");
 
@@ -346,8 +339,9 @@ public class WizardPageConfiguration extends WizardPage {
 		versionLabel.setText("Version");
 		Label appversionvalue = new Label(pomFieldsComposite, SWT.NONE);
 		appversionvalue.setText(parent.getVersion());
-		GridData versionData = new GridData(120, 15);
-		appversionvalue.setLayoutData(versionData);
+		data = new GridData(SWT.FILL, SWT.FILL, true, true);
+		appversionvalue.setLayoutData(data);
+
 		Label message3 = new Label(pomFieldsComposite, SWT.NONE);
 		message3.setText("same as Bundle-Version");
 	}
@@ -473,7 +467,7 @@ public class WizardPageConfiguration extends WizardPage {
 		for (BWModule module : project.getModules()) {
 			module.setGroupId(appGroupId.getText());
 
-			if (bwEdition.equals(BW6)
+			if (bwEdition.equals(MavenPluginConstants.BW6)
 					&& module.getType() == BWModuleType.Application) {
 				if (addDeploymentConfig.getSelection()) {
 					((BWApplication) module).getDeploymentInfo()
@@ -488,10 +482,6 @@ public class WizardPageConfiguration extends WizardPage {
 
 			}
 			module.setOverridePOM(true);
-
-			// module.setOverridePOM( buttonMap.containsKey(
-			// module.getArtifactId() ) ?
-			// (buttonMap.get(module.getArtifactId())).getSelection() : true );
 		}
 
 		BWModule parent = ModuleHelper.getParentModule(project.getModules());

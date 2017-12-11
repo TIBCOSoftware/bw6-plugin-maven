@@ -19,6 +19,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import com.tibco.bw.studio.maven.MavenPluginConstants;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
@@ -60,9 +61,9 @@ public class WizardPageEnterprise extends WizardPage {
 
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
-		this.project = project;		 
-		setTitle("Deployment Details for Apache Maven and TIBCO BusinessWorks");
-		setDescription("Please Enter the Deployment details to Deploy the EAR file to BWAgent.\r\nThe EAR file will be deployed to the Agent provided below during the Maven \"install\" lifecycle phase.");	
+		this.project = project;
+		setTitle("Deployment Details");
+		setDescription("The EAR file will be deployed to the Agent provided below during the Maven \"install\" lifecycle phase.");
 	}
 
 	public boolean validate() {
@@ -133,30 +134,32 @@ public class WizardPageEnterprise extends WizardPage {
 		}
 
 		boolean isValidCredential = true;
-		if(agentAuth.getText() != null && (BASIC_AUTH.equalsIgnoreCase(agentAuth.getText()) || DIGEST_AUTH.equalsIgnoreCase(agentAuth.getText()))) {
-			if(agentUser.getText() == null || agentUser.getText().isEmpty()) {
+		if (agentAuth.getText() != null
+				&& (BASIC_AUTH.equalsIgnoreCase(agentAuth.getText()) || DIGEST_AUTH
+						.equalsIgnoreCase(agentAuth.getText()))) {
+			if (agentUser.getText() == null || agentUser.getText().isEmpty()) {
 				isValidCredential = false;
 				errorMessage.append("[Agent Username value is required]");
 			}
-			if(agentPass.getText() == null || agentPass.getText().isEmpty()) {
+			if (agentPass.getText() == null || agentPass.getText().isEmpty()) {
 				isValidCredential = false;
 				errorMessage.append("[Agent Password value is required]");
 			}
 		}
 
 		boolean isValidSSL = true;
-		if(agentSSL.getSelection()) {
-			if(trustPath.getText() == null || trustPath.getText().isEmpty()) {
+		if (agentSSL.getSelection()) {
+			if (trustPath.getText() == null || trustPath.getText().isEmpty()) {
 				isValidSSL = false;
 				errorMessage.append("[Truststore Path value is required]");
 			}
-			if(trustPass.getText() == null || trustPass.getText().isEmpty()) {
+			if (trustPass.getText() == null || trustPass.getText().isEmpty()) {
 				isValidSSL = false;
 				errorMessage.append("[Truststore Password value is required]");
 			}
 		}
 
-		if(!errorMessage.toString().isEmpty()) {
+		if (!errorMessage.toString().isEmpty()) {
 			setErrorMessage(errorMessage.toString());
 			return false;
 		}
@@ -178,15 +181,16 @@ public class WizardPageEnterprise extends WizardPage {
 		appModule = ModuleHelper.getAppModule(project.getModules());
 		info = ((BWApplication) ModuleHelper.getApplication(project
 				.getModules())).getDeploymentInfo();
-		bwEdition = "bw6";
+		bwEdition = MavenPluginConstants.BW6;
 		try {
 			Map<String, String> manifest = ManifestParser.parseManifest(project
 					.getModules().get(0).getProject());
-			if (manifest.containsKey("TIBCO-BW-Edition")
-					&& manifest.get("TIBCO-BW-Edition").equals("bwcf")) { //$NON-NLS-1$
-				bwEdition = "bwcf"; //$NON-NLS-1$
+			if (manifest.containsKey(MavenPluginConstants.TIBCO_BW_EDITION)
+					&& manifest.get(MavenPluginConstants.TIBCO_BW_EDITION)
+							.equals(MavenPluginConstants.BWCF)) {
+				bwEdition = MavenPluginConstants.BWCF;
 			} else {
-				bwEdition = "bw6";//$NON-NLS-1$
+				bwEdition = MavenPluginConstants.BW6;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -200,7 +204,7 @@ public class WizardPageEnterprise extends WizardPage {
 
 	private void addNotes() {
 		Label label = new Label(container, SWT.NONE);
-		label.setText("Please enter the Host and Port of the Machine where the BWAgent is running. \r\n"
+		label.setText("Enter the Host and Port of the Machine where the BWAgent is running. \r\n"
 				+ "Select the BWAgent Authentication Type (if applicable), and enter the Username, Password. \r\n"
 				+ "Enter the Domain, AppSpace and AppNode Information\r\n"
 				+ "Note* : If the Domain, Appspace and AppNode do not exist then they will be created.\r\n"
@@ -302,17 +306,17 @@ public class WizardPageEnterprise extends WizardPage {
 		agentPass.setText(info.getAgentPassword());
 		agentPass.setLayoutData(agentData);
 
-		if(info.getAgentAuth() == null || info.getAgentAuth().isEmpty()) {
+		if (info.getAgentAuth() == null || info.getAgentAuth().isEmpty()) {
 			agentUser.setText("");
 			agentUser.setEnabled(false);
 			agentPass.setText("");
 			agentPass.setEnabled(false);
 		}
-		
+
 		agentAuth.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if(agentAuth.getSelectionIndex() > 0) {
+				if (agentAuth.getSelectionIndex() > 0) {
 					agentUser.setEnabled(true);
 					agentPass.setEnabled(true);
 				} else {
@@ -322,8 +326,10 @@ public class WizardPageEnterprise extends WizardPage {
 					agentPass.setEnabled(false);
 				}
 			}
+
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {}
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
 		});
 
 		Label agentSslLabel = new Label(container, SWT.NONE);
@@ -358,7 +364,7 @@ public class WizardPageEnterprise extends WizardPage {
 		keyPass.setText(info.getKeyPassword());
 		keyPass.setLayoutData(agentData);
 
-		if(!info.isAgentSSL()) {
+		if (!info.isAgentSSL()) {
 			trustPath.setText("");
 			trustPath.setEnabled(false);
 			trustPass.setText("");
@@ -372,7 +378,7 @@ public class WizardPageEnterprise extends WizardPage {
 		agentSSL.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if(agentSSL.getSelection()) {
+				if (agentSSL.getSelection()) {
 					trustPath.setEnabled(true);
 					trustPass.setEnabled(true);
 					keyPath.setEnabled(true);
@@ -388,8 +394,10 @@ public class WizardPageEnterprise extends WizardPage {
 					keyPass.setEnabled(false);
 				}
 			}
+
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {}
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
 		});
 	}
 
@@ -517,8 +525,8 @@ public class WizardPageEnterprise extends WizardPage {
 		backup.setSelection(info.isBackup());
 		backup.setToolTipText("If this option is selected, then the Application EAR file will be backed up, if it already exists.");
 		Label backupLabel = new Label(container, SWT.NONE);
-		backupLabel.setText("Backup Application EAR if exists.");
-		backupLabel.setToolTipText("Backup Application EAR if exists.");
+		backupLabel.setText("Backup Application EAR, if exists.");
+		backupLabel.setToolTipText("Backup Application EAR, if exists.");
 		GridData backupData = new GridData(350, 15);
 		backupData.horizontalSpan = 3;
 		backupLabel.setLayoutData(backupData);
@@ -577,10 +585,10 @@ public class WizardPageEnterprise extends WizardPage {
 		File appProject = new File(ModuleHelper
 				.getApplication(project.getModules()).getProject()
 				.getLocationURI());
-		File metainf = new File(appProject, "META-INF"); //$NON-NLS-1$
+		File metainf = new File(appProject, MavenPluginConstants.META_INF);
 		File[] files = metainf.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
-				if (pathname.getName().indexOf(".substvar") != -1) { //$NON-NLS-1$
+				if (pathname.getName().indexOf(MavenPluginConstants.SUBSTVAR) != -1) {
 					return true;
 				}
 				return false;

@@ -34,6 +34,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.PlatformUI;
 
+import com.tibco.bw.studio.maven.MavenPluginConstants;
 import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.BWProjectBuilder;
@@ -90,7 +91,7 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 				return;
 			}
 		} catch(Exception e) {
-			 Activator.logException("Failed to generate the POM file ", IStatus.ERROR, e);		
+			 Activator.logException(Messages.MavenPOMProcessor_FailureMessage, IStatus.ERROR, e);		
 		}
 	}
 
@@ -152,7 +153,7 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 				File parentFile = new File(application.getPomfileLocation().getParentFile().getParent() + File.separator + parent.getArtifactId());
 
 				parentFile.mkdirs();	
-				File pomFileAbs = new File(parentFile, "pom.xml");
+				File pomFileAbs = new File(parentFile, MavenPluginConstants.POM_XML);
 				pomFileAbs.createNewFile();
 				parent.setPomfileLocation(pomFileAbs);
 
@@ -183,7 +184,7 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 		if(application.isPomExists()) {
 			try {
 				String pom = application.getMavenModel().getParent().getRelativePath();
-				File pomFile = new File(application.getProject().getLocation().toFile().toString() + File.separator + pom, "pom.xml");
+				File pomFile = new File(application.getProject().getLocation().toFile().toString() + File.separator + pom, MavenPluginConstants.POM_XML);
 				if(pomFile.getCanonicalFile().exists()) {
 					parentLocation = pomFile.getCanonicalFile().getParent();
 				}
@@ -255,7 +256,7 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 
 			System.arraycopy(prevNatures, 0, newNatures, 0, prevNatures.length);
 
-			newNatures[prevNatures.length] = "org.eclipse.m2e.core.maven2Nature";
+			newNatures[prevNatures.length] = MavenPluginConstants.ORG_ECLIPSE_M2E_CORE_MAVEN2_NATURE;
 			desc.setNatureIds(newNatures);
 
 			project.setDescription(desc, new NullProgressMonitor());
@@ -263,12 +264,12 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 			ICommand[] commands = desc.getBuildSpec();
 			List<ICommand> commandList = Arrays.asList(commands);
 			ICommand build = new BuildCommand();
-			build.setBuilderName("org.eclipse.m2e.core.maven2Builder");
+			build.setBuilderName(MavenPluginConstants.ORG_ECLIPSE_M2E_CORE_MAVEN2_BUILDER);
 			List<ICommand> modList = new ArrayList<>(commandList);
 			modList.add(build);
 			desc.setBuildSpec(modList.toArray(new ICommand[]{}));
 		} catch(Exception e) {
-			 Activator.logException("Failed to add Maven nature to the Project : " + project.getName(), IStatus.ERROR, e);		
+			 Activator.logException(Messages.MavenPOMProcessor_FailureMessage2 + project.getName(), IStatus.ERROR, e);		
 		}
 	}
 }

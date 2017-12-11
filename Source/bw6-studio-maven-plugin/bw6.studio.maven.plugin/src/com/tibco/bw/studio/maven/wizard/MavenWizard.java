@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.eclipse.jface.wizard.Wizard;
 
+import com.tibco.bw.studio.maven.MavenPluginConstants;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
@@ -16,14 +17,14 @@ public class MavenWizard extends Wizard {
 	protected WizardPagePCF pcfPage;
 	protected WizardPageDocker dockerPage;
 	protected WizardPageEnterprise enterprisePage;
-	String bwEdition = "bw6";
+	protected String bwEdition = MavenPluginConstants.BW6;
 	private BWProject project;
 
 	public MavenWizard(BWProject project) {
 		super();
 		this.project = project;
 		setNeedsProgressMonitor(true);
-		setWindowTitle("Generate POM File");
+		setWindowTitle(Messages.MavenWizard_WindowTitle);
 	}
 
 	@Override
@@ -31,39 +32,39 @@ public class MavenWizard extends Wizard {
 		try {
 			Map<String, String> manifest = ManifestParser.parseManifest(project
 					.getModules().get(0).getProject());
-			if (manifest.containsKey("TIBCO-BW-Edition")
-					&& manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
+			if (manifest.containsKey(MavenPluginConstants.TIBCO_BW_EDITION)
+					&& manifest.get(MavenPluginConstants.TIBCO_BW_EDITION).equals(MavenPluginConstants.BWCF)) {
 				String targetPlatform = ContainerPreferenceProject
 						.getCurrentContainer().getLabel();
-				if (targetPlatform.equals("Cloud Foundry")) {
-					bwEdition = "cf";
+				if (targetPlatform.equals(MavenPluginConstants.CLOUD_FOUNDRY_PLATFORM_NAME)) {
+					bwEdition = MavenPluginConstants.CF;
 				} else {
-					bwEdition = "docker";
+					bwEdition = MavenPluginConstants.DOCKER;
 				}
 			} else {
-				bwEdition = "bw6";
+				bwEdition = MavenPluginConstants.BW6;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		configPage = new WizardPageConfiguration("POM Configuration", project);
-		pcfPage = new WizardPagePCF("PCF Deployment Configuration", project);
-		enterprisePage = new WizardPageEnterprise("Deployment Configuration",
+		configPage = new WizardPageConfiguration(Messages.MavenWizard_POMConfig, project);
+		pcfPage = new WizardPagePCF(Messages.MavenWizard_PCF_Config, project);
+		enterprisePage = new WizardPageEnterprise(Messages.MavenWizard_Deployemnt_Config,
 				project);
-		dockerPage = new WizardPageDocker("Docker Deployment Configuration",
+		dockerPage = new WizardPageDocker(Messages.MavenWizard_Docker_Config,
 				project);
 
 		addPage(configPage);
 
 		// Zoher - Just for UI changes. To be removed before checkin
-		bwEdition = "docker";
+		bwEdition = MavenPluginConstants.BW6;
 
-		if (bwEdition.equals("bw6")) {
+		if (bwEdition.equals(MavenPluginConstants.BW6)) {
 			addPage(enterprisePage);
-		} else if (bwEdition.equals("cf")) {
+		} else if (bwEdition.equals(MavenPluginConstants.CF)) {
 			addPage(pcfPage);
-		} else if (bwEdition.equals("docker")) {
+		} else if (bwEdition.equals(MavenPluginConstants.DOCKER)) {
 			addPage(dockerPage);
 		}
 	}
@@ -74,9 +75,9 @@ public class MavenWizard extends Wizard {
 		project = configPage.getUpdatedProject();
 
 		// Zoher - Just for UI changes. To be removed before checkin
-		bwEdition = "docker";
+		bwEdition = MavenPluginConstants.DOCKER;
 
-		if (bwEdition.equals("bw6")) {
+		if (bwEdition.equals(MavenPluginConstants.BW6)) {
 			if (((BWApplication) ModuleHelper.getApplication(project
 					.getModules())).getDeploymentInfo().isDeployToAdmin()) {
 				if (((WizardPageEnterprise) enterprisePage).validate()) {
@@ -87,9 +88,9 @@ public class MavenWizard extends Wizard {
 
 			}
 
-		} else if (bwEdition.equals("cf")) {
+		} else if (bwEdition.equals(MavenPluginConstants.CF)) {
 			pcfPage.getUpdatedProject();
-		} else if (bwEdition.equals("docker")) {
+		} else if (bwEdition.equals(MavenPluginConstants.DOCKER)) {
 			dockerPage.getUpdatedProject();
 		}
 
