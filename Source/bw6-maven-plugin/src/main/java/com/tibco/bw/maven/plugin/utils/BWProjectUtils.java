@@ -2,6 +2,7 @@ package com.tibco.bw.maven.plugin.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -11,6 +12,11 @@ public class BWProjectUtils {
 	public enum OS {
 		WINDOWS, UNIX
 	}
+	
+	public enum MODULE
+	{
+		APPMODULE, SHAREDMODULE, APPLICATION, CUSTOMXPATH
+	}
 
 	public static String getModuleVersion( File jarFile ) throws Exception {
 		JarInputStream jarStream = new JarInputStream( new FileInputStream( jarFile ));
@@ -18,7 +24,47 @@ public class BWProjectUtils {
 		jarStream.close();
 		return moduleManifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
 	}
+	
+	
+	public static MODULE getModuleType( File jarFile ){
+		
+		Manifest manifest =  null;
+		try
+		{
+			JarInputStream jarStream = new JarInputStream( new FileInputStream( jarFile ));
+			manifest = jarStream.getManifest();
+			jarStream.close();
 
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+ 
+		return getModuleType(manifest);		
+	}
+
+	public static MODULE getModuleType(Manifest manifest){
+		if(manifest != null){
+			Attributes attributes = manifest.getMainAttributes();
+			
+			if( attributes.getValue("TIBCO-BW-ApplicationModule") != null){
+				return MODULE.APPMODULE;
+			}
+			
+			else if( attributes.getValue("TIBCO-BW-SharedModule") != null){
+				return MODULE.SHAREDMODULE;	
+			}
+			else if( attributes.getValue("TIBCO-BW-Application") != null){
+				return MODULE.APPLICATION;
+			}
+		}
+		
+		return null;
+	}
+	
+	
 	public static String getAdminExecutable() {
 		String os = System.getProperty("os.name");
 		if (os.indexOf("Windows") != -1) {

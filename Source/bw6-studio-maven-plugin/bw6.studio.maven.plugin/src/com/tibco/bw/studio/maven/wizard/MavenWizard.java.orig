@@ -1,0 +1,130 @@
+package com.tibco.bw.studio.maven.wizard;
+
+import java.util.Map;
+
+import org.eclipse.jface.wizard.Wizard;
+
+import com.tibco.bw.studio.maven.helpers.ManifestParser;
+import com.tibco.bw.studio.maven.helpers.ModuleHelper;
+import com.tibco.bw.studio.maven.modules.model.BWApplication;
+import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.zion.project.core.ContainerPreferenceProject;
+
+public class MavenWizard extends Wizard {
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
+	protected WizardPageConfiguration configPage;
+	protected WizardPagePCF pcfPage;
+	protected WizardPageDocker dockerPage;
+	protected WizardPageEnterprise enterprisePage;
+	String bwEdition = "bw6";
+	private BWProject project;
+
+	public MavenWizard(BWProject project) {
+		super();
+		this.project = project;
+		setNeedsProgressMonitor(true);
+<<<<<<< Updated upstream
+=======
+		setWindowTitle("Generate POM File");
+>>>>>>> Stashed changes
+	}
+
+	@Override
+	public void addPages() {
+		try {
+<<<<<<< Updated upstream
+			Map<String, String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
+			if (manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
+				String targetPlatform = ContainerPreferenceProject.getCurrentContainer().getLabel();
+=======
+			Map<String, String> manifest = ManifestParser.parseManifest(project
+					.getModules().get(0).getProject());
+			if (manifest.containsKey("TIBCO-BW-Edition")
+					&& manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
+				String targetPlatform = ContainerPreferenceProject
+						.getCurrentContainer().getLabel();
+>>>>>>> Stashed changes
+				if (targetPlatform.equals("Cloud Foundry")) {
+					bwEdition = "cf";
+				} else {
+					bwEdition = "docker";
+				}
+			} else {
+				bwEdition = "bw6";
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		configPage = new WizardPageConfiguration("POM Configuration", project);
+		pcfPage = new WizardPagePCF("PCF Deployment Configuration", project);
+<<<<<<< Updated upstream
+		enterprisePage = new WizardPageEnterprise("Deployment Configuration", project);
+		dockerPage = new WizardPageDocker("Docker Deployment Configuration", project);
+
+		addPage(configPage);
+=======
+		enterprisePage = new WizardPageEnterprise("Deployment Configuration",
+				project);
+		dockerPage = new WizardPageDocker("Docker Deployment Configuration",
+				project);
+
+		addPage(configPage);
+
+		// Zoher - Just for UI changes. To be removed before checkin
+		bwEdition = "docker";
+
+>>>>>>> Stashed changes
+		if (bwEdition.equals("bw6")) {
+			addPage(enterprisePage);
+		} else if (bwEdition.equals("cf")) {
+			addPage(pcfPage);
+		} else if (bwEdition.equals("docker")) {
+			addPage(dockerPage);
+		}
+	}
+
+	@Override
+	public boolean performFinish() {
+		project = configPage.getUpdatedProject();
+<<<<<<< Updated upstream
+=======
+
+		// Zoher - Just for UI changes. To be removed before checkin
+		bwEdition = "docker";
+
+>>>>>>> Stashed changes
+		if (bwEdition.equals("bw6")) {
+			if (((BWApplication) ModuleHelper.getApplication(project
+					.getModules())).getDeploymentInfo().isDeployToAdmin()) {
+				if (((WizardPageEnterprise) enterprisePage).validate()) {
+					enterprisePage.getUpdatedProject();
+				} else {
+					return false;
+				}
+<<<<<<< Updated upstream
+			}
+=======
+
+			}
+
+>>>>>>> Stashed changes
+		} else if (bwEdition.equals("cf")) {
+			pcfPage.getUpdatedProject();
+		} else if (bwEdition.equals("docker")) {
+			dockerPage.getUpdatedProject();
+		}
+		return true;
+	}
+
+	public BWProject getProject() {
+		return project;
+	}
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
+}

@@ -6,8 +6,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -30,8 +32,14 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
+import org.codehaus.plexus.archiver.util.DefaultFileSet;
+import org.eclipse.aether.graph.Dependency;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -59,6 +67,9 @@ public class BWEARPackagerMojo extends AbstractMojo {
     @Component
     private MavenProject project;
 
+    @Component
+    ProjectDependenciesResolver resolver;
+    
     private List<File> tempFiles;
 
     private Manifest manifest;
@@ -78,6 +89,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
     //The version to be updated in the Application Manifest. 
     String version;
 
+    protected String pluginsToIgnore[] = null;
     /**
      * Execute Method.
      * 
@@ -98,6 +110,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
     		addModules();
     		getLog().info("Adding EAR Information to the EAR File");
     		addApplication();
+
     		cleanup();
     		getLog().info("BWEARPackager Mojo finished execution");
 		} catch (Exception e1) {
@@ -119,8 +132,11 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		File manifestFile = ManifestWriter.updateManifest(project, manifest);
 		File appManifest = addFiletoEAR(metainfFolder);
 
+
 		File earFile = getArchiveFileName();
 		archiver.setArchiver(jarchiver);
+
+		addDiagrams();
 
 		archiver.setOutputFile(earFile);
 
@@ -173,15 +189,133 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
                 //Save the module version in the Version Map.
                 moduleVersionMap.put(artifact.getArtifactId(), version);
-                /*if(isAppModuleArtifact) {
-                	this.version = version;
-                	isAppModuleArtifact = false;
-                }*/
             }
+            
+            
+			//This code allows dependencies declared in a Module to make it to the root level of the ear file
+			//This is necessary for the ear file to run properly
+    		List<MavenProject> projects = parser.getModulesProjectSet();
+			Set<File> artifactFiles = new HashSet<File>(); 
+    		for(MavenProject project : projects){
+    			
+    			Set<Artifact> dependencyArtifacts = project.getDependencyArtifacts();
+
+    			for(Artifact artifact : dependencyArtifacts) {
+    				
+    				File f = artifact.getFile();
+    				if(isPluginToIgnore(f.getName())){
+    					continue;
+    				}
+    				
+    				if(artifact.getVersion().equals("0.0.0")) { //$NON-NLS-1$
+    					continue;
+    				}
+    				
+    				if(moduleVersionMap.containsKey(artifact.getArtifactId())){
+    					continue;
+    				}
+    				
+    				String dependencyVersion = BWProjectUtils.getModuleVersion(artifact.getFile());
+    				
+    				Manifest mf = ManifestParser.parseManifestFromJAR( f);
+    				if( !mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+    				{
+    					continue;
+    				}
+    				
+    				moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
+					artifactFiles.add(artifact.getFile());
+    			}
+    		}
+    		
+			//This code takes dependencies in the application project and adds them to the EAR file root level
+	        DependencyResolutionResult resolutionResult = getDependenciesResolutionResult();
+	        if (resolutionResult != null) {
+	        	for(Dependency dependency : resolutionResult.getDependencies()) {
+	    			if(dependency.getArtifact().getVersion().equals("0.0.0")) { //$NON-NLS-1$
+	    				continue;
+	    			}
+	    			
+	    			if(moduleVersionMap.containsKey(dependency.getArtifact().getArtifactId())){
+	    				continue;
+	    			}
+	    			
+	    			Manifest mf = ManifestParser.parseManifestFromJAR( dependency.getArtifact().getFile() );
+	    			
+    				if( !mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+    				{
+    					continue;
+    				}
+	    			String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
+	                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
+					artifactFiles.add(dependency.getArtifact().getFile());
+	        	}
+	        }  
+	        
+			for(File file : artifactFiles) {
+				jarchiver.addFile(file, file.getName());
+			}
+    		
     	} catch(Exception e) {
     		getLog().error("Failed to add modules to the Application");
     		throw e;
     	}
+    }
+    
+    
+    private void addDiagrams()
+    {
+        DefaultFileSet fileSet = new DefaultFileSet();
+        fileSet.setDirectory(projectBasedir);
+        if( containsDiagrams())
+        {
+        	String [] includes = new String [] { "resources/"};
+        	fileSet.setIncludes(includes);
+        	archiver.getArchiver().addFileSet(fileSet);
+        }
+        
+
+    }
+    
+    private boolean containsDiagrams()
+    {
+    	return new File( projectBasedir , "resources").exists();
+    }
+
+	private DependencyResolutionResult getDependenciesResolutionResult() {
+		DependencyResolutionResult resolutionResult = null;
+        try {
+        	getLog().debug("Looking up dependency tree for the current project => " +  project + " and the current session => " + session);
+            DefaultDependencyResolutionRequest resolution = new DefaultDependencyResolutionRequest(project, session.getRepositorySession());
+            resolutionResult = resolver.resolve(resolution);
+        } catch (DependencyResolutionException e) {
+        	getLog().debug("Caught DependencyResolutionException for the project => " + e.getMessage() + " with cause => " + e.getCause());
+        	e.printStackTrace();
+            resolutionResult = e.getResult();
+        }
+		return resolutionResult;
+	}
+    
+    protected String[] getPluginsToIgnore(){
+    	if(pluginsToIgnore == null){
+    		pluginsToIgnore = new String[]{
+    				"com.tibco.bw.palette.shared",
+    				"com.tibco.xml.cxf.common",
+    				"tempbw"
+    		};
+    	}
+    	
+    	return pluginsToIgnore;
+    }
+    
+    protected boolean isPluginToIgnore(String pluginName){
+    	for(String toIgnore : getPluginsToIgnore()){
+    		if(pluginName.startsWith(toIgnore)){
+    			return true;
+    		}
+    	}
+    	
+    	return false;
     }
 
 	/**

@@ -5,6 +5,7 @@ public interface Constants {
 	public static final String BUNDLE_VERSION = "Bundle-Version";
 	public static final String BUNDLE_CLASSPATH = "Bundle-ClassPath";
 	public static final String BUNDLE_SYMBOLIC_NAME = "Bundle-SymbolicName";
+	public static final String BUNDLE_PROVIDE_CAPABILITY = "Provide-Capability";
 	public static final String TIBCO_BW_EDITION = "TIBCO-BW-Edition";
 	public static final String BWCF = "bwcf";
 	public static final String PACKAGING_MODEL_NAMESPACE_URI = "http://schemas.tibco.com/tra/model/core/PackagingModel";
@@ -13,4 +14,5 @@ public interface Constants {
 	public static final String TECHNOLOGY_VERSION = "technologyVersion";
 	public static final String BASIC_AUTH = "BASIC";
 	public static final String DIGEST_AUTH = "DIGEST";
+	public static final String TIBCO_SHARED_MODULE = "TIBCO-BW-SharedModule";
 }

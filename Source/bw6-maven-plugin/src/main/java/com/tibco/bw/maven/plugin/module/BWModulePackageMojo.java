@@ -39,6 +39,8 @@ import org.eclipse.aether.graph.Dependency;
 
 import com.tibco.bw.maven.plugin.build.BuildProperties;
 import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
+//import com.tibco.bw.maven.plugin.classpath.ClassPathFile;
+//import com.tibco.bw.maven.plugin.classpath.ClassPathFileParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
@@ -91,9 +93,10 @@ public class BWModulePackageMojo extends AbstractMojo {
             manifest = ManifestParser.parseManifest(projectBasedir);
 
             getLog().info("Updated the Manifest version ");
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            
+            ManifestWriter.updateManifestVersion(project, manifest);
             updateManifestVersion();
-
+            
             getLog().info("Removing the externals entries if any. ");
             removeExternals();
 
@@ -112,8 +115,8 @@ public class BWModulePackageMojo extends AbstractMojo {
             archiver.getArchiver().addFileSet(set);
             archiver.setOutputFile(pluginFile);
 
-           // File manifestFile = ManifestWriter.updateManifest(project, manifest);
-
+            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            
             jarArchiver.setManifest(manifestFile);
 
             getLog().info("Creating the Plugin JAR file");
@@ -258,6 +261,27 @@ public class BWModulePackageMojo extends AbstractMojo {
         if(includes.contains("target/")) {
         	includes.remove("target/");
         }
+        
+        if(isSharedModule()){
+        	//Ensure .project and .config are added
+        	if(!includes.contains(".config")){
+        		includes.add(".config");
+        	}
+        	if(!includes.contains(".project")){
+        		includes.add(".project");
+        	}
+        	
+//        	ClassPathFile cf = ClassPathFileParser.parse(projectBasedir);
+//        	if(!cf.getSourceEntries().isEmpty()){
+//        		includes.add(".classpath");
+//        		for(String srcFolder : cf.getSourceEntries()){
+//        			if(!includes.contains(srcFolder)){
+//        				includes.add(srcFolder);
+//        			}
+//        		}
+//        	}
+        }
+        
         if (includes.isEmpty()) {
             fileSet.setIncludes(new String[] { "" });
         } else {
@@ -270,6 +294,10 @@ public class BWModulePackageMojo extends AbstractMojo {
         }
         fileSet.setExcludes(allExcludes.toArray(new String[allExcludes.size()]));
         return fileSet;
+    }
+    
+    protected boolean isSharedModule(){
+    	return manifest.getMainAttributes().getValue(Constants.TIBCO_SHARED_MODULE) == null ? false : true;
     }
 
     private void updateManifestVersion() {
