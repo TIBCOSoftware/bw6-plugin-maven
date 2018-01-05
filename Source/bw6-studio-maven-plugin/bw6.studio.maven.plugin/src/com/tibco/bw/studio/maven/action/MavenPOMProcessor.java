@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.internal.events.BuildCommand;
 import org.eclipse.core.resources.ICommand;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
@@ -78,7 +79,14 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 				addMavenNature();
 				refreshProjects();
 				addParentProjectToWS();
-			} else {  //No need to generate the POM files. Return.
+			} else {  
+				//Added for Issue ID-AMBW-27792
+				IFile pomFile = selectedProject.getFile("/pom.xml");
+				File pomFileAbs = pomFile.getRawLocation().toFile();
+				if(pomFileAbs.exists() && pomFileAbs.length()==0) {
+					pomFileAbs.delete();
+				} 
+				//No need to generate the POM files. Return.
 				return;
 			}
 		} catch(Exception e) {
