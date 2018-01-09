@@ -129,7 +129,6 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		File metainfFolder = getApplicationMetaInf();
 
 		//Add the files from the META-INF to the EAR File.
-		File manifestFile = ManifestWriter.updateManifest(project, manifest);
 		File appManifest = addFiletoEAR(metainfFolder);
 
 
@@ -373,23 +372,19 @@ public class BWEARPackagerMojo extends AbstractMojo {
 	 * 
 	 * @throws Exception
 	 */
-	private File getUpdatedManifest(File manifest) throws Exception {
+	private File getUpdatedManifest(File manifestFile) throws Exception {
 		//Copy the MANIFEST.MF to a temporary location.
 		File tempManifest = File.createTempFile("bwear", "mf");
-		FileUtils.copyFile(manifest, tempManifest);
 
-		FileInputStream is = new FileInputStream(tempManifest);
-		Manifest mf = new Manifest(new FileInputStream(tempManifest));
-		is.close();
-
+		
 		// Update the Bundle Version
-		Attributes attr = mf.getMainAttributes();
+		Attributes attr = manifest.getMainAttributes();
 		attr.putValue(Constants.BUNDLE_VERSION, version);
 		getLog().info("Manifest updated with Version " + version);
 
 		//Write the updated file and return the same.
 		FileOutputStream os = new FileOutputStream(tempManifest);
-		mf.write(os);
+		manifest.write(os);
 		os.close();
 
 		tempFiles.add(tempManifest);
