@@ -103,7 +103,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
     	    archiveConfiguration = new MavenArchiveConfiguration();
     	    moduleVersionMap = new HashMap<String, String>();
             manifest = ManifestParser.parseManifest(projectBasedir);
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            ManifestWriter.updateManifestVersion(project, manifest);
             getLog().info("Updated the Manifest version ");
             updateManifestVersion();
     	    getLog().info("Adding Modules to the EAR file");
@@ -183,7 +183,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
                 File moduleJar = artifact.getFile();
 
                 //Add the JAR file to the EAR file
-                jarchiver.addFile(moduleJar, moduleJar.getName());
+                jarchiver.addFile(moduleJar, artifact.getArtifactId()+ "_" + artifact.getBaseVersion()+ ".jar");
                 String version = BWProjectUtils.getModuleVersion(moduleJar);
                 getLog().info("Adding Module JAR with name " + moduleJar.getName() + " with version " + version);
 
