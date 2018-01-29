@@ -49,10 +49,10 @@ public class ManifestWriter {
         attributes.putValue("Bundle-Version", projectVersion );
 
         //Updating provide capability for Shared Modules
-        if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
-        	String updatedProvide = ManifestParser.getUpdatedProvideCapabilities(mf, projectVersion);
-        	attributes.putValue(Constants.BUNDLE_PROVIDE_CAPABILITY, updatedProvide);
-        }
+//        if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
+//        	String updatedProvide = ManifestParser.getUpdatedProvideCapabilities(mf, projectVersion);
+//        	attributes.putValue(Constants.BUNDLE_PROVIDE_CAPABILITY, updatedProvide);
+//        }
 
     }
     
