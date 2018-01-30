@@ -22,7 +22,7 @@ d. Unzip the file in a folder on local drive.
 
 e. Open the Terminal and run install.bat ( for Windows based OS ) or install.sh ( for Unix based OS)
 
-f. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script. e.g. `/opt/tibco`
+f. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script. e.g. `/opt/tibco/bw_home`
 
 This will install the Maven Plugin to the TibcoHome. 
 
