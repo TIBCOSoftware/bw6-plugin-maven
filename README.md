@@ -2,28 +2,27 @@
 
 This plug-in is subject to the license shared as part of the repository. Kindly review the license before using or downloading this plug-in.
 
-It is provided as a sample plug-in to support use-cases of integrating TIBCO ActiveMatrix BusinessWorks™ 6.3.0 and higher with Apache Maven.
+It is provided as a sample plug-in to support use-cases of integrating TIBCO ActiveMatrix BusinessWorks™ with Apache Maven.
 
 ## Prerequisites
 
 1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the Path.
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
-2. TIBCO ActiveMatrix BusinessWorks™ 6.3.0 or higher should be installed.
+2. TIBCO ActiveMatrix BusinessWorks™ should be installed.
 
 ## Installation
-
 
 a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
 
 b. Navigate to the Installer Folder.
 
-c. Download TIB_BW_Maven_Plugin_1.1.0.zip
+c. Download TIB_BW_Maven_Plugin_x.y.z.zip
 
 d. Unzip the file in a folder on local drive.
 
 e. Open the Terminal and run install.bat ( for Windows based OS ) or install.sh ( for Unix based OS)
 
-f. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script.
+f. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script. e.g. `/opt/tibco/bw_home`
 
 This will install the Maven Plugin to the TibcoHome. 
 
@@ -58,7 +57,6 @@ k. Select the goal as "install" for creating the EAR file and installing it to l
 If you'd like to contribute to this plug-in, please reach out to integration-pm@tibco.com
 
 
-
 ***
 
 ***
@@ -73,23 +71,21 @@ It is provided as a sample plug-in to support use-cases of integrating TIBCO Bus
 
 1. Maven should be installed on the Machine. M2_HOME should be set. The Maven Executable should be available in the Path.
 This can be confirmed by running the command mvn -version from Terminal/Command Prompt.
-2. TIBCO BusinessWorks™ Container Edition 1.0.0 or higher should be installed.
+2. TIBCO BusinessWorks™ Container Edition should be installed.
 
 ## Installation
-
 
 a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
 
 b. Navigate to the Installer Folder.
 
-c. Download TIB_BW_Maven_Plugin_1.0.0.zip (for BWCE 1.0.1 having on PCF) or TIB_BW_Maven_Plugin_1.1.0.zip (for BWCE 2.0 having both Docker and PCF)
+c. Download TIB_BW_Maven_Plugin_x.y.z.zip
 
 d. Unzip the file in a folder on local drive.
 
 e. Open the Terminal and run install.bat ( for Windows based OS ) or install.sh ( for Unix based OS)
 
 f. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script.
-
 
 This will install the Maven Plugin to the TibcoHome. 
 
