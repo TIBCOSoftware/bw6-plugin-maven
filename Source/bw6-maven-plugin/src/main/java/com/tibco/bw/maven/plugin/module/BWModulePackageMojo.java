@@ -2,6 +2,7 @@ package com.tibco.bw.maven.plugin.module;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -124,17 +125,22 @@ public class BWModulePackageMojo extends AbstractMojo {
 
             project.getArtifact().setFile(pluginFile);
 
-            // Code for BWCE
+         // Code for BWCE
             String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
             if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
-            	List<MavenProject> projs = session.getAllProjects();
-            	for(int i = 0; i < projs.size(); i++) {
-            		MavenProject proj = projs.get(i);
-            		if(proj.getArtifactId().equals(project.getArtifactId())) {
-        				session.getAllProjects().set(i, project);
-        			}
-            	}
+            	List<MavenProject> amendedProjects = new ArrayList<>();
+            	for(MavenProject proj: session.getAllProjects())
+				{
+					if(proj.getArtifactId().equals(project.getArtifactId())) {
+						amendedProjects.add(project);
+					}
+					else {
+						amendedProjects.add(proj);
+					}
+				}
+            	session.setAllProjects(amendedProjects);
             }
+
             getLog().info("BW Module Packager Mojo finished execution.");
     	} catch (IOException e) {
             throw new MojoExecutionException("Error assembling JAR", e);
@@ -175,6 +181,18 @@ public class BWModulePackageMojo extends AbstractMojo {
 		for(File file : artifactFiles) {
 			if(file.getName().indexOf("com.tibco.bw.palette.shared") != -1 || file.getName().indexOf("com.tibco.xml.cxf.common") != -1 || file.getName().indexOf("tempbw") != -1) {
 				continue;
+			}
+			
+			
+			Manifest mf = ManifestParser.parseManifestFromJAR( file);
+			for( Object str : mf.getMainAttributes().keySet())
+			{
+				getLog().debug( str.toString() );
+				if( "TIBCO-BW-SharedModule".equals(str.toString() ))
+				{
+					continue;
+					
+				}
 			}
 			getLog().debug("Dependency added with name " + file.toString());
 			jarArchiver.addFile(file, "lib/" + file.getName());

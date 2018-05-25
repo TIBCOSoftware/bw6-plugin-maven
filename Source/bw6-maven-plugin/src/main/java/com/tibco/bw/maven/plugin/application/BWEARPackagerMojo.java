@@ -104,7 +104,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
     	    archiveConfiguration = new MavenArchiveConfiguration();
     	    moduleVersionMap = new HashMap<String, String>();
             manifest = ManifestParser.parseManifest(projectBasedir);
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
+            ManifestWriter.updateManifestVersion(project, manifest);
             getLog().info("Updated the Manifest version ");
             updateManifestVersion();
     	    getLog().info("Adding Modules to the EAR file");
@@ -130,7 +130,6 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		File metainfFolder = getApplicationMetaInf();
 
 		//Add the files from the META-INF to the EAR File.
-		File manifestFile = ManifestWriter.updateManifest(project, manifest);
 		File appManifest = addFiletoEAR(metainfFolder);
 
 
@@ -182,9 +181,21 @@ public class BWEARPackagerMojo extends AbstractMojo {
             for(Artifact artifact : artifacts) {
                 //Find the Module JAR file
                 File moduleJar = artifact.getFile();
+                
+				Manifest mf = ManifestParser.parseManifestFromJAR( moduleJar );
+				if( mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+				{
+	                jarchiver.addFile(moduleJar, artifact.getArtifactId()+ "_" + artifact.getBaseVersion()+ ".jar");
 
+				}
+				else
+				{
+					jarchiver.addFile(moduleJar, moduleJar.getName());
+				}
+
+                
+                
                 //Add the JAR file to the EAR file
-                jarchiver.addFile(moduleJar, moduleJar.getName());
                 String version = BWProjectUtils.getModuleVersion(moduleJar);
                 getLog().info("Adding Module JAR with name " + moduleJar.getName() + " with version " + version);
 
@@ -204,6 +215,8 @@ public class BWEARPackagerMojo extends AbstractMojo {
     			for(Artifact artifact : dependencyArtifacts) {
     				
     				File f = artifact.getFile();
+    				getLog().debug("Dependency file is " + f.getAbsolutePath() );
+    				
     				if(isPluginToIgnore(f.getName())){
     					continue;
     				}
@@ -219,13 +232,18 @@ public class BWEARPackagerMojo extends AbstractMojo {
     				String dependencyVersion = BWProjectUtils.getModuleVersion(artifact.getFile());
     				
     				Manifest mf = ManifestParser.parseManifestFromJAR( f);
-    				if( !mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+    				for( Object str : mf.getMainAttributes().keySet())
     				{
-    					continue;
-    				}
-    				
+    					getLog().debug( str.toString() );
+    					if( "TIBCO-BW-SharedModule".equals(str.toString() ))
+    					{
     				moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
 					artifactFiles.add(artifact.getFile());
+    						break;
+    						
+    			}
+    		}
+    		
     			}
     		}
     		
@@ -243,13 +261,19 @@ public class BWEARPackagerMojo extends AbstractMojo {
 	    			
 	    			Manifest mf = ManifestParser.parseManifestFromJAR( dependency.getArtifact().getFile() );
 	    			
-    				if( !mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+    				for( Object str : mf.getMainAttributes().keySet())
     				{
-    					continue;
-    				}
+    					getLog().debug( str.toString() );
+    					if( "TIBCO-BW-SharedModule".equals(str.toString() ))
+    					{
 	    			String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
 	                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
 					artifactFiles.add(dependency.getArtifact().getFile());
+    						break;
+    						
+	        	}
+    				}
+
 	        	}
 	        }  
 	        
@@ -374,23 +398,20 @@ public class BWEARPackagerMojo extends AbstractMojo {
 	 * 
 	 * @throws Exception
 	 */
-	private File getUpdatedManifest(File manifest) throws Exception {
+	private File getUpdatedManifest(File manifestFile) throws Exception {
 		//Copy the MANIFEST.MF to a temporary location.
 		File tempManifest = File.createTempFile("bwear", "mf");
-		Files.copy(manifest.toPath(), tempManifest.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
 		FileInputStream is = new FileInputStream(tempManifest);
-		Manifest mf = new Manifest(new FileInputStream(tempManifest));
-		is.close();
-
+		
 		// Update the Bundle Version
-		Attributes attr = mf.getMainAttributes();
+		Attributes attr = manifest.getMainAttributes();
 		attr.putValue(Constants.BUNDLE_VERSION, version);
 		getLog().info("Manifest updated with Version " + version);
 
 		//Write the updated file and return the same.
 		FileOutputStream os = new FileOutputStream(tempManifest);
-		mf.write(os);
+		manifest.write(os);
 		os.close();
 
 		tempFiles.add(tempManifest);
