@@ -43,19 +43,18 @@ public class MvnInstallExecutor {
 			buffer.append(" -Dversion=0.0.0");
 			buffer.append(" -Dpackaging=jar");
 			buffer.append(" -DlocalRepositoryPath=" + "\"" + session.getLocalRepository().getBasedir() + "\"");
-				
 			switch( BWProjectUtils.getOS()) {
 			case WINDOWS:
-					executeWinCommand(buffer.toString());	
-					break;
+				executeWinCommand(buffer.toString());	
+				break;
 			case UNIX:
-					executeUnix( buffer.toString() );
-					break;
+				executeUnix( buffer.toString() );
+				break;
 			}
 			if (fSettings.delete()){
-				logger.info("The setting.xml temporal file was delete sucessfull");
+				logger.info("The "+fSettings.getAbsolutePath()+" temporal file was delete sucessfull");
 			}else{
-				logger.warn("The setting.xml temporal file wasn't delete");
+				logger.warn("The "+fSettings.getAbsolutePath()+" temporal file wasn't delete");
 			}
 			Dependency dep = new Dependency();
 			dep.setGroupId("tempbw");
@@ -64,8 +63,8 @@ public class MvnInstallExecutor {
 			model.addDependency(dep);
 			logger.debug("Set the Dependency to Model");
 		} catch(Throwable e) {
-				logger.error( "Failed to add Dependency to Maven Repository for JAR " + jarFile.getName() + " .Please do it manually");
-				e.printStackTrace();
+			logger.error( "Failed to add Dependency to Maven Repository for JAR " + jarFile.getName() + " .Please do it manually");
+			e.printStackTrace();
 		}
 	}
 
