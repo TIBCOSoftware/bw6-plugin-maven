@@ -8,8 +8,10 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Arrays;
 
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.apache.maven.settings.io.DefaultSettingsWriter;
 import org.codehaus.plexus.logging.Logger;
 
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
@@ -25,24 +27,36 @@ public class MvnInstallExecutor {
 		executeUnixCommand(command);
 	}
 
-	public void execute(Model model, File jarFile) {
+	public void execute(Model model, File jarFile, MavenSession session){
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("mvn install:install-file ");
-		buffer.append(" -Dfile=" + "\"" + jarFile.getAbsolutePath() + "\"");
-		buffer.append(" -DgroupId=tempbw");
-		buffer.append(" -DartifactId=" + jarFile.getName().substring(0,jarFile.getName().lastIndexOf(".")) );
-		buffer.append(" -Dversion=0.0.0");
-		buffer.append(" -Dpackaging=jar");
-		try {
+		try{
+			File fSettings = File.createTempFile("settings", ".xml");
+			DefaultSettingsWriter defaultSettingsWriter = new DefaultSettingsWriter();
+			defaultSettingsWriter.write(fSettings, null, session.getSettings());
+			buffer.append("mvn");
+			buffer.append(" -s ");
+			buffer.append(fSettings.getAbsolutePath());
+			buffer.append(" install:install-file ");
+			buffer.append(" -Dfile=" + "\"" + jarFile.getAbsolutePath() + "\"");
+			buffer.append(" -DgroupId=tempbw");
+			buffer.append(" -DartifactId=" + jarFile.getName().substring(0,jarFile.getName().lastIndexOf(".")) );
+			buffer.append(" -Dversion=0.0.0");
+			buffer.append(" -Dpackaging=jar");
+			buffer.append(" -DlocalRepositoryPath=" + "\"" + session.getLocalRepository().getBasedir() + "\"");
+				
 			switch( BWProjectUtils.getOS()) {
 			case WINDOWS:
-				executeWinCommand(buffer.toString());	
-				break;
+					executeWinCommand(buffer.toString());	
+					break;
 			case UNIX:
-				executeUnix( buffer.toString() );
-				break;
+					executeUnix( buffer.toString() );
+					break;
 			}
-
+			if (fSettings.delete()){
+				logger.info("The setting.xml temporal file was delete sucessfull");
+			}else{
+				logger.warn("The setting.xml temporal file wasn't delete");
+			}
 			Dependency dep = new Dependency();
 			dep.setGroupId("tempbw");
 			dep.setArtifactId(jarFile.getName().substring(0,jarFile.getName().lastIndexOf(".")));
@@ -50,8 +64,8 @@ public class MvnInstallExecutor {
 			model.addDependency(dep);
 			logger.debug("Set the Dependency to Model");
 		} catch(Throwable e) {
-			logger.error( "Failed to add Dependency to Maven Repository for JAR " + jarFile.getName() + " .Please do it manually");
-			e.printStackTrace();
+				logger.error( "Failed to add Dependency to Maven Repository for JAR " + jarFile.getName() + " .Please do it manually");
+				e.printStackTrace();
 		}
 	}
 
