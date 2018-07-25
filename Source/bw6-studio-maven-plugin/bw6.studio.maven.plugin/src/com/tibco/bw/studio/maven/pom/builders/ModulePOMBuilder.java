@@ -18,6 +18,7 @@ import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder {
 	protected String bwEdition;
+	protected boolean isSharedModule=false;
 
 	@Override
 	public void build(BWProject project, BWModule module) throws Exception {
@@ -40,7 +41,14 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 
 		initializeModel();
 		addPrimaryTags();
+		if(isSharedModule==false){
 		addParent(ModuleHelper.getParentModule(project.getModules()));
+		}
+		else
+		{
+			model.setGroupId(module.getGroupId());
+			model.setVersion(module.getVersion());
+		}
 		addBuild();
 		if (module instanceof BWAppModule) {
 			addPaletteSharedDependency();

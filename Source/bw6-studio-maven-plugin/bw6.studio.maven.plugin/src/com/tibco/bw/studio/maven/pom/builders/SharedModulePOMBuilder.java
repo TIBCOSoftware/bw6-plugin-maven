@@ -7,7 +7,6 @@ import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 
 public class SharedModulePOMBuilder extends ModulePOMBuilder {
-
 	@Override
 	public void build(BWProject project, BWModule module) throws Exception {
 		
@@ -34,6 +33,7 @@ public class SharedModulePOMBuilder extends ModulePOMBuilder {
 			// addProperties();
 			generatePOMFile();
 		}else{
+			this.isSharedModule=false;
 			super.build(project, module);
 		}
 	}
