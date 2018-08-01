@@ -66,5 +66,14 @@
           name="BWMavenDependencyBuilder">
     </builder>
  </extension>
+ <extension
+       point="org.eclipse.ui.preferencePages">
+    <page
+          category="tibco.preference.bw"
+          class="com.tibco.bw.studio.maven.preferences.MavenDefaultsPreferencePage"
+          id="tibco.preference.bw.MavenDefaults"
+          name="Maven Defaults">
+    </page>
+ </extension>
 
 </plugin>
