@@ -5,10 +5,10 @@
   <version>1.3.1</version>
   <packaging>maven-plugin</packaging>
 
-  <name>Plugin Code for Apache Maven and TIBCO BusinessWorks™</name>
+  <name>Plugin Code for Apache Maven and TIBCO BusinessWorks&#174;</name>
 
   <description>
-    Plugin Code for Apache Maven and TIBCO BusinessWorks™.
+    Plugin Code for Apache Maven and TIBCO BusinessWorks&#174;.
     This is the Maven Plugin for BW6 and BWCE Build. 
   </description>
 
@@ -47,11 +47,6 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-embedder</artifactId>
       <version>3.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>1.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.plugins</groupId>

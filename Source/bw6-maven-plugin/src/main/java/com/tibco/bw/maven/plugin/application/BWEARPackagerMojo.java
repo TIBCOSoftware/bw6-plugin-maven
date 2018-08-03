@@ -21,7 +21,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
@@ -236,13 +235,13 @@ public class BWEARPackagerMojo extends AbstractMojo {
     					getLog().debug( str.toString() );
     					if( "TIBCO-BW-SharedModule".equals(str.toString() ))
     					{
-    	    				moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
-    						artifactFiles.add(artifact.getFile());
+    				moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
+					artifactFiles.add(artifact.getFile());
     						break;
     						
-    					}
-    				}
-    				
+    			}
+    		}
+    		
     			}
     		}
     		
@@ -265,12 +264,12 @@ public class BWEARPackagerMojo extends AbstractMojo {
     					getLog().debug( str.toString() );
     					if( "TIBCO-BW-SharedModule".equals(str.toString() ))
     					{
-    		    			String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
-    		                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
-    						artifactFiles.add(dependency.getArtifact().getFile());
+	    			String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
+	                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
+					artifactFiles.add(dependency.getArtifact().getFile());
     						break;
     						
-    					}
+	        	}
     				}
 
 	        	}
@@ -401,6 +400,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		//Copy the MANIFEST.MF to a temporary location.
 		File tempManifest = File.createTempFile("bwear", "mf");
 
+		FileInputStream is = new FileInputStream(tempManifest);
 		
 		// Update the Bundle Version
 		Attributes attr = manifest.getMainAttributes();
