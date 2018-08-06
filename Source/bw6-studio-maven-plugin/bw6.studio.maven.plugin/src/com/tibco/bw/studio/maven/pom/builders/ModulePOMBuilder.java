@@ -1,5 +1,6 @@
 package com.tibco.bw.studio.maven.pom.builders;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 				bwEdition = "cf";
 			} else {
 				bwEdition = "docker";
-			}
+		}
 		} else
 			bwEdition = "bw6";
 
@@ -100,14 +101,14 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		build.setOutputDirectory("target/classes");
 	}
 
-	protected void addBuild() {
+	protected void addBuild() throws IOException {
 		Build build = model.getBuild();
 		if (build == null) {
 			build = new Build();
-			
-		}
 			addSourceTarget(build);
 			addBW6MavenPlugin(build);
+		}
+
 		if (bwEdition.equals("cf")) {
 			boolean cfplugin = false;
 			List<Plugin> plugins = build.getPlugins();
@@ -147,7 +148,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 
 				}
 			}
-		}
+	}
 		model.setBuild(build);
 	}
 

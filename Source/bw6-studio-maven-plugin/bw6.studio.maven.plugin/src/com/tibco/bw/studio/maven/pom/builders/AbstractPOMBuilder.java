@@ -1,5 +1,7 @@
 package com.tibco.bw.studio.maven.pom.builders;
 
+import io.codearte.props2yaml.Props2YAML;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,12 +10,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.model.Activation;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
@@ -25,6 +29,8 @@ import org.apache.maven.model.Profile;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.demo.propstoyaml.PropertiesToYamlConverter;
+import org.demo.propstoyaml.PropertiesToYamlConverter.YamlConversionResult;
 
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
 import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
@@ -149,10 +155,10 @@ public abstract class AbstractPOMBuilder {
 			Xpp3Dom config = new Xpp3Dom("configuration");
 			Xpp3Dom child = new Xpp3Dom("files");
 			Xpp3Dom fileChild = new Xpp3Dom("file");
-			if(bwEdition.equals("cf")) {
+		/*	if(bwEdition.equals("cf")) {
 				fileChild.setValue("${pcf.property.file}");
 				child.addChild(fileChild);
-			} else if(bwEdition.equals("docker")) {
+			} else if(bwEdition.equals("docker")) {*/
 				fileChild.setValue("${docker.property.file}");
 				child.addChild(fileChild);
 				if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0) {
@@ -165,7 +171,7 @@ public abstract class AbstractPOMBuilder {
 					fileChild2.setValue("${k8s.property.file}");
 					child.addChild(fileChild2);
 				}
-			}
+		//	}
 			config.addChild(child);
 			plugin.setConfiguration(config);
 			build.addPlugin(plugin);
@@ -248,7 +254,7 @@ public abstract class AbstractPOMBuilder {
 		}
 	}
 
-	protected void addDockerK8SMavenPlugin(Build build, boolean skip) {
+	protected void addDockerK8SMavenPlugin(Build build, boolean skip) throws IOException {
 		if(!skip) {
 			createK8SPropertiesFiles();
 		}
@@ -261,6 +267,27 @@ public abstract class AbstractPOMBuilder {
 		Xpp3Dom child = new Xpp3Dom("skip");
         child.setValue(String.valueOf(skip));
         config.addChild(child);
+        if(!skip){
+        	String file=(getWorkspacepath() + File.separator + "k8s-dev.properties");
+        	String content="";
+			try {
+				content = new String(Files.readAllBytes(Paths.get(file)));
+			} catch (IOException e) {
+				throw new IOException("Could not read contents from file: "+file+" due to: "+e.getMessage());
+			}
+        	PropertiesToYamlConverter converter = new PropertiesToYamlConverter();
+        	String result = converter.convert(content).getYaml();//.convert(content).getYaml();
+        	
+        	
+        	try {
+				FileUtils.writeStringToFile(new File(getWorkspacepath() + File.separator + "src/main/fabric8/deployment.yaml"), result, "UTF-8");
+			} catch (IOException e) {
+				throw new IOException("Could not write contents to deployment.yaml file due to: "+e.getMessage());
+			}
+        
+        
+        
+        }
         plugin.setConfiguration(config);
 		build.addPlugin(plugin);
 	}
