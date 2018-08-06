@@ -155,10 +155,10 @@ public abstract class AbstractPOMBuilder {
 			Xpp3Dom config = new Xpp3Dom("configuration");
 			Xpp3Dom child = new Xpp3Dom("files");
 			Xpp3Dom fileChild = new Xpp3Dom("file");
-		/*	if(bwEdition.equals("cf")) {
+			if(bwEdition.equals("cf")) {
 				fileChild.setValue("${pcf.property.file}");
 				child.addChild(fileChild);
-			} else if(bwEdition.equals("docker")) {*/
+			} else if(bwEdition.equals("docker")) {
 				fileChild.setValue("${docker.property.file}");
 				child.addChild(fileChild);
 				if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0) {
@@ -171,7 +171,7 @@ public abstract class AbstractPOMBuilder {
 					fileChild2.setValue("${k8s.property.file}");
 					child.addChild(fileChild2);
 				}
-		//	}
+			}
 			config.addChild(child);
 			plugin.setConfiguration(config);
 			build.addPlugin(plugin);
