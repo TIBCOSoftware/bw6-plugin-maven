@@ -262,33 +262,195 @@ public abstract class AbstractPOMBuilder {
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("fabric8-maven-plugin");
 		plugin.setVersion("3.5.40");
-		
+
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
-        child.setValue(String.valueOf(skip));
-        config.addChild(child);
-        if(!skip){
-        	String file=(getWorkspacepath() + File.separator + "k8s-dev.properties");
-        	String content="";
+		child.setValue(String.valueOf(skip));
+		config.addChild(child);
+		if(!skip){
+			String file=(getWorkspacepath() + File.separator + "k8s-dev.properties");
+			Properties prop = new Properties();
+			InputStream input = null;
+
 			try {
-				content = new String(Files.readAllBytes(Paths.get(file)));
-			} catch (IOException e) {
-				throw new IOException("Could not read contents from file: "+file+" due to: "+e.getMessage());
+
+				input = new FileInputStream(file);
+
+				// load a properties file
+				prop.load(input);
 			}
-        	PropertiesToYamlConverter converter = new PropertiesToYamlConverter();
-        	String result = converter.convert(content).getYaml();//.convert(content).getYaml();
-        	
-        	
-        	try {
-				FileUtils.writeStringToFile(new File(getWorkspacepath() + File.separator + "src/main/fabric8/deployment.yaml"), result, "UTF-8");
-			} catch (IOException e) {
-				throw new IOException("Could not write contents to deployment.yaml file due to: "+e.getMessage());
+			catch(Exception e)
+			{
+
 			}
-        
-        
-        
-        }
-        plugin.setConfiguration(config);
+
+
+			String fileDocker=(getWorkspacepath() + File.separator + "docker-dev.properties");
+			Properties propsDocker = new Properties();
+			input = null;
+
+			try {
+
+				input = new FileInputStream(fileDocker);
+
+				// load a properties file
+				propsDocker.load(input);
+			}
+			catch(Exception e)
+			{
+
+			}
+
+			File directorySrc = new File(String.valueOf(getWorkspacepath() + File.separator+"src"));
+
+
+			if(!directorySrc.exists()){
+
+				directorySrc.mkdir();
+			}
+
+			File directoryMain = new File(String.valueOf(getWorkspacepath() + File.separator+"src/main"));
+
+
+			if(!directoryMain.exists()){
+
+				directoryMain.mkdir();
+			}
+			File directoryFabric8 = new File(String.valueOf(getWorkspacepath() + File.separator+"src/main/fabric8"));
+
+
+			if(!directoryFabric8.exists()){
+
+				directoryFabric8.mkdir();
+			}
+
+
+
+			//snakeYAML for writing maps nested objects to YAML file
+			String locationService = getWorkspacepath() + File.separator + "src/main/fabric8/service.yaml";
+			File serviceFile = new File(Paths.get(locationService).toString());
+			serviceFile.createNewFile();
+			Map<String, Object> dataService = new HashMap<String, Object>();
+			dataService.put("kind", "Service");
+			Map<String, Object> metadataService=new HashMap<String, Object>();
+			metadataService.put("name", prop.getProperty("fabric8.service.name"));
+			
+			Map<String, String> appName=new HashMap<String, String>();
+			String appModule=getWorkspacepath().toString(); 
+			if(appModule.endsWith(File.separator)){
+				appModule=appModule.substring(0,appModule.length()-1);
+			}
+			String appModuleName=appModule.substring(appModule.lastIndexOf(File.separator)+1);
+			appName.put("app", appModuleName);
+			
+			metadataService.put("labels",appName);
+			dataService.put("metadata", metadataService);
+			Map<String, Object> specdataService=new HashMap<String, Object>();
+			specdataService.put("type", prop.getProperty("fabric8.service.type"));
+
+			List<Map<String, Object>> portsList=new ArrayList<Map<String, Object>>();
+			Map<String, Object> portInfo=new HashMap<String, Object>();
+			portInfo.put("port", Integer.parseInt(prop.getProperty("fabric8.service.port")));
+			portInfo.put("targetPort", Integer.parseInt(prop.getProperty("fabric8.service.containerPort")));
+
+			portsList.add(portInfo);
+			specdataService.put("ports", portsList);
+
+			Map<String, String> appInfo=new HashMap<String, String>();
+			appInfo.put("app", prop.getProperty("fabric8.service.name"));
+			specdataService.put("selector", appInfo);
+
+
+
+
+			dataService.put("spec", specdataService);
+
+			DumperOptions options = new DumperOptions(); 
+			options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK); 
+			Yaml yaml = new Yaml(options); 
+			FileWriter writer = new FileWriter(locationService);
+			yaml.dump(dataService, writer);
+
+
+
+
+
+
+
+
+			String locationDeployment = getWorkspacepath() + File.separator + "src/main/fabric8/deployment.yaml";
+			File deploymentFile = new File(Paths.get(locationDeployment).toString());
+			deploymentFile.createNewFile();	
+
+			Map<String, Object> data = new HashMap<String, Object>();
+			data.put("kind", "Deployment");
+			Map<String, Object> metadata=new HashMap<String, Object>();
+			metadata.put("name", prop.getProperty("fabric8.replicationController.name"));
+			data.put("metadata", metadata);
+			Map<String, Object> specdata=new HashMap<String, Object>();
+			specdata.put("replicas", Integer.parseInt(prop.getProperty("fabric8.replicas")));
+			HashMap<String, String> appInfoDeployment=new HashMap<String, String>();
+			String application=getWorkspacepath().toString(); 
+			if(application.endsWith(File.separator)){
+				application=application.substring(0,application.length()-1);
+			}
+			String applicationName=application.substring(application.lastIndexOf(File.separator)+1);
+			
+			appInfoDeployment.put("app", applicationName);
+			Map<String, Object> matchLabels=new HashMap<String, Object>();
+			matchLabels.put("matchLabels", appInfoDeployment);
+			specdata.put("selector",matchLabels);
+			Map<String,Object> template=new HashMap<String, Object>();
+			metadata=new HashMap<String, Object>();
+			metadata.put("name", prop.getProperty("fabric8.replicationController.name"));
+			Map<String, Object> appInfoLabel=new HashMap<String, Object>();
+			appInfoLabel.put("app", applicationName);
+			metadata.put("labels", appInfoLabel);
+			template.put("metadata", metadata);
+			
+			List<Map<String, Object>> containerData=new ArrayList<Map<String,Object>>();
+			Map<String, Object> containerInfo= new HashMap<String, Object>();
+			containerInfo.put("name", prop.getProperty("fabric8.container.name"));
+
+			containerInfo.put("image", propsDocker.getProperty("docker.image"));
+
+			containerInfo.put("imagePullPolicy", "Always");
+			List<Map<String, Object>> envList=new ArrayList<Map<String, Object>>();
+			Map<String , Object> env = new HashMap<String, Object>();
+			env.put("name", "BW_LOGLEVEL");
+			env.put("value", "ERROR");
+			envList.add(env);
+			env = new HashMap<String, Object>();
+			env.put("name", "BW_PROFILE");
+			env.put("value", prop.getProperty("fabric8.env.APP_CONFIG_PROFILE"));
+			envList.add(env);
+			containerInfo.put("env", envList);
+			portsList=new ArrayList<Map<String, Object>>();
+			portInfo=new HashMap<String, Object>();
+			portInfo.put("containerPort", Integer.parseInt(prop.getProperty("fabric8.service.containerPort")));
+			portsList.add(portInfo);
+			containerInfo.put("ports", portsList);
+
+			containerData.add(containerInfo);
+			Map<String, Object> specdata1=new HashMap<String, Object>();
+			specdata1.put("containers", containerData);
+			template.put("spec", specdata1);
+
+			specdata.put("template",template);
+
+
+
+			data.put("spec", specdata);
+
+			options = new DumperOptions(); 
+			options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK); 
+			yaml = new Yaml(options); 
+			writer = new FileWriter(locationDeployment);
+			yaml.dump(data, writer);
+
+
+		}
+		plugin.setConfiguration(config);
 		build.addPlugin(plugin);
 	}
 
