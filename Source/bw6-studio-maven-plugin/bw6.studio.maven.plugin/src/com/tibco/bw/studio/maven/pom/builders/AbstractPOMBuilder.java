@@ -434,6 +434,7 @@ public abstract class AbstractPOMBuilder {
 			e.printStackTrace();
 		}
 	}
+	
 
 	private void createK8SPropertiesFiles() {
 		try {
@@ -449,12 +450,15 @@ public abstract class AbstractPOMBuilder {
 			properties.setProperty("fabric8.label.container", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.container.name", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.service.name", module.getBwk8sModule().getServiceName());
-			properties.setProperty("fabric8.service.type", "LoadBalancer");
+			properties.setProperty("fabric8.service.type", module.getBwk8sModule().getServiceType());
 			properties.setProperty("fabric8.service.port", "80");
 			properties.setProperty("fabric8.provider", "Tibco");
 			properties.setProperty("fabric8.service.containerPort", module.getBwk8sModule().getContainerPort());
 			properties.setProperty("fabric8.namespace", module.getBwk8sModule().getK8sNamespace());
 			properties.setProperty("fabric8.apply.namespace", module.getBwk8sModule().getK8sNamespace());
+			if(module.getBwk8sModule().getResourcesLocation()!=null){
+			properties.setProperty("fabric8.resources.location", module.getBwk8sModule().getResourcesLocation());
+			}
 
 			//Add k8s env variables
 			Map<String, String> k8sEnvVars = module.getBwk8sModule().getK8sEnvVariables();
