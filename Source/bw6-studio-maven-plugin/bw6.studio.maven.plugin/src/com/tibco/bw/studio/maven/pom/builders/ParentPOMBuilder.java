@@ -1,6 +1,5 @@
 package com.tibco.bw.studio.maven.pom.builders;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +45,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		generatePOMFile();
 	}
 
-	protected void addBuild() throws IOException {
+	protected void addBuild()  {
 		Build build = model.getBuild();
 		if (build == null) {
 			build = new Build();
