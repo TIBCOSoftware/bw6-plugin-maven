@@ -1,23 +1,23 @@
 package com.tibco.bw.studio.maven.pom.builders;
 
-import io.codearte.props2yaml.Props2YAML;
-
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import org.apache.commons.io.FileUtils;
+import java.util.Set;
 import org.apache.maven.model.Activation;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
@@ -29,8 +29,8 @@ import org.apache.maven.model.Profile;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.demo.propstoyaml.PropertiesToYamlConverter;
-import org.demo.propstoyaml.PropertiesToYamlConverter.YamlConversionResult;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
 import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
@@ -88,8 +88,8 @@ public abstract class AbstractPOMBuilder {
 
 	protected void addPrimaryTags() {
 		model.setModelVersion("4.0.0");
-    	model.setArtifactId( module.getArtifactId());
-    	model.setPackaging(getPackaging());
+		model.setArtifactId( module.getArtifactId());
+		model.setPackaging(getPackaging());
 	}
 
 	protected void addBW6MavenPlugin(Build build) {
@@ -122,10 +122,10 @@ public abstract class AbstractPOMBuilder {
 		Xpp3Dom config = new Xpp3Dom("configuration");
 
 		Xpp3Dom child = new Xpp3Dom("skip");
-        child.setValue("true");
-        config.addChild(child);
+		child.setValue("true");
+		config.addChild(child);
 
-        plugin.setConfiguration(config);
+		plugin.setConfiguration(config);
 		build.addPlugin(plugin);
 	}
 
@@ -261,13 +261,13 @@ public abstract class AbstractPOMBuilder {
 		Plugin plugin = new Plugin();
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("fabric8-maven-plugin");
-		plugin.setVersion("3.5.40");
+		plugin.setVersion("3.5.41");
 
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
 		child.setValue(String.valueOf(skip));
 		config.addChild(child);
-		if(!skip){
+		if(!skip){ //ADD ALL ENV VARS
 			String file=(getWorkspacepath() + File.separator + "k8s-dev.properties");
 			Properties prop = new Properties();
 			InputStream input = null;
@@ -276,7 +276,7 @@ public abstract class AbstractPOMBuilder {
 
 				input = new FileInputStream(file);
 
-				// load a properties file
+				// load the Kubernetes properties file
 				prop.load(input);
 			}
 			catch(Exception e)
@@ -293,7 +293,7 @@ public abstract class AbstractPOMBuilder {
 
 				input = new FileInputStream(fileDocker);
 
-				// load a properties file
+				// load the Docker properties file
 				propsDocker.load(input);
 			}
 			catch(Exception e)
@@ -334,7 +334,7 @@ public abstract class AbstractPOMBuilder {
 			dataService.put("kind", "Service");
 			Map<String, Object> metadataService=new HashMap<String, Object>();
 			metadataService.put("name", prop.getProperty("fabric8.service.name"));
-			
+
 			Map<String, String> appName=new HashMap<String, String>();
 			String appModule=getWorkspacepath().toString(); 
 			if(appModule.endsWith(File.separator)){
@@ -342,7 +342,7 @@ public abstract class AbstractPOMBuilder {
 			}
 			String appModuleName=appModule.substring(appModule.lastIndexOf(File.separator)+1);
 			appName.put("app", appModuleName);
-			
+
 			metadataService.put("labels",appName);
 			dataService.put("metadata", metadataService);
 			Map<String, Object> specdataService=new HashMap<String, Object>();
@@ -395,7 +395,7 @@ public abstract class AbstractPOMBuilder {
 				application=application.substring(0,application.length()-1);
 			}
 			String applicationName=application.substring(application.lastIndexOf(File.separator)+1);
-			
+
 			appInfoDeployment.put("app", applicationName);
 			Map<String, Object> matchLabels=new HashMap<String, Object>();
 			matchLabels.put("matchLabels", appInfoDeployment);
@@ -407,7 +407,7 @@ public abstract class AbstractPOMBuilder {
 			appInfoLabel.put("app", applicationName);
 			metadata.put("labels", appInfoLabel);
 			template.put("metadata", metadata);
-			
+
 			List<Map<String, Object>> containerData=new ArrayList<Map<String,Object>>();
 			Map<String, Object> containerInfo= new HashMap<String, Object>();
 			containerInfo.put("name", prop.getProperty("fabric8.container.name"));
@@ -416,14 +416,51 @@ public abstract class AbstractPOMBuilder {
 
 			containerInfo.put("imagePullPolicy", "Always");
 			List<Map<String, Object>> envList=new ArrayList<Map<String, Object>>();
-			Map<String , Object> env = new HashMap<String, Object>();
-			env.put("name", "BW_LOGLEVEL");
-			env.put("value", "ERROR");
-			envList.add(env);
-			env = new HashMap<String, Object>();
-			env.put("name", "BW_PROFILE");
-			env.put("value", prop.getProperty("fabric8.env.APP_CONFIG_PROFILE"));
-			envList.add(env);
+
+
+			Set<Object> envKeys = prop.keySet();
+			List<String> envVars=new ArrayList<String>();
+
+			if(envKeys!=null){
+				for(Object key: envKeys){
+					String keyVal= key.toString();
+					if(keyVal!=null && keyVal.startsWith("fabric8.env"))
+						envVars.add(keyVal);
+				}
+
+
+			}
+			if(envVars!=null){
+				for(int e=0;e< envVars.size(); e++){
+					Map<String , Object> env = new HashMap<String, Object>();	
+					String varName= envVars.get(e);
+					if(("fabric8.env.BW_LOGLEVEL").equalsIgnoreCase(varName)){
+						env.put("name", "BW_LOGLEVEL");
+						env.put("value", prop.getProperty("fabric8.env.BW_LOGLEVEL"));
+
+					}
+					else if(("fabric8.env.APP_CONFIG_PROFILE").equalsIgnoreCase(varName)){
+						env = new HashMap<String, Object>();
+						env.put("name", "BW_PROFILE");
+						env.put("value", prop.getProperty("fabric8.env.APP_CONFIG_PROFILE"));
+					}
+
+					else{
+						String envName= varName.replace("fabric8.env.", "");
+						env.put("name", envName);
+						env.put("value",prop.getProperty(varName));
+					}
+					envList.add(env);
+				}
+			}
+			Map<String , Object> envLogger = new HashMap<String, Object>();	
+			if(prop.getProperty("fabric8.env.BW_LOGLEVEL")==null || prop.getProperty("fabric8.env.BW_LOGLEVEL").isEmpty()){
+				envLogger.put("name", "BW_LOGLEVEL");
+				envLogger.put("value", "ERROR");
+				envList.add(envLogger);
+			}
+
+
 			containerInfo.put("env", envList);
 			portsList=new ArrayList<Map<String, Object>>();
 			portInfo=new HashMap<String, Object>();
@@ -466,7 +503,7 @@ public abstract class AbstractPOMBuilder {
 		plugin.setConfiguration(config);
 		build.addPlugin(plugin);
 	}
-	
+
 	protected void addDockerMavenPlugin(Build build) {
 		//Create properties file for Dev and Prod environment
 		createDockerPropertiesFiles();
@@ -480,19 +517,19 @@ public abstract class AbstractPOMBuilder {
 		Xpp3Dom config = new Xpp3Dom("configuration");
 
 		Xpp3Dom child = new Xpp3Dom("skip");
-        child.setValue("false");
-        config.addChild(child);
+		child.setValue("false");
+		config.addChild(child);
 
-        child = new Xpp3Dom("dockerHost");
-        child.setValue("${bwdocker.host}");
-        config.addChild(child);
+		child = new Xpp3Dom("dockerHost");
+		child.setValue("${bwdocker.host}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("certPath");
-        child.setValue("${bwdocker.certPath}");
-        config.addChild(child);
+		child = new Xpp3Dom("certPath");
+		child.setValue("${bwdocker.certPath}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("images");
-        Xpp3Dom imageChild = new Xpp3Dom("image");
+		child = new Xpp3Dom("images");
+		Xpp3Dom imageChild = new Xpp3Dom("image");
 		Xpp3Dom child1 = new Xpp3Dom("alias");
 		child1.setValue("${bwdocker.containername}");
 		imageChild.addChild(child1);
@@ -575,7 +612,7 @@ public abstract class AbstractPOMBuilder {
 			}
 			runchild.addChild(linkchild);
 		}
-				
+
 		//IF env variable exist
 		if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0) {
 			createDockerEnvVarPropertiesFiles();
@@ -811,50 +848,50 @@ public abstract class AbstractPOMBuilder {
 		Xpp3Dom config=new Xpp3Dom("configuration");
 
 		Xpp3Dom child = new Xpp3Dom("server");
-        child.setValue("${bwpcf.server}");
-        config.addChild(child);
+		child.setValue("${bwpcf.server}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("target");
-        child.setValue("${bwpcf.target}");
-        config.addChild(child);
+		child = new Xpp3Dom("target");
+		child.setValue("${bwpcf.target}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("trustSelfSignedCerts");
-        child.setValue("${bwpcf.trustSelfSignedCerts}");
-        config.addChild(child);
+		child = new Xpp3Dom("trustSelfSignedCerts");
+		child.setValue("${bwpcf.trustSelfSignedCerts}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("org");
-        child.setValue("${bwpcf.org}");
-        config.addChild(child);
+		child = new Xpp3Dom("org");
+		child.setValue("${bwpcf.org}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("space");
-        child.setValue("${bwpcf.space}");
-        config.addChild(child);
+		child = new Xpp3Dom("space");
+		child.setValue("${bwpcf.space}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("appname");
-        child.setValue("${bwpcf.appName}");
-        config.addChild(child);
+		child = new Xpp3Dom("appname");
+		child.setValue("${bwpcf.appName}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("url");
-        child.setValue("${bwpcf.url}");
-        config.addChild(child);
+		child = new Xpp3Dom("url");
+		child.setValue("${bwpcf.url}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("instances");
-        child.setValue("${bwpcf.instances}");
-        config.addChild(child);
+		child = new Xpp3Dom("instances");
+		child.setValue("${bwpcf.instances}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("skip");
-        child.setValue("false");
-        config.addChild(child);
+		child = new Xpp3Dom("skip");
+		child.setValue("false");
+		config.addChild(child);
 
-        child = new Xpp3Dom("memory");
-        child.setValue("${bwpcf.memory}");
-        config.addChild(child);
+		child = new Xpp3Dom("memory");
+		child.setValue("${bwpcf.memory}");
+		config.addChild(child);
 
-        child = new Xpp3Dom("buildpack");
-        child.setValue("${bwpcf.buildpack}");
-        config.addChild(child);
+		child = new Xpp3Dom("buildpack");
+		child.setValue("${bwpcf.buildpack}");
+		config.addChild(child);
 
-        Map<String, String> cfEnvVars=module.getBwpcfModule().getCfEnvVariables();
+		Map<String, String> cfEnvVars=module.getBwpcfModule().getCfEnvVariables();
 		if(!cfEnvVars.isEmpty()) {
 			child = new Xpp3Dom("env");
 			int i = 0;
@@ -869,30 +906,30 @@ public abstract class AbstractPOMBuilder {
 		}
 
 		List<BWPCFServicesModule> services=module.getBwpcfModule().getServices();
-        if(services != null && services.size() > 0) {
-        	child = new Xpp3Dom("services");
-        	for(BWPCFServicesModule service: services) {
-        		Xpp3Dom serviceChild = new Xpp3Dom("service");
-        		Xpp3Dom child1 = new Xpp3Dom("name");
-        		child1.setValue(service.getServiceName());
-        		serviceChild.addChild(child1);
+		if(services != null && services.size() > 0) {
+			child = new Xpp3Dom("services");
+			for(BWPCFServicesModule service: services) {
+				Xpp3Dom serviceChild = new Xpp3Dom("service");
+				Xpp3Dom child1 = new Xpp3Dom("name");
+				child1.setValue(service.getServiceName());
+				serviceChild.addChild(child1);
 
-        		child1 = new Xpp3Dom("label");
-        		child1.setValue(service.getServiceLabel());
-        		serviceChild.addChild(child1);
+				child1 = new Xpp3Dom("label");
+				child1.setValue(service.getServiceLabel());
+				serviceChild.addChild(child1);
 
-        		child1 = new Xpp3Dom("version");
-        		child1.setValue(service.getServiceVersion());
-        		serviceChild.addChild(child1);
+				child1 = new Xpp3Dom("version");
+				child1.setValue(service.getServiceVersion());
+				serviceChild.addChild(child1);
 
-        		child1 = new Xpp3Dom("plan");
-        		child1.setValue(service.getServicePlan());
-        		serviceChild.addChild(child1);
+				child1 = new Xpp3Dom("plan");
+				child1.setValue(service.getServicePlan());
+				serviceChild.addChild(child1);
 
-        		child.addChild(serviceChild);
-        	}
-        	config.addChild(child);
-        }
+				child.addChild(serviceChild);
+			}
+			config.addChild(child);
+		}
 		plugin.setConfiguration(config);	
 		build.addPlugin(plugin);
 	}
@@ -950,10 +987,10 @@ public abstract class AbstractPOMBuilder {
 		try {
 			Reader reader = new FileReader(pomXmlFile);
 			try {
-			    MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
-			    model = xpp3Reader.read(reader);
+				MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
+				model = xpp3Reader.read(reader);
 			} finally {
-			    reader.close();
+				reader.close();
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -964,23 +1001,23 @@ public abstract class AbstractPOMBuilder {
 	protected void addBW6MavenProfile(Model model) {
 		List<Profile> profiles = new ArrayList<Profile>();
 		BWDeploymentInfo info = ((BWApplication) module).getDeploymentInfo();	
- 		for(String nameProfile : info.getProfiles()) {
- 			Profile profile = new Profile();
- 			if (nameProfile.replace(".substvar", "").equals("default")) {
- 				profile.setId("DEFAULT");
- 			} else {
- 				profile.setId(nameProfile.replace(".substvar", ""));	
- 			}
- 			if (nameProfile.equals(info.getProfile())) {
- 				Activation activation = new Activation();
- 				activation.setActiveByDefault(true);
- 				profile.setActivation(activation);
- 			}
- 			Properties properties = new Properties();
- 			properties.setProperty("profile", nameProfile);
- 			profile.setProperties(properties);
- 			profiles.add(profile);
- 		}
- 		model.setProfiles(profiles);
- 	}
+		for(String nameProfile : info.getProfiles()) {
+			Profile profile = new Profile();
+			if (nameProfile.replace(".substvar", "").equals("default")) {
+				profile.setId("DEFAULT");
+			} else {
+				profile.setId(nameProfile.replace(".substvar", ""));	
+			}
+			if (nameProfile.equals(info.getProfile())) {
+				Activation activation = new Activation();
+				activation.setActiveByDefault(true);
+				profile.setActivation(activation);
+			}
+			Properties properties = new Properties();
+			properties.setProperty("profile", nameProfile);
+			profile.setProperties(properties);
+			profiles.add(profile);
+		}
+		model.setProfiles(profiles);
+	}
 }
