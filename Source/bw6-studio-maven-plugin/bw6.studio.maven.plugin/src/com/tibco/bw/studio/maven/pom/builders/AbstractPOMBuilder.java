@@ -281,7 +281,7 @@ public abstract class AbstractPOMBuilder {
 			}
 			catch(Exception e)
 			{
-
+				throw new IOException("Could not load input from "+file+" due to exception: "+e);
 			}
 
 
@@ -298,7 +298,7 @@ public abstract class AbstractPOMBuilder {
 			}
 			catch(Exception e)
 			{
-
+				throw new IOException("Could not load input from "+fileDocker+" due to exception: "+e);
 			}
 
 			File directorySrc = new File(String.valueOf(getWorkspacepath() + File.separator+"src"));
