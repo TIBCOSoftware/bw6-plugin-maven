@@ -97,7 +97,7 @@ public class BWJsonMojo extends AbstractMojo{
 
 
 		//snakeYAML for writing maps nested objects to YAML file
-		String locationService = getWorkspacepath() + File.separator + "src/main/fabric8/service.yml";
+		String locationService = getWorkspacepath() + File.separator + "src/main/fabric8/service.yaml";
 		File serviceFile = new File(Paths.get(locationService).toString());
 		try {
 			serviceFile.createNewFile();
@@ -159,7 +159,7 @@ public class BWJsonMojo extends AbstractMojo{
 
 
 
-		String locationDeployment = getWorkspacepath() + File.separator + "src/main/fabric8/deployment.yml";
+		String locationDeployment = getWorkspacepath() + File.separator + "src/main/fabric8/deployment.yaml";
 		File deploymentFile = new File(Paths.get(locationDeployment).toString());
 		try {
 			deploymentFile.createNewFile();
