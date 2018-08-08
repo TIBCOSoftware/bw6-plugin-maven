@@ -102,7 +102,7 @@ public class BWJsonMojo extends AbstractMojo{
 		try {
 			serviceFile.createNewFile();
 		} catch (IOException e1) {
-			throw new MojoExecutionException("Could not create file service.yml due to exception: "+e1);
+			throw new MojoExecutionException("Could not create file service.yaml due to exception: "+e1);
 		}
 		Map<String, Object> dataService = new HashMap<String, Object>();
 		dataService.put("kind", "Service");
@@ -147,7 +147,7 @@ public class BWJsonMojo extends AbstractMojo{
 			writer = new FileWriter(locationService);
 		} catch (IOException e1) {
 			
-			throw new MojoExecutionException("Could not write to service.yml due to exception: "+e1);
+			throw new MojoExecutionException("Could not write to service.yaml due to exception: "+e1);
 		}
 		if(writer!=null)
 		yaml.dump(dataService, writer);
@@ -164,7 +164,7 @@ public class BWJsonMojo extends AbstractMojo{
 		try {
 			deploymentFile.createNewFile();
 		} catch (IOException e1) {
-			throw new MojoExecutionException("Could not create file service.yml due to exception: "+e1);
+			throw new MojoExecutionException("Could not create file deployment.yaml due to exception: "+e1);
 		}	
 
 		Map<String, Object> data = new HashMap<String, Object>();
@@ -270,7 +270,7 @@ public class BWJsonMojo extends AbstractMojo{
 		try {
 			writer = new FileWriter(locationDeployment);
 		} catch (IOException e) {
-			throw new MojoExecutionException("Could not write to file deployment.yml due to exception: "+e);
+			throw new MojoExecutionException("Could not write to file deployment.yaml due to exception: "+e);
 		}
 		yaml.dump(data, writer);
 		
