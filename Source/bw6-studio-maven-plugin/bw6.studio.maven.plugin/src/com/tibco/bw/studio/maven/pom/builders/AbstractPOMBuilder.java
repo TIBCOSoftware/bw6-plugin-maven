@@ -450,7 +450,12 @@ public abstract class AbstractPOMBuilder {
 			properties.setProperty("fabric8.label.container", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.container.name", module.getBwk8sModule().getRcName());
 			properties.setProperty("fabric8.service.name", module.getBwk8sModule().getServiceName());
+			if(module.getBwk8sModule().getServiceType()==null || module.getBwk8sModule().getServiceType().isEmpty()){
+				properties.setProperty("fabric8.service.type", "LoadBalancer");
+			}
+			else{
 			properties.setProperty("fabric8.service.type", module.getBwk8sModule().getServiceType());
+			}
 			properties.setProperty("fabric8.service.port", "80");
 			properties.setProperty("fabric8.provider", "Tibco");
 			properties.setProperty("fabric8.service.containerPort", module.getBwk8sModule().getContainerPort());

@@ -81,6 +81,12 @@ public class BWJsonMojo extends AbstractMojo{
 		dirs.add("main");
 		dirs.add("fabric8");
 		mkDirs(root, dirs, 0);
+		
+		File dstdir = new File(String.valueOf(getWorkspacepath())+File.separator+"src/main/fabric8");
+		for(File fileDst: dstdir.listFiles()) {
+		    if (!fileDst.isDirectory()) 
+		        fileDst.delete();
+		}
 
 
 		String file=(getWorkspacepath() + File.separator + "k8s-dev.properties");
@@ -102,15 +108,12 @@ public class BWJsonMojo extends AbstractMojo{
 		if(prop.getProperty("fabric8.resources.location")!=null && !prop.getProperty("fabric8.resources.location").isEmpty()){
 			//copy the resource files to src/main/fabric8 location
 			final File srcdir = new File(prop.getProperty("fabric8.resources.location"));
-			final File dstdir = new File(String.valueOf(getWorkspacepath()+File.separator+"src/main/fabric8"));
+			
 			if(!srcdir.exists() || !dstdir.exists()){
 				throw new MojoExecutionException("Required directories do not exist for loading the resources");
 			}
 			
-			for(File fileDst: dstdir.listFiles()) {
-			    if (!fileDst.isDirectory()) 
-			        fileDst.delete();
-			}
+			
 			
 			String[] children = srcdir.list();
 			for (int i = 0; i < children.length; i++) {

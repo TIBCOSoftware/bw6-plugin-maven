@@ -86,6 +86,8 @@ public class WizardPageK8S extends WizardPage {
 		GridData rcData = new GridData(200, 15);
 		rcName.setLayoutData(rcData);
 
+		
+		
 		Label replicaLabel = new Label(container, SWT.NONE);
 		replicaLabel.setText("No Of Replicas");
 
@@ -93,6 +95,7 @@ public class WizardPageK8S extends WizardPage {
 		numOfReplicas.setText("1");
 		GridData replicaData = new GridData(50, 15);
 		numOfReplicas.setLayoutData(replicaData);
+		
 
 		Label srvNameLabel = new Label(container, SWT.NONE);
 		srvNameLabel.setText("Service Name");
@@ -108,14 +111,14 @@ public class WizardPageK8S extends WizardPage {
 		serviceType = new Text(container, SWT.BORDER | SWT.SINGLE);
 		serviceType.setText("LoadBalancer");
 		GridData serviceTypeData = new GridData(200, 15);
-		serviceName.setLayoutData(serviceTypeData);
+		serviceType.setLayoutData(serviceTypeData);
 
 		Label contPortLabel = new Label(container, SWT.NONE);
 		contPortLabel.setText("Container Port");
 
 		containerPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		containerPort.setText("8080");
-		GridData contPortData = new GridData(100, 15);
+		GridData contPortData = new GridData(50, 15);
 		containerPort.setLayoutData(contPortData);
 
 		Label namespaceLabel = new Label(container, SWT.NONE);
@@ -124,7 +127,6 @@ public class WizardPageK8S extends WizardPage {
 		k8sNamespace = new Text(container, SWT.BORDER | SWT.SINGLE);
 		k8sNamespace.setText("default");
 		GridData namespcData = new GridData(100, 15);
-
 		k8sNamespace.setLayoutData(namespcData);
 
 		Label envVarsLabel = new Label(container, SWT.NONE);
