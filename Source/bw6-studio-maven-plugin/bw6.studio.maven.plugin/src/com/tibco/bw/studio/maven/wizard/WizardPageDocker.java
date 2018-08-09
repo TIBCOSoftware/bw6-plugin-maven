@@ -136,7 +136,7 @@ public class WizardPageDocker extends WizardPage {
 		targetLabel.setText("Docker Host");
 
 		dockerHost = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHost.setText("tcp://0.0.0.0:2376");
+		dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDockerURL("tcp://0.0.0.0:2376"));
 		GridData dockerHostData = new GridData(200, 15);
 		dockerHost.setLayoutData(dockerHostData);
 
