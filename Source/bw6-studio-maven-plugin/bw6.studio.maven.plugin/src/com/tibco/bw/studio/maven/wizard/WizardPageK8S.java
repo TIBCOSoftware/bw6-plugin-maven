@@ -38,6 +38,8 @@ public class WizardPageK8S extends WizardPage {
 	private Text k8sEnvVars;
 	private Button provideYmlResources;
 	private Text yamlResources;
+	private Button browseButton;
+	private Label resourceLabel;
 
 
 	protected WizardPageK8S(String pageName, BWProject project) {
@@ -153,14 +155,14 @@ public class WizardPageK8S extends WizardPage {
 		
 		GridData resourceData = new GridData(200, 15);
 		
-		Label resourceLabel = new Label(innerContainer, SWT.NONE);
+		resourceLabel = new Label(innerContainer, SWT.NONE);
 		resourceLabel.setText("YML Resources location");
 		
 		yamlResources = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
 		yamlResources.setLayoutData(resourceData);
 		
 		
-		Button browseButton = new Button(innerContainer, SWT.PUSH);
+		browseButton = new Button(innerContainer, SWT.PUSH);
 		browseButton.setText("Browse ...");
 		browseButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
