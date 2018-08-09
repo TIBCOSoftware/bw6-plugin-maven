@@ -26,7 +26,7 @@ import com.tibco.bw.studio.maven.modules.model.BWProject;
 
 public class WizardPageK8S extends WizardPage {
 	private Composite container;
-	private Composite containerResources;
+	
 	@SuppressWarnings("unused")
 	private BWProject project;
 	private Text rcName;

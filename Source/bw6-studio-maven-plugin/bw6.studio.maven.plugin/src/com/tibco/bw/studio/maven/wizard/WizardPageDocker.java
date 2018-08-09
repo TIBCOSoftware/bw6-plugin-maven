@@ -22,7 +22,6 @@ import com.tibco.bw.studio.maven.modules.model.BWDockerModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
-import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
 
 public class WizardPageDocker extends WizardPage {
 	private Composite container;
@@ -106,7 +105,7 @@ public class WizardPageDocker extends WizardPage {
 		});
 
 		Label k8slabel = new Label(innerContainer, SWT.NONE);
-		k8slabel.setText("Kubernetes");
+		k8slabel.setText("Kubernetes/Openshift");
 	}
 
 	@Override
@@ -137,8 +136,7 @@ public class WizardPageDocker extends WizardPage {
 		targetLabel.setText("Docker Host");
 
 		dockerHost = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDockerURL("tcp://0.0.0.0:2376"));	
-//		dockerHost.setText("tcp://0.0.0.0:2376");
+		dockerHost.setText("tcp://0.0.0.0:2376");
 		GridData dockerHostData = new GridData(200, 15);
 		dockerHost.setLayoutData(dockerHostData);
 
