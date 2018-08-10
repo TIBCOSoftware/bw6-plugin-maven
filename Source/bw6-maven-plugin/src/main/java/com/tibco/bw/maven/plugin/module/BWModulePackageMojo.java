@@ -3,7 +3,7 @@ package com.tibco.bw.maven.plugin.module;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -156,11 +156,11 @@ public class BWModulePackageMojo extends AbstractMojo {
 	private void addDependencies() {
 		getLog().debug("Adding Maven dependencies to the JAR file");
 		Set<Artifact> artifacts = project.getDependencyArtifacts();
-		Set<File> artifactFiles = new HashSet<File>(); 
+		HashMap<File,String> artifactFiles = new HashMap<File,String>(); 
 
 		for(Artifact artifact : artifacts) {
 			if(!artifact.getVersion().equals("0.0.0")) {
-				artifactFiles.add(artifact.getFile());
+				artifactFiles.put(artifact.getFile(),artifact.getScope());
 			}
 		}
 
@@ -172,14 +172,14 @@ public class BWModulePackageMojo extends AbstractMojo {
         	for(Dependency dependency : resolutionResult.getDependencies()) {
                 getLog().debug("Adding artifact for dependency => " + dependency + ". The file for Dependency is => "  + dependency.getArtifact().getFile());
     			if(!dependency.getArtifact().getVersion().equals("0.0.0")) {
-            		artifactFiles.add(dependency.getArtifact().getFile());
+            		artifactFiles.put(dependency.getArtifact().getFile(),dependency.getScope());
     			}
         	}
         }
 
 		StringBuffer buffer = new StringBuffer();
-		for(File file : artifactFiles) {
-			if(file.getName().indexOf("com.tibco.bw.palette.shared") != -1 || file.getName().indexOf("com.tibco.xml.cxf.common") != -1 || file.getName().indexOf("tempbw") != -1) {
+		for(File file : artifactFiles.keySet()) {
+			if(artifactFiles.get(file).equalsIgnoreCase("provided")){
 				continue;
 			}
 			

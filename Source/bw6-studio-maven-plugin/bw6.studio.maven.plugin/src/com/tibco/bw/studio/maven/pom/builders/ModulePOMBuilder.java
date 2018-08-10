@@ -70,6 +70,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		dep.setGroupId("com.tibco.plugins");
 		dep.setArtifactId("com.tibco.bw.palette.shared");
 		dep.setVersion("6.1.100");
+		dep.setScope("provided");
 		if (!dependencyExists(dep)) {
 			model.getDependencies().add(dep);
 		}
@@ -90,6 +91,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		dep.setGroupId("com.tibco.plugins");
 		dep.setArtifactId("com.tibco.xml.cxf.common");
 		dep.setVersion("1.3.200");
+		dep.setScope("provided");
 		if (!dependencyExists(dep)) {
 			model.getDependencies().add(dep);
 		}
