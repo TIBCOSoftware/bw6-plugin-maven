@@ -2,7 +2,9 @@ package com.tibco.bw.maven.plugin.application;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,11 +17,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.DumperOptions;
 
@@ -33,9 +38,9 @@ public class BWJsonMojo extends AbstractMojo{
 		String workspacePath= System.getProperty("user.dir");
 		String wsPath= workspacePath;
 		if(wsPath.indexOf(".parent")!=-1){
-		wsPath= workspacePath.substring(0, workspacePath.lastIndexOf(".parent"));
+			wsPath= workspacePath.substring(0, workspacePath.lastIndexOf(".parent"));
 		}
-		
+
 		return wsPath;
 
 	}
@@ -131,6 +136,26 @@ public class BWJsonMojo extends AbstractMojo{
 			yml.dump(data, writer);		
 
 	}
+	
+	private String getAppVersion() throws MojoExecutionException{
+		MavenXpp3Reader reader = new MavenXpp3Reader();
+		Model model=null;
+		String version=null;
+		try {
+			model = reader.read(new FileReader(getWorkspacepath()+".parent"+File.separator+"pom.xml"));
+		} catch (FileNotFoundException e1) {
+			throw new MojoExecutionException("File pom.xml not found for reading application version");
+		} catch (IOException e1) {
+			throw new MojoExecutionException("Exception while reading pom.xml : "+e1);
+		} catch (XmlPullParserException e1) {
+			throw new MojoExecutionException("Error while parsing POM file: "+e1);
+		}
+		if(model!=null){
+			version= model.getVersion();
+			
+		}
+		return version;
+	}
 
 
 	private void createServiceYmlFile(Properties k8sprop) throws MojoExecutionException{
@@ -142,7 +167,7 @@ public class BWJsonMojo extends AbstractMojo{
 			throw new MojoExecutionException("Could not create file service.yml due to exception: "+e1);
 		}
 		Map<String, Object> dataService = new HashMap<String, Object>();
-		
+
 		dataService.put("kind", "Service");
 		Map<String, Object> metadataService=new HashMap<String, Object>();
 		metadataService.put("name", k8sprop.getProperty("fabric8.service.name"));
@@ -198,7 +223,7 @@ public class BWJsonMojo extends AbstractMojo{
 		appInfoDeployment.put("project", k8sprops.getProperty("fabric8.label.project"));
 		appInfoDeployment.put("provider","Tibco");
 		appInfoDeployment.put("group", k8sprops.getProperty("fabric8.label.group"));
-		
+
 		specdata.put("selector",appInfoDeployment);
 		Map<String,Object> template=new HashMap<String, Object>();
 		metadata=new HashMap<String, Object>();
@@ -206,8 +231,7 @@ public class BWJsonMojo extends AbstractMojo{
 		Map<String, Object> appInfoLabel=new HashMap<String, Object>();
 		appInfoLabel.put("container", k8sprops.getProperty("fabric8.container.name"));
 		appInfoLabel.put("project", k8sprops.getProperty("fabric8.label.project"));
-	//	appInfoLabel.put("provider","Tibco");
-	//	appInfoLabel.put("group", k8sprops.getProperty("fabric8.label.group"));
+
 		metadata.put("labels", appInfoLabel);
 		metadata.put("namespace",k8sprops.getProperty("fabric8.namespace"));
 		template.put("metadata", metadata);
@@ -217,11 +241,14 @@ public class BWJsonMojo extends AbstractMojo{
 		containerInfo.put("name", k8sprops.getProperty("fabric8.container.name"));
 
 		containerInfo.put("image", dockerProps.getProperty("docker.image"));
+			
+		String version= getAppVersion();
+		if(version!=null && version.endsWith("SNAPSHOT")){
+			containerInfo.put("imagePullPolicy","Always");
+		}
+				
 
-		//containerInfo.put("imagePullPolicy", "Always");
 		List<Map<String, Object>> envList=new ArrayList<Map<String, Object>>();
-
-
 		Set<Object> envKeys = k8sprops.keySet();
 		List<String> envVars=new ArrayList<String>();
 
@@ -247,13 +274,6 @@ public class BWJsonMojo extends AbstractMojo{
 				envList.add(env);
 			}
 		}
-		/*Map<String , Object> envLogger = new HashMap<String, Object>();	
-		if(envList contains namespace var)){
-			envLogger.put("name", "BW_LOGLEVEL");
-			envLogger.put("value", "ERROR");
-			envList.add(envLogger);
-		}*/
-		//put namespace in env
 
 
 		containerInfo.put("env", envList);
