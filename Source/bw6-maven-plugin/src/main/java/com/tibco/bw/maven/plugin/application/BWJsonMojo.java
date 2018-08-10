@@ -142,7 +142,7 @@ public class BWJsonMojo extends AbstractMojo{
 			throw new MojoExecutionException("Could not create file service.yml due to exception: "+e1);
 		}
 		Map<String, Object> dataService = new HashMap<String, Object>();
-		dataService.put("apiVersion","v1");
+		
 		dataService.put("kind", "Service");
 		Map<String, Object> metadataService=new HashMap<String, Object>();
 		metadataService.put("name", k8sprop.getProperty("fabric8.service.name"));
@@ -187,29 +187,27 @@ public class BWJsonMojo extends AbstractMojo{
 		}	
 
 		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("apiVersion","v1");
 		data.put("kind", "Deployment");
 		Map<String, Object> metadata=new HashMap<String, Object>();
 		metadata.put("name", k8sprops.getProperty("fabric8.replicationController.name"));
 		data.put("metadata", metadata);
 		Map<String, Object> specdata=new HashMap<String, Object>();
 		specdata.put("replicas", Integer.parseInt(k8sprops.getProperty("fabric8.replicas")));
-		HashMap<String, String> appInfoDeployment=new HashMap<String, String>();		
+		Map<String, String> appInfoDeployment=new HashMap<String, String>();		
 		appInfoDeployment.put("container", k8sprops.getProperty("fabric8.container.name"));
 		appInfoDeployment.put("project", k8sprops.getProperty("fabric8.label.project"));
 		appInfoDeployment.put("provider","Tibco");
 		appInfoDeployment.put("group", k8sprops.getProperty("fabric8.label.group"));
-		Map<String, Object> matchLabels=new HashMap<String, Object>();
-		matchLabels.put("matchLabels", appInfoDeployment);
-		specdata.put("selector",matchLabels);
+		
+		specdata.put("selector",appInfoDeployment);
 		Map<String,Object> template=new HashMap<String, Object>();
 		metadata=new HashMap<String, Object>();
 		metadata.put("name", k8sprops.getProperty("fabric8.replicationController.name"));
 		Map<String, Object> appInfoLabel=new HashMap<String, Object>();
 		appInfoLabel.put("container", k8sprops.getProperty("fabric8.container.name"));
 		appInfoLabel.put("project", k8sprops.getProperty("fabric8.label.project"));
-		appInfoLabel.put("provider","Tibco");
-		appInfoLabel.put("group", k8sprops.getProperty("fabric8.label.group"));
+	//	appInfoLabel.put("provider","Tibco");
+	//	appInfoLabel.put("group", k8sprops.getProperty("fabric8.label.group"));
 		metadata.put("labels", appInfoLabel);
 		metadata.put("namespace",k8sprops.getProperty("fabric8.namespace"));
 		template.put("metadata", metadata);
@@ -220,7 +218,7 @@ public class BWJsonMojo extends AbstractMojo{
 
 		containerInfo.put("image", dockerProps.getProperty("docker.image"));
 
-		containerInfo.put("imagePullPolicy", "Always");
+		//containerInfo.put("imagePullPolicy", "Always");
 		List<Map<String, Object>> envList=new ArrayList<Map<String, Object>>();
 
 
