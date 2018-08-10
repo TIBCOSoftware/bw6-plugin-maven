@@ -331,15 +331,13 @@ public class BWModulePackageMojo extends AbstractMojo {
     	if(bundlePath != null) {
         	String[] entries = bundlePath.split(",");
         	StringBuffer buffer = new StringBuffer();
-        	int start = 0;
         	for(String entry : entries) {
         		if(entry.indexOf("external") == -1) {
-            		if (start != 0) {
+            		if (buffer.length()!= 0) {
             			buffer.append(",");
             		}
         			buffer.append(entry);
         		}
-    			start++;
         	}
         	getLog().debug("Bundle Classpath after removing externals is " + buffer.toString());
         	manifest.getMainAttributes().putValue(Constants.BUNDLE_CLASSPATH, buffer.toString());
