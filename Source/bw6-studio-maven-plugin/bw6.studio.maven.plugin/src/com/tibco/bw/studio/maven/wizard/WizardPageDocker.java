@@ -22,6 +22,7 @@ import com.tibco.bw.studio.maven.modules.model.BWDockerModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
 
 public class WizardPageDocker extends WizardPage {
 	private Composite container;
