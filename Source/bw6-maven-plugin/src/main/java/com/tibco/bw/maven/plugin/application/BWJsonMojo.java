@@ -328,7 +328,7 @@ public class BWJsonMojo extends AbstractMojo{
 			for (int i = 0; i < children.length; i++) {
 				try {
 					String filename= children[i];
-					if(filename!=null && (filename.endsWith("yml") || filename.endsWith("yaml")))
+					if(filename!=null && (filename.endsWith(".yml") || filename.endsWith(".yaml")))
 						copyFile(new File(srcdir, filename), new File(dstdir,
 								filename));
 				} catch (IOException e) {
