@@ -94,7 +94,10 @@ public class BWJsonMojo extends AbstractMojo{
 	
 	private Properties getK8sPropertiesFromFile() throws MojoExecutionException{
 		String file=(getWorkspacepath() + File.separator + "k8s-dev.properties");
-		String profile=profileIds.get(0);
+		String profile=null;
+		if(profileIds!=null && !profileIds.isEmpty()){
+			profile= profileIds.get(0);
+		}
 		
 		if(profile!=null){
 			file= (getWorkspacepath() + File.separator + "k8s-"+profile+".properties");
@@ -123,7 +126,10 @@ public class BWJsonMojo extends AbstractMojo{
 
 
 		String fileDocker=(getWorkspacepath() + File.separator + "docker-dev.properties");
-		String profile=profileIds.get(0);
+		String profile=null;
+		if(profileIds!=null && !profileIds.isEmpty()){
+			profile=profileIds.get(0);
+		}
 		if(profile!=null){
 			fileDocker= (getWorkspacepath() + File.separator + "docker-"+profile+".properties");
 		}
