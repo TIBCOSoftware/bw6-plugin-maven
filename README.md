@@ -137,11 +137,11 @@ g. Enter Docker + Kubernetes details
        8. Deployment Name (Deployment name of kubernetes)
        9. No. of replicas (how many pods/instances on kubernetes)
        10. Service name (by default we are exposing service on LoadBalancer)
-	   11. Service Type (type of service, which by default is LoadBalancer)
+       11. Service Type (type of service, which by default is LoadBalancer)
        12. Container port
        13. Namespace (Kubernetes namespace)
        14. Env Variables (key=value comma seperated)
-	   15. Checkbox - Provide the YML Resources , If checked, an option to provide the YML Resources location is seen. Set the location to a folder on your machine where you have stored the YML files for service, deployment, pods or any other configurations.
+       15. Checkbox - Provide the YML Resources , If checked, an option to provide the YML Resources location is seen. Set the location to a folder on your machine where you have stored the YML files for service, deployment, pods or any other configurations.
 
 h. The Project will be converted to Maven (Eclipse Project) nature. Note the workspace will index after generating POM files for the first time and may take some time. You can continue with the steps below by allowing this indexing to run in the background.
  - You will find parent project will get created in your workspace with a pom file.
