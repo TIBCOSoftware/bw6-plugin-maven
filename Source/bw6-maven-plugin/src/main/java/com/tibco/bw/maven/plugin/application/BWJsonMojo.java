@@ -22,8 +22,11 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.DumperOptions;
@@ -32,6 +35,16 @@ import org.yaml.snakeyaml.DumperOptions;
 
 @Mojo(name = "bwfabric8json", defaultPhase = LifecyclePhase.INSTALL)
 public class BWJsonMojo extends AbstractMojo{
+
+
+	@Component
+	private MavenProject project;
+	
+	
+	 @Parameter(defaultValue = "${project.projectBuildingRequest.activeProfileIds}", property = "profile", required = false)
+	 private List<String> profileIds;
+	
+
 
 	private String getWorkspacepath() {
 
@@ -78,8 +91,15 @@ public class BWJsonMojo extends AbstractMojo{
 
 	}
 
+	
 	private Properties getK8sPropertiesFromFile() throws MojoExecutionException{
 		String file=(getWorkspacepath() + File.separator + "k8s-dev.properties");
+		String profile=profileIds.get(0);
+		
+		if(profile!=null){
+			file= (getWorkspacepath() + File.separator + "k8s-"+profile+".properties");
+		}
+		
 		Properties prop = new Properties();
 		InputStream input = null;
 
@@ -100,7 +120,13 @@ public class BWJsonMojo extends AbstractMojo{
 	}
 
 	private Properties getDockerPropertiesFromFile() throws MojoExecutionException{
+
+
 		String fileDocker=(getWorkspacepath() + File.separator + "docker-dev.properties");
+		String profile=profileIds.get(0);
+		if(profile!=null){
+			fileDocker= (getWorkspacepath() + File.separator + "docker-"+profile+".properties");
+		}
 		Properties propsDocker = new Properties();
 		FileInputStream input = null;
 
@@ -136,7 +162,7 @@ public class BWJsonMojo extends AbstractMojo{
 			yml.dump(data, writer);		
 
 	}
-	
+
 	private String getAppVersion() throws MojoExecutionException{
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		Model model=null;
@@ -152,7 +178,7 @@ public class BWJsonMojo extends AbstractMojo{
 		}
 		if(model!=null){
 			version= model.getVersion();
-			
+
 		}
 		return version;
 	}
@@ -241,12 +267,12 @@ public class BWJsonMojo extends AbstractMojo{
 		containerInfo.put("name", k8sprops.getProperty("fabric8.container.name"));
 
 		containerInfo.put("image", dockerProps.getProperty("docker.image"));
-			
+
 		String version= getAppVersion();
 		if(version!=null && version.endsWith("SNAPSHOT")){
 			containerInfo.put("imagePullPolicy","Always");
 		}
-				
+
 
 		List<Map<String, Object>> envList=new ArrayList<Map<String, Object>>();
 		Set<Object> envKeys = k8sprops.keySet();
