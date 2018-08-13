@@ -34,7 +34,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 				bwEdition = "cf";
 			} else {
 				bwEdition = "docker";
-		}
+			}
 		} else
 			bwEdition = "bw6";
 
@@ -106,10 +106,9 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		Build build = model.getBuild();
 		if (build == null) {
 			build = new Build();
-			}
-			addSourceTarget(build);
-			addBW6MavenPlugin(build);
-		
+		}
+		addSourceTarget(build);
+		addBW6MavenPlugin(build);
 		if (bwEdition.equals("cf")) {
 			boolean cfplugin = false;
 			List<Plugin> plugins = build.getPlugins();
@@ -149,7 +148,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 
 				}
 			}
-	}
+		}
 		model.setBuild(build);
 	}
 

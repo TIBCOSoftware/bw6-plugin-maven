@@ -30,7 +30,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 				bwEdition = "cf";
 			} else {
 				bwEdition = "docker";
-		}
+			}
 		} else
 			bwEdition = "bw6";
 
@@ -45,13 +45,13 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		generatePOMFile();
 	}
 
-	protected void addBuild()  {
+	protected void addBuild() {
 		Build build = model.getBuild();
 		if (build == null) {
 			build = new Build();
 		}
 
-	if (bwEdition.equals("cf")) {
+		if (bwEdition.equals("cf")) {
 			boolean cfplugin = false;
 			List<Plugin> plugins = build.getPlugins();
 			for (Plugin plg : plugins) {
@@ -65,7 +65,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 				addPCFWithSkipMavenPlugin(build);
 			}
 		} else if (bwEdition.equals("docker")) { 
-			
+
 			boolean dockerPlugin = false;
 			List<Plugin> plugins = build.getPlugins();
 			for (Plugin plg : plugins) {

@@ -258,7 +258,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		}
 	}
 
-	protected void addBuild()  {
+	protected void addBuild() {
 		Build build = model.getBuild();
 		if(build == null) {
 			build = new Build();
