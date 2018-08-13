@@ -15,6 +15,11 @@ public class BWK8SModule {
 	private String k8sNamespace;
 	
 	private Map<String, String> k8sEnvVariables;
+	
+	private String serviceType;
+	
+	
+	private String resourcesLocation;
 
 	public String getRcName() {
 		return rcName;
@@ -62,6 +67,23 @@ public class BWK8SModule {
 
 	public void setK8sEnvVariables(Map<String, String> k8sEnvVariables) {
 		this.k8sEnvVariables = k8sEnvVariables;
+	}
+
+	public String getServiceType() {
+		return serviceType;
+	}
+
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+
+
+	public String getResourcesLocation() {
+		return resourcesLocation;
+	}
+
+	public void setResourcesLocation(String resourcesLocation) {
+		this.resourcesLocation = resourcesLocation;
 	}
 	
 	

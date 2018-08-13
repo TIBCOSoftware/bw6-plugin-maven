@@ -102,14 +102,13 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		build.setOutputDirectory("target/classes");
 	}
 
-	protected void addBuild() {
+	protected void addBuild()  {
 		Build build = model.getBuild();
 		if (build == null) {
 			build = new Build();
-			
 		}
-			addSourceTarget(build);
-			addBW6MavenPlugin(build);
+		addSourceTarget(build);
+		addBW6MavenPlugin(build);
 		if (bwEdition.equals("cf")) {
 			boolean cfplugin = false;
 			List<Plugin> plugins = build.getPlugins();

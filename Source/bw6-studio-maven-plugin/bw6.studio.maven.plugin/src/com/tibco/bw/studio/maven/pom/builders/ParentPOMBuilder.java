@@ -64,7 +64,8 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 			if (!cfplugin) {
 				addPCFWithSkipMavenPlugin(build);
 			}
-		} else if (bwEdition.equals("docker")) {
+		} else if (bwEdition.equals("docker")) { 
+
 			boolean dockerPlugin = false;
 			List<Plugin> plugins = build.getPlugins();
 			for (Plugin plg : plugins) {
