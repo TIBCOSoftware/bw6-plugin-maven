@@ -12,17 +12,15 @@ This can be confirmed by running the command mvn -version from Terminal/Command 
 
 ## Installation
 
-a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
+a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven/releases
 
-b. Navigate to the Installer Folder.
+b. Download TIB_BW_Maven_Plugin_x.y.z.zip
 
-c. Download TIB_BW_Maven_Plugin_x.y.z.zip
+c. Unzip the file in a folder on local drive.
 
-d. Unzip the file in a folder on local drive.
+d. Open the Terminal and run install.bat ( for Windows based OS ) or install.sh ( for Unix based OS)
 
-e. Open the Terminal and run install.bat ( for Windows based OS ) or install.sh ( for Unix based OS)
-
-f. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script. e.g. `/opt/tibco/bw_home`
+e. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script. e.g. `/opt/tibco/bw_home`
 
 This will install the Maven Plugin to the TibcoHome. 
 
@@ -75,17 +73,15 @@ This can be confirmed by running the command mvn -version from Terminal/Command 
 
 ## Installation
 
-a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven
+a. Goto https://github.com/TIBCOSoftware/bw6-plugin-maven/releases
 
-b. Navigate to the Installer Folder.
+b. Download TIB_BW_Maven_Plugin_x.y.z.zip
 
-c. Download TIB_BW_Maven_Plugin_x.y.z.zip
+c. Unzip the file in a folder on local drive.
 
-d. Unzip the file in a folder on local drive.
+d. Open the Terminal and run install.bat ( for Windows based OS ) or install.sh ( for Unix based OS)
 
-e. Open the Terminal and run install.bat ( for Windows based OS ) or install.sh ( for Unix based OS)
-
-f. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script.
+e. The Installer will ask for TibcoHome location. Provide the TibcoHome to the Script.
 
 This will install the Maven Plugin to the TibcoHome. 
 
