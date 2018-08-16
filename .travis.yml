@@ -1,0 +1,15 @@
+language: 
+    - java
+jdk:
+  - oraclejdk8
+
+before_script: cd /home/travis/build/TIBCOSoftware/bw6-plugin-maven/tree/master/Source/bw6-maven-plugin
+
+install:
+  - mvn install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+
+script:
+ - mvn clean
+ - mvn compile
+ - mvn package
+  
