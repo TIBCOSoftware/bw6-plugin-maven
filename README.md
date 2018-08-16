@@ -164,7 +164,7 @@ Docker and Kubernetes -
  - clean package initialize docker:build 
  - initialize docker:start
  - initialize docker:push (before push make sure you generate token and authorize your docker host for GCP repo, follow step)
- - initialize fabric8:json 
+ - initialize fabric8:json
  - initialize fabric8:apply
 
 http://fabric8io.github.io/docker-maven-plugin/index.html
