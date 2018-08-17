@@ -167,6 +167,9 @@ public class WizardPageEnterprise extends WizardPage {
 
 	@Override
 	public void createControl(Composite parent) {
+		
+	
+		
 		container = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout(4, false);
 		container.setLayout(layout);
@@ -576,5 +579,10 @@ public class WizardPageEnterprise extends WizardPage {
 			list.add(file.getName());
 		}
 		return list;
+	}
+	@Override
+	public boolean canFlipToNextPage() 
+	{
+		return false;
 	}
 }

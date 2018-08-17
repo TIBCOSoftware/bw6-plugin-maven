@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
 import org.apache.maven.model.Activation;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
@@ -98,7 +99,7 @@ public abstract class AbstractPOMBuilder {
 		}
 		plugin.setGroupId("com.tibco.plugins");
 		plugin.setArtifactId("bw6-maven-plugin");
-		plugin.setVersion("1.3.1");
+		plugin.setVersion("2.0.0");
 		plugin.setExtensions("true");
 		addDeploymentDetails(plugin);
 	}
@@ -255,7 +256,7 @@ public abstract class AbstractPOMBuilder {
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("fabric8-maven-plugin");
 		plugin.setVersion("3.5.41");
-
+		
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
 		child.setValue(String.valueOf(skip));
@@ -435,7 +436,6 @@ public abstract class AbstractPOMBuilder {
 		}
 	}
 	
-
 	private void createK8SPropertiesFiles() {
 		try {
 			Properties properties = new Properties();

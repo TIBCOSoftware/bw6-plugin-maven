@@ -3,10 +3,12 @@ package com.tibco.bw.studio.maven.wizard;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.core.internal.resources.Project;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
@@ -16,6 +18,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -25,6 +28,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
+import com.tibco.amf.sca.policy.intent.helpers.IntentApplicability.Applicability;
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
@@ -34,18 +38,27 @@ import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWParent;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWProjectType;
-import com.tibco.zion.project.core.ContainerPreferenceProject;
+import com.tibco.bw.studio.maven.modules.model.BWTestInfo;
 
 public class WizardPageConfiguration extends WizardPage {
 	private BWProject project;
 	private Text appGroupId;
 	private Text appArtifactId;
 	private Text appVersion;
-	private Button addDeploymentConfig;
 	private Composite container;
-	private String bwEdition;
+	
+
+	private Text tibcoHome;
+	private Text bwHome;
+	private Button runTests;
+	private Button failIfSkip;
+
+
 	private Map<String, Button> buttonMap = new HashMap<String, Button>();
 
+	private Combo addDeploymentConfig;
+
+	
 	public WizardPageConfiguration(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;
@@ -53,8 +66,51 @@ public class WizardPageConfiguration extends WizardPage {
 		if(project.getType() == BWProjectType.Application){
 			setDescription("Enter the GroupId and ArtifactId for Maven POM File generation.\nPOM files will be generated for Projects listed below and Parent POM file will be generated aggregating the Projects");
 		}
+		
+		BWApplication application = (BWApplication) ModuleHelper.getApplication(project.getModules());
+		
+		if( application.getProjectType() != null )
+		{
+			MavenWizardContext.INSTANCE.setSelectedType( application.getProjectType() );
+		}
+		else
+		{
+			BWDeploymentInfo info = application.getDeploymentInfo();
+			if ( info.isDeployToAdmin()) {
+				MavenWizardContext.INSTANCE.setSelectedType( BWProjectTypes.AppSpace);
+			}
+			else
+			{
+				MavenWizardContext.INSTANCE.setSelectedType( BWProjectTypes.None);
+			}
+		}
+		
+
 	}
 
+	@Override
+	public IWizardPage getNextPage() 
+	{
+		switch( MavenWizardContext.INSTANCE.getSelectedType() )
+		{
+			case AppSpace:
+				return MavenWizardContext.INSTANCE.getEnterprisePage();		
+		
+			case PCF:
+				return MavenWizardContext.INSTANCE.getPCFPage();
+				
+			case Docker:
+				return MavenWizardContext.INSTANCE.getDockerPage();
+				
+			default:
+				break;		
+		}
+		
+		return null;
+		
+	}
+	
+	
 	@Override
 	public void setVisible(boolean visible) {
 		super.setVisible(visible);
@@ -73,7 +129,7 @@ public class WizardPageConfiguration extends WizardPage {
 					@Override
 					public void run() {
 						BWDeploymentInfo info = ((BWApplication) ModuleHelper.getApplication(project.getModules())).getDeploymentInfo();
-						if (info.isDeployToAdmin()) {
+						if ( MavenWizardContext.INSTANCE.getSelectedType() != BWProjectTypes.None ||  info.isDeployToAdmin()) {
 							MavenWizardContext.INSTANCE.getNextButton().setEnabled(true);
 						} else {
 							MavenWizardContext.INSTANCE.getNextButton().setEnabled(false);
@@ -91,21 +147,7 @@ public class WizardPageConfiguration extends WizardPage {
 
 	@Override
 	public void createControl(Composite parent) {
-		try {
-			Map<String, String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
-			if (manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
-				String targetPlatform = ContainerPreferenceProject.getCurrentContainer().getLabel();
-				if (targetPlatform.equals("Cloud Foundry")) {
-					bwEdition = "cf";
-				} else {
-					bwEdition = "docker";
-				}
-			} else {
-				bwEdition = "bw6";
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	
 
 		container = new Composite(parent, SWT.NONE);
 
@@ -117,8 +159,13 @@ public class WizardPageConfiguration extends WizardPage {
 		addSeperator(parent);
 		setApplicationPOMFields();
 		addSeperator(parent);
+		
+		setTestFields();
+		
+		addSeperator(parent);
+		
 		if(project.getType() == BWProjectType.Application){
-			setDeploymentCheckBox();
+			setDeploymentComboBox();
 			addSeperator(parent);
 		
 			Label label = new Label(container, SWT.NONE);
@@ -154,44 +201,139 @@ public class WizardPageConfiguration extends WizardPage {
 		horizontalLine.setFont(parent.getFont());
 	}
 
-	private void setDeploymentCheckBox() {
+	private void setDeploymentComboBox() 
+	{
 		Composite innerContainer = new Composite(container, SWT.NONE);
 
 		GridLayout layout = new GridLayout();
 		innerContainer.setLayout(layout);
 		layout.numColumns = 2;
 
-		addDeploymentConfig = new Button(innerContainer, SWT.CHECK);
+		Label label = new Label(innerContainer, SWT.NONE);
+		label.setText("Deploy Options: ");
 
-		BWDeploymentInfo info = ((BWApplication) ModuleHelper.getApplication(project.getModules())).getDeploymentInfo();
+		addDeploymentConfig = new Combo(innerContainer, SWT.DROP_DOWN| SWT.BORDER);
 
-		addDeploymentConfig.setSelection(info.isDeployToAdmin());
+		
+		
+		for( int i = 0 ; i < MavenWizardContext.INSTANCE.getProjectTypes().size() ; i++ )	
+		{
+			BWProjectTypes types  = MavenWizardContext.INSTANCE.getProjectTypes().get(i);
+			if( MavenWizardContext.INSTANCE.getSelectedType() == types)
+			{
+				addDeploymentConfig.select(i);
+				addDeploymentConfig.setText( types.name());
+			}
+			addDeploymentConfig.add(types.name() );
+			
+		}
+		
+		if( MavenWizardContext.INSTANCE.getSelectedType() == null )
+		{
+			addDeploymentConfig.select(0);
+		}
+			
+		
+	
+		addDeploymentConfig.addSelectionListener(new SelectionListener() 
+		{
 
-		addDeploymentConfig.addSelectionListener(new SelectionListener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (addDeploymentConfig.getSelection()) {
-					MavenWizardContext.INSTANCE.getNextButton().setEnabled(true);
-				} else {
+			public void widgetSelected(SelectionEvent e) 
+			{
+
+				String selected = addDeploymentConfig.getText();
+
+				switch (selected) {
+				case "None":
+					MavenWizardContext.INSTANCE.setSelectedType(BWProjectTypes.None);
 					MavenWizardContext.INSTANCE.getNextButton().setEnabled(false);
+				break;
+
+				case "AppSpace":
+					MavenWizardContext.INSTANCE.setSelectedType(BWProjectTypes.AppSpace);
+					MavenWizardContext.INSTANCE.getNextButton().setEnabled(true);
+				break;
+				
+				case "PCF":
+					MavenWizardContext.INSTANCE.setSelectedType(BWProjectTypes.PCF);
+					MavenWizardContext.INSTANCE.getNextButton().setEnabled(true);
+				break;
+
+				
+				case "Docker":
+					MavenWizardContext.INSTANCE.setSelectedType(BWProjectTypes.Docker);
+					MavenWizardContext.INSTANCE.getNextButton().setEnabled(true);
+				break;
+				
+				default:
+					break;
 				}
 			}
 
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
+
 			}
 		});
-
-		Label label = new Label(innerContainer, SWT.NONE);
-
-		if (bwEdition.equals("cf")) {
-			label.setText("Deploy EAR to Cloud Foundry");
-		} else if (bwEdition.equals("docker")) {
-			label.setText("Deploy EAR to Docker");
-		} else {
-			label.setText("Deploy EAR to BW Administrator");
 		}
+	
+	private void setTestFields()
+	{
+	
+		BWTestInfo info = null;
+		for( BWModule module : project.getModules() )
+		{
+			if( module.getType() == BWModuleType.Application )
+			{
+				info = ((BWApplication)module).getTestInfo();
+				break;
+			}
+		}
+		
+		
+		
+		Composite innerContainer = new Composite(container, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		innerContainer.setLayout(layout);
+		layout.numColumns = 2;
+
+		
+		Label runTestsLabel = new Label(innerContainer, SWT.NONE);
+		runTestsLabel.setText("Skip Tests:");
+
+		runTests = new Button(innerContainer, SWT.CHECK);
+		runTests.setSelection( info.getSkipTests() != null && !info.getSkipTests().isEmpty() ? Boolean.parseBoolean(info.getSkipTests()) : false);
+		
+		
+
+		Label skipLabel = new Label(innerContainer, SWT.NONE);
+		skipLabel.setText("Fail if No Tests :");
+
+		failIfSkip  = new Button(innerContainer, SWT.CHECK);
+		failIfSkip.setSelection( false );
+
+
+		Label tibcoHomeLabel = new Label(innerContainer, SWT.NONE);
+		tibcoHomeLabel.setText("Tibco Home : ");
+
+		tibcoHome = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
+		tibcoHome.setText( info.getTibcoHome() != null && !info.getTibcoHome().isEmpty() ? info.getTibcoHome() : "") ;
+		GridData groupData = new GridData(200, 15);
+		tibcoHome.setLayoutData(groupData);
+		
+		Label bwHomeLabel = new Label(innerContainer, SWT.NONE);
+		bwHomeLabel.setText( "BW Home : ");
+
+		bwHome = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
+		bwHome.setText( info.getBwHome() != null && !info.getBwHome().isEmpty() ? info.getBwHome() : "" );
+		GridData artifactData = new GridData(200, 15);
+		bwHome.setLayoutData(artifactData);
+
+		
+		
 	}
+	
 
 	private void setApplicationPOMFields() {
 		Composite innerContainer = new Composite(container, SWT.NONE);
@@ -257,8 +399,10 @@ public class WizardPageConfiguration extends WizardPage {
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 
-		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
+		//GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
+		GridData data = new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1);
 		data.horizontalSpan = 4;
+		data.heightHint = 50;
 		table.setLayoutData(data);
 
 		String[] titles = { "Module Name", "Module Type", "ArtifactId" };
@@ -309,45 +453,42 @@ public class WizardPageConfiguration extends WizardPage {
 		}
 	}
 
-	private void addCheckBox(Table table, TableItem item, BWModule module) {
-		int minWidth = 0;
-		item.setText(3, "Override");
-		Button b = new Button(table, SWT.CHECK);
-		buttonMap.put(module.getArtifactId(), b);
-		b.pack();
-		TableEditor editor = new TableEditor(table);
-		Point size = b.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		editor.setEditor(b, item, 3);
-		editor.minimumWidth = size.x;
-		minWidth = Math.max(size.x, minWidth);
-		editor.minimumHeight = size.y;
-		editor.horizontalAlignment = SWT.RIGHT;
-		editor.verticalAlignment = SWT.CENTER;
-	}
+
 
 	public BWProject getProject() {
 		return project;
 	}
 
 	public BWProject getUpdatedProject() {
-		for (BWModule module : project.getModules()) {
+		for (BWModule module : project.getModules())
+		{
 			module.setGroupId(appGroupId.getText());
-			if (bwEdition.equals("bw6")
-					&& module.getType() == BWModuleType.Application) {
-				if (addDeploymentConfig.getSelection()) {
+			if ( module.getType() == BWModuleType.Application) 
+			{
+				
+				if( MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.AppSpace )
+				{
 					((BWApplication) module).getDeploymentInfo().setDeployToAdmin(true);
-				} else {
-					((BWApplication) module).setDeploymentInfo(new BWDeploymentInfo());
+					
+				}
+				else
+				{
 					((BWApplication) module).getDeploymentInfo().setDeployToAdmin(false);
 				}
-			}
+				
+				BWTestInfo info = ((BWApplication) module).getTestInfo();
+				info.setTibcoHome( tibcoHome.getText() );
+				info.setBwHome( bwHome.getText());
+				info.setSkipTests( String.valueOf(runTests.getSelection()));
+				
+				
+			}		
 			module.setOverridePOM(true);
-			// module.setOverridePOM(buttonMap.containsKey(module.getArtifactId())
-			// ? (buttonMap.get(module.getArtifactId())).getSelection() : true
-			// );
+			
 		}
 
-		if(project.getType() == BWProjectType.Application){
+		if(project.getType() == BWProjectType.Application)
+		{
 			BWModule parent = ModuleHelper.getParentModule(project.getModules());
 	
 			if (!parent.getArtifactId().equals(appArtifactId.getText()) || !parent.getGroupId().equals(appGroupId.getText())) {

@@ -31,7 +31,9 @@ import com.tibco.bw.studio.maven.modules.model.BWPluginModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 import com.tibco.bw.studio.maven.modules.model.BWSharedModule;
+import com.tibco.bw.studio.maven.modules.model.BWTestInfo;
 import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
+import com.tibco.bw.studio.maven.wizard.BWProjectTypes;
 
 public class BWProjectBuilder {
 	List<BWModuleParser.BWModuleData> moduleData;
@@ -124,8 +126,22 @@ public class BWProjectBuilder {
 	}
 
 	private void loadDeploymentInfo(BWApplication application) {
-		BWDeploymentInfo info = application.getDeploymentInfo();
+		
 		Model model = application.getMavenModel();
+		
+BWTestInfo testInfo = application.getTestInfo();
+		
+		if( model != null && model.getProperties() != null )
+		{
+			testInfo.setSkipTests( (String) model.getProperties().get( "skipTests" ) );		
+			testInfo.setTibcoHome((String) model.getProperties().get( "tibco.Home" ) );		
+			testInfo.setBwHome( (String) model.getProperties().get( "bw.Home" ) );
+		
+			application.setProjectType( (String) model.getProperties().get( "project.type" ) != null && ! ((String) model.getProperties().get( "project.type" )).isEmpty() ?  BWProjectTypes.valueOf((String) model.getProperties().get( "project.type" )) : null);
+		}
+		
+		BWDeploymentInfo info = application.getDeploymentInfo();
+		
 		if(model == null) {
 			return;
 		}
