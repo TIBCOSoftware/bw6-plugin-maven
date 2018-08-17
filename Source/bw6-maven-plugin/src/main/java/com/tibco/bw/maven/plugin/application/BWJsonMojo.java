@@ -207,8 +207,8 @@ public class BWJsonMojo extends AbstractMojo{
 		Map<String, Object> serviceLabels= new HashMap<String, Object>();
 		serviceLabels.put("container", k8sprop.getProperty("fabric8.container.name"));
 		serviceLabels.put("project", k8sprop.getProperty("fabric8.label.project"));
-		serviceLabels.put("provider","Tibco");
-		serviceLabels.put("group", k8sprop.getProperty("fabric8.label.group"));
+		serviceLabels.put("provider","fabric8");
+		serviceLabels.put("group", "com.tibco.bw");
 		metadataService.put("labels",serviceLabels);
 		metadataService.put("namespace",k8sprop.getProperty("fabric8.namespace"));
 		dataService.put("metadata", metadataService);
@@ -226,8 +226,8 @@ public class BWJsonMojo extends AbstractMojo{
 		Map<String, String> appInfo=new HashMap<String, String>();
 		appInfo.put("container", k8sprop.getProperty("fabric8.container.name"));
 		appInfo.put("project", k8sprop.getProperty("fabric8.label.project"));
-		appInfo.put("provider","Tibco");
-		appInfo.put("group", k8sprop.getProperty("fabric8.label.group"));
+		appInfo.put("provider","fabric8");
+		appInfo.put("group", "com.tibco.bw");
 		specdataService.put("selector", appInfo);
 		dataService.put("spec", specdataService);
 		writeToYamlFile(locationService, dataService);		
@@ -253,8 +253,8 @@ public class BWJsonMojo extends AbstractMojo{
 		Map<String, String> appInfoDeployment=new HashMap<String, String>();		
 		appInfoDeployment.put("container", k8sprops.getProperty("fabric8.container.name"));
 		appInfoDeployment.put("project", k8sprops.getProperty("fabric8.label.project"));
-		appInfoDeployment.put("provider","Tibco");
-		appInfoDeployment.put("group", k8sprops.getProperty("fabric8.label.group"));
+		appInfoDeployment.put("provider","fabric8");
+		appInfoDeployment.put("group", "com.tibco.bw");
 
 		specdata.put("selector",appInfoDeployment);
 		Map<String,Object> template=new HashMap<String, Object>();
