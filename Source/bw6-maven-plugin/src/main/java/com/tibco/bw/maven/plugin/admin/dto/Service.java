@@ -45,7 +45,7 @@ public class Service {
     }
 
     /**
-     *
+     * @param bindings the bindings
      */
     public Service(final Collection<ServiceBinding> bindings) {
         this.bindings = bindings;

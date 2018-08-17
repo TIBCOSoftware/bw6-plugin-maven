@@ -48,7 +48,7 @@ public class AppInstance {
     }
 
     /**
-     * @param appNodeName
+     * @param appNodeName name of appnode
      *            the appNodeName to set
      */
     public void setAppNodeName(final String appNodeName) {

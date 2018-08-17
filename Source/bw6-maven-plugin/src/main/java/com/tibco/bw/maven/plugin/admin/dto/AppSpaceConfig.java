@@ -61,7 +61,7 @@ public class AppSpaceConfig {
     }
 
     /**
-     * @param agentName
+     * @param agent	
      *            the agentName to set
      */
     public void setAgentName(final String agent) {

@@ -202,7 +202,7 @@ public class AppNode {
     }
 
     /**
-     * @param name
+     * @param port
      *            , the osgiPort of this AppNode the osgiPort to set
      */
 
@@ -211,7 +211,7 @@ public class AppNode {
     }
 
     /**
-     * @param name
+     * @param port
      *            , the httpPort of this AppNode the httpPort to set
      */
 

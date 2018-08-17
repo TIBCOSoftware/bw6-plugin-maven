@@ -2,11 +2,16 @@ package com.tibco.bw.maven.plugin.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 
 public class BWProjectUtils {
 	public enum OS {
@@ -88,4 +93,22 @@ public class BWProjectUtils {
 		}
 		throw new MojoExecutionException("Failed to find Admin Home at location: " + bwAdminHome);
 	}
+	
+	public static MavenProject getApplicationProject( MavenSession session  )
+	{
+
+		List<MavenProject> projects = session.getAllProjects();
+		for( MavenProject project : projects )
+		{
+			Manifest mf = ManifestParser.parseManifest( project.getBasedir() );
+			MODULE module =  BWProjectUtils.getModuleType(mf);
+
+			if( module == MODULE.APPLICATION )
+			{
+				return project;
+			}
+		}
+		return null;
+	}
+	
 }

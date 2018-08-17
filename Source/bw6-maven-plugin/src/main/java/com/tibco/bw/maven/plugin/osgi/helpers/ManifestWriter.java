@@ -35,8 +35,6 @@ public class ManifestWriter {
     public static void updateManifestVersion(MavenProject project , Manifest mf)
     {
         Attributes attributes = mf.getMainAttributes();
-        System.out.println("UpdateManifest Method in");
-        System.out.println("Update Attribute");
         
         String projectVersion = project.getVersion();
         if( projectVersion.indexOf("-SNAPSHOT") != -1 )

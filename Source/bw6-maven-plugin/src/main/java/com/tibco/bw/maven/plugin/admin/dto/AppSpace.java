@@ -239,7 +239,7 @@ public class AppSpace {
     }
 
     /**
-     * @param minNodes
+     * @param nodes
      *            the minimum number of nodes in the AppSpace to put this AppSpace into Running state to set
      */
     public void setMinNodes(final int nodes) {
@@ -247,7 +247,7 @@ public class AppSpace {
     }
 
     /**
-     * @param version
+     * @param v
      *            the version of BW software that this AppSpace is handling, the version must be same across all agents attached to this
      *            AppSpace
      */
@@ -272,7 +272,7 @@ public class AppSpace {
     }
 
     /**
-     * @param nodes
+     * @param apps
      *            , The list of Applications deployed to this AppSpace the nodes to set
      */
     public void setApplications(final List<Application> apps) {

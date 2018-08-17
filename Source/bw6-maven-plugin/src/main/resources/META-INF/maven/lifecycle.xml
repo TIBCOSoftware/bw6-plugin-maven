@@ -1,0 +1,13 @@
+<lifecycles>
+  <lifecycle>
+    <id>bwtestreport</id>
+    <phases>
+      <phase>
+        <id>test</id>
+        <configuration>
+          <testFailureIgnore>true</testFailureIgnore>
+        </configuration>
+      </phase>
+    </phases>
+  </lifecycle>
+</lifecycles>

@@ -89,8 +89,8 @@ public class Machine {
 
 	/**
 	 *
-	 * @param installationRefs
-	 */
+	 * @param installationRefs the installrefs
+ 	 */
 	public void setInstallationRefs(final List<HRef> installationRefs) {
 		this.installationRefs = installationRefs;
 	}

@@ -170,9 +170,7 @@ public class BWExecutionListener extends AbstractExecutionListener {
         }
     }
 
-    /**
-     * <pre>--- mojo-artifactId:version:goal (mojo-executionId) @ project-artifactId ---</pre>
-     */
+   
     @Override
     public void mojoStarted(ExecutionEvent event) {
         if (logger.isInfoEnabled()) {
@@ -186,9 +184,7 @@ public class BWExecutionListener extends AbstractExecutionListener {
         }
     }
 
-    /**
-     * <pre>>>> mojo-artifactId:version:goal (mojo-executionId) @ project-artifactId >>></pre>
-     */
+    
     @Override
     public void forkStarted(ExecutionEvent event) {
         if (logger.isInfoEnabled()) {
@@ -202,9 +198,7 @@ public class BWExecutionListener extends AbstractExecutionListener {
         }
     }
 
-    /**
-     * <pre>&lt;&lt;&lt; mojo-artifactId:version:goal (mojo-executionId) @ project-artifactId &lt;&lt;&lt;</pre>
-     */
+   
     @Override
     public void forkSucceeded(ExecutionEvent event) {
         if (logger.isInfoEnabled()) {

@@ -204,7 +204,7 @@ public class Application {
     }
 
     /**
-     * @param status
+     * @param state
      *            the status to set
      */
     public void setState(final ApplicationRuntimeStates state) {

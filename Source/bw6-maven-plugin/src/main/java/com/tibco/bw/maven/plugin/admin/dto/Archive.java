@@ -199,7 +199,7 @@ public class Archive {
 	}
 
 	/**
-	 * @param paparentth
+	 * @param parent
 	 *            the parent folder to set
 	 */
 	public void setParent(final String parent) {
@@ -279,7 +279,7 @@ public class Archive {
 	}
 
 	/**
-	 * @param profileNames
+	 * @param profiles
 	 *            the profileNames to set
 	 */
 	public void setProfileNames(final Collection<String> profiles) {
@@ -287,7 +287,7 @@ public class Archive {
 	}
 
 	/**
-	 * @param category
+	 * @param ref
 	 *            the category to set
 	 */
 	public void setArchivesRef(final HRef ref) {
