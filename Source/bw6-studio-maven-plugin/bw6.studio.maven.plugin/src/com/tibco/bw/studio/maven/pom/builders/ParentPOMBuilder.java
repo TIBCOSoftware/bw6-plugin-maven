@@ -12,10 +12,10 @@ import com.tibco.bw.studio.maven.helpers.ModuleOrderBuilder;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
-import com.tibco.zion.project.core.ContainerPreferenceProject;
+import com.tibco.bw.studio.maven.wizard.BWProjectTypes;
+import com.tibco.bw.studio.maven.wizard.MavenWizardContext;
 
 public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder {
-	private String bwEdition;
 
 	@Override
 	public void build(BWProject project, BWModule module) throws Exception {
@@ -23,25 +23,14 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		this.module = module;
 		initializeModel();
 
-		Map<String, String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
-		if (manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
-			String targetPlatform = ContainerPreferenceProject.getCurrentContainer().getLabel();
-			if (targetPlatform.equals("Cloud Foundry")) {
-				bwEdition = "cf";
-			} else {
-				bwEdition = "docker";
-			}
-		} else
-			bwEdition = "bw6";
-
+		
 		addPrimaryTags();
 		model.setGroupId(module.getGroupId());
 		model.setVersion(module.getVersion());
 		// addProperties();
 		addModules();
-		if (bwEdition.equals("cf") || bwEdition.equals("docker")) {
-			addBuild();
-		}
+		addBuild();
+
 		generatePOMFile();
 	}
 
@@ -50,10 +39,33 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		if (build == null) {
 			build = new Build();
 		}
+		
+		
+		List<Plugin> plugins = build.getPlugins();
+		
+		boolean reportPlugin = false;
+		
+		for (Plugin plugin : plugins) 
+		{
+			if (plugin.getArtifactId().equals("maven-site-plugin")) {
+				reportPlugin = true;
+				break;
+			}
+		}
+		
+		if( !reportPlugin )
+		{
+			Plugin repPlugin = new Plugin();
+			repPlugin.setArtifactId("maven-site-plugin");
+			repPlugin.setVersion("3.7.1");
+			repPlugin.setGroupId("org.apache.maven.plugins");
+			plugins.add(repPlugin);
+		}
 
-		if (bwEdition.equals("cf")) {
+		if ( MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.PCF )
+		{
 			boolean cfplugin = false;
-			List<Plugin> plugins = build.getPlugins();
+			
 			for (Plugin plg : plugins) {
 				if (plg.getArtifactId().equals("cf-maven-plugin")) {
 					cfplugin = true;
@@ -64,10 +76,10 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 			if (!cfplugin) {
 				addPCFWithSkipMavenPlugin(build);
 			}
-		} else if (bwEdition.equals("docker")) { 
-
+		} else if (MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.Docker) {
+			//|| MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.K8S
 			boolean dockerPlugin = false;
-			List<Plugin> plugins = build.getPlugins();
+			
 			for (Plugin plg : plugins) {
 				if (plg.getArtifactId().equals("docker-maven-plugin")) {
 					dockerPlugin = true;

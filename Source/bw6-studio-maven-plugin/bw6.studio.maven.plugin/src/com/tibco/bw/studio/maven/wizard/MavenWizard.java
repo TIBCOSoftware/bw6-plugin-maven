@@ -9,81 +9,113 @@ import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWProjectType;
-import com.tibco.zion.project.core.ContainerPreferenceProject;
 
 public class MavenWizard extends Wizard {
-	protected WizardPageConfiguration configPage;
-	protected WizardPagePCF pcfPage;
-	protected WizardPageDocker dockerPage;
-	protected WizardPageEnterprise enterprisePage;
-	String bwEdition = "bw6";
 	private BWProject project;
 
 	public MavenWizard(BWProject project) {
 		super();
 		this.project = project;
 		setNeedsProgressMonitor(true);
+		MavenWizardContext.INSTANCE.reset();
 	}
 
 	@Override
 	public void addPages() {
 		try {
 			Map<String, String> manifest = ManifestParser.parseManifest(project.getModules().get(0).getProject());
-			if (manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
-				String targetPlatform = ContainerPreferenceProject.getCurrentContainer().getLabel();
-				if (targetPlatform.equals("Cloud Foundry")) {
-					bwEdition = "cf";
-				} else {
-					bwEdition = "docker";
-				}
-			} else {
-				bwEdition = "bw6";
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		configPage = new WizardPageConfiguration("POM Configuration", project);
-		addPage(configPage);
-		
-		if(project.getType() == BWProjectType.Application){
-			pcfPage = new WizardPagePCF("PCF Deployment Configuration", project);
-			enterprisePage = new WizardPageEnterprise("Deployment Configuration", project);
-			dockerPage = new WizardPageDocker("Docker Deployment Configuration", project);
 			
-			if (bwEdition.equals("bw6")) {
-				addPage(enterprisePage);
-			} else if (bwEdition.equals("cf")) {
-				addPage(pcfPage);
-			} else if (bwEdition.equals("docker")) {
-				addPage(dockerPage);
+			MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.None );
+			
+			if (manifest.containsKey("TIBCO-BW-Edition") )				
+			{
+				String editions = manifest.get( "TIBCO-BW-Edition" );
+				
+				if( editions.isEmpty() )
+				{
+					MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.AppSpace );
+				}
+				
+				else 
+				{	
+					String[] editionList = editions.split(",");
+					for( String str : editionList )
+					{
+						switch ( str )
+						{
+						case "bwe":
+							MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.AppSpace );
+							break;
+
+						case "bwcf":
+							MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.PCF );
+							MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.Docker );							
+						break;
+
+						default:
+							break;
+						}
+					}
+				}
 			}
+
+			MavenWizardContext.INSTANCE.setConfigPage(new WizardPageConfiguration("POM Configuration", project));
+			MavenWizardContext.INSTANCE.setEnterprisePage(new WizardPageEnterprise("Deployment Configuration", project));
+		
+			MavenWizardContext.INSTANCE.setPCFPage(new WizardPagePCF("PCF Deployment Configuration",project));
+			MavenWizardContext.INSTANCE.setDockerPage(new WizardPageDocker("Docker Deployment Configuration", project));
+			MavenWizardContext.INSTANCE.setKubernetesPage(new WizardPageK8S("Kubernetes Deployment Configuration", project));
+			
+			addPage(MavenWizardContext.INSTANCE.getConfigPage());
+			addPage(MavenWizardContext.INSTANCE.getEnterprisePage());
+			addPage(MavenWizardContext.INSTANCE.getPCFPage());
+			addPage(MavenWizardContext.INSTANCE.getDockerPage());
+			addPage(MavenWizardContext.INSTANCE.getKubernetesPage());
+		}
+		catch(Exception e )
+		{
+			e.printStackTrace();
 		}
 	}
 
+
 	@Override
-	public boolean performFinish() {
-		project = configPage.getUpdatedProject();
-		if(project.getType() == BWProjectType.SharedModule){
+	public boolean performFinish() 
+	{
+		project = MavenWizardContext.INSTANCE.getConfigPage().getUpdatedProject();
+		
+		if(project.getType() == BWProjectType.SharedModule)
+		{
 			return true;
-		}else{
+		}
+		else
+		{
+		
+			switch ( MavenWizardContext.INSTANCE.getSelectedType() )
+			{
 			
-			if (bwEdition.equals("bw6")) {
-				if (((BWApplication) ModuleHelper.getApplication(project
-						.getModules())).getDeploymentInfo().isDeployToAdmin()) {
-					if (((WizardPageEnterprise) enterprisePage).validate()) {
-						enterprisePage.getUpdatedProject();
+				case AppSpace:
+					if (((WizardPageEnterprise) MavenWizardContext.INSTANCE.getEnterprisePage()).validate()) 
+					{
+						MavenWizardContext.INSTANCE.getEnterprisePage().getUpdatedProject();
 					} else {
 						return false;
 					}
-				}
-			} else if (bwEdition.equals("cf")) {
-				pcfPage.getUpdatedProject();
-			} else if (bwEdition.equals("docker")) {
-				dockerPage.getUpdatedProject();
+			
+					break;
+					
+				case PCF:
+					MavenWizardContext.INSTANCE.getPCFPage().getUpdatedProject();
+					
+				case Docker:
+					MavenWizardContext.INSTANCE.getDockerPage().getUpdatedProject();
+					
+			default:
+				break;
 			}
-			return true;
 		}
+		
+		return true;
 	}
 
 	public BWProject getProject() {

@@ -7,7 +7,7 @@ public class BWApplication extends BWModule
 {
 
 	private BWDeploymentInfo deploymentInfo = new BWDeploymentInfo();
-	
+	private BWTestInfo testInfo = new BWTestInfo();
 	
 	public BWModuleType getType() 
 	{
@@ -27,5 +27,13 @@ public class BWApplication extends BWModule
 	public void setDeploymentInfo(BWDeploymentInfo deploymentInfo)
 	{
 		this.deploymentInfo = deploymentInfo;
+	}
+	public BWTestInfo getTestInfo() 
+	{
+		return testInfo;
+	}
+	public void setTestInfo(BWTestInfo testInfo) 
+	{
+		this.testInfo = testInfo;
 	}
 }

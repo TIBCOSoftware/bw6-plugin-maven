@@ -7,6 +7,7 @@ import org.apache.maven.model.Model;
 import org.eclipse.core.resources.IProject;
 
 import com.tibco.bw.studio.maven.pom.builders.IPOMBuilder;
+import com.tibco.bw.studio.maven.wizard.BWProjectTypes;
 
 
 public abstract class BWModule 
@@ -18,8 +19,9 @@ public abstract class BWModule
 	protected String groupId;
 	protected String version;
 	protected String name;
-
-	protected String tibcoHome;
+	//protected String tibcoHome;
+	protected BWProjectTypes projectType;
+	
 	
 	protected File pomfileLocation;
 
@@ -116,14 +118,6 @@ public abstract class BWModule
 		this.version = version;
 	}
 
-	public String getTibcoHome() {
-		return tibcoHome;
-	}
-
-	public void setTibcoHome(String tibcoHome) 
-	{
-		this.tibcoHome = tibcoHome;
-	}
 
 	public File getPomfileLocation() 
 	{
@@ -213,5 +207,15 @@ public abstract class BWModule
 	public void setMavenModel(Model mavenModel) 
 	{
 		this.mavenModel = mavenModel;
+	}
+	
+	public BWProjectTypes getProjectType(){
+		return projectType;
+		
+	}
+	
+	public void setProjectType(BWProjectTypes projectType) 
+	{
+		this.projectType = projectType;
 	}
 }

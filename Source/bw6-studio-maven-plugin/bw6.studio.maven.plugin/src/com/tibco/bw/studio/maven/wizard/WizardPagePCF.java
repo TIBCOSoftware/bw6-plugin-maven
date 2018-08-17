@@ -201,4 +201,9 @@ public class WizardPagePCF extends WizardPage {
 		}
 		return project;
 	}
+	@Override
+	public boolean canFlipToNextPage() 
+	{
+		return false;
+	}
 }

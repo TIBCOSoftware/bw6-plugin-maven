@@ -250,4 +250,9 @@ public class WizardPageK8S extends WizardPage {
 		horizontalLine.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 4, 1));
 		horizontalLine.setFont(parent.getFont());
 	}*/
+	@Override
+	public boolean canFlipToNextPage() 
+	{
+		return false;
+	}
 }
