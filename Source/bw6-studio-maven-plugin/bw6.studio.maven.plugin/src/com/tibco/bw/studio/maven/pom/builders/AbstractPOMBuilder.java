@@ -571,6 +571,7 @@ public abstract class AbstractPOMBuilder {
 			}
 			properties.setProperty("bwpcf.instances", module.getBwpcfModule().getInstances());
 			properties.setProperty("bwpcf.memory", module.getBwpcfModule().getMemory());
+			properties.setProperty("bwpcf.diskQuota", module.getBwpcfModule().getDiskQuota());
 			properties.setProperty("bwpcf.buildpack", module.getBwpcfModule().getBuildpack());
 
 			//Add cf env variables
@@ -668,6 +669,10 @@ public abstract class AbstractPOMBuilder {
 
 		child = new Xpp3Dom("memory");
 		child.setValue("${bwpcf.memory}");
+		config.addChild(child);
+		
+		child = new Xpp3Dom("diskQuota");
+		child.setValue("${bwpcf.diskQuota}");
 		config.addChild(child);
 
 		child = new Xpp3Dom("buildpack");
