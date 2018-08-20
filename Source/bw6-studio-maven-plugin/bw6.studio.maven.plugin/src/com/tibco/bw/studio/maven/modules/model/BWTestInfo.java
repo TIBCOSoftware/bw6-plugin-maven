@@ -9,7 +9,7 @@ public class BWTestInfo
 
 	protected String skipTests;
 	
-	protected String skipOnError;
+	protected String failIfNoTests;
 	
 	
 	public String getTibcoHome() {
@@ -39,14 +39,14 @@ public class BWTestInfo
 		this.skipTests = runTests;
 	}
 
-	public String getSkipOnError() 
+	public String getFailIfNoTests() 
 	{
-		return skipOnError;
+		return failIfNoTests;
 	}
 
-	public void setSkipOnError(String skipOnError)
+	public void setFailIfNoTests(String skipOnError)
 	{
-		this.skipOnError = skipOnError;
+		this.failIfNoTests = skipOnError;
 	}
 
 
