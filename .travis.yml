@@ -4,7 +4,7 @@ jdk:
   - oraclejdk8
 
 install:
-  - cd /home/travis/build/TIBCOSoftware/bw6-plugin-maven/tree/master/Source/bw6-maven-plugin
+  - cd /home/travis/build/TIBCOSoftware/bw6-plugin-maven/Source/bw6-maven-plugin
   - mvn install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 
 script:
