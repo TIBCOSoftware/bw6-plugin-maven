@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/TIBCOSoftware/bw6-plugin-maven.svg?branch=master)](https://travis-ci.org/TIBCOSoftware/bw6-plugin-maven)
+
 # Plug-in Code for Apache Maven and TIBCO ActiveMatrix BusinessWorks™ and TIBCO BusinessWorks™ Container Edition
 
 This plug-in is subject to the license shared as part of the repository. Kindly review the license before using or downloading this plug-in.
