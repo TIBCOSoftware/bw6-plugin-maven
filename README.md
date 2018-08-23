@@ -26,7 +26,8 @@ e. The Installer will ask for TibcoHome location. Provide the TibcoHome to the S
 This will install the Maven Plugin to the TibcoHome. 
 
 ## For TIBCO ActiveMatrix BusinessWorks™
-Please follow the wiki page at [Steps for TIBCO ActiveMatrix BusinessWorks™] ()
+Please follow the wiki page at 
+[Steps for TIBCO ActiveMatrix BusinessWorks™](https://github.com/TIBCOSoftware/bw6-plugin-maven/wiki/Steps-For-TIBCO-ActiveMatrix-BusinessWorks)
 
 
 ## For TIBCO BusinessWorks™ Container Edition 
@@ -34,6 +35,8 @@ Please follow the wiki page at [Steps for TIBCO ActiveMatrix BusinessWorks™] (
 Please follow the wiki pages at [Building-applications-for-TIBCO-BusinessWorks-Container-Edition](
 https://github.com/TIBCOSoftware/bw6-plugin-maven/wiki/Building-applications-for-TIBCO-BusinessWorks-Container-Edition)
 
+## Building the code
+Please follow the wiki page [Building the Maven Plugin](https://github.com/TIBCOSoftware/bw6-plugin-maven/wiki/Build)
 
 ## Contributing to the Plug-in
 
