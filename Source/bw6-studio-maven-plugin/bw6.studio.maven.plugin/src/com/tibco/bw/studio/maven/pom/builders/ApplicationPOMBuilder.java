@@ -104,6 +104,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		if( testInfo.getSkipTests() != null && !testInfo.getSkipTests().isEmpty())
 		{
 			model.getProperties().put("skipTests", testInfo.getSkipTests() );
+			model.getProperties().put("failIfNoTests", testInfo.getFailIfNoTests() );
 			model.getProperties().put("tibco.Home", testInfo.getTibcoHome() );
 			model.getProperties().put("bw.Home", testInfo.getBwHome() );
 		}

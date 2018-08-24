@@ -133,7 +133,8 @@ BWTestInfo testInfo = application.getTestInfo();
 		
 		if( model != null && model.getProperties() != null )
 		{
-			testInfo.setSkipTests( (String) model.getProperties().get( "skipTests" ) );		
+			testInfo.setSkipTests( (String) model.getProperties().get( "skipTests" ) );
+			testInfo.setFailIfNoTests((String) model.getProperties().get( "failIfNoTests" ) );		
 			testInfo.setTibcoHome((String) model.getProperties().get( "tibco.Home" ) );		
 			testInfo.setBwHome( (String) model.getProperties().get( "bw.Home" ) );
 		

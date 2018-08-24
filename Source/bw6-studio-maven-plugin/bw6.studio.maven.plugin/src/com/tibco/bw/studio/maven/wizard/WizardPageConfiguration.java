@@ -298,6 +298,14 @@ public class WizardPageConfiguration extends WizardPage {
 		innerContainer.setLayout(layout);
 		layout.numColumns = 2;
 
+//		Label label = new Label(container, SWT.NONE);
+//		label.setText("Note* : Tibco Home and BW Home values are required to run the Unit-Tests on the Project");
+
+		Label label = new Label(innerContainer, SWT.NONE);
+		label.setText("Note* : Tibco Home and BW Home values are required to run the Unit-Tests defined in the Project.");
+		GridData versionData = new GridData();
+		versionData.horizontalSpan = 2;
+		label.setLayoutData(versionData);
 		
 		Label runTestsLabel = new Label(innerContainer, SWT.NONE);
 		runTestsLabel.setText("Skip Tests:");
@@ -480,7 +488,7 @@ public class WizardPageConfiguration extends WizardPage {
 				info.setTibcoHome( tibcoHome.getText() );
 				info.setBwHome( bwHome.getText());
 				info.setSkipTests( String.valueOf(runTests.getSelection()));
-				
+				info.setFailIfNoTests(String.valueOf(failIfSkip.getSelection()));
 				
 			}		
 			module.setOverridePOM(true);
