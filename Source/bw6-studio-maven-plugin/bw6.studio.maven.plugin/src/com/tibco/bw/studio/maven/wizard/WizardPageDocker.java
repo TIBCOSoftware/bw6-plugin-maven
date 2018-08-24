@@ -31,6 +31,8 @@ public class WizardPageDocker extends WizardPage {
 	private Text dockerHostCertPath;
 	private Text dockerImageName;
 	private Text dockerImageFrom;
+	private Button autoPullImage;
+	private boolean isAutoPull;
 	private Text dockerImageMaintainer;
 	private Text dockerAppName;
 	private Text dockerVolume;
@@ -164,6 +166,33 @@ public class WizardPageDocker extends WizardPage {
 		dockerImageFrom.setText("tibco/bwce");
 		GridData imgFromData = new GridData(100, 15);
 		dockerImageFrom.setLayoutData(imgFromData);
+		
+		Label autoPullLabel = new Label(container, SWT.NONE);
+		autoPullLabel.setText("Auto Pull Base Image");
+		GridData autoPullData = new GridData(50, 15);
+		autoPullImage= new Button(container, SWT.CHECK);
+		autoPullImage.setSelection(false);
+		autoPullImage.setLayoutData(autoPullData);
+		autoPullImage.addSelectionListener(new SelectionListener(){
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if(autoPullImage.getSelection()){
+					isAutoPull= true;
+				}
+				else{
+					isAutoPull= false;
+				}
+				
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				
+				
+			}
+			
+		});
 
 		Label maintainerLabel = new Label(container, SWT.NONE);
 		maintainerLabel.setText("Maintainer");
@@ -171,10 +200,17 @@ public class WizardPageDocker extends WizardPage {
 		dockerImageMaintainer = new Text(container, SWT.BORDER | SWT.SINGLE);
 		dockerImageMaintainer.setText("abc@tibco.com");
 		GridData maintainerData = new GridData(200, 15);
-		maintainerData.horizontalSpan = 3;
-		dockerImageMaintainer.setLayoutData(maintainerData);
 
-		final Button dkr = new Button(container, SWT.CHECK);
+		dockerImageMaintainer.setLayoutData(maintainerData);
+		
+		
+		Composite innerContainer = new Composite(container, SWT.NONE);
+
+		GridLayout layout = new GridLayout();
+		innerContainer.setLayout(layout);
+		layout.numColumns = 2;
+		final Button dkr = new Button(innerContainer, SWT.CHECK);
+		
 		dkr.setSelection(false);
 
 		dkr.addSelectionListener(new SelectionListener() {
@@ -208,9 +244,11 @@ public class WizardPageDocker extends WizardPage {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-
-		Label dkrlabel = new Label(container, SWT.NONE);
+		
+		
+		Label dkrlabel = new Label(innerContainer, SWT.NONE);
 		dkrlabel.setText("Run on docker host");
+		
 		// createContents(container);
 	}
 
@@ -278,6 +316,8 @@ public class WizardPageDocker extends WizardPage {
 		bwdocker.setDockerHostCertPath(dockerHostCertPath.getText());
 		bwdocker.setDockerImageName(dockerImageName.getText());
 		bwdocker.setDockerImageFrom(dockerImageFrom.getText());
+		
+		bwdocker.setAutoPullImage(isAutoPull);
 		bwdocker.setDockerImageMaintainer(dockerImageMaintainer.getText());
 
 		// Below are Docker Run values - set them only if checked otherwise blank
