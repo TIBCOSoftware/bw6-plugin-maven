@@ -168,7 +168,7 @@ public class WizardPageDocker extends WizardPage {
 		dockerImageFrom.setLayoutData(imgFromData);
 		
 		Label autoPullLabel = new Label(container, SWT.NONE);
-		autoPullLabel.setText("Auto Pull Images");
+		autoPullLabel.setText("Auto Pull Base Image");
 		GridData autoPullData = new GridData(50, 15);
 		autoPullImage= new Button(container, SWT.CHECK);
 		autoPullImage.setSelection(false);
