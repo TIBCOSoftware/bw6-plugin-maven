@@ -68,7 +68,7 @@ public class BWDockerModule {
 	}
 
 	public void setAutoPullImage(boolean autoPullImage) {
-		this.autoPullImage = autoPullImage;
+		this.autoPullImage= autoPullImage;
 	}
 
 	public String getDockerImageMaintainer() {

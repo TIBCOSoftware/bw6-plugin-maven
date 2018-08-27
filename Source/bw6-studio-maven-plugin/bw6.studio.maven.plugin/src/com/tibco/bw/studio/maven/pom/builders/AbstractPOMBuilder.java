@@ -296,9 +296,11 @@ public abstract class AbstractPOMBuilder {
 		config.addChild(child);
 		
 		
-		child = new Xpp3Dom("autoPull");
+		child = new Xpp3Dom("imagePullPolicy");
+		
 		child.setValue("${bwdocker.autoPullImage}");
 		config.addChild(child);
+		
 
 		child = new Xpp3Dom("dockerHost");
 		child.setValue("${bwdocker.host}");
@@ -511,7 +513,7 @@ public abstract class AbstractPOMBuilder {
 			properties.setProperty("docker.image", module.getBwDockerModule().getDockerImageName());
 			properties.setProperty("bwdocker.containername", module.getBwDockerModule().getDockerAppName());
 			properties.setProperty("bwdocker.from", module.getBwDockerModule().getDockerImageFrom());
-			properties.setProperty("bwdocker.autoPullImage", (module.getBwDockerModule().isAutoPullImage()?"true":"false"));
+			properties.setProperty("bwdocker.autoPullImage", (module.getBwDockerModule().isAutoPullImage()?"Always":"IfNotPresent"));
 			properties.setProperty("bwdocker.maintainer", module.getBwDockerModule().getDockerImageMaintainer());
 			
 
