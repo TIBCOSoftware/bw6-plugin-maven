@@ -65,23 +65,24 @@ public class WizardPageConfiguration extends WizardPage {
 		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorks");
 		if(project.getType() == BWProjectType.Application){
 			setDescription("Enter the GroupId and ArtifactId for Maven POM File generation.\nPOM files will be generated for Projects listed below and Parent POM file will be generated aggregating the Projects");
-		}
-		
-		BWApplication application = (BWApplication) ModuleHelper.getApplication(project.getModules());
-		
-		if( application.getProjectType() != null )
-		{
-			MavenWizardContext.INSTANCE.setSelectedType( application.getProjectType() );
-		}
-		else
-		{
-			BWDeploymentInfo info = application.getDeploymentInfo();
-			if ( info.isDeployToAdmin()) {
-				MavenWizardContext.INSTANCE.setSelectedType( BWProjectTypes.AppSpace);
-			}
-			else
+
+
+			BWApplication application = (BWApplication) ModuleHelper.getApplication(project.getModules());
+
+			if( null!=application && application.getProjectType() != null )
 			{
-				MavenWizardContext.INSTANCE.setSelectedType( BWProjectTypes.None);
+				MavenWizardContext.INSTANCE.setSelectedType( application.getProjectType() );
+			}
+			else if(null!=application)
+			{
+				BWDeploymentInfo info = application.getDeploymentInfo();
+				if (info.isDeployToAdmin()) {
+					MavenWizardContext.INSTANCE.setSelectedType( BWProjectTypes.AppSpace);
+				}
+				else
+				{
+					MavenWizardContext.INSTANCE.setSelectedType( BWProjectTypes.None);
+				}
 			}
 		}
 		
@@ -290,55 +291,53 @@ public class WizardPageConfiguration extends WizardPage {
 				break;
 			}
 		}
-		
-		
-		
-		Composite innerContainer = new Composite(container, SWT.NONE);
-		GridLayout layout = new GridLayout();
-		innerContainer.setLayout(layout);
-		layout.numColumns = 2;
+		if(null != info){
+			Composite innerContainer = new Composite(container, SWT.NONE);
+			GridLayout layout = new GridLayout();
+			innerContainer.setLayout(layout);
+			layout.numColumns = 2;
 
-//		Label label = new Label(container, SWT.NONE);
-//		label.setText("Note* : Tibco Home and BW Home values are required to run the Unit-Tests on the Project");
+			//		Label label = new Label(container, SWT.NONE);
+			//		label.setText("Note* : Tibco Home and BW Home values are required to run the Unit-Tests on the Project");
 
-		Label label = new Label(innerContainer, SWT.NONE);
-		label.setText("Note* : Tibco Home and BW Home values are required to run the Unit-Tests defined in the Project.");
-		GridData versionData = new GridData();
-		versionData.horizontalSpan = 2;
-		label.setLayoutData(versionData);
-		
-		Label runTestsLabel = new Label(innerContainer, SWT.NONE);
-		runTestsLabel.setText("Skip Tests:");
+			Label label = new Label(innerContainer, SWT.NONE);
+			label.setText("Note* : Tibco Home and BW Home values are required to run the Unit-Tests defined in the Project.");
+			GridData versionData = new GridData();
+			versionData.horizontalSpan = 2;
+			label.setLayoutData(versionData);
 
-		runTests = new Button(innerContainer, SWT.CHECK);
-		runTests.setSelection( info.getSkipTests() != null && !info.getSkipTests().isEmpty() ? Boolean.parseBoolean(info.getSkipTests()) : false);
-		
-		
+			Label runTestsLabel = new Label(innerContainer, SWT.NONE);
 
-		Label skipLabel = new Label(innerContainer, SWT.NONE);
-		skipLabel.setText("Fail if No Tests :");
-
-		failIfSkip  = new Button(innerContainer, SWT.CHECK);
-		failIfSkip.setSelection( false );
+			runTestsLabel.setText("Skip Tests:");
+			runTests = new Button(innerContainer, SWT.CHECK);
+			runTests.setSelection( info.getSkipTests() != null && !info.getSkipTests().isEmpty() ? Boolean.parseBoolean(info.getSkipTests()) : false);
 
 
-		Label tibcoHomeLabel = new Label(innerContainer, SWT.NONE);
-		tibcoHomeLabel.setText("Tibco Home : ");
 
-		tibcoHome = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-		tibcoHome.setText( info.getTibcoHome() != null && !info.getTibcoHome().isEmpty() ? info.getTibcoHome() : "") ;
-		GridData groupData = new GridData(200, 15);
-		tibcoHome.setLayoutData(groupData);
-		
-		Label bwHomeLabel = new Label(innerContainer, SWT.NONE);
-		bwHomeLabel.setText( "BW Home : ");
+			Label skipLabel = new Label(innerContainer, SWT.NONE);
+			skipLabel.setText("Fail if No Tests :");
 
-		bwHome = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-		bwHome.setText( info.getBwHome() != null && !info.getBwHome().isEmpty() ? info.getBwHome() : "" );
-		GridData artifactData = new GridData(200, 15);
-		bwHome.setLayoutData(artifactData);
+			failIfSkip  = new Button(innerContainer, SWT.CHECK);
+			failIfSkip.setSelection( false );
 
-		
+
+			Label tibcoHomeLabel = new Label(innerContainer, SWT.NONE);
+			tibcoHomeLabel.setText("Tibco Home : ");
+
+			tibcoHome = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
+			tibcoHome.setText( info.getTibcoHome() != null && !info.getTibcoHome().isEmpty() ? info.getTibcoHome() : "") ;
+			GridData groupData = new GridData(200, 15);
+			tibcoHome.setLayoutData(groupData);
+
+			Label bwHomeLabel = new Label(innerContainer, SWT.NONE);
+			bwHomeLabel.setText( "BW Home : ");
+
+			bwHome = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
+			bwHome.setText( info.getBwHome() != null && !info.getBwHome().isEmpty() ? info.getBwHome() : "" );
+			GridData artifactData = new GridData(200, 15);
+			bwHome.setLayoutData(artifactData);
+
+}
 		
 	}
 	
