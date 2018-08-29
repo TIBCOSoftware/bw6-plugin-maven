@@ -104,6 +104,15 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="backup")
 	private boolean backup;
 
+	@Parameter(property="externalProfile")
+	private boolean externalProfile;
+	
+	@Parameter(property="externalProfileLoc")
+	private String externalProfileLoc;
+	
+	@Parameter(property="version")
+	private String version;
+	
 	@Parameter(property="backupLocation")
 	private String backupLocation;
 
@@ -158,7 +167,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
         		agentName = agent.getName();
         		getLog().info("Agent Name -> " + agentName);
         	}
-
+        	version=manifest.getMainAttributes().getValue("Manifest-Version");
     		deployer.getOrCreateDomain(domain, domainDesc);
     		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
     		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
@@ -168,7 +177,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			getLog().info("AppSpace is Running.");
     		}
     		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation);
+    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc);
     		deployer.close();
     	} catch(Exception e) {
     		getLog().error(e);
@@ -239,6 +248,8 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			redeploy = Boolean.parseBoolean(deployment.getProperty("redeploy"));
 			backup = Boolean.parseBoolean(deployment.getProperty("backup"));
 			backupLocation = deployment.getProperty("backupLocation");
+			externalProfile=Boolean.parseBoolean(deployment.getProperty("externalProfile"));
+			externalProfileLoc=deployment.getProperty("externalProfileLoc");
 		} catch(Exception e) {
 			deployToAdmin = false;
 			getLog().error(e);
@@ -315,6 +326,12 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			isValidBackupLoc = false;
 			errorMessage.append("[Backup Location value is required]");
 		}
+		
+		boolean isValidexternalProfileLoc = true;
+		if(externalProfile && externalProfileLoc.isEmpty()) {
+			isValidexternalProfileLoc = false;
+			errorMessage.append("[external Profile Location value is required]");
+		}
 
 		boolean isValidCredential = true;
 		if(agentAuth != null && (Constants.BASIC_AUTH.equalsIgnoreCase(agentAuth) || Constants.DIGEST_AUTH.equalsIgnoreCase(agentAuth))) {
@@ -345,7 +362,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			return false;
 		}
 
-		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL) {
+		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL && isValidexternalProfileLoc) {
 			return true;
 		}
 		return false;
