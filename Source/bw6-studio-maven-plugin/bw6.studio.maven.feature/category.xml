@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/bw6.studio.maven.feature_2.0.0.qualifier.jar" id="bw6.studio.maven.feature" version="2.0.0.qualifier">
+   <feature url="features/bw6.studio.maven.feature_2.0.1.qualifier.jar" id="bw6.studio.maven.feature" version="2.0.1.qualifier">
       <category name="Plugin Code for Apache Maven and TIBCO BusinessWorks™"/>
    </feature>
    <category-def name="Plugin Code for Apache Maven and TIBCO BusinessWorks™" label="Plugin Code for Apache Maven and TIBCO BusinessWorks™"/>

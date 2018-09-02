@@ -60,17 +60,18 @@ public class MavenWizard extends Wizard {
 			}
 
 			MavenWizardContext.INSTANCE.setConfigPage(new WizardPageConfiguration("POM Configuration", project));
-			MavenWizardContext.INSTANCE.setEnterprisePage(new WizardPageEnterprise("Deployment Configuration", project));
-		
-			MavenWizardContext.INSTANCE.setPCFPage(new WizardPagePCF("PCF Deployment Configuration",project));
-			MavenWizardContext.INSTANCE.setDockerPage(new WizardPageDocker("Docker Deployment Configuration", project));
-			MavenWizardContext.INSTANCE.setKubernetesPage(new WizardPageK8S("Kubernetes Deployment Configuration", project));
-			
 			addPage(MavenWizardContext.INSTANCE.getConfigPage());
-			addPage(MavenWizardContext.INSTANCE.getEnterprisePage());
-			addPage(MavenWizardContext.INSTANCE.getPCFPage());
-			addPage(MavenWizardContext.INSTANCE.getDockerPage());
-			addPage(MavenWizardContext.INSTANCE.getKubernetesPage());
+			
+			if(project.getType() == BWProjectType.Application){
+				MavenWizardContext.INSTANCE.setEnterprisePage(new WizardPageEnterprise("Deployment Configuration", project));
+				MavenWizardContext.INSTANCE.setPCFPage(new WizardPagePCF("PCF Deployment Configuration",project));
+				MavenWizardContext.INSTANCE.setDockerPage(new WizardPageDocker("Docker Deployment Configuration", project));
+				MavenWizardContext.INSTANCE.setKubernetesPage(new WizardPageK8S("Kubernetes Deployment Configuration", project));
+				addPage(MavenWizardContext.INSTANCE.getEnterprisePage());
+				addPage(MavenWizardContext.INSTANCE.getPCFPage());
+				addPage(MavenWizardContext.INSTANCE.getDockerPage());
+				addPage(MavenWizardContext.INSTANCE.getKubernetesPage());
+			}
 		}
 		catch(Exception e )
 		{
