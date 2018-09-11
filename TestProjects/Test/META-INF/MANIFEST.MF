@@ -1,0 +1,34 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Test Module
+Bundle-SymbolicName: Test
+Bundle-Version: 1.0.0.qualifier
+Bundle-ClassPath: .,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\boot\spring-boot-starter\2.0.2.RELEASE\spring-boot-starter-2.0.2.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\boot\spring-boot\2.0.2.RELEASE\spring-boot-2.0.2.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\spring-context\5.0.6.RELEASE\spring-context-5.0.6.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\spring-aop\5.0.6.RELEASE\spring-aop-5.0.6.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\spring-beans\5.0.6.RELEASE\spring-beans-5.0.6.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\spring-expression\5.0.6.RELEASE\spring-expression-5.0.6.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\boot\spring-boot-autoconfigure\2.0.2.RELEASE\spring-boot-autoconfigure-2.0.2.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\boot\spring-boot-starter-logging\2.0.2.RELEASE\spring-boot-starter-logging-2.0.2.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\ch\qos\logback\logback-classic\1.2.3\logback-classic-1.2.3.jar,
+ external:C:\Users\ankpande\.m2\repository\ch\qos\logback\logback-core\1.2.3\logback-core-1.2.3.jar,
+ external:C:\Users\ankpande\.m2\repository\org\slf4j\slf4j-api\1.7.25\slf4j-api-1.7.25.jar,
+ external:C:\Users\ankpande\.m2\repository\org\apache\logging\log4j\log4j-to-slf4j\2.10.0\log4j-to-slf4j-2.10.0.jar,
+ external:C:\Users\ankpande\.m2\repository\org\apache\logging\log4j\log4j-api\2.10.0\log4j-api-2.10.0.jar,
+ external:C:\Users\ankpande\.m2\repository\org\slf4j\jul-to-slf4j\1.7.25\jul-to-slf4j-1.7.25.jar,
+ external:C:\Users\ankpande\.m2\repository\javax\annotation\javax.annotation-api\1.3.2\javax.annotation-api-1.3.2.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\spring-core\5.0.6.RELEASE\spring-core-5.0.6.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\springframework\spring-jcl\5.0.6.RELEASE\spring-jcl-5.0.6.RELEASE.jar,
+ external:C:\Users\ankpande\.m2\repository\org\yaml\snakeyaml\1.19\snakeyaml-1.19.jar
+Bundle-Vendor: TIBCO Software Inc.
+TIBCO-BW-Edition: bwe
+TIBCO-BW-Version: 6.5.0 V62 2018-08-07
+Require-Capability: com.tibco.bw.model; filter:="(name=bwext)",
+ com.tibco.bw.module; filter:="(&(name=TestSharedModule)(version=1.0.0))",
+ com.tibco.bw.palette; filter:="(name=bw.generalactivities)"
+TIBCO-BW-ApplicationModule: META-INF/module.bwm
+TIBCO-BW-ConfigProfile: META-INF/default.substvar
+TIBCO-BW-ModuleSharedVariables: META-INF/module.msv
+TIBCO-BW-JobSharedVariables: META-INF/module.jsv

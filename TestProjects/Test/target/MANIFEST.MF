@@ -1,0 +1,17 @@
+Manifest-Version: 1.0.0.201809111136
+Bundle-SymbolicName: Test
+Bundle-ManifestVersion: 2
+TIBCO-BW-Edition: bwe
+Bundle-Vendor: TIBCO Software Inc.
+TIBCO-BW-ModuleSharedVariables: META-INF/module.msv
+Require-Capability: com.tibco.bw.model; filter:="(name=bwext)",com.tib
+ co.bw.module; filter:="(&(name=TestSharedModule)(version=1.0.0))",com
+ .tibco.bw.palette; filter:="(name=bw.generalactivities)"
+TIBCO-BW-ConfigProfile: META-INF/default.substvar
+TIBCO-BW-Version: 6.5.0 V62 2018-08-07
+Bundle-Name: Test Module
+Bundle-Version: 1.0.0.201809111136
+Bundle-ClassPath: .
+TIBCO-BW-ApplicationModule: META-INF/module.bwm
+TIBCO-BW-JobSharedVariables: META-INF/module.jsv
+

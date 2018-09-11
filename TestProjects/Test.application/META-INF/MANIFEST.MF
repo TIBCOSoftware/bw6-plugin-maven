@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Test Application
+Bundle-SymbolicName: Test.application
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: TIBCO Software Inc.
+TIBCO-BW-Version: 6.5.0 V62 2018-08-07
+TIBCO-BW-Edition: bwe
+TIBCO-BW-Application: META-INF/TIBCO.xml
+TIBCO-BW-ConfigProfile: META-INF/default.substvar

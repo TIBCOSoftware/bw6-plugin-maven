@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: TestSharedModule Module
+Bundle-SymbolicName: TestSharedModule
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: TIBCO Software Inc.
+TIBCO-BW-ConfigProfile: META-INF/default.substvar
+TIBCO-BW-SharedModule: META-INF/module.bwm
+TIBCO-BW-Edition: bwe
+TIBCO-BW-JobSharedVariables: META-INF/module.jsv
+Require-Capability: com.tibco.bw.model; filter:="(name=bwext)"
+TIBCO-BW-ModuleSharedVariables: META-INF/module.msv
+Provide-Capability: com.tibco.bw.module; name="TestSharedModule"; version:Version="1.0.0",
+ com.tibco.bw.processes; name="testsharedmodule"
+TIBCO-BW-Version: 6.5.0 V62 2018-08-07
