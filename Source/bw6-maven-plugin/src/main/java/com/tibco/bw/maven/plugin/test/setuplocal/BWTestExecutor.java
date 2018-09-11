@@ -34,7 +34,7 @@ public class BWTestExecutor
 		{
 			if( BWTestConfig.INSTANCE.getEngineProcess() != null )
 			{
-				BWTestConfig.INSTANCE.getEngineProcess().destroyForcibly();
+				//BWTestConfig.INSTANCE.getEngineProcess().destroyForcibly();
 			}
 			if( BWTestConfig.INSTANCE.getConfigDir() != null )
 			{

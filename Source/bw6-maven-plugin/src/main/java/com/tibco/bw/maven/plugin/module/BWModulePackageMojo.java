@@ -58,6 +58,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 
     @Component
     private MavenSession session;
+	
 
     @Component
     private MavenProject project;
@@ -84,6 +85,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
     	try {
+    		System.out.println(System.getProperty("project.basedir"));
     		getLog().info("Module Packager Mojo started for Module " + project.getName() + " ...");
             MavenArchiver archiver = new MavenArchiver();
 
