@@ -26,7 +26,6 @@
         <extensions>true</extensions>
         <configuration>
           <outputDirectory>target/test-harness/test</outputDirectory>
-          <projectBasedir>../Test.application</projectBasedir>
           <project implementation="com.tibco.bw.maven.plugin.test.stub.BWMavenPluginEarStub" />
           <session implementation="com.tibco.bw.maven.plugin.test.stub.MavenSessionForEarSubStub" />
         </configuration>
