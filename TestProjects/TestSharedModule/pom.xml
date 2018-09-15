@@ -21,7 +21,6 @@
         <extensions>true</extensions>
         <configuration>
           <outputDirectory>target/test-harness/test</outputDirectory>
-          <projectBasedir>../TestSharedModule</projectBasedir>
           <project implementation="com.tibco.bw.maven.plugin.test.stub.BWMavenPluginSharedModuleStub" />
           <session implementation="com.tibco.bw.maven.plugin.test.stub.MavenSessionforSharedModuleSubStub" />
         </configuration>
