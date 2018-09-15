@@ -29,7 +29,6 @@
         <extensions>true</extensions>
         <configuration>
           <outputDirectory>target/test-harness/test</outputDirectory>
-          <projectBasedir>../Test</projectBasedir>
           <project implementation="com.tibco.bw.maven.plugin.test.stub.BWMavenPluginJarStub" />
           <session implementation="com.tibco.bw.maven.plugin.test.stub.MavenSessionforJarSubStub" />
         </configuration>
