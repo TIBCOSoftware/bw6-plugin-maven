@@ -52,9 +52,9 @@ public class MvnInstallExecutor {
 				break;
 			}
 			if (fSettings.delete()){
-				logger.info("The "+fSettings.getAbsolutePath()+" temporal file was delete sucessfull");
+				logger.info("The "+fSettings.getAbsolutePath()+" Temporal file is deleted sucessfully");
 			}else{
-				logger.warn("The "+fSettings.getAbsolutePath()+" temporal file wasn't delete");
+				logger.warn("The "+fSettings.getAbsolutePath()+" Temporal file is not deleted");
 			}
 			Dependency dep = new Dependency();
 			dep.setGroupId("tempbw");
