@@ -20,7 +20,7 @@ public class TestBWAModuleMojo extends AbstractMojoTestCase {
 	protected void setUp() throws Exception {		
 		super.setUp();
 		pom = new File( prop.getModulepath(),"pom.xml" );
-		System.out.println(pom+"::: pom");
+	
 	}
 	public void testexecute() throws Exception {
 		try {

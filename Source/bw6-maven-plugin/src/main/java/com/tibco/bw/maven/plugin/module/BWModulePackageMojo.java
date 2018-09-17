@@ -53,7 +53,7 @@ public class BWModulePackageMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.build.directory}", property = "outputDir", required = true)
     private File outputDirectory;
 
-	@Parameter(property="project.basedir")
+	@Parameter(defaultValue = "${project.basedir}")
 	private File projectBasedir;
 
     @Component
@@ -85,7 +85,12 @@ public class BWModulePackageMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
     	try {
-    		System.out.println(System.getProperty("project.basedir"));
+    		System.out.println("projectBasedir before::"+projectBasedir);
+    		
+    		if(projectBasedir==null || projectBasedir.toString().contains("project.basedir") ){
+    			projectBasedir = project.getBasedir();    			  			
+    		}
+    		System.out.println("projectBasedir after::"+projectBasedir);
     		getLog().info("Module Packager Mojo started for Module " + project.getName() + " ...");
             MavenArchiver archiver = new MavenArchiver();
 

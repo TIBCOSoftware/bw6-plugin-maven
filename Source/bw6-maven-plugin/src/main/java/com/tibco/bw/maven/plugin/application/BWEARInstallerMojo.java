@@ -115,7 +115,11 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	private String applicationName;
 
     public void execute() throws MojoExecutionException {
-    	try {    		
+    	try {
+
+    		if(projectBasedir==null || projectBasedir.toString().contains("project.basedir") ){
+    			projectBasedir = project.getBasedir();    			  			
+    		}
     		getLog().info("BWEAR Installer Mojo started ...");
     		Manifest manifest = ManifestParser.parseManifest(projectBasedir);
     		String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);

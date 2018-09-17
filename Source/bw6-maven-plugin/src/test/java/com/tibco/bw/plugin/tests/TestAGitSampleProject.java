@@ -2,12 +2,8 @@ package com.tibco.bw.plugin.tests;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
-import org.apache.maven.shared.utils.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
@@ -57,6 +53,7 @@ public class TestAGitSampleProject extends AbstractMojoTestCase {
 	private void createGitClone(){
 		Git git = null;
 		try {
+			System.out.println("Cloning Sample Projects from Git....");
 			git = Git
 					.cloneRepository()
 					.setURI("https://github.com/TIBCOSoftware/bw6-plugin-maven.git")
@@ -66,7 +63,7 @@ public class TestAGitSampleProject extends AbstractMojoTestCase {
 					.setBranchesToClone(
 							Collections.singleton("refs/heads/unittest"))
 					.setBranch("refs/heads/unittest").call();
-			
+			System.out.println("Completed Cloning");
 
 		} catch (GitAPIException e) {
 			e.printStackTrace();

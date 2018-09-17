@@ -53,12 +53,12 @@ public class BWMavenPluginProjectStub
         setUrl( model.getUrl() );
         setPackaging( model.getPackaging() );
         setFile(new File( file, "pom.xml" ));
-        
         Artifact artifact = new MyArtifactStub(getGroupId(), getArtifactId(), getVersion(), null, getPackaging());
         artifact.setArtifactHandler(new DefaultArtifactHandlerStub(getPackaging()));
         artifact.setBaseVersion(getVersion());
         //artifact.setFile(destination);
         setArtifact(artifact);
+        
         //setRemoteArtifactRepositories(getRemoteArtifactRepositories());
         
         Set<Artifact> hSet = new HashSet<Artifact>();

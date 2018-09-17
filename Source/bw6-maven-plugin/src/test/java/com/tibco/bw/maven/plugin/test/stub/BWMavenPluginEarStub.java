@@ -11,10 +11,9 @@ public class BWMavenPluginEarStub extends BWMavenPluginProjectStub {
 		super(prop.getApplicationpath());
 
 	}
-
-	@Override
-	public File getBasedir() {
-		return prop.getApplicationpath();
-	}
-
+	/** {@inheritDoc} */
+	 public File getBasedir()
+	    {
+	        return getFile().getParentFile() ;
+	    }
 }

@@ -12,9 +12,15 @@ public class BWMavenPluginSharedModuleStub extends BWMavenPluginProjectStub {
 
 	}
 
-	@Override
+	/*@Override
 	public File getBasedir() {
 		return prop.getSharedModulepath();
-	}
+	}*/
+	
+	/** {@inheritDoc} */
+    public File getBasedir()
+    {
+        return getFile().getParentFile() ;
+    }
 
 }
