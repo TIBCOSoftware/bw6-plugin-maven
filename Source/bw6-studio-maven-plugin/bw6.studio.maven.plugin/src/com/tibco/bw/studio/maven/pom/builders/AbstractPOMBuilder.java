@@ -760,22 +760,17 @@ public abstract class AbstractPOMBuilder {
 	protected void initializeModel() {
 		File pomFile = module.getPomfileLocation();
 		model = readModel(pomFile);
-		if(model == null) {
-			model = new Model();
-		}
 	}
 
 	protected Model readModel(File pomXmlFile) {
 		Model model = null;
-		try {
-			Reader reader = new FileReader(pomXmlFile);
-			try {
-				MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
+		try (Reader reader = new FileReader(pomXmlFile)) {
+			MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
+			if (pomXmlFile.length() != 0)
 				model = xpp3Reader.read(reader);
-			} finally {
-				reader.close();
-			}
-		} catch(Exception e) {
+			else
+				model = new Model();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return model;

@@ -61,6 +61,10 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 								bwEdition = "docker";
 								break;
 							
+							case None:
+								bwEdition = "bw6";
+								break;
+								
 							default:
 								break;
 							}
