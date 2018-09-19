@@ -47,13 +47,13 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 		for(MavenProject project : projects) {
 			if(project.getPackaging().equals("bwmodule")) {
 				logger.debug("Checking JAR dependencies for Project " + project.getName());
-				addJARToDependency(project);
+				addJARToDependency(session, project);
 			}
 		}
 		super.afterProjectsRead(session);
 	}
 
-	public void addJARToDependency(MavenProject project) {
+	public void addJARToDependency(MavenSession session, MavenProject project) {
 		File baseDir = project.getBasedir();
 		File[] list = BWFileUtils.getFilesForTypeRec(baseDir, project.getBuild().getDirectory(), ".jar");
 		if(list == null || list.length == 0) {
@@ -67,7 +67,7 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 				continue;
 			}
 			logger.debug("Adding JAR to Local Maven Repo " + file.toString()) ;
-			executor.execute(project.getModel(), file);
+			executor.execute(project.getModel(), file, session);
 		}
 	}
 
