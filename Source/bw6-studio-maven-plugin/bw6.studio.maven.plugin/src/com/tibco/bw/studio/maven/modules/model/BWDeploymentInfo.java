@@ -24,9 +24,11 @@ public class BWDeploymentInfo {
 	private String httpPort = "";
 	private String osgiPort = "";
 	private String profile = "";
-	private boolean redeploy = true;
-	private boolean backup = true;
+	private boolean redeploy = false;
+	private boolean backup = false;
 	private String backupLocation = "";
+	private boolean externalProfile = false;
+	private String externalProfileLoc = "";
 	private List<String> profiles = new ArrayList<String>();
 
 	public boolean isDeployToAdmin() {
@@ -156,7 +158,22 @@ public class BWDeploymentInfo {
 	public void setBackupLocation(String backupLocation) {
 		this.backupLocation = backupLocation;
 	}
+	public boolean isexternalProfile() {
+		return externalProfile;
+	}
 
+	public void setexternalProfile(boolean externalProfile) {
+		this.externalProfile = externalProfile;
+	}
+
+	public String getexternalProfileLoc() {
+		return externalProfileLoc;
+	}
+
+	public void setexternalProfileLoc(String externalProfileLoc) {
+		this.externalProfileLoc = externalProfileLoc;
+	}
+	
 	public String getAgentUsername() {
 		return agentUsername;
 	}
