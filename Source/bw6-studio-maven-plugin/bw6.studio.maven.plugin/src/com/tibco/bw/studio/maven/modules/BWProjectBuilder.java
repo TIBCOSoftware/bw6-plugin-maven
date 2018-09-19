@@ -32,7 +32,9 @@ import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 import com.tibco.bw.studio.maven.modules.model.BWSharedModule;
 import com.tibco.bw.studio.maven.modules.model.BWTestInfo;
+import com.tibco.bw.studio.maven.preferences.MavenDefaultsPreferencePage;
 import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
+import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
 import com.tibco.bw.studio.maven.wizard.BWProjectTypes;
 
 public class BWProjectBuilder {
@@ -76,7 +78,7 @@ public class BWProjectBuilder {
 
 	private BWParent buildParent(BWApplication application) throws Exception {
 		BWParent module = new BWParent();
-		module.setGroupId(MavenProjectPreferenceHelper.INSTANCE.getDefaultGroupID("com.tibco.bw"));
+		module.setGroupId(MavenProjectPreferenceHelper.INSTANCE.getDefaultGroupID(MavenPropertiesFileDefaults.INSTANCE.getDefaultGroupID("com.tibco.bw")));
 		module.setArtifactId(application.getArtifactId() + ".parent");
 		module.setVersion(application.getVersion());
 		File parent = new File(application.getPomfileLocation().getParentFile().getParent() + File.separator + application.getArtifactId() + ".parent");
@@ -108,7 +110,7 @@ public class BWProjectBuilder {
 			if(model != null) {
 				module.setMavenModel(model);
 				module.setArtifactId(model.getArtifactId());
-				module.setGroupId(MavenProjectPreferenceHelper.INSTANCE.getDefaultGroupID("com.tibco.bw"));
+				module.setGroupId(MavenProjectPreferenceHelper.INSTANCE.getDefaultGroupID(MavenPropertiesFileDefaults.INSTANCE.getDefaultGroupID("com.tibco.bw")));
 			}
 		}
 		module.setPomfileLocation(pomFileAbs);
@@ -263,7 +265,7 @@ BWTestInfo testInfo = application.getTestInfo();
 		module.setArtifactId(artifactId);
 		module.setName((headers.get("Bundle-Name")));
 		module.setVersion(VersionHelper.getOSGi2MavenVersion((headers.get("Bundle-Version"))));
-		module.setGroupId(MavenProjectPreferenceHelper.INSTANCE.getDefaultGroupID("com.tibco.bw"));
+		module.setGroupId(MavenProjectPreferenceHelper.INSTANCE.getDefaultGroupID(MavenPropertiesFileDefaults.INSTANCE.getDefaultGroupID("com.tibco.bw")));
 		
 		IFile pomFile = project.getFile("/pom.xml");
 		File pomFileAbs = pomFile.getRawLocation().toFile();
