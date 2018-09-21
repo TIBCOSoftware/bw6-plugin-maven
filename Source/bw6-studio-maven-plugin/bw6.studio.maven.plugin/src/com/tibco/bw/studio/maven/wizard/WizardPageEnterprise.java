@@ -17,6 +17,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Widget;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
@@ -49,6 +50,7 @@ public class WizardPageEnterprise extends WizardPage {
 	private Button redeploy;
 	private Button backup;
 	private Text backupLocation;
+	private Text externalProfileLoc;
 	private Text httpPort;
 	private Text osgiPort;
 	private Combo profile;
@@ -56,7 +58,7 @@ public class WizardPageEnterprise extends WizardPage {
 	private BWDeploymentInfo info;
 	private static final String BASIC_AUTH = "BASIC";
 	private static final String DIGEST_AUTH = "DIGEST";
-
+	private int index=0;
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;		 
@@ -130,6 +132,12 @@ public class WizardPageEnterprise extends WizardPage {
 			isValidBackupLoc = false;
 			errorMessage.append("[Backup Location value is required]");
 		}
+		
+		boolean isValidexternalProfileLoc = true;
+		if(profile.getItem(index)=="other" && externalProfileLoc.getText().isEmpty()) {
+			isValidexternalProfileLoc = false;
+			errorMessage.append("[external Profile Location value is required]");
+		}
 
 		boolean isValidCredential = true;
 		if(agentAuth.getText() != null && (BASIC_AUTH.equalsIgnoreCase(agentAuth.getText()) || DIGEST_AUTH.equalsIgnoreCase(agentAuth.getText()))) {
@@ -159,7 +167,7 @@ public class WizardPageEnterprise extends WizardPage {
 			setErrorMessage(errorMessage.toString());
 			return false;
 		}
-		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL) {
+		if(isValidHost && isValidPort && isValidDomain && isValidAppSpace && isValidAppNode && isValidHTTPPort && isValidOSGi && isValidBackupLoc && isValidCredential && isValidSSL && isValidexternalProfileLoc) {
 			return true;
 		}
 		return false;
@@ -239,6 +247,8 @@ public class WizardPageEnterprise extends WizardPage {
 				info.setRedeploy(redeploy.getSelection());
 				info.setBackup(backup.getSelection());
 				info.setBackupLocation(backupLocation.getText());
+				info.setexternalProfile(info.isexternalProfile());
+				info.setexternalProfileLoc(externalProfileLoc.getText());
 			}
 			module.setOverridePOM(true);
 		}
@@ -473,11 +483,12 @@ public class WizardPageEnterprise extends WizardPage {
 		profileLabel.setText("Profile");
 
 		profile = new Combo(container, SWT.BORDER | SWT.SINGLE);
-		List<String> profiles = getProfiles(); 
+		final List<String> profiles = getProfiles(); 
 		for(String name : profiles) {
 			profile.add(name);
 		}
-		int index = getSelectedProfile(profiles);
+		profile.add("other");
+		index = getSelectedProfile(profiles);
 		if(index != -1) {
 			profile.select(index);	
 		}
@@ -485,8 +496,43 @@ public class WizardPageEnterprise extends WizardPage {
 		GridData profileData = new GridData(135, 15);
 		profileData.horizontalSpan = 3;
 		profile.setLayoutData(profileData);
+		profile.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				index=profile.getSelectionIndex();
+				if(profile.getItem(index).equalsIgnoreCase("other")){
+					info.setexternalProfile(true);
+					externalProfileLoc.setEnabled(true);
+				}
+				else{
+					externalProfileLoc.setEnabled(false);
+				}
+				
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});	
+		addexternalProfileBox();
 		addRedeployBox();
 		addBackupEarBox();
+		
+	}
+
+	private void addexternalProfileBox() {
+
+		Label externalProfileLocLabel = new Label(container, SWT.NONE);
+		externalProfileLocLabel.setText("External Profile Location");
+		externalProfileLoc = new Text(container, SWT.BORDER | SWT.SINGLE);
+		externalProfileLoc.setText(info.getexternalProfileLoc());
+		GridData externalProfileLocData = new GridData(150, 15);
+		externalProfileLoc.setLayoutData(externalProfileLocData);
+		externalProfileLoc.setEnabled(false);
+
 	}
 
 	private void addRedeployBox() {
@@ -498,8 +544,8 @@ public class WizardPageEnterprise extends WizardPage {
 		domainLabel.setText("Re Deploy the Application if exists.");
 		domainLabel.setToolTipText("Re Deploy the Application if exists.");
 
-		GridData deployData = new GridData(350, 15);
-		deployData.horizontalSpan = 3;
+		GridData deployData = new GridData(350, 25);
+		deployData.horizontalSpan = 1;
 
 		domainLabel.setLayoutData(deployData);
 	}
@@ -511,8 +557,9 @@ public class WizardPageEnterprise extends WizardPage {
 		Label backupLabel = new Label(container, SWT.NONE);
 		backupLabel.setText("Backup Application EAR if exists.");
 		backupLabel.setToolTipText("Backup Application EAR if exists.");
-		GridData backupData = new GridData(350, 15);
-		backupData.horizontalSpan = 3;
+		GridData backupData = new GridData(350, 25);
+		backupData.horizontalAlignment = GridData.BEGINNING;
+		backupData.horizontalSpan = 0;
 		backupLabel.setLayoutData(backupData);
 
 		Label backupLocLabel = new Label(container, SWT.NONE);
@@ -520,11 +567,20 @@ public class WizardPageEnterprise extends WizardPage {
 		backupLocation = new Text(container, SWT.BORDER | SWT.SINGLE);
 		backupLocation.setText(info.getBackupLocation());
 		GridData backupLocationData = new GridData(150, 15);
-		backupLocation.setLayoutData(backupLocationData);
+		backupLocationData.horizontalAlignment = GridData.FILL;
 
+		backupLocation.setLayoutData(backupLocationData);
+		backupLocation.setEnabled(false);
 		backup.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				if(info.isBackup()==false){
+					info.setBackup(true);
+				}
+				else{
+					info.setBackup(false);
+				}
+				backup.setSelection(info.isBackup());
 				if(backup.getSelection()) {
 					backupLocation.setEnabled(true);
 				} else {
