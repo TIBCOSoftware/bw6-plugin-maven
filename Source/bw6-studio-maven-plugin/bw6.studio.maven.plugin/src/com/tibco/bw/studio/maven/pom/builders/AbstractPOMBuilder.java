@@ -26,6 +26,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
+import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.modules.model.BWApplication;
 import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
@@ -33,11 +34,13 @@ import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWPCFServicesModule;
 import com.tibco.bw.studio.maven.modules.model.BWParent;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.wizard.MavenWizardContext;
 
 public abstract class AbstractPOMBuilder {
 	protected BWProject project; 
 	protected BWModule module;
 	protected Model model;
+	protected static String bwEdition=null;
 
 	protected void addParent(BWParent parentModule) {
 		Parent parent = new Parent();
@@ -772,22 +775,17 @@ public abstract class AbstractPOMBuilder {
 	protected void initializeModel() {
 		File pomFile = module.getPomfileLocation();
 		model = readModel(pomFile);
-		if(model == null) {
-			model = new Model();
-		}
 	}
 
 	protected Model readModel(File pomXmlFile) {
 		Model model = null;
-		try {
-			Reader reader = new FileReader(pomXmlFile);
-			try {
-				MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
+		try (Reader reader = new FileReader(pomXmlFile)) {
+			MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
+			if (pomXmlFile.length() != 0)
 				model = xpp3Reader.read(reader);
-			} finally {
-				reader.close();
-			}
-		} catch(Exception e) {
+			else
+				model = new Model();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return model;
@@ -814,5 +812,48 @@ public abstract class AbstractPOMBuilder {
 			profiles.add(profile);
 		}
 		model.setProfiles(profiles);
+	}
+	protected static String setBwEdition(BWModule module)throws Exception{
+		Map<String, String> manifest = ManifestParser.parseManifest(module.getProject());
+		if (manifest.containsKey("TIBCO-BW-Edition") )				
+		{
+			String editions = manifest.get( "TIBCO-BW-Edition" );				
+			String[] editionList = editions.split(",");
+				for( String str : editionList )
+				{
+					switch ( str )
+					{
+					case "bwe":
+						bwEdition = "bw6";
+						break;
+
+					case "bwcf":
+						
+							switch ( MavenWizardContext.INSTANCE.getSelectedType() )
+							{
+							case PCF:
+								bwEdition = "cf";
+								break;
+								
+							case Docker:
+								bwEdition = "docker";
+								break;
+							
+							case None:
+								bwEdition = "bw6";
+								break;
+								
+							default:
+								break;
+							}
+						
+						break;
+				default:
+						break;
+					}
+					
+				}
+		}
+		return bwEdition;
 	}
 }
