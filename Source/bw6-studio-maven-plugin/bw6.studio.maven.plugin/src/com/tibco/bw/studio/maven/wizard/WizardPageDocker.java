@@ -22,7 +22,9 @@ import com.tibco.bw.studio.maven.modules.model.BWDockerModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.preferences.MavenDefaultsPreferencePage;
 import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
+import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
 
 public class WizardPageDocker extends WizardPage {
 	private Composite container;
@@ -139,7 +141,7 @@ public class WizardPageDocker extends WizardPage {
 		targetLabel.setText("Docker Host");
 
 		dockerHost = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDockerURL("tcp://0.0.0.0:2376"));
+		dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_URL(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_URL("tcp://0.0.0.0:2376")));
 		GridData dockerHostData = new GridData(200, 15);
 		dockerHost.setLayoutData(dockerHostData);
 
@@ -147,7 +149,7 @@ public class WizardPageDocker extends WizardPage {
 		certLabel.setText("Cert Path");
 
 		dockerHostCertPath = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHostCertPath.setText("</home/user/machine/>");
+		dockerHostCertPath.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_CertPath(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_CertPath("</home/user/machine/>")));
 		GridData dockerHostCertData = new GridData(200, 15);
 		dockerHostCertPath.setLayoutData(dockerHostCertData);
 
@@ -155,7 +157,7 @@ public class WizardPageDocker extends WizardPage {
 		imgNameLabel.setText("Image Name");
 
 		dockerImageName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageName.setText("gcr.io/<project_id>/<image-name>");
+		dockerImageName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_ImageName(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_ImageName("gcr.io/<project_id>/<image-name>")));
 		GridData dockerImgNameData = new GridData(200, 15);
 		dockerImageName.setLayoutData(dockerImgNameData);
 
@@ -163,7 +165,7 @@ public class WizardPageDocker extends WizardPage {
 		imgFromLabel.setText("BWCE Image");
 
 		dockerImageFrom = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageFrom.setText("tibco/bwce");
+		dockerImageFrom.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_BWCEImage(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_BWCEImage("tibco/bwce")));
 		GridData imgFromData = new GridData(100, 15);
 		dockerImageFrom.setLayoutData(imgFromData);
 		
@@ -198,7 +200,7 @@ public class WizardPageDocker extends WizardPage {
 		maintainerLabel.setText("Maintainer");
 
 		dockerImageMaintainer = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageMaintainer.setText("abc@tibco.com");
+		dockerImageMaintainer.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_Maintainer(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_Maintainer("abc@tibco.com")));
 		GridData maintainerData = new GridData(200, 15);
 
 		dockerImageMaintainer.setLayoutData(maintainerData);
@@ -218,12 +220,12 @@ public class WizardPageDocker extends WizardPage {
 			public void widgetSelected(SelectionEvent e) {
 				if (dkr.getSelection()) {
 					dockerAppName.setEditable(true);
-					dockerAppName.setText("BWCEAPP");
+					dockerAppName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_AppName(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_AppName("BWCEAPP")));
 					dockerVolume.setEditable(true);
 					dockerLink.setEditable(true);
 					dockerEnv.setEditable(true);
 					dockerPort.setEditable(true);
-					dockerPort.setText("18080:8080,17777:7777");
+					dockerPort.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_Ports(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_Ports("18080:8080,17777:7777")));
 					container.layout();
 				} else {
 					dockerAppName.setEditable(false);

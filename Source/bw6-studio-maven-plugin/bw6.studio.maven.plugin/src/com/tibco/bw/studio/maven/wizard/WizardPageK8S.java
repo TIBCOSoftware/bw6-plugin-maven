@@ -23,6 +23,8 @@ import org.eclipse.swt.widgets.Text;
 import com.tibco.bw.studio.maven.modules.model.BWK8SModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
+import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
 
 public class WizardPageK8S extends WizardPage {
 	private Composite container;
@@ -81,7 +83,7 @@ public class WizardPageK8S extends WizardPage {
 		rcLabel.setText("Deployment Name");
 
 		rcName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		rcName.setText("bwce-sample");
+		rcName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_DeploymentName(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_DeploymentName("bwce-sample")));
 		GridData rcData = new GridData(200, 15);
 		rcName.setLayoutData(rcData);
 
@@ -91,7 +93,7 @@ public class WizardPageK8S extends WizardPage {
 		replicaLabel.setText("No Of Replicas");
 
 		numOfReplicas = new Text(container, SWT.BORDER | SWT.SINGLE);
-		numOfReplicas.setText("1");
+		numOfReplicas.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_NoOfReplicas(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_NoOfReplicas("1")));
 		GridData replicaData = new GridData(50, 15);
 		numOfReplicas.setLayoutData(replicaData);
 		
@@ -100,7 +102,7 @@ public class WizardPageK8S extends WizardPage {
 		srvNameLabel.setText("Service Name");
 
 		serviceName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		serviceName.setText("bwce-sample-service");
+		serviceName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ServiceName(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ServiceName("bwce-sample-service")));
 		GridData serviceNamData = new GridData(200, 15);
 		serviceName.setLayoutData(serviceNamData);
 
@@ -108,7 +110,7 @@ public class WizardPageK8S extends WizardPage {
 		srvTypeLabel.setText("Service Type");
 
 		serviceType = new Text(container, SWT.BORDER | SWT.SINGLE);
-		serviceType.setText("LoadBalancer");
+		serviceType.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ServiceType(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ServiceType("LoadBalancer")));
 		GridData serviceTypeData = new GridData(200, 15);
 		serviceType.setLayoutData(serviceTypeData);
 
@@ -116,7 +118,7 @@ public class WizardPageK8S extends WizardPage {
 		contPortLabel.setText("Container Port");
 
 		containerPort = new Text(container, SWT.BORDER | SWT.SINGLE);
-		containerPort.setText("8080");
+		containerPort.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ContainerPort(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ContainerPort("8080")));
 		GridData contPortData = new GridData(50, 15);
 		containerPort.setLayoutData(contPortData);
 
@@ -124,7 +126,7 @@ public class WizardPageK8S extends WizardPage {
 		namespaceLabel.setText("K8S Namespace");
 
 		k8sNamespace = new Text(container, SWT.BORDER | SWT.SINGLE);
-		k8sNamespace.setText("default");
+		k8sNamespace.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_K8SNamespace(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_K8SNamespace("default")));
 		GridData namespcData = new GridData(100, 15);
 		k8sNamespace.setLayoutData(namespcData);
 
@@ -132,7 +134,7 @@ public class WizardPageK8S extends WizardPage {
 		envVarsLabel.setText("Env Vars");
 
 		k8sEnvVars = new Text(container, SWT.BORDER | SWT.SINGLE);
-		k8sEnvVars.setText("APP_CONFIG_PROFILE=docker, abc=xyz");
+		k8sEnvVars.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_EnvVars("APP_CONFIG_PROFILE=docker, abc=xyz")));
 		GridData envvarData = new GridData(400, 15);
 		envvarData.horizontalSpan = 3;
 		k8sEnvVars.setLayoutData(envvarData);
