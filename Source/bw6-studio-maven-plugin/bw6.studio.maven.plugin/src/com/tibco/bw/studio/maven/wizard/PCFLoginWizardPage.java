@@ -20,6 +20,8 @@ import org.eclipse.swt.widgets.Text;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
+import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
 
 public class PCFLoginWizardPage extends WizardPage {
 	private BWProject project;
@@ -68,7 +70,7 @@ public class PCFLoginWizardPage extends WizardPage {
 		usernameLabel.setText("Username");
 
 		username = new Text(container, SWT.BORDER | SWT.SINGLE);
-		username.setText("admin");
+		username.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_Username(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_Username("admin")));
 		GridData usernameData = new GridData(150, 15);
 		username.setLayoutData(usernameData);
 

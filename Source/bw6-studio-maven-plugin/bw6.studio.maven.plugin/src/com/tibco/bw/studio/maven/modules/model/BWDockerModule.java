@@ -13,6 +13,8 @@ public class BWDockerModule {
 	
 	private String dockerImageFrom;
 	
+	private boolean autoPullImage;
+	
 	private String dockerImageMaintainer;
 	
 	private String dockerAppName;
@@ -59,6 +61,14 @@ public class BWDockerModule {
 
 	public void setDockerImageFrom(String dockerImageFrom) {
 		this.dockerImageFrom = dockerImageFrom;
+	}
+	
+	public boolean isAutoPullImage() {
+		return autoPullImage;
+	}
+
+	public void setAutoPullImage(boolean autoPullImage) {
+		this.autoPullImage = autoPullImage;
 	}
 
 	public String getDockerImageMaintainer() {
@@ -122,6 +132,8 @@ public class BWDockerModule {
 	public void setPlatform(String platform) {
 		this.platform = platform;
 	}
+
+	
 
 
 	

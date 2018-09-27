@@ -22,7 +22,9 @@ import com.tibco.bw.studio.maven.modules.model.BWDockerModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.preferences.MavenDefaultsPreferencePage;
 import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
+import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
 
 public class WizardPageDocker extends WizardPage {
 	private Composite container;
@@ -31,6 +33,8 @@ public class WizardPageDocker extends WizardPage {
 	private Text dockerHostCertPath;
 	private Text dockerImageName;
 	private Text dockerImageFrom;
+	private Button autoPullImage;
+	private boolean isAutoPull;
 	private Text dockerImageMaintainer;
 	private Text dockerAppName;
 	private Text dockerVolume;
@@ -137,7 +141,7 @@ public class WizardPageDocker extends WizardPage {
 		targetLabel.setText("Docker Host");
 
 		dockerHost = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDockerURL("tcp://0.0.0.0:2376"));
+		dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_URL(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_URL("tcp://0.0.0.0:2376")));
 		GridData dockerHostData = new GridData(200, 15);
 		dockerHost.setLayoutData(dockerHostData);
 
@@ -145,7 +149,7 @@ public class WizardPageDocker extends WizardPage {
 		certLabel.setText("Cert Path");
 
 		dockerHostCertPath = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHostCertPath.setText("</home/user/machine/>");
+		dockerHostCertPath.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_CertPath(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_CertPath("</home/user/machine/>")));
 		GridData dockerHostCertData = new GridData(200, 15);
 		dockerHostCertPath.setLayoutData(dockerHostCertData);
 
@@ -153,7 +157,7 @@ public class WizardPageDocker extends WizardPage {
 		imgNameLabel.setText("Image Name");
 
 		dockerImageName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageName.setText("gcr.io/<project_id>/<image-name>");
+		dockerImageName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_ImageName(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_ImageName("gcr.io/<project_id>/<image-name>")));
 		GridData dockerImgNameData = new GridData(200, 15);
 		dockerImageName.setLayoutData(dockerImgNameData);
 
@@ -161,20 +165,54 @@ public class WizardPageDocker extends WizardPage {
 		imgFromLabel.setText("BWCE Image");
 
 		dockerImageFrom = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageFrom.setText("tibco/bwce");
+		dockerImageFrom.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_BWCEImage(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_BWCEImage("tibco/bwce")));
 		GridData imgFromData = new GridData(100, 15);
 		dockerImageFrom.setLayoutData(imgFromData);
+		
+		Label autoPullLabel = new Label(container, SWT.NONE);
+		autoPullLabel.setText("Auto Pull Base Image");
+		GridData autoPullData = new GridData(50, 15);
+		autoPullImage= new Button(container, SWT.CHECK);
+		autoPullImage.setSelection(false);
+		autoPullImage.setLayoutData(autoPullData);
+		autoPullImage.addSelectionListener(new SelectionListener(){
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if(autoPullImage.getSelection()){
+					isAutoPull= true;
+				}
+				else{
+					isAutoPull= false;
+				}
+				
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				
+				
+			}
+			
+		});
 
 		Label maintainerLabel = new Label(container, SWT.NONE);
 		maintainerLabel.setText("Maintainer");
 
 		dockerImageMaintainer = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageMaintainer.setText("abc@tibco.com");
+		dockerImageMaintainer.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_Maintainer(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_Maintainer("abc@tibco.com")));
 		GridData maintainerData = new GridData(200, 15);
-		maintainerData.horizontalSpan = 3;
-		dockerImageMaintainer.setLayoutData(maintainerData);
 
-		final Button dkr = new Button(container, SWT.CHECK);
+		dockerImageMaintainer.setLayoutData(maintainerData);
+		
+		
+		Composite innerContainer = new Composite(container, SWT.NONE);
+
+		GridLayout layout = new GridLayout();
+		innerContainer.setLayout(layout);
+		layout.numColumns = 2;
+		final Button dkr = new Button(innerContainer, SWT.CHECK);
+		
 		dkr.setSelection(false);
 
 		dkr.addSelectionListener(new SelectionListener() {
@@ -182,12 +220,12 @@ public class WizardPageDocker extends WizardPage {
 			public void widgetSelected(SelectionEvent e) {
 				if (dkr.getSelection()) {
 					dockerAppName.setEditable(true);
-					dockerAppName.setText("BWCEAPP");
+					dockerAppName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_AppName(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_AppName("BWCEAPP")));
 					dockerVolume.setEditable(true);
 					dockerLink.setEditable(true);
 					dockerEnv.setEditable(true);
 					dockerPort.setEditable(true);
-					dockerPort.setText("18080:8080,17777:7777");
+					dockerPort.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_Ports(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_Ports("18080:8080,17777:7777")));
 					container.layout();
 				} else {
 					dockerAppName.setEditable(false);
@@ -208,9 +246,11 @@ public class WizardPageDocker extends WizardPage {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-
-		Label dkrlabel = new Label(container, SWT.NONE);
+		
+		
+		Label dkrlabel = new Label(innerContainer, SWT.NONE);
 		dkrlabel.setText("Run on docker host");
+		
 		// createContents(container);
 	}
 
@@ -278,6 +318,8 @@ public class WizardPageDocker extends WizardPage {
 		bwdocker.setDockerHostCertPath(dockerHostCertPath.getText());
 		bwdocker.setDockerImageName(dockerImageName.getText());
 		bwdocker.setDockerImageFrom(dockerImageFrom.getText());
+		
+		bwdocker.setAutoPullImage(isAutoPull);
 		bwdocker.setDockerImageMaintainer(dockerImageMaintainer.getText());
 
 		// Below are Docker Run values - set them only if checked otherwise blank

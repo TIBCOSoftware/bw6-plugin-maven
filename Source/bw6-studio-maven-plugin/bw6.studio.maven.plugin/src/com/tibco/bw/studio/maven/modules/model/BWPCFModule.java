@@ -21,6 +21,8 @@ public class BWPCFModule {
 	
 	private String memory;
 	
+	private String diskQuota;
+	
 	private String buildpack;
 	
 	private List<BWPCFServicesModule> services;
@@ -115,6 +117,14 @@ public class BWPCFModule {
 
 	public void setCfEnvVariables(Map<String, String> cfEnvVariables) {
 		this.cfEnvVariables = cfEnvVariables;
+	}
+
+	public String getDiskQuota() {
+		return diskQuota;
+	}
+
+	public void setDiskQuota(String diskQuota) {
+		this.diskQuota = diskQuota;
 	}
 
 	
