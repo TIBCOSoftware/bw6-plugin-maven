@@ -9,6 +9,10 @@ public class FileHelper {
         Path pathAbsolute = Paths.get(path1);
         Path pathBase = Paths.get(path2);
         Path pathRelative = pathBase.relativize(pathAbsolute);
-        return pathRelative.toString();
+        String relativePath= pathRelative.toString();
+        if(relativePath!=null){
+        	relativePath = relativePath.replace("\\", "/");
+        }
+        return relativePath; 
 	}
 }
