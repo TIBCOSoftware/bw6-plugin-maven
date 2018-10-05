@@ -1,10 +1,16 @@
 package com.tibco.bw.studio.maven.wizard;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -22,6 +28,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.tibco.bw.studio.maven.modules.model.BWK8SModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
+import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
 import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
@@ -42,6 +49,9 @@ public class WizardPageK8S extends WizardPage {
 	private Text yamlResources;
 	private Button browseButton;
 	private Label resourceLabel;
+	private FileInputStream devPropfile = null;
+	Map<String, String> properties= new HashMap();
+	private StringBuilder envStr = new StringBuilder();
 
 
 	protected WizardPageK8S(String pageName, BWProject project) {
@@ -66,7 +76,54 @@ public class WizardPageK8S extends WizardPage {
 		setPageComplete(true);
 	}
 
+	private String getWorkspacepath() {
+		for (BWModule module : project.getModules()) {
+			if (module.getType() == BWModuleType.Application) {
+				String pomloc = module.getPomfileLocation().toString();
+				String workspace = pomloc.substring(0,
+						pomloc.indexOf("pom.xml"));
+				return workspace;
+			}
+		}
+		return null;
+	}
+	
 	private void setK8SPOMFields() {
+		File devfile = new File(getWorkspacepath() + File.separator
+				+ "k8s-dev.properties");
+		if (devfile.exists()) {
+			try {
+				devPropfile = new FileInputStream(devfile);
+				Properties props = new Properties();
+				props.load(devPropfile);
+				devPropfile.close();
+				Enumeration enuKeys = props.keys();
+
+				while (enuKeys.hasMoreElements()) {
+					String key = (String) enuKeys.nextElement();
+					String value = props.getProperty(key);
+					properties.put(key, value);
+					String s = "fabric8.env.";
+					if (key.startsWith(s)) {
+						envStr.append(key.substring(s.length()));
+						envStr.append("=");
+						envStr.append(value);
+						envStr.append(",");
+					}
+				}
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} finally {
+				try {
+					devPropfile.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+		
 		Label lLabel = new Label(container, SWT.NONE);
 		lLabel.setText("Kubernetes configuration:");
 		GridData lData = new GridData(150, 15);
@@ -83,7 +140,10 @@ public class WizardPageK8S extends WizardPage {
 		rcLabel.setText("Deployment Name");
 
 		rcName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		rcName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_DeploymentName(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_DeploymentName("bwce-sample")));
+		if(properties.containsKey("fabric8.label.container"))
+			rcName.setText(properties.get("fabric8.label.container"));
+		else
+			rcName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_DeploymentName(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_DeploymentName("bwce-sample")));
 		GridData rcData = new GridData(200, 15);
 		rcName.setLayoutData(rcData);
 
@@ -93,7 +153,10 @@ public class WizardPageK8S extends WizardPage {
 		replicaLabel.setText("No Of Replicas");
 
 		numOfReplicas = new Text(container, SWT.BORDER | SWT.SINGLE);
-		numOfReplicas.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_NoOfReplicas(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_NoOfReplicas("1")));
+		if(properties.containsKey("fabric8.replicas"))
+			numOfReplicas.setText(properties.get("fabric8.replicas"));
+		else
+			numOfReplicas.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_NoOfReplicas(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_NoOfReplicas("1")));
 		GridData replicaData = new GridData(50, 15);
 		numOfReplicas.setLayoutData(replicaData);
 		
@@ -102,7 +165,10 @@ public class WizardPageK8S extends WizardPage {
 		srvNameLabel.setText("Service Name");
 
 		serviceName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		serviceName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ServiceName(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ServiceName("bwce-sample-service")));
+		if(properties.containsKey("fabric8.service.name"))
+			serviceName.setText(properties.get("fabric8.service.name"));
+		else
+			serviceName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ServiceName(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ServiceName("bwce-sample-service")));
 		GridData serviceNamData = new GridData(200, 15);
 		serviceName.setLayoutData(serviceNamData);
 
@@ -110,7 +176,10 @@ public class WizardPageK8S extends WizardPage {
 		srvTypeLabel.setText("Service Type");
 
 		serviceType = new Text(container, SWT.BORDER | SWT.SINGLE);
-		serviceType.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ServiceType(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ServiceType("LoadBalancer")));
+		if(properties.containsKey("fabric8.service.type"))
+			serviceType.setText(properties.get("fabric8.service.type"));
+		else
+			serviceType.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ServiceType(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ServiceType("LoadBalancer")));
 		GridData serviceTypeData = new GridData(200, 15);
 		serviceType.setLayoutData(serviceTypeData);
 
@@ -118,7 +187,10 @@ public class WizardPageK8S extends WizardPage {
 		contPortLabel.setText("Container Port");
 
 		containerPort = new Text(container, SWT.BORDER | SWT.SINGLE);
-		containerPort.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ContainerPort(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ContainerPort("8080")));
+		if(properties.containsKey("fabric8.service.containerPort"))
+			containerPort.setText(properties.get("fabric8.service.containerPort"));
+		else
+			containerPort.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_ContainerPort(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_ContainerPort("8080")));
 		GridData contPortData = new GridData(50, 15);
 		containerPort.setLayoutData(contPortData);
 
@@ -126,7 +198,10 @@ public class WizardPageK8S extends WizardPage {
 		namespaceLabel.setText("K8S Namespace");
 
 		k8sNamespace = new Text(container, SWT.BORDER | SWT.SINGLE);
-		k8sNamespace.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_K8SNamespace(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_K8SNamespace("default")));
+		if(properties.containsKey("fabric8.apply.namespace"))
+			k8sNamespace.setText(properties.get("fabric8.apply.namespace"));
+		else
+			k8sNamespace.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_K8SNamespace(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_K8SNamespace("default")));
 		GridData namespcData = new GridData(100, 15);
 		k8sNamespace.setLayoutData(namespcData);
 
@@ -134,12 +209,15 @@ public class WizardPageK8S extends WizardPage {
 		envVarsLabel.setText("Env Vars");
 
 		k8sEnvVars = new Text(container, SWT.BORDER | SWT.SINGLE);
-		k8sEnvVars.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_EnvVars("APP_CONFIG_PROFILE=docker, abc=xyz")));
+		if(devfile.exists()){
+			if (envStr.length() != 0)
+				k8sEnvVars.setText(envStr.substring(0, envStr.length() - 1));
+		}
+		else
+			k8sEnvVars.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_EnvVars("APP_CONFIG_PROFILE=docker, abc=xyz")));
 		GridData envvarData = new GridData(400, 15);
 		envvarData.horizontalSpan = 3;
 		k8sEnvVars.setLayoutData(envvarData);
-		
-		
 
 		Label provideResourcesLabel = new Label(container, SWT.NONE);
 		provideResourcesLabel.setText("Provide the YML Resources");
@@ -147,8 +225,6 @@ public class WizardPageK8S extends WizardPage {
 		provideYmlResources= new Button(container, SWT.CHECK);
 		provideYmlResources.setSelection(false);
 		provideYmlResources.setLayoutData(provideResData);
-		
-	
 		
 		Composite innerContainer = new Composite(container, SWT.NONE);
 		GridLayout innerLayout = new GridLayout();

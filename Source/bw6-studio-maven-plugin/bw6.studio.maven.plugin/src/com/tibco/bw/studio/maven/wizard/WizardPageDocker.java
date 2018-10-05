@@ -1,10 +1,16 @@
 package com.tibco.bw.studio.maven.wizard;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
@@ -43,6 +49,9 @@ public class WizardPageDocker extends WizardPage {
 	private Text dockerEnv;
 	private WizardPageK8S k8sPage;
 	// private static int numDockerElements=0;//24;
+	private FileInputStream devPropfile = null;
+	Map<String, String> properties = new HashMap();
+	StringBuilder envStr = new StringBuilder();
 
 	private Text platform;
 
@@ -68,6 +77,18 @@ public class WizardPageDocker extends WizardPage {
 		// addSeperator(parent);
 		setControl(container);
 		setPageComplete(true);
+	}
+	
+	private String getWorkspacepath() {
+		for (BWModule module : project.getModules()) {
+			if (module.getType() == BWModuleType.Application) {
+				String pomloc = module.getPomfileLocation().toString();
+				String workspace = pomloc.substring(0,
+						pomloc.indexOf("pom.xml"));
+				return workspace;
+			}
+		}
+		return null;
 	}
 
 	private void selectDockerDeploymentPlatforms() {
@@ -125,6 +146,64 @@ public class WizardPageDocker extends WizardPage {
 	}
 
 	private void setApplicationDockerBuildPOMFields() {
+		final File dkrdevfile = new File(getWorkspacepath() + File.separator
+				+ "docker-dev.properties");
+		final File dkrdevEnvfile = new File(getWorkspacepath() + File.separator
+				+ "docker-host-env-dev.properties");
+		if (dkrdevfile.exists()) {
+			try {
+				devPropfile = new FileInputStream(dkrdevfile);
+				Properties props = new Properties();
+				props.load(devPropfile);
+				devPropfile.close();
+				Enumeration enuKeys = props.keys();
+
+				while (enuKeys.hasMoreElements()) {
+					String key = (String) enuKeys.nextElement();
+					String value = props.getProperty(key);
+					properties.put(key, value);
+				}
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} finally {
+				try {
+					devPropfile.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+		if (dkrdevEnvfile.exists()) {
+
+			FileInputStream devEnvPropFile = null;
+			try {
+				devEnvPropFile = new FileInputStream(dkrdevEnvfile);
+				Properties propEnv = new Properties();
+				propEnv.load(devEnvPropFile);
+				devEnvPropFile.close();
+				Enumeration enuKeys = propEnv.keys();
+
+				while (enuKeys.hasMoreElements()) {
+					String key = (String) enuKeys.nextElement();
+					String value = propEnv.getProperty(key);
+					envStr.append(key);
+					envStr.append("=");
+					envStr.append(value);
+					envStr.append(",");
+				}
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} finally {
+				try {
+					devEnvPropFile.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+
 		Label lLabel = new Label(container, SWT.NONE);
 		lLabel.setText("Docker host build configuration:");
 		GridData lData = new GridData(300, 15);
@@ -141,7 +220,10 @@ public class WizardPageDocker extends WizardPage {
 		targetLabel.setText("Docker Host");
 
 		dockerHost = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_URL(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_URL("tcp://0.0.0.0:2376")));
+		if (properties.containsKey("bwdocker.host"))
+			dockerHost.setText(properties.get("bwdocker.host"));
+		else
+			dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_URL(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_URL("tcp://0.0.0.0:2376")));
 		GridData dockerHostData = new GridData(200, 15);
 		dockerHost.setLayoutData(dockerHostData);
 
@@ -149,7 +231,10 @@ public class WizardPageDocker extends WizardPage {
 		certLabel.setText("Cert Path");
 
 		dockerHostCertPath = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHostCertPath.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_CertPath(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_CertPath("</home/user/machine/>")));
+		if (properties.containsKey("bwdocker.certPath"))
+			dockerHostCertPath.setText(properties.get("bwdocker.certPath"));
+		else
+			dockerHostCertPath.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_CertPath(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_CertPath("</home/user/machine/>")));
 		GridData dockerHostCertData = new GridData(200, 15);
 		dockerHostCertPath.setLayoutData(dockerHostCertData);
 
@@ -157,7 +242,10 @@ public class WizardPageDocker extends WizardPage {
 		imgNameLabel.setText("Image Name");
 
 		dockerImageName = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_ImageName(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_ImageName("gcr.io/<project_id>/<image-name>")));
+		if (properties.containsKey("docker.image"))
+			dockerImageName.setText(properties.get("docker.image"));
+		else
+			dockerImageName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_ImageName(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_ImageName("gcr.io/<project_id>/<image-name>")));
 		GridData dockerImgNameData = new GridData(200, 15);
 		dockerImageName.setLayoutData(dockerImgNameData);
 
@@ -165,7 +253,10 @@ public class WizardPageDocker extends WizardPage {
 		imgFromLabel.setText("BWCE Image");
 
 		dockerImageFrom = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageFrom.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_BWCEImage(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_BWCEImage("tibco/bwce")));
+		if (properties.containsKey("bwdocker.from"))
+			dockerImageFrom.setText(properties.get("bwdocker.from"));
+		else
+			dockerImageFrom.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_BWCEImage(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_BWCEImage("tibco/bwce")));
 		GridData imgFromData = new GridData(100, 15);
 		dockerImageFrom.setLayoutData(imgFromData);
 		
@@ -200,7 +291,10 @@ public class WizardPageDocker extends WizardPage {
 		maintainerLabel.setText("Maintainer");
 
 		dockerImageMaintainer = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerImageMaintainer.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_Maintainer(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_Maintainer("abc@tibco.com")));
+		if (properties.containsKey("bwdocker.maintainer"))
+			dockerImageMaintainer.setText(properties.get("bwdocker.maintainer"));
+		else
+			dockerImageMaintainer.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_Maintainer(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_Maintainer("abc@tibco.com")));
 		GridData maintainerData = new GridData(200, 15);
 
 		dockerImageMaintainer.setLayoutData(maintainerData);
@@ -220,28 +314,52 @@ public class WizardPageDocker extends WizardPage {
 			public void widgetSelected(SelectionEvent e) {
 				if (dkr.getSelection()) {
 					dockerAppName.setEditable(true);
-					dockerAppName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_AppName(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_AppName("BWCEAPP")));
+					if (properties.containsKey("bwdocker.containername"))
+						dockerAppName.setText(properties
+								.get("bwdocker.containername"));
+					else
+						dockerAppName.setText("BWCEAPP");
+
 					dockerVolume.setEditable(true);
 					dockerLink.setEditable(true);
-					dockerEnv.setEditable(true);
 					dockerPort.setEditable(true);
-					dockerPort.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_Ports(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_Ports("18080:8080,17777:7777")));
+					dockerEnv.setEditable(true);
+					if (envStr.length() != 0)
+						dockerEnv.setText(envStr.substring(0, envStr.length() - 1));
+
+					if (dkrdevfile.exists()) {
+						setPropertyVars(dockerVolume, "bwdocker.volume.v");
+						setPropertyVars(dockerLink, "bwdocker.link.l");
+						setPropertyVars(dockerPort, "bwdocker.port.p");
+					} else {
+						dockerPort.setText("18080:8080,17777:7777");
+					}
+
 					container.layout();
 				} else {
-					dockerAppName.setEditable(false);
-					dockerAppName.setText("");
-					dockerVolume.setEditable(false);
-					dockerVolume.setText("");
-					dockerLink.setEditable(false);
-					dockerLink.setText("");
-					dockerEnv.setEditable(false);
-					dockerEnv.setText("");
-					dockerPort.setEditable(false);
-					dockerPort.setText("");
+					setEditableFalseForAllText(dockerAppName, dockerVolume,dockerLink, dockerEnv, dockerPort);
 					container.layout();
 				}
 			}
 
+			private void setEditableFalseForAllText(Text... texts) {
+				for (Text t : texts) {
+					t.setEditable(false);
+					t.setText("");
+				}
+			}
+
+			private void setPropertyVars(Text text, String strContained) {
+				StringBuilder str = new StringBuilder();
+				for (int i = 0; i < properties.size(); i++) {
+					if (properties.containsKey(strContained + i)) {
+						str.append(properties.get(strContained + i));
+						str.append(",");
+					}
+				}
+				if (str.length() != 0)
+					text.setText(str.substring(0, str.length() - 1));
+			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
