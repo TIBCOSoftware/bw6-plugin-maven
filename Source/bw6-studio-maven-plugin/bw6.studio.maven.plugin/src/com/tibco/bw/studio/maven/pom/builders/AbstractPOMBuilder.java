@@ -397,7 +397,7 @@ public abstract class AbstractPOMBuilder {
 			Xpp3Dom envVarChild = new Xpp3Dom("envPropertyFile");
 			envVarChild.setValue("${docker.env.property.file}");
 			runchild.addChild(envVarChild);
-		}
+		} 
 		imageChild.addChild(runchild);
 		child.addChild(imageChild);
 		config.addChild(child);
@@ -768,18 +768,10 @@ public abstract class AbstractPOMBuilder {
 
 	protected Model readModel(File pomXmlFile) {
 		Model model = null;
-//		try {
-//			Reader reader = new FileReader(pomXmlFile);
-//			try {
-//				MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
 		try (Reader reader = new FileReader(pomXmlFile)) {
 			MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
 			if (pomXmlFile.length() != 0)
 				model = xpp3Reader.read(reader);
-//			} finally {
-//				reader.close();
-//			}
-//		} catch(Exception e) {
 			else
 				model = new Model();
 		} catch (Exception e) {
