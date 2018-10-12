@@ -63,8 +63,12 @@ public abstract class AbstractPOMBuilder {
 			properties = new Properties();
 		}
 		properties.put("docker.property.file", "docker-dev.properties");
-		if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0) {
-			properties.put("docker.env.property.file", "docker-host-env-dev.properties");
+		String workspacePath = getWorkspacepath();
+		if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0 && workspacePath!=null) {
+			String envPropFile = workspacePath+File.separator+"docker-host-env-dev.properties";
+			if(workspacePath.endsWith(File.separator))
+				envPropFile = workspacePath+"docker-host-env-dev.properties";
+			properties.put("docker.env.property.file", envPropFile);
 		} else {
 			if(properties.containsKey("docker.env.property.file")) {
 				properties.remove("docker.env.property.file");
@@ -79,6 +83,7 @@ public abstract class AbstractPOMBuilder {
 		}
 		model.setProperties(properties);
 	}
+
 
 	protected void addPrimaryTags() {
 		model.setModelVersion("4.0.0");
