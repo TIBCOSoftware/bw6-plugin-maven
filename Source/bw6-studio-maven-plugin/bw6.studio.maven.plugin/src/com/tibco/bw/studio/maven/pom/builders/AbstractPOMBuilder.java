@@ -84,7 +84,6 @@ public abstract class AbstractPOMBuilder {
 		model.setProperties(properties);
 	}
 
-
 	protected void addPrimaryTags() {
 		model.setModelVersion("4.0.0");
 		model.setArtifactId( module.getArtifactId());
@@ -567,9 +566,12 @@ public abstract class AbstractPOMBuilder {
 			properties.setProperty("bwpcf.trustSelfSignedCerts", "true");
 			properties.setProperty("bwpcf.org", module.getBwpcfModule().getOrg());
 			properties.setProperty("bwpcf.appName", module.getBwpcfModule().getAppName());
+			
 			properties.setProperty("bwpcf.space", module.getBwpcfModule().getSpace());
-
-			if(module.getBwpcfModule().getAppName() != null && !module.getBwpcfModule().getAppName().isEmpty()) {
+			if(module.getBwpcfModule().getPCFDomain() != null && !module.getBwpcfModule().getPCFDomain().isEmpty()) {
+				properties.setProperty("bwpcf.url", getPCFAppURLForDomain(module.getBwpcfModule().getAppName(), module.getBwpcfModule().getPCFDomain()));
+			}
+			else if(module.getBwpcfModule().getAppName() != null && !module.getBwpcfModule().getAppName().isEmpty()) {
 				properties.setProperty("bwpcf.url", getPCFAppURL(module.getBwpcfModule().getAppName()));
 			} else {
 				properties.setProperty("bwpcf.url", getPCFAppDefaultURL());
@@ -658,6 +660,7 @@ public abstract class AbstractPOMBuilder {
 		child = new Xpp3Dom("appname");
 		child.setValue("${bwpcf.appName}");
 		config.addChild(child);
+		
 
 		child = new Xpp3Dom("url");
 		child.setValue("${bwpcf.url}");
@@ -721,8 +724,14 @@ public abstract class AbstractPOMBuilder {
 		plugin.setConfiguration(config);	
 		build.addPlugin(plugin);
 	}
+	
+private String getPCFAppURLForDomain(String appName, String domain) {
+		
+		return appName + "." + domain;
+	}
 
 	private String getPCFAppURL(String appName) {
+		
 		appName = appName.replace(".", "-");
 		String domainStr = module.getBwpcfModule().getTarget();
 		String protoDom = domainStr.substring(0, domainStr.indexOf("."));
