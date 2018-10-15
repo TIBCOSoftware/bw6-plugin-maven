@@ -103,7 +103,7 @@ public class WizardPagePCF extends WizardPage {
 		pcfDomainLabel.setText("PCF Domain");
 		
 		appPCFDomain = new Text(container, SWT.BORDER | SWT.SINGLE);
-		appPCFDomain.setText("AppDomain");
+		
 		GridData appDomainData = new GridData(100, 15);
 		appPCFAppName.setLayoutData(appDomainData);
 		
