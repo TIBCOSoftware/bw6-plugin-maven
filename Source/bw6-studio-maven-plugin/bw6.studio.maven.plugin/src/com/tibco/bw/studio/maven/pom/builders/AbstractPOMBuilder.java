@@ -726,7 +726,7 @@ public abstract class AbstractPOMBuilder {
 	}
 	
 private String getPCFAppURLForDomain(String appName, String domain) {
-		
+		appName = appName.replace(".", "-");
 		return appName + "." + domain;
 	}
 
