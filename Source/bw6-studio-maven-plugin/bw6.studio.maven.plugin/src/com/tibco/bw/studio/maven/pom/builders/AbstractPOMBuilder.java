@@ -402,6 +402,17 @@ public abstract class AbstractPOMBuilder {
 			Xpp3Dom envVarChild = new Xpp3Dom("envPropertyFile");
 			envVarChild.setValue("${docker.env.property.file}");
 			runchild.addChild(envVarChild);
+		} else {
+			File devfile = new File(getWorkspacepath() + File.separator
+					+ "docker-host-env-dev.properties");
+			if (devfile.exists()) {
+				devfile.delete();
+			}
+			File prodfile = new File(getWorkspacepath() + File.separator
+					+ "docker-host-env-prod.properties");
+			if (prodfile.exists()) {
+				prodfile.delete();
+			}
 		}
 		imageChild.addChild(runchild);
 		child.addChild(imageChild);
@@ -587,11 +598,9 @@ public abstract class AbstractPOMBuilder {
 			//Add cf env variables
 			Map<String, String> cfEnvVars = module.getBwpcfModule().getCfEnvVariables();
 			if(!cfEnvVars.isEmpty()) {
-				int i = 0;
 				for (String key : cfEnvVars.keySet()) {
-					String cfKey = "bwpcf.env." + i;
+					String cfKey = "bwpcf.env." + key;
 					properties.setProperty(cfKey, cfEnvVars.get(key));
-					i++;
 				}
 			}
 
