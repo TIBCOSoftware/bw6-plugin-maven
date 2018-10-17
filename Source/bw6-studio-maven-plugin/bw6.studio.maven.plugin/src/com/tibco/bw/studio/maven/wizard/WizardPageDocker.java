@@ -1,10 +1,16 @@
 package com.tibco.bw.studio.maven.wizard;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
@@ -39,6 +45,10 @@ public class WizardPageDocker extends WizardPage {
 	private Text dockerEnv;
 	private WizardPageK8S k8sPage;
 	// private static int numDockerElements=0;//24;
+	private FileInputStream devPropfile = null;
+	Map<String, String> properties = new HashMap();
+	StringBuilder envStr = new StringBuilder();
+
 
 	private Text platform;
 
@@ -66,6 +76,18 @@ public class WizardPageDocker extends WizardPage {
 		setPageComplete(true);
 	}
 
+	private String getWorkspacepath() {
+		for (BWModule module : project.getModules()) {
+			if (module.getType() == BWModuleType.Application) {
+				String pomloc = module.getPomfileLocation().toString();
+				String workspace = pomloc.substring(0,
+						pomloc.indexOf("pom.xml"));
+				return workspace;
+			}
+		}
+		return null;
+	}
+	
 	private void selectDockerDeploymentPlatforms() {
 		Label lLabel = new Label(container, SWT.NONE);
 		lLabel.setText("Select platform where you want to deploy your docker image:");
@@ -121,6 +143,33 @@ public class WizardPageDocker extends WizardPage {
 	}
 
 	private void setApplicationDockerBuildPOMFields() {
+		final File dkrdevfile = new File(getWorkspacepath() + File.separator+ "docker-dev.properties");
+		if (dkrdevfile.exists()) {
+			try {
+				devPropfile = new FileInputStream(dkrdevfile);
+				Properties props = new Properties();
+				props.load(devPropfile);
+				devPropfile.close();
+				Enumeration enuKeys = props.keys();
+
+				while (enuKeys.hasMoreElements()) {
+					String key = (String) enuKeys.nextElement();
+					String value = props.getProperty(key);
+					properties.put(key, value);
+				}
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} finally {
+				try {
+					devPropfile.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+		
 		Label lLabel = new Label(container, SWT.NONE);
 		lLabel.setText("Docker host build configuration:");
 		GridData lData = new GridData(300, 15);
@@ -137,7 +186,10 @@ public class WizardPageDocker extends WizardPage {
 		targetLabel.setText("Docker Host");
 
 		dockerHost = new Text(container, SWT.BORDER | SWT.SINGLE);
-		dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDockerURL("tcp://0.0.0.0:2376"));
+		if (properties.containsKey("bwdocker.host"))
+			dockerHost.setText(properties.get("bwdocker.host"));
+		else
+			dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDockerURL("tcp://0.0.0.0:2376"));
 		GridData dockerHostData = new GridData(200, 15);
 		dockerHost.setLayoutData(dockerHostData);
 

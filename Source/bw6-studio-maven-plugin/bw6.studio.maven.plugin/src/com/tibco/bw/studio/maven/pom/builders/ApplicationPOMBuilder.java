@@ -34,44 +34,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 
 		this.project = project;
 		this.module = module;
-		
-		Map<String, String> manifest = ManifestParser.parseManifest(module.getProject());
-		if (manifest.containsKey("TIBCO-BW-Edition") )				
-		{
-			String editions = manifest.get( "TIBCO-BW-Edition" );				
-	
-				String[] editionList = editions.split(",");
-				for( String str : editionList )
-				{
-					switch ( str )
-					{
-					case "bwe":
-						bwEdition = "bw6";
-						break;
 
-					case "bwcf":
-						
-							switch ( MavenWizardContext.INSTANCE.getSelectedType() )
-							{
-							case PCF:
-								bwEdition = "cf";
-								break;
-								
-							case Docker:
-								bwEdition = "docker";
-								break;
-							
-							default:
-								break;
-							}
-						
-						break;
-				default:
-						break;
-					}
-					
-				}
-		}
+		bwEdition = setBwEdition(module);
 		initializeModel();
 		addPrimaryTags();
 		//addParent(ModuleHelper.getParentModule(project.getModules()));
