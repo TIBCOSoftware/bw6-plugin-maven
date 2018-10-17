@@ -66,8 +66,12 @@ public abstract class AbstractPOMBuilder {
 			properties = new Properties();
 		}
 		properties.put("docker.property.file", "docker-dev.properties");
-		if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0) {
-			properties.put("docker.env.property.file", "docker-host-env-dev.properties");
+		String workspacePath = getWorkspacepath();
+		if(module.getBwDockerModule().getDockerEnvs() != null && module.getBwDockerModule().getDockerEnvs().size() > 0 && workspacePath!=null) {
+			String envPropFile = workspacePath+File.separator+"docker-host-env-dev.properties";
+			if(workspacePath.endsWith(File.separator))
+				envPropFile = workspacePath+"docker-host-env-dev.properties";
+			properties.put("docker.env.property.file", envPropFile);
 		} else {
 			if(properties.containsKey("docker.env.property.file")) {
 				properties.remove("docker.env.property.file");
@@ -259,12 +263,12 @@ public abstract class AbstractPOMBuilder {
 		plugin.setGroupId("io.fabric8");
 		plugin.setArtifactId("fabric8-maven-plugin");
 		plugin.setVersion("3.5.41");
-		
+
 		Xpp3Dom config = new Xpp3Dom("configuration");
 		Xpp3Dom child = new Xpp3Dom("skip");
 		child.setValue(String.valueOf(skip));
 		config.addChild(child);
-	
+
 		plugin.setConfiguration(config);
 		build.addPlugin(plugin);
 	}
@@ -438,7 +442,7 @@ public abstract class AbstractPOMBuilder {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void createK8SPropertiesFiles() {
 		try {
 			Properties properties = new Properties();
@@ -457,7 +461,7 @@ public abstract class AbstractPOMBuilder {
 				properties.setProperty("fabric8.service.type", "LoadBalancer");
 			}
 			else{
-			properties.setProperty("fabric8.service.type", module.getBwk8sModule().getServiceType());
+				properties.setProperty("fabric8.service.type", module.getBwk8sModule().getServiceType());
 			}
 			properties.setProperty("fabric8.service.port", "80");
 			properties.setProperty("fabric8.provider", "Tibco");
@@ -465,7 +469,7 @@ public abstract class AbstractPOMBuilder {
 			properties.setProperty("fabric8.namespace", module.getBwk8sModule().getK8sNamespace());
 			properties.setProperty("fabric8.apply.namespace", module.getBwk8sModule().getK8sNamespace());
 			if(module.getBwk8sModule().getResourcesLocation()!=null){
-			properties.setProperty("fabric8.resources.location", module.getBwk8sModule().getResourcesLocation());
+				properties.setProperty("fabric8.resources.location", module.getBwk8sModule().getResourcesLocation());
 			}
 
 			//Add k8s env variables
@@ -565,9 +569,12 @@ public abstract class AbstractPOMBuilder {
 			properties.setProperty("bwpcf.trustSelfSignedCerts", "true");
 			properties.setProperty("bwpcf.org", module.getBwpcfModule().getOrg());
 			properties.setProperty("bwpcf.appName", module.getBwpcfModule().getAppName());
-			properties.setProperty("bwpcf.space", module.getBwpcfModule().getSpace());
 
-			if(module.getBwpcfModule().getAppName() != null && !module.getBwpcfModule().getAppName().isEmpty()) {
+			properties.setProperty("bwpcf.space", module.getBwpcfModule().getSpace());
+			if(module.getBwpcfModule().getPCFDomain() != null && !module.getBwpcfModule().getPCFDomain().isEmpty()) {
+				properties.setProperty("bwpcf.url", getPCFAppURLForDomain(module.getBwpcfModule().getAppName(), module.getBwpcfModule().getPCFDomain()));
+			}
+			else if(module.getBwpcfModule().getAppName() != null && !module.getBwpcfModule().getAppName().isEmpty()) {
 				properties.setProperty("bwpcf.url", getPCFAppURL(module.getBwpcfModule().getAppName()));
 			} else {
 				properties.setProperty("bwpcf.url", getPCFAppDefaultURL());
@@ -657,6 +664,7 @@ public abstract class AbstractPOMBuilder {
 		child.setValue("${bwpcf.appName}");
 		config.addChild(child);
 
+
 		child = new Xpp3Dom("url");
 		child.setValue("${bwpcf.url}");
 		config.addChild(child);
@@ -720,7 +728,13 @@ public abstract class AbstractPOMBuilder {
 		build.addPlugin(plugin);
 	}
 
+	private String getPCFAppURLForDomain(String appName, String domain) {
+		appName = appName.replace(".", "-");
+		return appName + "." + domain;
+	}
+
 	private String getPCFAppURL(String appName) {
+
 		appName = appName.replace(".", "-");
 		String domainStr = module.getBwpcfModule().getTarget();
 		String protoDom = domainStr.substring(0, domainStr.indexOf("."));

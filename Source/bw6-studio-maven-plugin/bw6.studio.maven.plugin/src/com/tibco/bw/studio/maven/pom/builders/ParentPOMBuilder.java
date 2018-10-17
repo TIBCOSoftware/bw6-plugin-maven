@@ -115,9 +115,10 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 	}
 
 	protected void addModules() {
-		if (model.getModules().size() > 0) {
-			return;
-		}
+		while(model.getModules().size()>0){
+			String module= model.getModules().get(0);
+			model.removeModule(module);
+		}			
 		for (BWModule module : project.getModules()) {
 			if (module.getType() == BWModuleType.PluginProject) {
 				model.getModules().add(module.getToPath());
