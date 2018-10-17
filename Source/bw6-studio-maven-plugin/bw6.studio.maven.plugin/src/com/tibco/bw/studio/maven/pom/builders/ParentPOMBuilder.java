@@ -23,7 +23,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		this.module = module;
 		initializeModel();
 
-		
+
 		addPrimaryTags();
 		model.setGroupId(module.getGroupId());
 		model.setVersion(module.getVersion());
@@ -39,12 +39,12 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		if (build == null) {
 			build = new Build();
 		}
-		
-		
+
+
 		List<Plugin> plugins = build.getPlugins();
-		
+
 		boolean reportPlugin = false;
-		
+
 		for (Plugin plugin : plugins) 
 		{
 			if (plugin.getArtifactId().equals("maven-site-plugin")) {
@@ -52,7 +52,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 				break;
 			}
 		}
-		
+
 		if( !reportPlugin )
 		{
 			Plugin repPlugin = new Plugin();
@@ -65,7 +65,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		if ( MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.PCF )
 		{
 			boolean cfplugin = false;
-			
+
 			for (Plugin plg : plugins) {
 				if (plg.getArtifactId().equals("cf-maven-plugin")) {
 					cfplugin = true;
@@ -79,7 +79,7 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		} else if (MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.Docker) {
 			//|| MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.K8S
 			boolean dockerPlugin = false;
-			
+
 			for (Plugin plg : plugins) {
 				if (plg.getArtifactId().equals("docker-maven-plugin")) {
 					dockerPlugin = true;
@@ -115,8 +115,9 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 	}
 
 	protected void addModules() {
-		if (model.getModules().size() > 0) {
-			return;
+		while(model.getModules().size()>0){
+			String module= model.getModules().get(0);
+			model.removeModule(module);
 		}
 		for (BWModule module : project.getModules()) {
 			if (module.getType() == BWModuleType.PluginProject) {

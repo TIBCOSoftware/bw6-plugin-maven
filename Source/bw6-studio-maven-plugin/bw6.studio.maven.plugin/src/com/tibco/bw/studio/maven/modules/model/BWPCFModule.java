@@ -17,6 +17,8 @@ public class BWPCFModule {
 	
 	private String appName;
 	
+	private String pcfDomain;
+	
 	private String instances;
 	
 	private String memory;
@@ -125,6 +127,14 @@ public class BWPCFModule {
 
 	public void setDiskQuota(String diskQuota) {
 		this.diskQuota = diskQuota;
+	}
+	
+	public String getPCFDomain() {
+		return pcfDomain;
+	}
+ 	public void setPCFDomain(String pcfDomain) {
+		this.pcfDomain = pcfDomain;
+		
 	}
 
 	
