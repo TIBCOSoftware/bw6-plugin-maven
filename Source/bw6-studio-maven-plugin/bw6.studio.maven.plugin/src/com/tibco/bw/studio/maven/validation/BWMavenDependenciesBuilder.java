@@ -287,18 +287,9 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			projects.add(handler.getProject());
 		}
 		
-		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
-		if(editingDomain != null){
-			
-			RecordingCommand command = new RecordingCommand(editingDomain) {
-				@Override
-				protected void doExecute() {
-					ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
-				}
-			};
-
-			editingDomain.getCommandStack().execute(command);
-		}
+	
+		ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
+		
 	}
 
 	protected void registerDependencies(List<BWExternalDependencyRecord>records, IProject hostProject){
