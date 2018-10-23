@@ -23,7 +23,6 @@ import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectNature;
-import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -288,22 +287,9 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			projects.add(handler.getProject());
 		}
 		
-		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
-		if(editingDomain != null){
-			
-			WorkspaceJob job = new WorkspaceJob(editingDomain.getID()) {
-
-				@Override
-				public IStatus runInWorkspace(IProgressMonitor monitor)
-						throws CoreException {
-					ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
-					return Status.OK_STATUS;
-				}
-				
-			};
-			
-		job.schedule();
-		}
+	
+		ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
+		
 	}
 
 	protected void registerDependencies(List<BWExternalDependencyRecord>records, IProject hostProject){
