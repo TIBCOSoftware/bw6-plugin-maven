@@ -42,6 +42,7 @@ public class WizardPagePCF extends WizardPage {
 	private Text appPCFOrg;
 	private Text appPCFSpace;
 	private Text appPCFAppName;
+	private Text appPCFDomain;
 	private Text appPCFInstances;
 	private Text appPCFMemory;
 	private Text appPCFDiskQuota;
@@ -171,6 +172,14 @@ public class WizardPagePCF extends WizardPage {
 			appPCFAppName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_AppName(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_AppName("AppName")));
 		GridData appNameData = new GridData(100, 15);
 		appPCFAppName.setLayoutData(appNameData);
+		
+		Label pcfDomainLabel = new Label(container, SWT.RIGHT);
+		pcfDomainLabel.setText("PCF Domain");
+		
+		appPCFDomain = new Text(container, SWT.BORDER | SWT.SINGLE);
+		
+		GridData appDomainData = new GridData(100, 15);
+		appPCFAppName.setLayoutData(appDomainData);
 
 		Label instancesLabel = new Label(container, SWT.RIGHT);
 		instancesLabel.setText("App Instances");
@@ -273,6 +282,7 @@ public class WizardPagePCF extends WizardPage {
 		bwpcf.setOrg(appPCFOrg.getText());
 		bwpcf.setSpace(appPCFSpace.getText());
 		bwpcf.setAppName(appPCFAppName.getText());
+		bwpcf.setPCFDomain(appPCFDomain.getText());
 		bwpcf.setInstances(appPCFInstances.getText());
 		bwpcf.setMemory(appPCFMemory.getText());
 		bwpcf.setDiskQuota(appPCFDiskQuota.getText());

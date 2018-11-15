@@ -51,41 +51,41 @@ import com.tibco.zion.common.util.EditingDomainUtil;
 
 @SuppressWarnings("restriction")
 public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
-	
+
 	protected IMaven maven;
 	public static final String PLUGIN_PROPERTY_VALUE_MAVEN_ESM = "MAVEN_ESM"; //$NON-NLS-1$
-	
+
 	@Override
 	public void doBuild(int kind, IProject project, IProgressMonitor monitor) {
-				
+
 		if(project == null){
 			return;
 		}
-		
+
 		if(!isMavenProject(project)){
 			return;
 		}
-			
+
 		if(!isLocalProject(project)){
 			return;
 		}
-		
+
 		Model mavenModel = getMavenModel(project);
-		
+
 		if(mavenModel == null){
 			return;
 		}
-		
+
 		List<Dependency> dependencyList = mavenModel.getDependencies();
 		List<BWExternalDependencyRecord> handlers = new ArrayList<BWExternalDependencyRecord>();
 
 		//1. Remove dependencies
 		Set<IProject> projectsToValidate = new HashSet<IProject>(); 
 		removeDependencies(project, dependencyList, projectsToValidate);
-		
+
 		//2. Create the new dependencies
 		for(Dependency dependency : dependencyList){
-			
+
 			File jarFile = getDependencyFile(dependency);
 			if(isSharedModule(jarFile)){
 				BWExternalDependencyRecord handler = createProjectFromDependency(dependency, jarFile);
@@ -99,30 +99,30 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 				}
 			}
 		}
-		
+
 		//3. Add new modules to project dependencies section
 		addModulesToProjectDependencies(handlers, project);
-		
+
 		//4. Add new modules to application dependencies section
 		addModulesToApplication(handlers, project);
-		
+
 		//5. Register new dependencies
 		registerDependencies(handlers, project);
-		
+
 		//6. Register project dependencies in hostProject
 		addProjectDependencies(project, handlers);
-		
+
 		//7. Add project itself to validations if there is other projects to validate
 		if(!projectsToValidate.isEmpty() && !projectsToValidate.contains(project)){
 			projectsToValidate.add(project);
 		}
-		
+
 		//8. Run builder on projects that depend from newly created ESM
 		if(!projectsToValidate.isEmpty()){
 			validateProjects(projectsToValidate);
 		}
 	}
-	
+
 	protected boolean isMavenProject(IProject project){
 		boolean isMavenProject = false;
 		try {
@@ -133,13 +133,13 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-		
+
 		return isMavenProject;
 	}
-	
+
 	protected boolean isLocalProject(IProject project){
 		boolean isLocal = true;
-		
+
 		try {
 			String value = project.getPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY);
 			if(value != null){
@@ -148,20 +148,20 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-		
+
 		return isLocal;
 	}
-	
+
 	protected Model getMavenModel(IProject project){
 		IFile pomFile = project.getFile(BWMavenConstants.POM_XML_LOCATION);
-		
+
 		if(!pomFile.exists()){
 			return null;
 		}
 		Model mavenModel = null;
 		try{
-			 File f = pomFile.getRawLocation().toFile();
-			 mavenModel = POMHelper.readModelFromPOM(f);
+			File f = pomFile.getRawLocation().toFile();
+			mavenModel = POMHelper.readModelFromPOM(f);
 		}catch(Exception e){
 			//File is not in the workspace, it may come from a zip package
 			URI uri = pomFile.getLocationURI();
@@ -176,7 +176,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 		return mavenModel;
 	}
-	
+
 	protected File getDependencyFile(Dependency dependency){
 		if(maven == null){
 			IMavenConfiguration config = new MavenConfigurationImpl();
@@ -188,7 +188,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			String version = dependency.getVersion();
 			String type = dependency.getType();
 			String classifier = dependency.getClassifier();
-			
+
 			Artifact artifact = maven.resolve(groupId, artifactId, version, type, classifier, maven.getArtifactRepositories(), null);
 			if(artifact != null){
 				File f = artifact.getFile();
@@ -199,10 +199,10 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
-	
+
 	protected boolean isSharedModule(File file){
 		if(file != null){
 			try {
@@ -228,14 +228,14 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		if(jarFile == null || dependency == null){
 			return null;
 		}
-		
+
 		String projectName = getProjectName(jarFile);
 		String dependencyId = dependency.getGroupId() + "." + dependency.getArtifactId();
 		String dependencyVersion = dependency.getVersion();
-		
+
 		String pathStr = jarFile.getAbsolutePath();
 		Path jarPath = new Path(pathStr);
-		
+
 		if("jar".equalsIgnoreCase(jarPath.getFileExtension())){	
 			pathStr = pathStr.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
 			try {
@@ -249,9 +249,9 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			}
 		}
 
-	    return null;
+		return null;
 	}
-	
+
 	protected String getProjectName(File file){
 		String projectName = ""; //$NON-NLS-1$
 		if(file != null){
@@ -263,7 +263,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 					String value = attr.getValue(BWMavenConstants.HEADER_BUNDLE_NAME);
 					jarFile.close();
 					if(value != null ){
-						 projectName = value;
+						projectName = value;
 					}
 				}
 			} catch (IOException e) {
@@ -279,26 +279,17 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			ModelHelper.INSTANCE.addModuleRequireCapabilities(project, sourceProject);
 		}					
 	}
-	
+
 	protected void addModulesToApplication(List<BWExternalDependencyRecord> modules, final IProject sourceProject){
-		
+
 		final List<IProject> projects = new ArrayList<>();
 		for(BWExternalDependencyRecord handler : modules){
 			projects.add(handler.getProject());
 		}
-		
-		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
-		if(editingDomain != null){
-			
-			RecordingCommand command = new RecordingCommand(editingDomain) {
-				@Override
-				protected void doExecute() {
-					ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
-				}
-			};
 
-			editingDomain.getCommandStack().execute(command);
-		}
+
+		ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
+
 	}
 
 	protected void registerDependencies(List<BWExternalDependencyRecord>records, IProject hostProject){
@@ -307,7 +298,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			registry.addDependencyRecord(hostProject, record);
 		}
 	}
-	
+
 	protected void removeDependencies(final IProject hostProject, List<Dependency> dependencies, Set<IProject> projectsToValidate){
 		Iterator<BWExternalDependencyRecord> records = BWExternalDependenciesRegistry.INSTANCE.getDependencyRecordsForProject(hostProject);
 		List<BWExternalDependencyRecord> toRemove = new ArrayList<>();
@@ -317,7 +308,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			for(Dependency dep : dependencies){
 				String depId = dep.getGroupId() + "." + dep.getArtifactId();
 				String depVersion = dep.getVersion();
-				
+
 				if(record.getDependencyId().equals(depId) && record.getDependencyVersion().equals(depVersion)){
 					dependencies.remove(dep);
 					remove = false;
@@ -327,9 +318,9 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			if(remove){
 				toRemove.add(record);
 			}
-			
+
 		}
-		
+
 		//Remove referenced projects from hostProject
 		List<IProject> projectsToRemove = new ArrayList<IProject>();
 		Set<IProject> referencedProjects = ProjectUtil.getReferencedProjectsHierarchy(hostProject, null);
@@ -340,7 +331,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 				}
 			}
 		}
-		
+
 		if(projectsToRemove.size() > 0){
 			IProject[] referencedProjectsToRemove = projectsToRemove.toArray(new IProject[projectsToRemove.size()]);
 			RemoveProjectDependenciesOp op = new RemoveProjectDependenciesOp(hostProject, referencedProjectsToRemove);
@@ -351,14 +342,14 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			} catch (InterruptedException e) {
 				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
 			}
-			
+
 		}
-		
-		
+
+
 		for(BWExternalDependencyRecord record : toRemove){
-			
+
 			final IProject moduleToRemove = record.getProject();
-			
+
 			//Add projects interested in the module to remove to the list of projects to validate
 			List<IProject> interestedProjects = ModelHelper.INSTANCE.getInterestedInProject(moduleToRemove, true, true, false);
 			for(IProject interestedProject : interestedProjects){
@@ -370,10 +361,10 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 					projectsToValidate.add(interestedProject);
 				}
 			}
-			
+
 			TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
 			if(editingDomain != null){
-				
+
 				RecordingCommand command = new RecordingCommand(editingDomain) {
 					@Override
 					protected void doExecute() {
@@ -384,17 +375,17 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 
 				editingDomain.getCommandStack().execute(command);
 			}
-			
+
 			BWExternalDependenciesRegistry.INSTANCE.removeDependencyRecord(hostProject, record);
 		}
-		
+
 		return;
 	}
-	
+
 	protected void validateProjects(Set<IProject> projectsToValidate){
 		BWMavenValidationJob.schedule(projectsToValidate, 1000);
 	}
-	
+
 	protected void addProjectDependencies(IProject hostProject, List<BWExternalDependencyRecord >records){
 		List<IProject> projectsToAdd = new ArrayList<IProject>();
 		Set<IProject> referencedProjects = ProjectUtil.getReferencedProjectsHierarchy(hostProject, null);
@@ -405,7 +396,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 				}
 			}
 		}
-		
+
 		//Add projects to the reference
 		if(projectsToAdd.size() > 0){
 			IProject[] referencedProjectsToAdd = projectsToAdd.toArray(new IProject[projectsToAdd.size()]);
@@ -418,6 +409,6 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
 			}
 		}
-		
+
 	}
 }
