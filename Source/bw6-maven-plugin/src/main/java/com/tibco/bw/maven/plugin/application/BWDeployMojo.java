@@ -25,13 +25,10 @@ import com.tibco.bw.maven.plugin.utils.Constants;
 @Mojo(name = "bwdeployer")
 public class BWDeployMojo extends AbstractMojo {
 
-	@Parameter(property = "deployToAdmin")
-	private boolean deployToAdmin;
-
 	@Parameter(property = "agentHost")
 	private String agentHost;
 
-    @Parameter(property = "agentPort")
+	@Parameter(property = "agentPort")
 	private String agentPort;
 
 	@Parameter(property = "agentAuth")
@@ -139,11 +136,6 @@ public class BWDeployMojo extends AbstractMojo {
 				getLog().error("Validation failed. Skipping EAR Deployment.");
 				return;
 			}
-			if (!deployToAdmin) {
-				getLog().info(
-						"Deploy To Admin is set to False. Skipping EAR Deployment.");
-				return;
-			}
 			deriveEARInformation(files[0]);
 			applicationName = manifest.getMainAttributes().getValue(
 					Constants.BUNDLE_SYMBOLIC_NAME);
@@ -207,19 +199,17 @@ public class BWDeployMojo extends AbstractMojo {
 
 	private boolean deploymentConfigExists() {
 		if (deploymentConfigfile == null || deploymentConfigfile.isEmpty()) {
-			getLog().info(
-					"No Deployment Config File set. Reading the deployment Properties from POM File.");
+			getLog().info("No Deployment Config File set.");
 			return false;
 		}
 		String deploymentFile = deploymentConfigfile;
 		File file = new File(deploymentFile);
 		if (!file.exists()) {
-			getLog().info(
-					"Deployment Config File not found. Reading the deployment Properties from POM File.");
+			getLog().info("Deployment Config File not found.");
 			return false;
 		}
 		getLog().info(
-				"Deployment Config File found. Loading configuration from the same.");
+				"Deployment Config File found. Loading configuration from the Config file.");
 		return true;
 	}
 
@@ -262,8 +252,6 @@ public class BWDeployMojo extends AbstractMojo {
 			httpPort = deployment.getProperty("httpPort");
 			osgiPort = deployment.getProperty("osgiPort");
 			profile = deployment.getProperty("profile");
-			deployToAdmin = Boolean.parseBoolean(deployment
-					.getProperty("deployToAdmin"));
 			redeploy = Boolean.parseBoolean(deployment.getProperty("redeploy"));
 			backup = Boolean.parseBoolean(deployment.getProperty("backup"));
 			backupLocation = deployment.getProperty("backupLocation");
@@ -271,7 +259,6 @@ public class BWDeployMojo extends AbstractMojo {
 					.getProperty("externalProfile"));
 			externalProfileLoc = deployment.getProperty("externalProfileLoc");
 		} catch (Exception e) {
-			deployToAdmin = false;
 			getLog().error(e);
 			getLog().info(
 					"Error in Loading Deployment Properties. Skipping EAR Deployment.");

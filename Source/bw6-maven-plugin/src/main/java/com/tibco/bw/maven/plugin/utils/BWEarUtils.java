@@ -7,12 +7,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BWEarUtils {
+	final static Logger logger = LoggerFactory.getLogger(BWEarUtils.class);
 
 	public static void ExtractEARFile(File earLocation, File EARFile)
 			throws IOException {
-		// getLog().debug("Extracting EAR File");
+		logger.debug("Extracting EAR File");
 		ZipInputStream zipIn = new ZipInputStream(new FileInputStream(EARFile));
 		ZipEntry entry = zipIn.getNextEntry();
 		while (entry != null) {
@@ -32,7 +35,7 @@ public class BWEarUtils {
 
 	public static void ExtractEARFileEntry(ZipInputStream zipIn, String filePath)
 			throws IOException {
-		// getLog().debug("Extracting EAR File Entries ");
+		logger.debug("Extracting EAR File Entries ");
 		new File(new File(filePath).getParent()).mkdirs();
 		BufferedOutputStream bos = new BufferedOutputStream(
 				new FileOutputStream(filePath));
@@ -54,7 +57,7 @@ public class BWEarUtils {
 	}
 
 	public static void DeleteEARFileEntries(File earLocation) {
-		// getLog().debug("Deleting EARFile Entries ");
+		logger.debug("Deleting EARFile Entries ");
 		String[] entries = earLocation.list();
 		for (String entry : entries) {
 			File currentFile = new File(earLocation.getPath(), entry);
