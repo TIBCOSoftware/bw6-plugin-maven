@@ -58,12 +58,9 @@ public class BWEarUtils {
 		String[] entries = earLocation.list();
 		for (String entry : entries) {
 			File currentFile = new File(earLocation.getPath(), entry);
-			// ************************
-
 			if (currentFile.getName().contains("META-INF")) {
 				deleteSubFolder(currentFile);
 			}
-			// **********************
 			if (currentFile.isDirectory()) {
 				DeleteEARFileEntries(currentFile);
 			}
