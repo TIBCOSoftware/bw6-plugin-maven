@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class BWEarUtils {
 	final static Logger logger = LoggerFactory.getLogger(BWEarUtils.class);
 
-	public static void ExtractEARFile(File earLocation, File EARFile)
+	public static void extractEARFile(File earLocation, File EARFile)
 			throws IOException {
 		logger.debug("Extracting EAR File");
 		ZipInputStream zipIn = new ZipInputStream(new FileInputStream(EARFile));
@@ -22,7 +22,7 @@ public class BWEarUtils {
 			String filePath = earLocation.getAbsolutePath() + File.separator
 					+ entry.getName();
 			if (!entry.isDirectory()) {
-				ExtractEARFileEntry(zipIn, filePath);
+				extractEARFileEntry(zipIn, filePath);
 			} else {
 				File dir = new File(filePath);
 				dir.mkdir();
@@ -33,7 +33,7 @@ public class BWEarUtils {
 		zipIn.close();
 	}
 
-	public static void ExtractEARFileEntry(ZipInputStream zipIn, String filePath)
+	public static void extractEARFileEntry(ZipInputStream zipIn, String filePath)
 			throws IOException {
 		logger.debug("Extracting EAR File Entries ");
 		new File(new File(filePath).getParent()).mkdirs();
@@ -56,7 +56,7 @@ public class BWEarUtils {
 		element.delete();
 	}
 
-	public static void DeleteEARFileEntries(File earLocation) {
+	public static void deleteEARFileEntries(File earLocation) {
 		logger.debug("Deleting EARFile Entries ");
 		String[] entries = earLocation.list();
 		for (String entry : entries) {
@@ -65,7 +65,7 @@ public class BWEarUtils {
 				deleteSubFolder(currentFile);
 			}
 			if (currentFile.isDirectory()) {
-				DeleteEARFileEntries(currentFile);
+				deleteEARFileEntries(currentFile);
 			}
 			if (!(currentFile.getName().contains(".ear")
 					|| currentFile.getName().contains("configFile") || currentFile

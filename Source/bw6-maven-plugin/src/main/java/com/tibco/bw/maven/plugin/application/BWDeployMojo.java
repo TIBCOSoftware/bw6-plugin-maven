@@ -119,7 +119,7 @@ public class BWDeployMojo extends AbstractMojo {
 			if (files.length == 0) {
 				throw new Exception("EAR file not found for the Application");
 			}
-			BWEarUtils.ExtractEARFile(earLocation, files[0]);
+			BWEarUtils.extractEARFile(earLocation, files[0]);
 			Manifest manifest = ManifestParser.parseManifest(earLocation);
 			String bwEdition = manifest.getMainAttributes().getValue(
 					Constants.TIBCO_BW_EDITION);
@@ -183,7 +183,7 @@ public class BWDeployMojo extends AbstractMojo {
 					externalProfileLoc);
 			deployer.close();
 			deployer.close();
-			BWEarUtils.DeleteEARFileEntries(earLocation);
+			BWEarUtils.deleteEARFileEntries(earLocation);
 		} catch (Exception e) {
 			getLog().error(e);
 			throw new MojoExecutionException(
