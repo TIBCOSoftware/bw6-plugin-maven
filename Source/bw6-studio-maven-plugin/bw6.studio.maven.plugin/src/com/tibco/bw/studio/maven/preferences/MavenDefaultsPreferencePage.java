@@ -69,6 +69,7 @@ public class MavenDefaultsPreferencePage extends FieldEditorPreferencePage imple
 		try {
 			String tibcohome = BWIniConfigurationUtil.INSTANCE.getTibcoHome();
 			findFile("MavenDefault.properties",new File(tibcohome));
+			if(propertyFile!=null){
 			FileInputStream fileInput = new FileInputStream(propertyFile);
 			Properties properties = new Properties();
 			properties.load(fileInput);
@@ -99,7 +100,7 @@ public class MavenDefaultsPreferencePage extends FieldEditorPreferencePage imple
 			    MavenPropertiesFileDefaults.INSTANCE.setDefaultKubernetes_ContainerPort(properties.getProperty("MavenDefaultsPreferencePage_defaultKubernetes_ContainerPort"));
 			    MavenPropertiesFileDefaults.INSTANCE.setDefaultKubernetes_K8SNamespace(properties.getProperty("MavenDefaultsPreferencePage_defaultKubernetes_K8SNamespace"));
 			    MavenPropertiesFileDefaults.INSTANCE.setDefaultKubernetes_EnvVars(properties.getProperty("MavenDefaultsPreferencePage_defaultKubernetes_EnvVars"));
-//			}
+			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
