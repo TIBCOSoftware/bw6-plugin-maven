@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Test_Assert Application
-Bundle-SymbolicName: Test_Assert.application
-Bundle-Version: 1.0.0.qualifier
-Bundle-Vendor: TIBCO Software Inc.
-TIBCO-BW-Application: META-INF/TIBCO.xml
-TIBCO-BW-ConfigProfile: META-INF/default.substvar
-TIBCO-BW-Version: 6.3.2 V15 2016-03-14

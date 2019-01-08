@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jndi:namedResource xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:_6ae3a134-ecdc-4c6e-ab5d-e9cbc5a67bc4="http://ns.tibco.com/bw/palette/dataformat/6ae3a134-ecdc-4c6e-ab5d-e9cbc5a67bc4" xmlns:dataformat="http://ns.tibco.com/bw/palette/dataformat" xmlns:jndi="http://xsd.tns.tibco.com/amf/models/sharedresource/jndi" xmi:id="_N-lAgQcgEeamLL84L1xrcw" name="test_assert.DataFormatResource" type="dataformat:DataFormat">
-  <imports xmi:id="_7rh_kAciEeamLL84L1xrcw" importType="http://www.w3.org/2001/XMLSchema" namespace="http://ns.tibco.com/bw/palette/dataformat/6ae3a134-ecdc-4c6e-ab5d-e9cbc5a67bc4"/>
-  <jndi:configuration xsi:type="dataformat:DataFormat" xmi:id="_N_BFYAcgEeamLL84L1xrcw" formatType="Delimiter separated" colSeparator="|" colSeparatorParseRule="Treat all characters as entered as a single column separator string" lineSeparator="New Line" fillCharacter="Space" schemaElementQName="_6ae3a134-ecdc-4c6e-ab5d-e9cbc5a67bc4:row" fieldOffsetsStr="id(0,0)&#xA;int_col(0,0)&#xA;theboolean(0,0)">
-    <fieldOffsets xmi:id="_7uOuQAciEeamLL84L1xrcw" name="id"/>
-    <fieldOffsets xmi:id="_7uOuQQciEeamLL84L1xrcw" name="int_col"/>
-    <fieldOffsets xmi:id="_7uOuQgciEeamLL84L1xrcw" name="theboolean"/>
-  </jndi:configuration>
-</jndi:namedResource>
