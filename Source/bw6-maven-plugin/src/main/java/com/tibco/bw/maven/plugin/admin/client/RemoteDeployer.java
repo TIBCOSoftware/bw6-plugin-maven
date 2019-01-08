@@ -29,6 +29,7 @@ import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.Boundary;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
@@ -189,6 +190,24 @@ public class RemoteDeployer {
 		}
 	}
 
+	private AppSpace setProfile(final String domainName, final String appSpaceName, final String version,final String appName,final String externalProfileLoc) throws ClientException {
+		init();
+		try {
+			final FileDataBodyPart filePart = new FileDataBodyPart("file", new File(externalProfileLoc));
+			FormDataMultiPart formDataMultiPart  = new FormDataMultiPart();
+		    final FormDataMultiPart multipart = (FormDataMultiPart) formDataMultiPart.bodyPart(filePart);
+			  MediaType contentType = formDataMultiPart .getMediaType();
+			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("config").path("externalprofile").request().put(Entity.entity(multipart , contentType));
+			processErrorResponse(response);
+			AppSpace appSpace = response.readEntity(AppSpace.class);
+			return appSpace;
+			
+		} catch (ProcessingException pe) {
+			throw getConnectionException(pe);
+		} catch (Exception ex) {
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
 	public AppSpace getOrCreateAppSpace(final String domainName, final String appSpaceName, final String desc) throws ClientException {
 		List<AppSpace> appSpaces = getAppSpaces(domainName, null, false, true);
 		for(AppSpace appSpace : appSpaces) {
@@ -214,7 +233,7 @@ public class RemoteDeployer {
 		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);
 	}
 
-	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation) throws ClientException {
+	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc) throws ClientException {
 		List<Application> applications = getApplications(domainName, appSpaceName, null, true);
 		for(Application application : applications) {
 			if(application.getName().equals(appName)) {
@@ -237,7 +256,10 @@ public class RemoteDeployer {
 		log.info("Uploading the Archive file -> " + earName);
 		uploadArchive(domainName, null, file, true);
 		log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
-		deployApplication(domainName, appSpaceName, earName, null, true, replace, profile);
+		deployApplication(domainName, appSpaceName, earName, null, true, replace, profile,externalProfile);
+		if(externalProfile){
+			setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
+			}
 	}
 
 	private List<AppSpace> getAppSpaces(final String domainName, final String filter, final boolean full, final boolean status) throws ClientException {
@@ -354,13 +376,18 @@ public class RemoteDeployer {
 		}
 	}
 
-	private Application deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile) throws ClientException {
+	private Application deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile, boolean externalProfile) throws ClientException {
 		init();
 		try {
 			r = r.queryParam("archivename", archiveName);
 			addQueryParam("path", path);
 			r = r.queryParam("startondeploy", String.valueOf(startOnDeploy)).queryParam("replace", String.valueOf(replace));
+			if(externalProfile){
+				addQueryParam("profile", "default.substvar");
+			}
+			else{
 			addQueryParam("profile", profile);
+			}
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 			Application application = response.readEntity(Application.class);

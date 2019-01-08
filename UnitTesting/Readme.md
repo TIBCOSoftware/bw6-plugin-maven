@@ -1,3 +1,7 @@
+## Deprecation Notice
+
+"The unit testing feature is now offered out of the box with TIBCO ActiveMatrix BusinessWorks(TM) and TIBCO BusinessWorks(TM) Container Edition. Please refer to [official documentation](https://docs.tibco.com/pub/activematrix_businessworks/6.5.0/doc/html/GUID-20758669-A9B4-4D84-95DB-0BFDA225E068.html) for unit testing.
+Hence effective immediately the unit testing feature as part of this open source repository is now deprecated and will be removed shortly.".
 # Assertions plugin for TIBCO ActiveMatrix BusinessWorks™ 6
 
 ### To add plugin to existing Installation:

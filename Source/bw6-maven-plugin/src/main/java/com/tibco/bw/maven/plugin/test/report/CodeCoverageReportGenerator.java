@@ -96,7 +96,7 @@ public class CodeCoverageReportGenerator
 
 		        sinkHeader( sink, "Process %" );
 
-		        sinkHeader( sink, "Ativity %" );
+		        sinkHeader( sink, "Activity %" );
 
 		        sinkHeader( sink, "Transition %" );
 

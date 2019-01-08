@@ -14,6 +14,7 @@ import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWPluginModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.wizard.MavenWizardContext;
 
 public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder {
 	protected String bwEdition;
@@ -25,18 +26,7 @@ public class ModulePOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		}
 		this.project = project;
 		this.module = module;
-
-		Map<String, String> manifest = ManifestParser.parseManifest(module.getProject());
-		if (manifest.containsKey("TIBCO-BW-Edition") && manifest.get("TIBCO-BW-Edition").equals("bwcf")) {
-			String targetPlatform = "docker";
-			if (targetPlatform.equals("Cloud Foundry")) {
-				bwEdition = "cf";
-			} else {
-				bwEdition = "docker";
-			}
-		} else
-			bwEdition = "bw6";
-
+		bwEdition=setBwEdition(module);
 		initializeModel();
 		addPrimaryTags();
 		addParent(ModuleHelper.getParentModule(project.getModules()));

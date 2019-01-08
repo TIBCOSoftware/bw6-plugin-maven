@@ -34,44 +34,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 
 		this.project = project;
 		this.module = module;
-		
-		Map<String, String> manifest = ManifestParser.parseManifest(module.getProject());
-		if (manifest.containsKey("TIBCO-BW-Edition") )				
-		{
-			String editions = manifest.get( "TIBCO-BW-Edition" );				
-	
-				String[] editionList = editions.split(",");
-				for( String str : editionList )
-				{
-					switch ( str )
-					{
-					case "bwe":
-						bwEdition = "bw6";
-						break;
-
-					case "bwcf":
-						
-							switch ( MavenWizardContext.INSTANCE.getSelectedType() )
-							{
-							case PCF:
-								bwEdition = "cf";
-								break;
-								
-							case Docker:
-								bwEdition = "docker";
-								break;
-							
-							default:
-								break;
-							}
-						
-						break;
-				default:
-						break;
-					}
-					
-				}
-		}
+		bwEdition=setBwEdition(module);
 		initializeModel();
 		addPrimaryTags();
 		//addParent(ModuleHelper.getParentModule(project.getModules()));
@@ -145,6 +108,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.getProperties().remove("backup");
 			model.getProperties().remove("backupLocation");
 			model.getProperties().remove("profile");
+			model.getProperties().remove("externalProfile");
+			model.getProperties().remove("externalProfileLoc");
 			return;
 		}
 
@@ -266,6 +231,16 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		model.addProperty("backupLocation", info.getBackupLocation());
 		properties.put("backupLocation", info.getBackupLocation());
 
+		Xpp3Dom externalProfile  = new Xpp3Dom("externalProfile");
+		externalProfile.setValue("${externalProfile}");
+		model.addProperty("externalProfile", Boolean.toString(info.isexternalProfile()));
+		properties.put("externalProfile", Boolean.toString(info.isexternalProfile()));
+
+		Xpp3Dom externalProfileLoc  = new Xpp3Dom("externalProfileLoc");
+		externalProfileLoc.setValue("${externalProfileLoc}");
+		model.addProperty("externalProfileLoc", info.getexternalProfileLoc());
+		properties.put("externalProfileLoc", info.getexternalProfileLoc());
+		
 		config.addChild(deployToAdmin);
 		config.addChild(agentHost);
 		config.addChild(agentPort);
@@ -289,6 +264,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		config.addChild(backup);
 		config.addChild(backupLocation);
 		config.addChild(profile);
+		config.addChild(externalProfile);
+		config.addChild(externalProfileLoc);
 
 		plugin.setConfiguration(config);
 
@@ -342,7 +319,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			ReportPlugin p = new ReportPlugin();
 			p.setGroupId("com.tibco.plugins");
 			p.setArtifactId("bw6-maven-plugin");
-			p.setVersion("2.0.0");
+			p.setVersion("2.1.0");
 			reporting.getPlugins().add(p);
 		}
 		

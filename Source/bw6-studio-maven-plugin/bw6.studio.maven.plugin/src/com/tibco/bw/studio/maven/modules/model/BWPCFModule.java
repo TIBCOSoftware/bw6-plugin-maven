@@ -17,9 +17,13 @@ public class BWPCFModule {
 	
 	private String appName;
 	
+	private String pcfDomain;
+	
 	private String instances;
 	
 	private String memory;
+	
+	private String diskQuota;
 	
 	private String buildpack;
 	
@@ -115,6 +119,22 @@ public class BWPCFModule {
 
 	public void setCfEnvVariables(Map<String, String> cfEnvVariables) {
 		this.cfEnvVariables = cfEnvVariables;
+	}
+
+	public String getDiskQuota() {
+		return diskQuota;
+	}
+
+	public void setDiskQuota(String diskQuota) {
+		this.diskQuota = diskQuota;
+	}
+	
+	public String getPCFDomain() {
+		return pcfDomain;
+	}
+ 	public void setPCFDomain(String pcfDomain) {
+		this.pcfDomain = pcfDomain;
+		
 	}
 
 	
