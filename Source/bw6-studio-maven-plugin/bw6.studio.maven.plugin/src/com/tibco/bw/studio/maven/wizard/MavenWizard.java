@@ -58,6 +58,9 @@ public class MavenWizard extends Wizard {
 						}
 					}
 				}
+			}else {
+				// "TIBCO-BW-Edition" value in manifest is not set, default will be "bwe".
+				MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.AppSpace );
 			}
 
 			MavenWizardContext.INSTANCE.setConfigPage(new WizardPageConfiguration("POM Configuration", project));
