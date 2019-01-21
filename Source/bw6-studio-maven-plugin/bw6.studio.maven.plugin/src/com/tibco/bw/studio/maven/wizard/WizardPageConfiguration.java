@@ -189,13 +189,13 @@ public class WizardPageConfiguration extends WizardPage {
 
 	private void addNotes() {
 		Label label = new Label(container, SWT.NONE);
-		label.setText("Note* : The Maven ArtifactId and the Bundle-SymbolicName should be same.");
+		label.setText("Note* : Maven ArtifactId and Bundle-SymbolicName should be same.");
 		GridData versionData = new GridData();
 		versionData.horizontalSpan = 4;
 		label.setLayoutData(versionData);
 
 		Label label1 = new Label(container, SWT.NONE);
-		label1.setText("Note* : The Maven Version and the Bundle-Version should be same.");
+		label1.setText("Note* : Maven Version and Bundle-Version should be same.");
 		versionData = new GridData();
 		versionData.horizontalSpan = 4;
 		label1.setLayoutData(versionData);
