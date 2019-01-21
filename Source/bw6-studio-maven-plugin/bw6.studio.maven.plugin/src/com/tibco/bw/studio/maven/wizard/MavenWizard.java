@@ -129,8 +129,4 @@ public class MavenWizard extends Wizard {
         return windowTitle;
     }
 	
-	@Override
-	 public void setWindowTitle(String newTitle) {
-	        windowTitle = newTitle;
-    }
 }
