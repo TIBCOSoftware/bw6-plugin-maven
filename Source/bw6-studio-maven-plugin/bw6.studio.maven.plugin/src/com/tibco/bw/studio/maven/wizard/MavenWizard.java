@@ -12,6 +12,7 @@ import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 
 public class MavenWizard extends Wizard {
 	private BWProject project;
+	private String windowTitle ="Generate POM for Application";
 
 	public MavenWizard(BWProject project) {
 		super();
@@ -122,4 +123,9 @@ public class MavenWizard extends Wizard {
 	public BWProject getProject() {
 		return project;
 	}
+	
+	@Override
+	public String getWindowTitle() {
+        return windowTitle;
+    }
 }
