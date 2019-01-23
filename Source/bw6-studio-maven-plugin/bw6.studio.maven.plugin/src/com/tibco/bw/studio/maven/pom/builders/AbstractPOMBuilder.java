@@ -876,6 +876,9 @@ public abstract class AbstractPOMBuilder {
 				}
 
 			}
+		} else {
+			// "TIBCO-BW-Edition" value in manifest is not set, default value of bwEdition will be "bw6".
+			bwEdition = "bw6";
 		}
 		return bwEdition;
 	}
