@@ -179,7 +179,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 
 		StringBuffer buffer = new StringBuffer();
 		for(File file : artifactFiles.keySet()) {
-			if(artifactFiles.get(file).equalsIgnoreCase("provided") || file.getName().indexOf("com.tibco.bw.palette.shared") != -1 || file.getName().indexOf("com.tibco.xml.cxf.common") != -1 || file.getName().indexOf("tempbw") != -1){
+			if(artifactFiles.get(file).equalsIgnoreCase("provided") || artifactFiles.get(file).equalsIgnoreCase("system") || file.getName().indexOf("com.tibco.bw.palette.shared") != -1 || file.getName().indexOf("com.tibco.xml.cxf.common") != -1 || file.getName().indexOf("tempbw") != -1){
 				continue;
 			}
 			
