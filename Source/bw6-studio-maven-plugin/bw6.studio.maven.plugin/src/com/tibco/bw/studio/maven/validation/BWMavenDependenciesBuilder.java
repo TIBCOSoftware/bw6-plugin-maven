@@ -187,6 +187,9 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			String artifactId = dependency.getArtifactId();
 			String version = dependency.getVersion();
 			String type = dependency.getType();
+			if("bwmodule".equalsIgnoreCase(type)){
+				type = "jar";
+			}
 			String classifier = dependency.getClassifier();
 
 			Artifact artifact = maven.resolve(groupId, artifactId, version, type, classifier, maven.getArtifactRepositories(), null);
