@@ -184,7 +184,7 @@ public class BWTestMojo extends AbstractMojo {
 	{
 		if( ! skipTests )
 		{
-			if( project.getProperties().get("skipTests").equals("true") )
+			if( "true".equals(project.getProperties().get("skipTests")) )
 			{
 				return true;
 			}
