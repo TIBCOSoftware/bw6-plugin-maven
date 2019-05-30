@@ -10,17 +10,23 @@ import javax.xml.bind.annotation.XmlType;
 
 @SuppressWarnings("serial")
 @XmlType
-@XmlSeeAlso({AssertionDTO.class})
+@XmlSeeAlso({AssertionDTO.class,MockActivityDTO.class})
+
 public class TestCaseDTO implements Serializable{
 
 
 	
 	private String xmlInput;
 	
+	private String mockOutputFilePath;
+	
 	private String testCaseFile;
 
 	@SuppressWarnings("rawtypes")
 	private List assertionList = new ArrayList();
+	
+	@SuppressWarnings("rawtypes")
+	private List mockActivityList = new ArrayList();
 
 	@XmlElement
 	public String getXmlInput() 
@@ -31,6 +37,17 @@ public class TestCaseDTO implements Serializable{
 	public void setXmlInput(String xmlInput) 
 	{
 		this.xmlInput = xmlInput;
+	}
+	
+	public void setmockOutputFilePath(String mockOutputFilePath) 
+	{
+		this.mockOutputFilePath = mockOutputFilePath;
+	}
+	
+	@XmlElement
+	public String getmockOutputFilePath() 
+	{
+		return mockOutputFilePath;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -54,5 +71,17 @@ public class TestCaseDTO implements Serializable{
 	public void setTestCaseFile(String testCaseFile) 
 	{
 		this.testCaseFile = testCaseFile;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@XmlElement(name="mockActivityList")
+	public List getMockActivityList() 
+	{
+		return mockActivityList;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public void setMockActivityList(List mockActivityList) {
+		this.mockActivityList = mockActivityList;
 	}
 }

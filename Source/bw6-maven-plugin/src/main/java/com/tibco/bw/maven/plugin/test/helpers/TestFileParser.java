@@ -20,6 +20,7 @@ import org.xml.sax.SAXException;
 
 import com.tibco.bw.maven.plugin.test.dto.AssertionDTO;
 import com.tibco.bw.maven.plugin.test.dto.ConditionLanguageDTO;
+import com.tibco.bw.maven.plugin.test.dto.MockActivityDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestCaseDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
@@ -123,13 +124,36 @@ public class TestFileParser {
 											}
 										}
 									}
+								}else if("MockActivity".equals(cEl.getNodeName())){
+									
+									MockActivityDTO mockActivity = new MockActivityDTO();
+									
+									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
+									mockActivity.setLocation(location);
+									
+									NodeList gChildNodes = cEl.getChildNodes();
+									for (int k = 0; k < gChildNodes.getLength(); k++) {
+										Node gcNode = gChildNodes.item(k);
+										if (gcNode instanceof Element) {
+											Element e1 = (Element) gcNode;
+											if ("MockOutputFilePath".equals(e1.getNodeName()))
+											{
+												String mockOutputFilePath = e1.getTextContent();
+												mockActivity.setmockOutputFilePath(mockOutputFilePath);
+												testcase.setmockOutputFilePath(mockOutputFilePath);
+												testcase.getMockActivityList().add(mockActivity);
+												break;
+											}
+									
 								}
 							}
 						}
+							}
+						}
 						
-						if( testcase.getAssertionList().isEmpty() )
+						if( testcase.getAssertionList().isEmpty() && testcase.getMockActivityList().isEmpty())
 						{
-							BWTestConfig.INSTANCE.getLogger().info( "No assertions found in the Test File : " + testcase.getTestCaseFile() + " . Skipping the running of file." );
+							BWTestConfig.INSTANCE.getLogger().info( "No assertions and Mock Activities found in the Test File : " + testcase.getTestCaseFile() + " . Skipping the running of file." );
 						}
 						else
 						{
