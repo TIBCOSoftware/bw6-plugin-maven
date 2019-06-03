@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
@@ -16,7 +15,8 @@ import com.tibco.bw.maven.plugin.utils.Path;
 
 public class ConfigFileGenerator 
 {
-
+	ArrayList<String> bundleNamesList = new ArrayList<>();
+    Boolean isBundleToStart = false;
 	public void generateConfig()
 	{
 		
@@ -76,7 +76,7 @@ public class ConfigFileGenerator
 	
 	private void addPluginsFromDir( File target , StringBuilder builder )
 	{
-
+        
 		File []files = target.listFiles();
 		for( File file : files )
 		{
@@ -85,20 +85,34 @@ public class ConfigFileGenerator
 			{
 				continue;
 			}
-//			File devBundle = getDevBundle( file.getName() );
-//			if( devBundle != null )
-//			{
-//				file = devBundle;
-//				System.out.println( "### Found dev " +  file);
-//			}
-			
-			if( builder.length() > 0 )
-			{
-				builder.append( ",");
+
+			String[] split = file.getName().split("_");
+			if(bundleNamesList.isEmpty()){
+				bundleNamesList.add(split[0]);
+				isBundleToStart = true;
 			}
+			else{
+				for(String bundleName : bundleNamesList){
+					if(null !=bundleName && bundleName.equals(split[0])){
+						isBundleToStart = false;
+						break;
+					}
+					else{
+						isBundleToStart = true;
+					}
+				}
+				if(isBundleToStart){
+					bundleNamesList.add(split[0]);
+				}
+				}
 			
-			
-			addReference( builder , file );
+			if(isBundleToStart){
+				if(builder.length() > 0 )
+				{
+					builder.append( ",");
+				}
+				addReference( builder , file );
+			}
 		}
 		
 	}
@@ -120,7 +134,7 @@ public class ConfigFileGenerator
 	{
 		
 		List<File> list = new ArrayList<>();
-		String [] platformDirs = { "system/hotfix/lib/common" , "system/lib/common" , "system/hotfix/palettes" , "system/palettes" , "system/hotfix/shared" , "system/shared"};
+		String [] platformDirs = { "system/hotfix/lib/common" , "system/lib/common" , "system/hotfix/palettes" , "system/palettes" , "system/hotfix/shared" , "system/shared","config/drivers/shells/jdbc.oracle.runtime/hotfix/runtime/plugins" ,"config/drivers/shells/jdbc.oracle.runtime/runtime/plugins","config/drivers/shells/jdbc.mysql.runtime/hotfix/runtime/plugins","config/drivers/shells/jdbc.mysql.runtime/runtime/plugins","config/drivers/shells/jdbc.mariadb.runtime/hotfix/runtime/plugins","config/drivers/shells/jdbc.mariadb.runtime/runtime/plugins","config/drivers/shells/jdbc.db2.runtime/hotfix/runtime/plugins","config/drivers/shells/jdbc.db2.runtime/runtime/plugins"};
 	
 		String bwHomeStr = BWTestConfig.INSTANCE.getTibcoHome() + BWTestConfig.INSTANCE.getBwHome();
 		File bwHome = new File( bwHomeStr );
