@@ -98,12 +98,10 @@ public class EngineRunner
 					InputStreamReader isr = new InputStreamReader(is);
 					BufferedReader br = new BufferedReader(isr);
 					String line;
-					//int lineNo = 1;
 			        while((line = br.readLine()) != null) {
-			        	System.out.println(line);
-			        	/*if(null != logger){
+			        	if(null != logger){
 			        		logger.info(line);
-			        	}*/
+			        	}
 			        	if( line.contains( "Started BW Application") )
 						{
 							latch.countDown();

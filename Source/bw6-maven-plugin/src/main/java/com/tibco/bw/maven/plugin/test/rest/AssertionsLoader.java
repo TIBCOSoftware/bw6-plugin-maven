@@ -6,16 +6,20 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
+import com.tibco.bw.maven.plugin.test.setuplocal.EngineRunner;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 
 public class AssertionsLoader 
 {
 
 	MavenProject project;
+	private final Logger logger = LoggerFactory.getLogger(AssertionsLoader.class);
 	
 	public AssertionsLoader( MavenProject project)
 	{
@@ -32,6 +36,7 @@ public class AssertionsLoader
 		List testCaseList = new ArrayList();
 		for( File file : files )
 		{
+			logger.info("## Running Test for "+file.getName()+" ##");
 			String assertionxml = FileUtils.readFileToString( file );
 			
 			TestFileParser.INSTANCE.collectAssertions(assertionxml , suite);
