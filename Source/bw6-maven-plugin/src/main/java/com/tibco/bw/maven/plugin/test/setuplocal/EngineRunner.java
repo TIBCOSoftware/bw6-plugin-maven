@@ -3,21 +3,18 @@ package com.tibco.bw.maven.plugin.test.setuplocal;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.tibco.bw.maven.plugin.lifecycle.BWExecutionListener;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class EngineRunner 
 {     
-	private final Logger logger = LoggerFactory.getLogger(EngineRunner.class);
-	 CountDownLatch latch = new CountDownLatch(1);
+	CountDownLatch latch = new CountDownLatch(1);
+	AtomicBoolean isEngineStarted = new AtomicBoolean(true);
 
 	public void run() throws Exception
 	{
@@ -33,7 +30,8 @@ public class EngineRunner
         process = builder.start();
         
         BWTestConfig.INSTANCE.getLogger().info( "## Starting BW Engine in Test Mode ##");
-        
+        BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs Start---------------------------------------------------------------------------------------------------------------------------------------------------");
+        BWTestConfig.INSTANCE.getLogger().info( "" );
         BWTestConfig.INSTANCE.setEngineProcess(process);
         
         final StringBuilder sb  = new StringBuilder();
@@ -60,7 +58,10 @@ public class EngineRunner
 		
 		timer.cancel();
 		
-		System.out.println();
+		if(!isEngineStarted.get()){
+			throw new EngineProcessException("BW Engine not started successfully.Please see logs for more details");
+		}
+		
         BWTestConfig.INSTANCE.getLogger().info( "## BW Engine Successfully Started ##");
 
 		
@@ -79,7 +80,7 @@ public class EngineRunner
 					String line;
 					
 			        while((line = br.readLine()) != null) {
-			           // System.out.println( line);
+			            //System.out.println( line);
 			            sb.append( line );
 			        }
 				} catch(Exception e) {
@@ -90,7 +91,7 @@ public class EngineRunner
 		return error;
 	}
 
-	private Runnable getInputRunnable(final Process process, final StringBuilder sb) {
+	private Runnable getInputRunnable(final Process process, final StringBuilder sb){
 		Runnable input = new Runnable() {
 			public void run() {
 				try {
@@ -98,12 +99,8 @@ public class EngineRunner
 					InputStreamReader isr = new InputStreamReader(is);
 					BufferedReader br = new BufferedReader(isr);
 					String line;
-					//int lineNo = 1;
 			        while((line = br.readLine()) != null) {
 			        	System.out.println(line);
-			        	/*if(null != logger){
-			        		logger.info(line);
-			        	}*/
 			        	if( line.contains( "Started BW Application") )
 						{
 							latch.countDown();
@@ -111,8 +108,13 @@ public class EngineRunner
 			        	
 			            sb.append( line );
 			        }
+			        if(latch.getCount()>0){
+			        	isEngineStarted.set(false);
+			        	latch.countDown();
+			        }
+			        
 				} catch(Exception e) {
-		        	//logger.error ( e.getMessage() , e);
+					e.printStackTrace();
 		        }
 			}
 		};

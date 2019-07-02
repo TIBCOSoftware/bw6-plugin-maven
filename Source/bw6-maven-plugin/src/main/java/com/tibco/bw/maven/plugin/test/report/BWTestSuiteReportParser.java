@@ -117,6 +117,11 @@ public class BWTestSuiteReportParser
 						packageDetails.incrementFailures();
 						fileDetails.incrementFailures();
 					}
+					else if(testcase.getProcessFailures()>0){
+						processDetails.incrementErrors();
+						packageDetails.incrementErrors();
+						fileDetails.incrementErrors();
+					}
 				}
 			}
 		}
@@ -198,9 +203,12 @@ public class BWTestSuiteReportParser
 		{
 			float success = 0;
 			
-			if( failures == 0 )
+			if( failures == 0 && errors == 0)
 			{
 				success = 1 * 100;
+			}
+			else if(errors == totalTests){
+				success = 0;
 			}
 			else if( failures == totalTests )
 			{
@@ -208,7 +216,7 @@ public class BWTestSuiteReportParser
 			}
 			else 
 			{
-				success = ((float)(totalTests - failures) /(float) totalTests) * 100;
+				success = ((float)(totalTests - failures - errors) /(float) totalTests) * 100;
 			}
 			return String.valueOf( format.format(success) );
 
@@ -298,9 +306,12 @@ public class BWTestSuiteReportParser
 		{
 			float success = 0;
 			
-			if( failures == 0 )
+			if( failures == 0 && errors == 0)
 			{
 				success = 1 * 100;
+			}
+			else if(errors == totalTests){
+				success = 0;
 			}
 			else if( failures == totalTests )
 			{
@@ -308,7 +319,7 @@ public class BWTestSuiteReportParser
 			}
 			else 
 			{
-				success = ((float)(totalTests - failures) / (float)totalTests) * 100;
+				success = ((float)(totalTests - failures - errors) / (float)totalTests) * 100;
 			}
 			return String.valueOf( format.format(success) );
 			}
@@ -335,6 +346,7 @@ public class BWTestSuiteReportParser
 		private String fileName;
 		private int totalAssertions;
 		private int failures;
+		private int errors;
 		private List<String> assertionFailures = new ArrayList<>();
 		
 		public ProcessFileTestDetails()
@@ -370,9 +382,19 @@ public class BWTestSuiteReportParser
 			return failures;
 		}
 		
+		public int getErrors() 
+		{
+			return errors;
+		}
+		
 		public void incrementFailures()
 		{
 			this.failures++;
+		}
+		
+		public void incrementErrors()
+		{
+			this.errors++;
 		}
 
 		public List<String> getAssertionFailures() 
@@ -416,7 +438,30 @@ public class BWTestSuiteReportParser
 		
 		public String getErrors()
 		{
-			return "0";
+			
+			int totalErrors  = 0; 
+			
+			for( int count = 0 ; count < completeResult.getModuleResult().size() ; count++ )
+			{
+				TestSuiteResultDTO result = (TestSuiteResultDTO) completeResult.getModuleResult().get( count );
+				for( int i =0 ; i < result.getTestSetResult().size() ; i++ )
+				{
+					TestSetResultDTO testset = (TestSetResultDTO) result.getTestSetResult().get( i );
+
+					
+					for( int j = 0 ; j < testset.getTestCaseResult().size() ; j++ )
+					{
+						TestCaseResultDTO testcase = (TestCaseResultDTO) testset.getTestCaseResult().get( j );
+						if( testcase.getProcessFailures() > 0 )
+						{
+							totalErrors++;
+						}
+						
+					}
+				}
+
+			}
+			return String.valueOf(totalErrors);
 		}
 		
 		public String getSkipped()
@@ -444,10 +489,6 @@ public class BWTestSuiteReportParser
 						{
 							totalfailure++;
 						}
-						else
-						{
-
-						}
 					}
 				}
 
@@ -459,7 +500,7 @@ public class BWTestSuiteReportParser
 		{
 			float success = 0;
 
-			if( Integer.valueOf(getFailures()) == 0 )
+			if( Integer.valueOf(getFailures()) == 0 && Integer.valueOf(getErrors()) == 0 )
 			{
 				success = 100;
 			}
@@ -467,9 +508,14 @@ public class BWTestSuiteReportParser
 			{
 				success = 0;
 			}
+			else if( Integer.valueOf(getErrors()) == Integer.valueOf(getTotalTests()) )
+			{
+				success = 0;
+			}
+			
 			else 
 			{
-				success = (((float)(Integer.valueOf(getTotalTests()) - Integer.valueOf(getFailures()) )/ ((float)Integer.valueOf(getTotalTests())) ))* 100;
+				success = (((float)(Integer.valueOf(getTotalTests()) - Integer.valueOf(getFailures()) - Integer.valueOf(getErrors()))/ ((float)Integer.valueOf(getTotalTests())) ))* 100;
 			}
 			return String.valueOf( format.format(success) );
 		}

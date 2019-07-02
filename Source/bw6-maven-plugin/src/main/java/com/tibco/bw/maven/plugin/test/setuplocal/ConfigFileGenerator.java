@@ -80,8 +80,15 @@ public class ConfigFileGenerator
 		File []files = target.listFiles();
 		for( File file : files )
 		{
+			//If database drivers are not installed then don't load the lib folder
+			File libFolder = new File(file.getAbsolutePath().concat("/lib"));
+			if(libFolder.exists()){
+				if(libFolder.isDirectory() && libFolder.list().length==0){
+					continue;
+				}
+			}
 			
-			if( file.getName().contains( "DS_Store"))
+			if( file.getName().contains( "DS_Store") || file.getName().contains("com.tibco.bw.extensions.logback") || file.getName().contains("com.tibco.bw.thor.equinox.env") || file.getName().contains("org.eclipse.equinox.console.jaas.fragment"))
 			{
 				continue;
 			}
