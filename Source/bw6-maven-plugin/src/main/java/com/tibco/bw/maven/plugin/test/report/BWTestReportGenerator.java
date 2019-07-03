@@ -186,7 +186,7 @@ public class BWTestReportGenerator
 
     		sinkCell( sink, String.valueOf( packageDetails.getTotalTests() ) );
 
-    		sinkCell( sink, "0");
+    		sinkCell( sink, String.valueOf( packageDetails.getErrors() ));
 
     		sinkCell( sink,  String.valueOf( packageDetails.getFailures()) );
 
@@ -287,7 +287,7 @@ public class BWTestReportGenerator
 
         sinkCell( sink, Integer.toString( suite.getTotalTests() ) );
 
-        sinkCell( sink, "0" );
+        sinkCell( sink, Integer.toString( suite.getErrors() ));
 
         sinkCell( sink, Integer.toString( suite.getFailures() ) );
 

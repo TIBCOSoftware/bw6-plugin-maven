@@ -207,6 +207,8 @@ public class BWTestRunner
 		int totaltests = 0;
 		int totalsuccess = 0;
 		int totalfailure = 0;
+		int totalProcessFailure = 0;
+		int finalResult = 0;
 		for( int i =0 ; i < result.getTestSetResult().size() ; i++ )
 		{
 			StringBuilder processFileBuilder = new StringBuilder();
@@ -217,6 +219,7 @@ public class BWTestRunner
 
 			int success = 0;
 			int failure = 0;
+			int processFilure = 0;
 			
 			for( int j = 0 ; j < testset.getTestCaseResult().size() ; j++ )
 			{
@@ -226,23 +229,35 @@ public class BWTestRunner
 					failure++;
 					totalfailure++;
 				}
-				else
+				else if( testcase.getProcessFailures() > 0 )
+				{
+					processFilure++;
+					totalProcessFailure++;
+					
+				}
+				else if( testcase.getAssertions()>0)
 				{
 					success++;
 					totalsuccess++;
 				}
 				totaltests++;
 			}
-			processFileBuilder.append( "    Success : " + success + " 	Failure : " + failure + "	Errors : " + "0");
+			processFileBuilder.append( "    Success : " + success + " 	Failure : " + failure + "	Errors : " + processFilure);
 			builder.append( processFileBuilder.toString() );
 			writeProcessResult( result.getModuleInfo().getModuleName() , testset , processFileBuilder.toString() );
 		}
 		
 		builder.append( "\n\nResults \n");
-		builder.append( "Success : " + totalsuccess + "    Failure : " + totalfailure  + "    Errors : " + "0");
+		builder.append( "Success : " + totalsuccess + "    Failure : " + totalfailure  + "    Errors : " + totalProcessFailure);
         BWTestConfig.INSTANCE.getLogger().info( builder.toString() );
+        if(totalfailure>0){
+        	finalResult = totalfailure;
+        }
+        else{
+        	finalResult = totalProcessFailure;
+        }
         
-        return totalfailure ;
+        return finalResult ;
         
 	}
 	

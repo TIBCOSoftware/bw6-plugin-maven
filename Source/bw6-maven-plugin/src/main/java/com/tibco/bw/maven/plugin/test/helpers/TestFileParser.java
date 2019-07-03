@@ -1,12 +1,14 @@
 package com.tibco.bw.maven.plugin.test.helpers;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,6 +18,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.tibco.bw.maven.plugin.test.dto.AssertionDTO;
@@ -30,6 +33,10 @@ import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 public class TestFileParser {
 
 	public static TestFileParser INSTANCE = new TestFileParser();
+	
+	boolean disableMocking = false;
+	
+	boolean disableAssertions = false;
 
 	private TestFileParser() {
 
@@ -37,7 +44,7 @@ public class TestFileParser {
 
 	
 	@SuppressWarnings({ "unchecked" })
-	public void collectAssertions(String contents , TestSuiteDTO suite ) 
+	public void collectAssertions(String contents , TestSuiteDTO suite ) throws Exception,FileNotFoundException
 	{
 		
 		
@@ -80,6 +87,7 @@ public class TestFileParser {
 								Element cEl = (Element) cNode;
 								if ("Assertion".equals(cEl.getNodeName()))
 								{
+									if(!disableAssertions){
 									AssertionDTO ast = new AssertionDTO();
 									ast.setProcessId(processId);
 
@@ -108,6 +116,7 @@ public class TestFileParser {
 										}
 									}
 									testcase.getAssertionList().add(ast);
+								 }
 								}
 								else if( "Operation".equals(cEl.getNodeName()))
 								{
@@ -139,21 +148,39 @@ public class TestFileParser {
 											if ("MockOutputFilePath".equals(e1.getNodeName()))
 											{
 												String mockOutputFilePath = e1.getTextContent();
-												mockActivity.setmockOutputFilePath(mockOutputFilePath);
-												testcase.setmockOutputFilePath(mockOutputFilePath);
-												testcase.getMockActivityList().add(mockActivity);
-												break;
+												if(!disableMocking){
+													boolean isValidFile = validateMockXMLFile(mockOutputFilePath);
+													if(isValidFile){
+														mockActivity.setmockOutputFilePath(mockOutputFilePath);
+														testcase.setmockOutputFilePath(mockOutputFilePath);
+														testcase.getMockActivityList().add(mockActivity);
+														break;
+													}
+												}
 											}
+											
 									
 								}
 							}
 						}
 							}
 						}
+						if(disableMocking){
+							BWTestConfig.INSTANCE.getLogger().info("-----------------------------------------------------------------------------------------------");
+							BWTestConfig.INSTANCE.getLogger().info("## Mocking will be disabled for all Mocked Activities. DisableMocking :" + disableMocking +" ##");
+							BWTestConfig.INSTANCE.getLogger().info("-----------------------------------------------------------------------------------------------");
+						}
 						
-						if( testcase.getAssertionList().isEmpty() && testcase.getMockActivityList().isEmpty())
+						if(disableAssertions){
+							BWTestConfig.INSTANCE.getLogger().info("-----------------------------------------------------------------------------------------------");
+							BWTestConfig.INSTANCE.getLogger().info("## All Assertions will be disabled. DisableAssertions :" + disableAssertions +" ##");
+							BWTestConfig.INSTANCE.getLogger().info("-----------------------------------------------------------------------------------------------");
+						}
+						
+						if( testcase.getAssertionList().isEmpty() && testcase.getMockActivityList().isEmpty() && !disableMocking && !disableAssertions)
 						{
 							BWTestConfig.INSTANCE.getLogger().info( "No assertions and Mock Activities found in the Test File : " + testcase.getTestCaseFile() + " . Skipping the running of file." );
+							
 						}
 						else
 						{
@@ -168,6 +195,7 @@ public class TestFileParser {
 			e.printStackTrace();
 		} catch (SAXException e) {
 			e.printStackTrace();
+			throw e;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -180,6 +208,49 @@ public class TestFileParser {
 			}
 		}
 
+	}
+	
+	private boolean validateMockXMLFile(String mockOutputFilePath) throws Exception {
+		File mockOutputFile = new File(mockOutputFilePath);
+		if(mockOutputFile.exists()){
+			try {
+				 String mockOutputString = readXMLFile(mockOutputFilePath);// TODO Set mockOutputString to TestCase variable mockOutput 
+				 DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(mockOutputString)));
+				 return true;
+		    } catch (Exception e) {
+		    	String errorMessage = "Provided XML file "+ mockOutputFilePath +" is not valid";
+		    	BWTestConfig.INSTANCE.getLogger().error(errorMessage, e);
+		    	throw e;
+		    }
+		}
+		else{
+			String errorMessage = "Provided XML file "+ mockOutputFilePath +" is not Present";
+	    	BWTestConfig.INSTANCE.getLogger().error(errorMessage, new FileNotFoundException());
+			throw new Exception();
+		}
+		
+	}
+
+
+	private String readXMLFile(String mockOutputFilePath) {
+		String sCurrentLine;
+		StringBuilder sb = new StringBuilder();
+		try (BufferedReader br = new BufferedReader(new FileReader(mockOutputFilePath))) {
+			while ((sCurrentLine = br.readLine()) != null) {
+				sb.append(sCurrentLine);
+			}
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		return sb.toString();
+	}
+
+	public void setdisbleMocking(boolean disableMocking){
+		this.disableMocking = disableMocking;
+	}
+	
+	public void setdisbleAssertions(boolean disableAssertions){
+		this.disableAssertions = disableAssertions;
 	}
 	
 	@SuppressWarnings("unchecked")

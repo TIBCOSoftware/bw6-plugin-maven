@@ -14,6 +14,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 import com.tibco.bw.maven.plugin.test.setuplocal.BWTestExecutor;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 
@@ -33,6 +34,12 @@ public class BWTestMojo extends AbstractMojo {
 
     @Parameter( property = "failIfNoTests" , defaultValue = "true" )
     private boolean failIfNoTests;
+    
+    @Parameter( property = "disableMocking" , defaultValue = "false" )
+    private boolean disableMocking;
+    
+    @Parameter( property = "disableAssertions" , defaultValue = "false" )
+    private boolean disableAssertions;
     
     
     public void execute() throws MojoExecutionException , MojoFailureException
@@ -168,6 +175,10 @@ public class BWTestMojo extends AbstractMojo {
     {
 		String tibcoHome = project.getProperties().getProperty("tibco.Home");
 		String bwHome = project.getProperties().getProperty("bw.Home");
+		
+		TestFileParser.INSTANCE.setdisbleMocking(disableMocking);
+		
+		TestFileParser.INSTANCE.setdisbleAssertions(disableAssertions);
 
     	BWTestConfig.INSTANCE.reset();
 		

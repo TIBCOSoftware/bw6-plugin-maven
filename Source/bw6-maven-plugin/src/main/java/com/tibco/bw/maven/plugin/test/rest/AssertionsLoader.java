@@ -30,8 +30,12 @@ public class AssertionsLoader
 		List<File> files = getAssertionsFromProject();
 		TestSuiteDTO suite = new TestSuiteDTO();
 		List testCaseList = new ArrayList();
+		BWTestConfig.INSTANCE.getLogger().info("");
+		BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs End---------------------------------------------------------------------------------------------------------------------------------------------------");
 		for( File file : files )
 		{
+			BWTestConfig.INSTANCE.getLogger().info("## Running Test for "+file.getName()+" ##");
+			
 			String assertionxml = FileUtils.readFileToString( file );
 			
 			TestFileParser.INSTANCE.collectAssertions(assertionxml , suite);
