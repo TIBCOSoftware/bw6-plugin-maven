@@ -6,7 +6,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.jar.Manifest;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -118,6 +122,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 
 	@Parameter(property="deploymentConfigfile")
 	private String deploymentConfigfile;
+	
+	@Parameter(property = "externalEarLoc")
+	private String externalEarLoc;
 
 	private String earLoc;
 	private String earName;
@@ -144,13 +151,22 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			getLog().info("Deploy To Admin is set to False. Skipping EAR Deployment.");
     			return;
     		}
-
+    		
     		File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
     		if(files.length == 0) {
     			throw new Exception("EAR file not found for the Application");
     		}
-
-    		deriveEARInformation(files[0]);
+    		
+    		if(externalEarLocExists()){
+    			File f = new File(externalEarLoc);
+    			Path p = Paths.get(externalEarLoc + "/" +files[0].getName());
+    			
+    			Files.deleteIfExists(p);
+    			FileUtils.copyFileToDirectory(files[0], f);
+    			 deriveEARInformation(p.toFile());
+    		} else
+    			deriveEARInformation(files[0]);
+    			
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
     		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword);
@@ -184,7 +200,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		throw new MojoExecutionException("Failed to deploy BW Application ", e);
     	}
     }
-
+    
 	private void deriveEARInformation(File file) {
 		earLoc = file.getAbsolutePath();
 		earLoc = earLoc.replace("\\", "/");
@@ -204,6 +220,14 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		}
 		getLog().info("Deployment Config File found. Loading configuration from the same.");
 		return true;
+	}
+	
+	private boolean externalEarLocExists() {
+		if(externalEarLoc == null || externalEarLoc.isEmpty()){
+			return false;
+		}
+			getLog().info("Deploying the Ear from external Ear location: " + externalEarLoc);
+			return true;
 	}
 
 	private void loadFromDeploymentProperties() {
@@ -250,6 +274,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			backupLocation = deployment.getProperty("backupLocation");
 			externalProfile=Boolean.parseBoolean(deployment.getProperty("externalProfile"));
 			externalProfileLoc=deployment.getProperty("externalProfileLoc");
+			externalEarLoc=deployment.getProperty("externalEarLoc");
 		} catch(Exception e) {
 			deployToAdmin = false;
 			getLog().error(e);
