@@ -226,7 +226,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		if(externalEarLoc == null || externalEarLoc.isEmpty()){
 			return false;
 		}
-			getLog().info("ExternalEarLoc is set. Deploying the ear from ExternalEarLoc folder.");
+			getLog().info("Deploying the Ear from external Ear location: " + externalEarLoc);
 			return true;
 	}
 
