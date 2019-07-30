@@ -55,6 +55,7 @@ public class WizardPageConfiguration extends WizardPage {
 
 	private Text tibcoHome;
 	private Text bwHome;
+	private Text engineDebugPort;
 	private Button runTests;
 	private Button failIfSkip;
 
@@ -219,7 +220,6 @@ public class WizardPageConfiguration extends WizardPage {
 		label.setText("Deploy Options: ");
 
 		addDeploymentConfig = new Combo(innerContainer, SWT.DROP_DOWN| SWT.BORDER);
-
 		
 		
 		for( int i = 0 ; i < MavenWizardContext.INSTANCE.getProjectTypes().size() ; i++ )	
@@ -341,6 +341,15 @@ public class WizardPageConfiguration extends WizardPage {
 			bwHome.setText( info.getBwHome() != null && !info.getBwHome().isEmpty() ? info.getBwHome() : "" );
 			GridData artifactData = new GridData(200, 15);
 			bwHome.setLayoutData(artifactData);
+			
+			
+			Label engineDebugPortLabel = new Label(innerContainer, SWT.NONE);
+			engineDebugPortLabel.setText( "Engine Debug Port : ");
+
+			engineDebugPort = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
+			engineDebugPort.setText("8090");
+			GridData engineDebugPortData = new GridData(200, 15);
+			bwHome.setLayoutData(engineDebugPortData);
 
 }
 		
@@ -511,6 +520,7 @@ public class WizardPageConfiguration extends WizardPage {
 				info.setBwHome( bwHome.getText());
 				info.setSkipTests( String.valueOf(runTests.getSelection()));
 				info.setFailIfNoTests(String.valueOf(failIfSkip.getSelection()));
+				info.setEngineDebugPort(engineDebugPort.getText());
 				
 			}		
 			module.setOverridePOM(true);

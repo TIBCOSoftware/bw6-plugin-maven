@@ -11,6 +11,8 @@ public class BWTestInfo
 	
 	protected String failIfNoTests;
 	
+	protected String engineDebugPort;
+	
 	
 	public String getTibcoHome() {
 		return tibcoHome;
@@ -47,6 +49,14 @@ public class BWTestInfo
 	public void setFailIfNoTests(String skipOnError)
 	{
 		this.failIfNoTests = skipOnError;
+	}
+
+	public String getEngineDebugPort() {
+		return engineDebugPort;
+	}
+
+	public void setEngineDebugPort(String engineDebugPort) {
+		this.engineDebugPort = engineDebugPort;
 	}
 
 

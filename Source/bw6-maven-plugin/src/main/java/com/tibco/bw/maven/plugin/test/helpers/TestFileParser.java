@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -158,12 +160,10 @@ public class TestFileParser {
 													}
 												}
 											}
-											
-									
-								}
-							}
-						}
-							}
+								      }
+						       	}
+						     }
+						   }
 						}
 						if(disableMocking){
 							BWTestConfig.INSTANCE.getLogger().info("-----------------------------------------------------------------------------------------------");
@@ -207,6 +207,66 @@ public class TestFileParser {
 				e.printStackTrace();
 			}
 		}
+
+	}
+	
+	
+		public List<String> collectMockActivities(String contents){
+		InputStream is = null;
+		List<String> mockActivities = new ArrayList<>();
+		try {
+			
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			is = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
+			Document document = builder.parse(is);
+			NodeList nodeList = document.getDocumentElement().getChildNodes();
+
+			for (int i = 0; i < nodeList.getLength(); i++) 
+			{
+				Node node = nodeList.item(i);
+				if (node instanceof Element) 
+				{
+					Element el = (Element) node;
+					if ("ProcessNode".equals(el.getNodeName())) 
+					{
+						String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
+						NodeList childNodes = el.getChildNodes();
+						for (int j = 0; j < childNodes.getLength(); j++) 
+						{
+							Node cNode = childNodes.item(j);
+							if (cNode instanceof Element) {
+								Element cEl = (Element) cNode;
+								if("MockActivity".equals(cEl.getNodeName())){
+									MockActivityDTO mockActivity = new MockActivityDTO();
+									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
+									mockActivity.setLocation(location);
+									if(!disableMocking){
+										String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
+										if(null!=activityName){
+											mockActivities.add("-D"+processId+activityName+"=true");
+										}
+									}
+								}
+						    }
+					    }
+				     }
+			       }
+			   }
+				
+		} catch (ParserConfigurationException |SAXException | IOException e) {
+			e.printStackTrace();
+		}   
+		finally {
+			try {
+				if (is != null) {
+					is.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return mockActivities;
 
 	}
 	

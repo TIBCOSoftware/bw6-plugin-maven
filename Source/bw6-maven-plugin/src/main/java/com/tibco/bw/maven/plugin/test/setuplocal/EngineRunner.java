@@ -6,10 +6,9 @@ import java.io.InputStreamReader;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class EngineRunner 
 {     
@@ -20,13 +19,7 @@ public class EngineRunner
 	{
 		Process process = null;
 	
-	
-		String[] cmdLine = BWTestConfig.INSTANCE.getLaunchConfig().toArray( new String[]{} );
-
-		//FileUtils.copyFile( new File ("D:/Codebase/BW6/Trunk/test/UnitTestsPOC/dev.properties") , new File("C:/Users/abhide/AppData/Local/Temp/bwconfig/dev.properties"));
-		
 		ProcessBuilder builder = new ProcessBuilder( BWTestConfig.INSTANCE.getLaunchConfig());
-        //builder.directory( new File( executorHome ) );
         process = builder.start();
         
         BWTestConfig.INSTANCE.getLogger().info( "## Starting BW Engine in Test Mode ##");
@@ -52,7 +45,6 @@ public class EngineRunner
 	    Timer timer = new Timer("Timer");
 	     
 	    timer.schedule(task, 0, 1500);
-		
 		
 		latch.await();
 		
