@@ -2,7 +2,6 @@ package com.tibco.bw.maven.plugin.test.setuplocal;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -87,11 +86,21 @@ public class EngineLaunchConfigurator
 				if( currentLine.contains("%%BW_HOME%%"))
 				{
 					currentLine = currentLine.replace("%%BW_HOME%%", BWTestConfig.INSTANCE.getBwHome() );
+					if(!BWTestExecutor.INSTANCE.getMockActivityList().isEmpty()){
+						
+						list.addAll(BWTestExecutor.INSTANCE.getMockActivityList());
+						BWTestExecutor.INSTANCE.getMockActivityList().clear();
+					}
+					
 				}
 
 				if( currentLine.contains("%%CONFIG_DIR%%"))
 				{
 					currentLine = currentLine.replace("%%CONFIG_DIR%%", BWTestConfig.INSTANCE.getConfigDir().toString().replace("\\", "/") );
+				}
+				if( currentLine.contains("%%ENGINE_DEBUG_PORT%%"))
+				{
+					currentLine = currentLine.replace("%%ENGINE_DEBUG_PORT%%", String.valueOf(BWTestExecutor.INSTANCE.getEngineDebugPort()) );
 				}
 				if( currentLine.equals("-dev"))
 				{
@@ -109,6 +118,7 @@ public class EngineLaunchConfigurator
 			}
 
 		}
+		
 		catch(Exception e )
 		{
 			e.printStackTrace();

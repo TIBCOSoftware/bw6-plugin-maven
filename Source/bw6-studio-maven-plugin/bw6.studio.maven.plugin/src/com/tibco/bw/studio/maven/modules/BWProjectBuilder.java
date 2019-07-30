@@ -139,6 +139,7 @@ BWTestInfo testInfo = application.getTestInfo();
 			testInfo.setFailIfNoTests((String) model.getProperties().get( "failIfNoTests" ) );		
 			testInfo.setTibcoHome((String) model.getProperties().get( "tibco.Home" ) );		
 			testInfo.setBwHome( (String) model.getProperties().get( "bw.Home" ) );
+			testInfo.setEngineDebugPort( (String) model.getProperties().get( "engineDebugPort" ) );
 		
 			application.setProjectType( (String) model.getProperties().get( "project.type" ) != null && ! ((String) model.getProperties().get( "project.type" )).isEmpty() ?  BWProjectTypes.valueOf((String) model.getProperties().get( "project.type" )) : null);
 		}

@@ -41,6 +41,11 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "disableAssertions" , defaultValue = "false" )
     private boolean disableAssertions;
     
+    @Parameter( property = "engineDebugPort" , defaultValue = "8090" )
+    private int engineDebugPort;
+    
+    
+    
     
     public void execute() throws MojoExecutionException , MojoFailureException
     {
@@ -179,6 +184,8 @@ public class BWTestMojo extends AbstractMojo {
 		TestFileParser.INSTANCE.setdisbleMocking(disableMocking);
 		
 		TestFileParser.INSTANCE.setdisbleAssertions(disableAssertions);
+		
+		BWTestExecutor.INSTANCE.setEngineDebugPort(engineDebugPort);
 
     	BWTestConfig.INSTANCE.reset();
 		

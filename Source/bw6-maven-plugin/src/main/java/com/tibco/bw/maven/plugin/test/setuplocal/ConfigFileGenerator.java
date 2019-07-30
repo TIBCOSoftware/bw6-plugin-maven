@@ -2,16 +2,21 @@ package com.tibco.bw.maven.plugin.test.setuplocal;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.maven.project.MavenProject;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
-import com.tibco.bw.maven.plugin.utils.Path;
 
 public class ConfigFileGenerator 
 {
@@ -41,18 +46,11 @@ public class ConfigFileGenerator
 				if( project.getPackaging().equals("bwmodule") || project.getPackaging().equals("bwear"))
 				{
 					builder.append( "," );
-					addReference(builder,  project.getBasedir() );
+					addReference(builder,  project.getBasedir() ,project.getBasedir().getName());
 				}
 				
 			}
-//			builder.append(",");
-//			addReference(builder, new File("D:/Codebase/BW6/Trunk/platform/runtime/plugins/com.tibco.bw.core.runtime.bw.tests"));
-//
-//			builder.append(",");
-//			addReference(builder, new File("D:/Codebase/BW6/Trunk/thor/management/plugins/com.tibco.bw.thor.management.bw.tests"));
 
-			
-			
 			Properties properties = new Properties();
 			properties.put( "osgi.bundles", builder.toString() );
 			properties.put( "osgi.bundles.defaultStartLevel", "5" );
@@ -88,7 +86,7 @@ public class ConfigFileGenerator
 				}
 			}
 			
-			if( file.getName().contains( "DS_Store") || file.getName().contains("com.tibco.bw.extensions.logback") || file.getName().contains("com.tibco.bw.thor.equinox.env") || file.getName().contains("org.eclipse.equinox.console.jaas.fragment"))
+			if( file.getName().contains( "DS_Store"))
 			{
 				continue;
 			}
@@ -118,19 +116,19 @@ public class ConfigFileGenerator
 				{
 					builder.append( ",");
 				}
-				addReference( builder , file );
+				addReference( builder , file , split[0]);
 			}
 		}
 		
 	}
 	
 	
-	private void addReference(  StringBuilder builder , File file )
+	private void addReference(  StringBuilder builder , File file ,String key)
 	{
 		builder.append("reference:");
 		builder.append( "file:");
-		builder.append( new Path(file.getAbsolutePath()).removeTrailingSeparator().toString() );
-		builder.append(getStartValue(file.getName()));
+		builder.append( new com.tibco.bw.maven.plugin.utils.Path(file.getAbsolutePath()).removeTrailingSeparator().toString() );
+		builder.append(getStartValue(key));
 
 	}
 	
@@ -139,11 +137,30 @@ public class ConfigFileGenerator
 	
 	private List<File> getTargetPlatform()
 	{
-		
+		File pluginPalettes;
 		List<File> list = new ArrayList<>();
 		String [] platformDirs = { "system/hotfix/lib/common" , "system/lib/common" , "system/hotfix/palettes" , "system/palettes" , "system/hotfix/shared" , "system/shared","config/drivers/shells/jdbc.oracle.runtime/hotfix/runtime/plugins" ,"config/drivers/shells/jdbc.oracle.runtime/runtime/plugins","config/drivers/shells/jdbc.mysql.runtime/hotfix/runtime/plugins","config/drivers/shells/jdbc.mysql.runtime/runtime/plugins","config/drivers/shells/jdbc.mariadb.runtime/hotfix/runtime/plugins","config/drivers/shells/jdbc.mariadb.runtime/runtime/plugins","config/drivers/shells/jdbc.db2.runtime/hotfix/runtime/plugins","config/drivers/shells/jdbc.db2.runtime/runtime/plugins"};
 	
 		String bwHomeStr = BWTestConfig.INSTANCE.getTibcoHome() + BWTestConfig.INSTANCE.getBwHome();
+		
+		if(BWTestConfig.INSTANCE.getBwHome().contains("bwce")){
+			pluginPalettes = new File(BWTestConfig.INSTANCE.getTibcoHome().concat("/bwce/palettes")); //If  plugin is installed load the jars for the same
+		}
+		else{
+			pluginPalettes = new File(BWTestConfig.INSTANCE.getTibcoHome().concat("/bw/palettes")); //If plugin is installed load the jars for the same
+		}
+
+		if(pluginPalettes.exists() && pluginPalettes.isDirectory()){
+			Path [] pluginPlatformDirs = getPluginPlatformDir(pluginPalettes.getPath());
+			for(Path pluginFile : pluginPlatformDirs){
+				File file = new File(pluginFile.toString(),"plugins");
+				if(file.exists()){
+					list.add(file); 
+				}
+
+			}
+		}
+		
 		File bwHome = new File( bwHomeStr );
 		
 		for( String str : platformDirs )
@@ -160,75 +177,36 @@ public class ConfigFileGenerator
 		
 	}
 	
-	private File getDevBundle( String name )
-	{
-		
-		if( name.contains( "com.tibco.bx.core_" ))
-		{
-			return new File("D:/Codebase/BX/Trunk/runtime/engine/plugins/com.tibco.bx.core");
-		}
-//		if( name.contains("com.tibco.bw.core.runtime_"))
-//		{
-//			return new File("D:/Codebase/BW6/Trunk/platform/runtime/plugins/com.tibco.bw.core.runtime");
-//		}
-//		else if( name.contains("com.tibco.bw.core.runtime.api_"))
-//		{
-//			return new File("D:/Codebase/BW6/Trunk/platform/runtime.api/plugins/com.tibco.bw.core.runtime.api");	
-//		}
-//		else if( name.contains( "com.tibco.bw.frwk.api_" ))
-//		{
-//			return new File( "D:/Codebase/BW6/Trunk/thor/bw/plugins/com.tibco.bw.frwk.api");
-//
-//		}
-//		else if( name.contains( "com.tibco.bw.frwk.engine_" ))
-//		{
-//			return new File("D:/Codebase/BW6/Trunk/thor/bw/plugins/com.tibco.bw.frwk.engine");
-//		}
-//			
-//		else if( name.contains( "com.tibco.bw.runtime_" ))
-//		{
-//			return new File("D:/Codebase/BW6/Trunk/api/runtime/plugins/com.tibco.bw.runtime");
-//		}
-		
-		
-		
-		else if( name.contains( "com.tibco.bw.thor.runtime_" ))
-		{
-			return new File("D:/Codebase/BW6/Trunk/thor/runtime/plugins/com.tibco.bw.thor.runtime");
-		}
+	
+	
+	private Path[] getPluginPlatformDir(String path) {
+		try (Stream<Path> paths = Files.walk(Paths.get(path))) {
 
-		else if( name.contains( "com.tibco.bw.frwk_" ))
-		{
-			return new File("D:/Codebase/BW6/Trunk/thor/bw/plugins/com.tibco.bw.frwk");
+			Path[] pluginDirPath = paths.filter(Files::isDirectory)
+					.filter(s -> s.endsWith("runtime")).toArray(Path[]::new);
+
+			return pluginDirPath;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
 		}
-		
-		else if( name.contains( "com.tibco.bw.thor.management.bw.tests_" ))
-		{
-			return new File("D:/Codebase/BW6/Trunk/thor/management/plugins/com.tibco.bw.thor.management.bw.tests");
-		}
-		else if( name.contains( "com.tibco.bw.core.runtime.bw.tests_" ))
-		{
-			return new File("D:/Codebase/BW6/Trunk/platform/runtime/plugins/com.tibco.bw.core.runtime.bw.tests");
-		}
-		
-		return null;
 	}
-	
-	
+
+
 	private Map<String,String> getStartValuesMap()
 	{
 		Map<String,String> map = new HashMap<String,String>();
 		
-		map.put( "com.tibco.tpcl.javax.system.exports_5.10.0.001" , "" );
-		map.put( "com.tibco.bw.extensions.logback_6.3.100.007.jar" , "" );
-		map.put( "com.tibco.bw.thor.equinox.env_1.2.900.008.jar" , "" );
-		map.put( "com.tibco.neo.eclipse.support.osgi_1.2.0.001@3.jar" , "@3:start" );
-		map.put( "org.eclipse.osgi.compatibility.state_1.0.1.v20140709-1414.jar" , "" );
-		map.put( "com.tibco.bw.thor.runtime.tools_1.2.900.008@2.jar" , "@2:start" );
-		map.put( "com.tibco.tpcl.javax.osgi.factories_1.10.0.001@1.jar" , "@1:start" );
-		map.put( "org.eclipse.equinox.common_3.6.200.v20130402-1505.jar" , "@2:start" );
-		map.put( "com.tibco.tpcl.javax.system.exports.sun_5.10.0.001" , "" );
-		map.put( "org.eclipse.equinox.console.jaas.fragment_1.0.100.001" , "" );
+		map.put( "com.tibco.tpcl.javax.system.exports" , "" );
+		map.put( "com.tibco.bw.extensions.logback" , ""  );
+		map.put( "com.tibco.bw.thor.equinox.env" , "" );
+		map.put( "com.tibco.neo.eclipse.support.osgi" , "@3:start" );
+		map.put( "org.eclipse.osgi.compatibility.state" , "" );
+		map.put( "com.tibco.bw.thor.runtime.tools" , "@2:start" );
+		map.put( "com.tibco.tpcl.javax.osgi.factories" , "@1:start" );
+		map.put( "org.eclipse.equinox.common" , "@2:start" );
+		map.put( "com.tibco.tpcl.javax.system.exports.sun" , "" );
+		map.put( "org.eclipse.equinox.console.jaas.fragment" , "" );
 		
 		return map;
 		
