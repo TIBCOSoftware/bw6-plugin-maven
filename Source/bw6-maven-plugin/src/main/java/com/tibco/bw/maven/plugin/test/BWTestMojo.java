@@ -28,44 +28,44 @@ public class BWTestMojo extends AbstractMojo {
 
     @Parameter( property = "testFailureIgnore", defaultValue = "false" )
     private boolean testFailureIgnore;
-    
+
     @Parameter( property = "skipTests", defaultValue = "false" )
     protected boolean skipTests;
 
     @Parameter( property = "failIfNoTests" , defaultValue = "true" )
     private boolean failIfNoTests;
-    
+
     @Parameter( property = "disableMocking" , defaultValue = "false" )
     private boolean disableMocking;
-    
+
     @Parameter( property = "disableAssertions" , defaultValue = "false" )
     private boolean disableAssertions;
-    
+
     @Parameter( property = "engineDebugPort" , defaultValue = "8090" )
     private int engineDebugPort;
-    
-    
-    
-    
+
+
+
+
     public void execute() throws MojoExecutionException , MojoFailureException
     {
-    	
+
     	BWTestExecutor executor = new BWTestExecutor();
-    	try 
+    	try
     	{
-    	
+
     		session.getProjects();
-    		
+
     		if( !verifyParameters() )
     		{
     			return;
     		}
-    		   		
+
     		initialize();
-    		
+
 			executor.execute();
 		}
-    	catch (Exception e) 
+    	catch (Exception e)
     	{
 
     		if( e instanceof MojoFailureException )
@@ -82,30 +82,30 @@ public class BWTestMojo extends AbstractMojo {
     		}
     		else
     		{
-    			
+
     			e.printStackTrace();
     			throw new MojoExecutionException( e.getMessage(), e);
     		}
 		}
-    	
+
     }
 
-    
-    
+
+
     private boolean verifyParameters() throws Exception
     {
-    	
-    	
+
+
     	if( isSkipTests() )
     	{
 			getLog().info( "-------------------------------------------------------" );
     		getLog().info( "Skipping Test phase.");
 			getLog().info( "-------------------------------------------------------" );
 
-    		
+
     		return false;
     	}
-    	
+
     	String tibcoHome = project.getProperties().getProperty("tibco.Home");
 		String bwHome = project.getProperties().getProperty("bw.Home");
 
@@ -117,19 +117,28 @@ public class BWTestMojo extends AbstractMojo {
 
 			return false;
 		}
-		
+
 		File file = new File( tibcoHome + bwHome );
 		if( !file.exists() || !file.isDirectory()  )
 		{
 			getLog().info( "-------------------------------------------------------" );
 			getLog().info( "Provided TibcoHome directory is invalid. Skipping Test Phase.");
 			getLog().info( "-------------------------------------------------------" );
-	
+
 			return false;
 		}
+        File eclipseDependenciesDir = new File( tibcoHome + "/tools/p2director/eclipse/plugins");
+        if( !eclipseDependenciesDir.exists())
+		{
+            getLog().info("-------------------------------------------------------");
+            getLog().info("No Eclipse Dependencies found. Skipping Test Phase.");
+            getLog().info("-------------------------------------------------------");
+
+            return false;
+        }
 		boolean exists = checkForTest();
-		
-    	
+
+
     	if( getFailIfNoTests() )
     	{
     		if(!exists )
@@ -147,14 +156,14 @@ public class BWTestMojo extends AbstractMojo {
     			return false;
     		}
     	}
-    		
-    	
-    	
+
+
+
     	return true;
-    	
+
     }
-    
-    
+
+
     private boolean checkForTest()
     {
     	List<MavenProject> projects = session.getProjects();
@@ -172,32 +181,32 @@ public class BWTestMojo extends AbstractMojo {
 		getLog().info( "-------------------------------------------------------" );
 		getLog().info( "No BWT Test files exist. ");
 		getLog().info( "-------------------------------------------------------" );
-    	
+
     	return false;
     }
-    
+
     private void initialize() throws Exception
     {
 		String tibcoHome = project.getProperties().getProperty("tibco.Home");
 		String bwHome = project.getProperties().getProperty("bw.Home");
-		
+
 		TestFileParser.INSTANCE.setdisbleMocking(disableMocking);
-		
+
 		TestFileParser.INSTANCE.setdisbleAssertions(disableAssertions);
-		
+
 		BWTestExecutor.INSTANCE.setEngineDebugPort(engineDebugPort);
 
     	BWTestConfig.INSTANCE.reset();
-		
+
 		BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, project , getLog() );
-		
+
 		getLog().info( "" );
 		getLog().info( "-------------------------------------------------------" );
 		getLog().info( " Running BW Tests " );
 		getLog().info( "-------------------------------------------------------" );
     }
-    
-    
+
+
 	public boolean isSkipTests()
 	{
 		if( ! skipTests )
@@ -221,19 +230,19 @@ public class BWTestMojo extends AbstractMojo {
 
 
 
-	public boolean isTestFailureIgnore() 
+	public boolean isTestFailureIgnore()
 	{
 		return testFailureIgnore;
 	}
 
-	public void setTestFailureIgnore(boolean testFailureIgnore) 
+	public void setTestFailureIgnore(boolean testFailureIgnore)
 	{
 		this.testFailureIgnore = testFailureIgnore;
 	}
 
 
 
-	public boolean getFailIfNoTests() 
+	public boolean getFailIfNoTests()
 	{
 		return failIfNoTests;
 	}
