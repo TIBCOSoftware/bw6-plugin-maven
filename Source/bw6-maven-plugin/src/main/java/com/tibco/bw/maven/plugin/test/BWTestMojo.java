@@ -26,231 +26,199 @@ public class BWTestMojo extends AbstractMojo {
     @Component
     private MavenProject project;
 
-    @Parameter( property = "testFailureIgnore", defaultValue = "false" )
+    @Parameter(property = "testFailureIgnore", defaultValue = "false")
     private boolean testFailureIgnore;
 
-    @Parameter( property = "skipTests", defaultValue = "false" )
+    @Parameter(property = "skipTests", defaultValue = "false")
     protected boolean skipTests;
 
-    @Parameter( property = "failIfNoTests" , defaultValue = "true" )
+    @Parameter(property = "failIfNoTests", defaultValue = "true")
     private boolean failIfNoTests;
 
-    @Parameter( property = "disableMocking" , defaultValue = "false" )
+    @Parameter(property = "disableMocking", defaultValue = "false")
     private boolean disableMocking;
 
-    @Parameter( property = "disableAssertions" , defaultValue = "false" )
+    @Parameter(property = "disableAssertions", defaultValue = "false")
     private boolean disableAssertions;
 
-    @Parameter( property = "engineDebugPort" , defaultValue = "8090" )
+    @Parameter(property = "engineDebugPort", defaultValue = "8090")
     private int engineDebugPort;
 
+    private String eclipsePluginsPath = null;
 
+    public void execute() throws MojoExecutionException, MojoFailureException {
 
+        BWTestExecutor executor = new BWTestExecutor();
+        try {
 
-    public void execute() throws MojoExecutionException , MojoFailureException
-    {
+            session.getProjects();
 
-    	BWTestExecutor executor = new BWTestExecutor();
-    	try
-    	{
+            if (!verifyParameters()) {
+                return;
+            }
 
-    		session.getProjects();
+            initialize();
 
-    		if( !verifyParameters() )
-    		{
-    			return;
-    		}
+            executor.execute();
+        } catch (Exception e) {
 
-    		initialize();
+            if (e instanceof MojoFailureException) {
+                if (!testFailureIgnore) {
+                    throw (MojoFailureException) e;
 
-			executor.execute();
-		}
-    	catch (Exception e)
-    	{
+                } else {
+                    System.out.println("Ignoring the exception for generating the report");
+                }
+            } else {
 
-    		if( e instanceof MojoFailureException )
-    		{
-    			if( ! testFailureIgnore )
-    			{
-        			throw (MojoFailureException)e;
-
-    			}
-    			else
-    			{
-    				System.out.println( "Ignoring the exception for generating the report");
-    			}
-    		}
-    		else
-    		{
-
-    			e.printStackTrace();
-    			throw new MojoExecutionException( e.getMessage(), e);
-    		}
-		}
+                e.printStackTrace();
+                throw new MojoExecutionException(e.getMessage(), e);
+            }
+        }
 
     }
 
 
-
-    private boolean verifyParameters() throws Exception
-    {
+    private boolean verifyParameters() throws Exception {
 
 
-    	if( isSkipTests() )
-    	{
-			getLog().info( "-------------------------------------------------------" );
-    		getLog().info( "Skipping Test phase.");
-			getLog().info( "-------------------------------------------------------" );
+        if (isSkipTests()) {
+            getLog().info("-------------------------------------------------------");
+            getLog().info("Skipping Test phase.");
+            getLog().info("-------------------------------------------------------");
 
 
-    		return false;
-    	}
+            return false;
+        }
 
-    	String tibcoHome = project.getProperties().getProperty("tibco.Home");
-		String bwHome = project.getProperties().getProperty("bw.Home");
+        String tibcoHome = project.getProperties().getProperty("tibco.Home");
+        String bwHome = project.getProperties().getProperty("bw.Home");
 
-		if( tibcoHome == null || tibcoHome.isEmpty() || bwHome == null || bwHome.isEmpty() )
-		{
-			getLog().info( "-------------------------------------------------------" );
-			getLog().info( "Tibco Home or BW Home is not provided. Skipping Test Phase.");
-			getLog().info( "-------------------------------------------------------" );
+        if (tibcoHome == null || tibcoHome.isEmpty() || bwHome == null || bwHome.isEmpty()) {
+            getLog().info("-------------------------------------------------------");
+            getLog().info("Tibco Home or BW Home is not provided. Skipping Test Phase.");
+            getLog().info("-------------------------------------------------------");
 
-			return false;
-		}
+            return false;
+        }
 
-		File file = new File( tibcoHome + bwHome );
-		if( !file.exists() || !file.isDirectory()  )
-		{
-			getLog().info( "-------------------------------------------------------" );
-			getLog().info( "Provided TibcoHome directory is invalid. Skipping Test Phase.");
-			getLog().info( "-------------------------------------------------------" );
+        File file = new File(tibcoHome + bwHome);
+        if (!file.exists() || !file.isDirectory()) {
+            getLog().info("-------------------------------------------------------");
+            getLog().info("Provided TibcoHome directory is invalid. Skipping Test Phase.");
+            getLog().info("-------------------------------------------------------");
 
-			return false;
-		}
-        File eclipseDependenciesDir = new File( tibcoHome + "/tools/p2director/eclipse/plugins");
-        if( !eclipseDependenciesDir.exists())
-		{
+            return false;
+        }
+        try {
+            eclipsePluginsPath = project.getProperties().getProperty("eclipse.plugins");
+        } catch (Exception ex) {
+            getLog().info("-------------------------------------------------------");
+            getLog().info("Provided eclipse.plugins directory is invalid - Trying the default one");
+            getLog().info("-------------------------------------------------------");
+        }
+        eclipsePluginsPath = (eclipsePluginsPath != null) ? eclipsePluginsPath : tibcoHome + "/tools/p2director/eclipse/plugins";
+        getLog().info("-------------------------------------------------------");
+        getLog().info(" Searching in : " + eclipsePluginsPath);
+        getLog().info("-------------------------------------------------------");
+        File eclipseDependenciesDir = new File(eclipsePluginsPath);
+        if (!eclipseDependenciesDir.exists()) {
             getLog().info("-------------------------------------------------------");
             getLog().info("No Eclipse Dependencies found. Skipping Test Phase.");
             getLog().info("-------------------------------------------------------");
 
             return false;
         }
-		boolean exists = checkForTest();
+        boolean exists = checkForTest();
 
 
-    	if( getFailIfNoTests() )
-    	{
-    		if(!exists )
-    		{
-    			throw new MojoFailureException( "No Test files existing in any of the Module." );
-    		}
-    	}
-    	else
-    	{
-    		if( !exists )
-    		{
-    			getLog().info( "-------------------------------------------------------" );
-    			getLog().info( "No Tests found in any Module. Skipping Test Phase.");
-    			getLog().info( "-------------------------------------------------------" );
-    			return false;
-    		}
-    	}
+        if (getFailIfNoTests()) {
+            if (!exists) {
+                throw new MojoFailureException("No Test files existing in any of the Module.");
+            }
+        } else {
+            if (!exists) {
+                getLog().info("-------------------------------------------------------");
+                getLog().info("No Tests found in any Module. Skipping Test Phase.");
+                getLog().info("-------------------------------------------------------");
+                return false;
+            }
+        }
 
 
-
-    	return true;
+        return true;
 
     }
 
 
-    private boolean checkForTest()
-    {
-    	List<MavenProject> projects = session.getProjects();
-    	for( MavenProject project : projects )
-		{
-			if( project.getPackaging().equals("bwmodule") )
-			{
-				List<File> files = BWFileUtils.getEntitiesfromLocation( project.getBasedir().toString() , "bwt");
-				if( files.size() > 0 )
-				{
-					return true;
-				}
-			}
-		}
-		getLog().info( "-------------------------------------------------------" );
-		getLog().info( "No BWT Test files exist. ");
-		getLog().info( "-------------------------------------------------------" );
+    private boolean checkForTest() {
+        List<MavenProject> projects = session.getProjects();
+        for (MavenProject project : projects) {
+            if (project.getPackaging().equals("bwmodule")) {
+                List<File> files = BWFileUtils.getEntitiesfromLocation(project.getBasedir().toString(), "bwt");
+                if (files.size() > 0) {
+                    return true;
+                }
+            }
+        }
+        getLog().info("-------------------------------------------------------");
+        getLog().info("No BWT Test files exist. ");
+        getLog().info("-------------------------------------------------------");
 
-    	return false;
+        return false;
     }
 
-    private void initialize() throws Exception
-    {
-		String tibcoHome = project.getProperties().getProperty("tibco.Home");
-		String bwHome = project.getProperties().getProperty("bw.Home");
+    private void initialize() throws Exception {
+        String tibcoHome = project.getProperties().getProperty("tibco.Home");
+        String bwHome = project.getProperties().getProperty("bw.Home");
 
-		TestFileParser.INSTANCE.setdisbleMocking(disableMocking);
+        TestFileParser.INSTANCE.setdisbleMocking(disableMocking);
 
-		TestFileParser.INSTANCE.setdisbleAssertions(disableAssertions);
+        TestFileParser.INSTANCE.setdisbleAssertions(disableAssertions);
 
-		BWTestExecutor.INSTANCE.setEngineDebugPort(engineDebugPort);
+        BWTestExecutor.INSTANCE.setEngineDebugPort(engineDebugPort);
 
-    	BWTestConfig.INSTANCE.reset();
+        BWTestConfig.INSTANCE.reset();
 
-		BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, project , getLog() );
+        BWTestConfig.INSTANCE.init(tibcoHome, bwHome, eclipsePluginsPath, session, project, getLog());
 
-		getLog().info( "" );
-		getLog().info( "-------------------------------------------------------" );
-		getLog().info( " Running BW Tests " );
-		getLog().info( "-------------------------------------------------------" );
+        getLog().info("");
+        getLog().info("-------------------------------------------------------");
+        getLog().info(" Running BW Tests ");
+        getLog().info("-------------------------------------------------------");
     }
 
 
-	public boolean isSkipTests()
-	{
-		if( ! skipTests )
-		{
-			if( "true".equals(project.getProperties().get("skipTests")) )
-			{
-				return true;
-			}
-		}
-		return skipTests;
-	}
+    public boolean isSkipTests() {
+        if (!skipTests) {
+            if ("true".equals(project.getProperties().get("skipTests"))) {
+                return true;
+            }
+        }
+        return skipTests;
+    }
 
 
+    public void setSkipTests(boolean skipTests) {
+        this.skipTests = skipTests;
+    }
 
 
-	public void setSkipTests(boolean skipTests)
-	{
-		this.skipTests = skipTests;
-	}
+    public boolean isTestFailureIgnore() {
+        return testFailureIgnore;
+    }
+
+    public void setTestFailureIgnore(boolean testFailureIgnore) {
+        this.testFailureIgnore = testFailureIgnore;
+    }
 
 
+    public boolean getFailIfNoTests() {
+        return failIfNoTests;
+    }
 
 
-	public boolean isTestFailureIgnore()
-	{
-		return testFailureIgnore;
-	}
-
-	public void setTestFailureIgnore(boolean testFailureIgnore)
-	{
-		this.testFailureIgnore = testFailureIgnore;
-	}
-
-
-
-	public boolean getFailIfNoTests()
-	{
-		return failIfNoTests;
-	}
-
-
-
-	public void setFailIfNoTests(boolean failIfNoTests)
-	{
-		this.failIfNoTests = failIfNoTests;
-	}
+    public void setFailIfNoTests(boolean failIfNoTests) {
+        this.failIfNoTests = failIfNoTests;
+    }
 }

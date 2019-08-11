@@ -102,10 +102,11 @@ public class BWTestsReport extends AbstractMavenReport
 		
 		String tibcoHome = "";
 		String bwHome = "";
+		String eclipsePluginsPath ="";
 		Log logger =  getLog();
 		
 		try {
-			BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, getProject() , logger );
+			BWTestConfig.INSTANCE.init(  tibcoHome , bwHome ,eclipsePluginsPath, session, getProject() , logger );
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
