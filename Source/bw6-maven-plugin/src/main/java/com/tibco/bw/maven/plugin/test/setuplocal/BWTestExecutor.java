@@ -3,6 +3,7 @@ package com.tibco.bw.maven.plugin.test.setuplocal;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -13,6 +14,7 @@ import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 import com.tibco.bw.maven.plugin.test.rest.BWTestRunner;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
+
 
 
 public class BWTestExecutor 
@@ -58,7 +60,13 @@ public class BWTestExecutor
 		
 	}
 	
-	public void collectMockActivityName() throws Exception,FileNotFoundException
+	/**
+	 * This method is used to collect the all mock activities and subprocess whose activities "init()" lifecycle wants
+	 * to skip at runtime. 
+	 * @throws Exception
+	 * @throws FileNotFoundException
+	 */
+	public void collectSkipInitActivityName() throws Exception,FileNotFoundException
 	{
 		List<MavenProject> projects = BWTestConfig.INSTANCE.getSession().getProjects();
 		for( MavenProject project : projects )
@@ -69,11 +77,11 @@ public class BWTestExecutor
 				List<File> files = BWFileUtils.getEntitiesfromLocation( baseDir.toString() , "bwt");
 				for( File file : files )
 				{
-					List<String> tempList = new ArrayList<String>();
+					HashSet<String> tempSkipSet = new HashSet<String>();
 					String assertionxml = FileUtils.readFileToString( file );
-					tempList = TestFileParser.INSTANCE.collectMockActivities(assertionxml);
-					if(!tempList.isEmpty()){
-						mockActivity.addAll(tempList);
+					tempSkipSet = TestFileParser.INSTANCE.collectSkipInitActivities(assertionxml);
+					if(!tempSkipSet.isEmpty()){
+						mockActivity.addAll(tempSkipSet);
 						BWTestExecutor.INSTANCE.setMockActivityList(mockActivity);;
 						
 					}
@@ -87,7 +95,7 @@ public class BWTestExecutor
 	private void initialize() throws Exception
 	{
 		
-		collectMockActivityName();
+		collectSkipInitActivityName();
 		EngineLaunchConfigurator config = new EngineLaunchConfigurator();
 		config.loadConfiguration();
 		
