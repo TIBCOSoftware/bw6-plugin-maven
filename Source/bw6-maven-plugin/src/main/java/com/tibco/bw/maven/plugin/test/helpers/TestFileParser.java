@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -211,9 +212,10 @@ public class TestFileParser {
 	}
 	
 	
-		public List<String> collectMockActivities(String contents){
+		public HashSet<String> collectSkipInitActivities(String contents){
 		InputStream is = null;
-		List<String> mockActivities = new ArrayList<>();
+		HashSet<String> skipInitActivitiesSet = new HashSet<String>();
+		
 		try {
 			
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -231,6 +233,8 @@ public class TestFileParser {
 					if ("ProcessNode".equals(el.getNodeName())) 
 					{
 						String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
+						String key = "-D"+processId+"=true";
+						skipInitActivitiesSet.add(key);
 						NodeList childNodes = el.getChildNodes();
 						for (int j = 0; j < childNodes.getLength(); j++) 
 						{
@@ -244,7 +248,7 @@ public class TestFileParser {
 									if(!disableMocking){
 										String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
 										if(null!=activityName){
-											mockActivities.add("-D"+processId+activityName+"=true");
+											skipInitActivitiesSet.add("-D"+processId+activityName+"=true");
 										}
 									}
 								}
@@ -266,7 +270,7 @@ public class TestFileParser {
 				e.printStackTrace();
 			}
 		}
-		return mockActivities;
+		return skipInitActivitiesSet;
 
 	}
 	
