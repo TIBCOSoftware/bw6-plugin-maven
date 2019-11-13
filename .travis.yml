@@ -1,7 +1,9 @@
 language: 
     - java
 jdk:
-  - oraclejdk9
+  - oraclejdk8
+
+dist: trusty
 
 install:
   - cd /home/travis/build/TIBCOSoftware/bw6-plugin-maven/Source/bw6-maven-plugin
