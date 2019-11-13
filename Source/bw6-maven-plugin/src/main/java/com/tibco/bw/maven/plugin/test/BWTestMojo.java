@@ -20,10 +20,10 @@ import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 
 @Mojo(name = "bwtest", defaultPhase = LifecyclePhase.TEST)
 public class BWTestMojo extends AbstractMojo {
-    @Component
+	@Parameter(defaultValue="${session}", readonly=true)
     private MavenSession session;
 
-    @Component
+	@Parameter(defaultValue="${project}", readonly=true)
     private MavenProject project;
 
     @Parameter( property = "testFailureIgnore", defaultValue = "false" )
