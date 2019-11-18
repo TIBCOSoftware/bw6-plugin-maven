@@ -30,10 +30,10 @@ import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwinstall", defaultPhase = LifecyclePhase.INSTALL)
 public class BWEARInstallerMojo extends AbstractMojo {
-    @Component
+	@Parameter(defaultValue="${session}", readonly=true)
     private MavenSession session;
 
-    @Component
+	@Parameter(defaultValue="${project}", readonly=true)
     private MavenProject project;
 
 	@Parameter(property="project.build.directory")
