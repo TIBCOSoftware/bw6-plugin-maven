@@ -56,10 +56,10 @@ public class BWModuleTestPackageMojo extends AbstractMojo {
 	@Parameter(property="project.basedir")
 	private File projectBasedir;
 
-    @Component
+	@Parameter(defaultValue="${session}", readonly=true)
     private MavenSession session;
 
-    @Component
+    @Parameter(defaultValue="${project}", readonly=true)
     private MavenProject project;
 
     @Parameter(defaultValue = "${project.build.outputDirectory}", required = true)

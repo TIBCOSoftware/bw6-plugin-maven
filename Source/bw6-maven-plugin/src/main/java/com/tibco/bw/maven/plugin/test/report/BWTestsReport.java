@@ -17,6 +17,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 
@@ -28,7 +29,7 @@ import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 public class BWTestsReport extends AbstractMavenReport 
 {
 	
-	 @Component
+	@Parameter(defaultValue="${session}", readonly=true)
 	  private MavenSession session;
 
 

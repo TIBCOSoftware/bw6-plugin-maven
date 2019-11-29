@@ -37,7 +37,7 @@ import org.yaml.snakeyaml.DumperOptions;
 public class BWJsonMojo extends AbstractMojo{
 
 
-	@Component
+	@Parameter(defaultValue="${project}", readonly=true)
 	private MavenProject project;
 	
 	
