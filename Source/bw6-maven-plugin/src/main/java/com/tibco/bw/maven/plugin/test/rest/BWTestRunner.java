@@ -121,11 +121,15 @@ public class BWTestRunner
 			
 			TestSuiteResultDTO resultDTO = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , TestSuiteResultDTO.class);
 			
-			result.getModuleResult().add(resultDTO);
-			
-			int failures = printTestResults(resultDTO);
-			
-			return failures;
+			if( null != resultDTO ){
+				result.getModuleResult().add(resultDTO);
+				int failures = printTestResults(resultDTO);
+				return failures;
+			}
+			else{
+				throw new MojoFailureException("An Exception occurred");
+			}
+		
 
 			
 		
