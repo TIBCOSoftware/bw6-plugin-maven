@@ -38,7 +38,7 @@ public class AssertionsLoader
 			
 			String assertionxml = FileUtils.readFileToString( file );
 			
-			TestFileParser.INSTANCE.collectAssertions(assertionxml , suite);
+			TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
 			
 		}
 		

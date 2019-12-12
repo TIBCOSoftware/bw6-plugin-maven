@@ -47,7 +47,7 @@ public class TestFileParser {
 
 	
 	@SuppressWarnings({ "unchecked" })
-	public void collectAssertions(String contents , TestSuiteDTO suite ) throws Exception,FileNotFoundException
+	public void collectAssertions(String contents , TestSuiteDTO suite , String baseDirectoryPath ) throws Exception,FileNotFoundException
 	{
 		
 		
@@ -151,6 +151,11 @@ public class TestFileParser {
 											if ("MockOutputFilePath".equals(e1.getNodeName()))
 											{
 												String mockOutputFilePath = e1.getTextContent();
+												File file = new File(mockOutputFilePath);
+												if(!file.isAbsolute()){
+													BWTestConfig.INSTANCE.getLogger().info("Provided Mock File path is relative "+file.getPath());
+													mockOutputFilePath = baseDirectoryPath.concat(mockOutputFilePath);
+												}
 												if(!disableMocking){
 													boolean isValidFile = validateMockXMLFile(mockOutputFilePath);
 													if(isValidFile){
