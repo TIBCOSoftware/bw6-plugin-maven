@@ -17,6 +17,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -40,6 +41,8 @@ public class TestFileParser {
 	boolean disableMocking = false;
 	
 	boolean disableAssertions = false;
+	
+	String goldInputFromFile = "false";
 
 	private TestFileParser() {
 
@@ -90,6 +93,9 @@ public class TestFileParser {
 								Element cEl = (Element) cNode;
 								if ("Assertion".equals(cEl.getNodeName()))
 								{
+									if(null != cEl.getAttributes().getNamedItem("goldOutputFromFile")){
+										goldInputFromFile = cEl.getAttributes().getNamedItem("goldOutputFromFile").getNodeValue();
+									}
 									if(!disableAssertions){
 									AssertionDTO ast = new AssertionDTO();
 									ast.setProcessId(processId);
@@ -113,6 +119,15 @@ public class TestFileParser {
 												break;
 											case "Expression":
 												String expression = gcEl.getLastChild().getTextContent();
+												if("true".equals(goldInputFromFile)){
+													String inputFile = StringUtils.substringBetween(expression,"file:///", "')");
+													File goldInputFile = new File(inputFile);
+													if(!goldInputFile.isAbsolute()){
+														baseDirectoryPath =	baseDirectoryPath.replace("\\" , "/");
+														String replaceInputFile = baseDirectoryPath.concat(inputFile);
+														expression = StringUtils.replace(expression, inputFile, replaceInputFile);
+													}
+												}
 												ast.setExpression(expression);
 												break;
 											}
