@@ -123,8 +123,10 @@ public class TestFileParser {
 													String inputFile = StringUtils.substringBetween(expression,"file:///", "')");
 													File goldInputFile = new File(inputFile);
 													if(!goldInputFile.isAbsolute()){
+														BWTestConfig.INSTANCE.getLogger().info("Provided Gold File path is relative "+inputFile);
 														baseDirectoryPath =	baseDirectoryPath.replace("\\" , "/");
-														String replaceInputFile = baseDirectoryPath.concat(inputFile);
+														String replaceInputFile = baseDirectoryPath.concat("/"+inputFile);
+														BWTestConfig.INSTANCE.getLogger().info("Absolute File path File path is relative "+replaceInputFile);
 														expression = StringUtils.replace(expression, inputFile, replaceInputFile);
 													}
 												}
@@ -169,7 +171,7 @@ public class TestFileParser {
 												File file = new File(mockOutputFilePath);
 												if(!file.isAbsolute()){
 													BWTestConfig.INSTANCE.getLogger().info("Provided Mock File path is relative "+file.getPath());
-													mockOutputFilePath = baseDirectoryPath.concat(mockOutputFilePath);
+													mockOutputFilePath = baseDirectoryPath.concat("/"+mockOutputFilePath);
 												}
 												if(!disableMocking){
 													boolean isValidFile = validateMockXMLFile(mockOutputFilePath);
