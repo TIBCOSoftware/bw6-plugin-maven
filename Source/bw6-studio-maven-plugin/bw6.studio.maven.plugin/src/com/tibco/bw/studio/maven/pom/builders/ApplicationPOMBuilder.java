@@ -319,7 +319,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			ReportPlugin p = new ReportPlugin();
 			p.setGroupId("com.tibco.plugins");
 			p.setArtifactId("bw6-maven-plugin");
-			p.setVersion("2.3.0");
+			p.setVersion("2.5.0");
 			reporting.getPlugins().add(p);
 		}
 		
