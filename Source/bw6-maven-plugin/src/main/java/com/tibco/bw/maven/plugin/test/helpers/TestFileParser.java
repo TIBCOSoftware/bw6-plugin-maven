@@ -42,7 +42,6 @@ public class TestFileParser {
 	
 	boolean disableAssertions = false;
 	
-	String goldInputFromFile = "false";
 
 	private TestFileParser() {
 
@@ -52,7 +51,7 @@ public class TestFileParser {
 	@SuppressWarnings({ "unchecked" })
 	public void collectAssertions(String contents , TestSuiteDTO suite , String baseDirectoryPath ) throws Exception,FileNotFoundException
 	{
-		
+		String goldInputFromFile = "false";
 		
 		InputStream is = null;
 		try {
