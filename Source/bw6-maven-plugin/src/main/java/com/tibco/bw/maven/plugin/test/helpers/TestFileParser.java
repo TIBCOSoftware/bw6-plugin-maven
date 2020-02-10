@@ -152,7 +152,7 @@ public class TestFileParser {
 											}
 										}
 									}
-								}else if("MockActivity".equals(cEl.getNodeName())){
+								}else if("MockActivity".equals(cEl.getNodeName()) || "MockFault".equals(cEl.getNodeName())){
 									
 									MockActivityDTO mockActivity = new MockActivityDTO();
 									
