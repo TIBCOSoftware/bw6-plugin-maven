@@ -102,6 +102,10 @@ public class EngineLaunchConfigurator
 				{
 					currentLine = currentLine.replace("%%ENGINE_DEBUG_PORT%%", String.valueOf(BWTestExecutor.INSTANCE.getEngineDebugPort()) );
 				}
+				if( currentLine.contains("%%ECLIPSE_PLUGINS%%"))
+				{
+					currentLine = currentLine.replace("%%ECLIPSE_PLUGINS%%", BWTestConfig.INSTANCE.getEclipsePluginsPath());
+				}
 				if( currentLine.equals("-dev"))
 				{
 					if( isDev)
