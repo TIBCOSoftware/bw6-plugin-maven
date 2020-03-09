@@ -376,7 +376,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	private Application deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile, boolean externalProfile) throws ClientException {
+	private void deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile, boolean externalProfile) throws ClientException {
 		init();
 		try {
 			r = r.queryParam("archivename", archiveName);
@@ -390,11 +390,12 @@ public class RemoteDeployer {
 			}
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
-			Application application = response.readEntity(Application.class);
-			if(application.getCode() != null && !application.getCode().isEmpty()) {
-				throw new ClientException(500, application.getCode() + ": " + application.getMessage(), null);
+		//	Application application = response.readEntity(Application.class);
+		//Rest API response has been changed. Now it returns 201 in case of successful deployment.
+			if(response.getStatus() != 201 ) {
+				throw new ClientException(500, response.getStatus() + ": " , null);
 			}
-			return application;
+			
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {
