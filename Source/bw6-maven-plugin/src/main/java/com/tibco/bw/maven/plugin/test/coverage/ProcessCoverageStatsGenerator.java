@@ -30,7 +30,6 @@ public class ProcessCoverageStatsGenerator
 			}
 			stats.addActivities( cov.getActivities().size() );
 			stats.addActivitiesCovered( cov.getActivitiesExec().size() );
-
 			stats.addTransition( cov.getTransitions().size() );
 			stats.addTransitionCovered( cov.getTransitionExec().size());
 
@@ -39,6 +38,7 @@ public class ProcessCoverageStatsGenerator
 			pstat.setProcessName( cov.getProcessName() );
 			pstat.setTotalActivities( cov.getActivities().size() );
 			pstat.setCoveredActivities( cov.getActivitiesExec().size() );
+			pstat.addCoveredActivitiesName( cov.getActivitiesExec() );
 			pstat.setTotalTransitions( cov.getTransitions().size() );
 			pstat.setCoveredTransitions( cov.getTransitionExec().size());
 			processStats.add(pstat);
@@ -77,6 +77,7 @@ public class ProcessCoverageStatsGenerator
 		private int coveredTransitions;
 		
 		private int coveredActivities;
+		
 		
 		public void addModule( String module )
 		{
@@ -213,7 +214,6 @@ public class ProcessCoverageStatsGenerator
 
 			return  format.format(success) + "%  (" + covered + " / "  + total + ")";
 		}
-
 		
 	}
 	
@@ -231,6 +231,7 @@ public class ProcessCoverageStatsGenerator
 		
 		private int coveredActivities;
 		
+		private List<String> coveredActivitiesName = new ArrayList<String>();
 		
 		public String getActivityStat()
 		{
@@ -327,6 +328,14 @@ public class ProcessCoverageStatsGenerator
 
 		public void setCoveredActivities(int coveredActivities) {
 			this.coveredActivities = coveredActivities;
+		}
+		
+		public List<String> getCoveredActivitiesName() {
+			return coveredActivitiesName;
+		}
+
+		public void addCoveredActivitiesName(List<String> coveredActivityName) {
+			coveredActivitiesName.addAll(coveredActivityName);
 		}
 		
 		
