@@ -145,6 +145,8 @@ public class CodeCoverageReportGenerator
 			sinkHeader( sink, "Module" );
 
 			sinkHeader( sink, "Process" );
+			
+			sinkHeader( sink, "Activity Name" );
 
 			sinkHeader( sink,"Activity %" );
 
@@ -161,6 +163,8 @@ public class CodeCoverageReportGenerator
 			        sinkCell( sink, stat.getModuleName() );
 
 			        sinkCell( sink, stat.getProcessName() );
+			        
+			        sinkCell( sink, stat.getCoveredActivitiesName().toString() );
 
 			        sinkCell( sink, stat.getActivityStat() );
 
