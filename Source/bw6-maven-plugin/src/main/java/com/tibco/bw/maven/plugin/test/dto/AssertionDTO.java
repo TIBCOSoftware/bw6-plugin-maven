@@ -15,6 +15,18 @@ public class AssertionDTO implements Serializable {
 	private String expression;
 	private ConditionLanguageDTO language;
 	private String activityId;
+	private String goldInput;
+	private String assertionMode;
+	private String startElementNameTag;
+	private String endElementNameTag;
+
+	public String getGoldInput() {
+		return goldInput;
+	}
+
+	public void setGoldInput(String goldInput) {
+		this.goldInput = goldInput;
+	}
 
 	@XmlElement
 	public String getProcessId() {
@@ -61,6 +73,30 @@ public class AssertionDTO implements Serializable {
 	public void setActivityId(String activityId) 
 	{
 		this.activityId = activityId;
+	}
+
+	public String getAssertionMode() {
+		return assertionMode;
+	}
+
+	public void setAssertionMode(String assertionMode) {
+		this.assertionMode = assertionMode;
+	}
+
+	public String getStartElementNameTag() {
+		return startElementNameTag;
+	}
+
+	public void setStartElementNameTag(String startElementNameTag) {
+		this.startElementNameTag = startElementNameTag;
+	}
+
+	public String getEndElementNameTag() {
+		return endElementNameTag;
+	}
+
+	public void setEndElementNameTag(String endElementNameTag) {
+		this.endElementNameTag = endElementNameTag;
 	}
 
 }

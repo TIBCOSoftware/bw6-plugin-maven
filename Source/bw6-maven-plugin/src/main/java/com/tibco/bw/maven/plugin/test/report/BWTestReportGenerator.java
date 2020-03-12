@@ -30,6 +30,7 @@ public class BWTestReportGenerator
 	
     private CompleteReportDTO result ;
     private BWTestSuiteReportParser bwTestParser;
+    private static boolean  showFailureProcessname = true;
     
 	public void generateReport( CompleteReportDTO result ,  Sink sink)
 	{
@@ -63,6 +64,11 @@ public class BWTestReportGenerator
         constructPackagesSection(sink);
         
         constructTestCasesSection(sink);
+        
+        if(bwTestParser.isShowFailureDetails() && showFailureProcessname){
+        	 constructFailureDetailsSection(sink);
+        }
+       
         
         sink.body_();
 
@@ -355,6 +361,63 @@ public class BWTestReportGenerator
         sink.section1_();
     }
 
+    
+
+    private void constructFailureDetailsSection( Sink sink )
+    {
+        
+
+        sink.section1();
+        sink.sectionTitle1();
+        sink.text( "Failure Details " );
+        sink.sectionTitle1_();
+
+        sinkAnchor( sink, "Failure_Details" );
+
+        constructHotLinks( sink );
+
+        
+        for ( Map.Entry<String, PackageTestDetails> entry : bwTestParser.getPackageMap().entrySet() )
+    	{
+    		String packageName = entry.getKey();
+
+    		List<ProcessTestDetails> testSuiteList = entry.getValue().getProcessDetails();
+    		
+    		for( ProcessTestDetails suite : testSuiteList )
+    		{
+    			
+                sink.section2();
+                sink.sectionTitle2();
+                sink.text( suite.getProcessName() );
+                sink.sectionTitle2_();
+
+                sinkAnchor( sink, packageName + '.' + suite.getProcessName() );
+
+                sink.table();
+
+                sink.tableRows( new int[]{ LEFT, LEFT }, true );
+
+                for ( ProcessFileTestDetails testCase : suite.getFileTestDetails() )
+                {
+                	
+                	constructFailureDataSection( sink, testCase );
+                	
+                }
+
+                sink.tableRows_();
+
+                sink.table_();
+
+                sink.section2_();
+    		}
+    	}
+
+    sinkLineBreak( sink );
+
+    sink.section1_();
+}
+    
+   
     private static void constructTestCaseSection( Sink sink , ProcessFileTestDetails testCase )
     {
         sink.tableRow();
@@ -363,6 +426,8 @@ public class BWTestReportGenerator
 
         if ( testCase.getFailures() > 0 )
         {
+        	showFailureProcessname = true;
+        	
             sink.link( "#" + toHtmlId( testCase.getFileName() ) );
 
             sinkIcon( "error", sink );
@@ -389,6 +454,33 @@ public class BWTestReportGenerator
 
     }
     
+    private static void constructFailureDataSection( Sink sink , ProcessFileTestDetails testCase ){
+
+        
+        if( testCase.getAssertionFailures().size() > 0 )
+        {
+        	sink.section4();
+        	sink.sectionTitle4();
+            sink.text( testCase.getFileName() );
+            sink.sectionTitle4_();
+        	for(String faultData : testCase.getFailureData())
+        	{
+        		sink.tableRow();
+        		sink.tableCell();
+        		sink.link( "#" + toHtmlId( testCase.getFileName() ) );
+        		sinkIcon( "error", sink );
+        		sink.link_();
+        		sink.tableCell_();
+        		sinkCell( sink, faultData   );
+        		sink.tableRow_();
+        	}
+        }
+        else{
+        	sinkCell(sink, "No failed assertion found for Test case File "+testCase.getFileName());
+        }
+
+    
+    }
     
     private static String toHtmlId( String id )
     {
@@ -435,6 +527,10 @@ public class BWTestReportGenerator
             sinkLink( sink, "Test Cases", "#Test_Cases" );
             sink.text( "]" );
 
+            sink.text( " [" );
+            sinkLink( sink, "Failure Details", "#Failure_Details" );
+            sink.text( "]" );
+            
             sink.paragraph_();
     }
 
