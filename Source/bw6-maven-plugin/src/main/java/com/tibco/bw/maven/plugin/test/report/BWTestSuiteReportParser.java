@@ -20,6 +20,7 @@ public class BWTestSuiteReportParser
 
 	private CompleteReportDTO completeResult ;
 	private Summary summary;
+	private boolean showFailureDetails = false;
 	private Map<String, PackageTestDetails> packageMap = new HashMap<>();
 	
 	public BWTestSuiteReportParser( CompleteReportDTO result )
@@ -45,7 +46,8 @@ public class BWTestSuiteReportParser
 		for( int count = 0 ; count < completeResult.getModuleResult().size() ; count++ )
 		{
 			TestSuiteResultDTO result = (TestSuiteResultDTO) completeResult.getModuleResult().get( count );
-		
+			
+			setShowFailureDetails( result.getshowFailureDetails());
 		
 			for( int i =0 ; i < result.getTestSetResult().size() ; i++ )
 			{
@@ -104,7 +106,14 @@ public class BWTestSuiteReportParser
 						AssertionResultDTO aresult = (AssertionResultDTO) testcase.getAssertionResult().get(  assercount );
 						if( aresult.getAssertionStatus().equals("failed"))
 						{
+							StringBuilder assertionFailureDataBuilder = new StringBuilder();
 							fileDetails.addAssertionFailure(aresult.getActivityName() );
+							assertionFailureDataBuilder.append(" Assertion Failed For Activity with name "+"["+aresult.getActivityName()+"]");
+							assertionFailureDataBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
+							assertionFailureDataBuilder.append(" [Activity Output:  "+aresult.getActivityOutput()+"]");
+							assertionFailureDataBuilder.append(" [Gold Output:  "+aresult.getGoldInput()+"]");
+							fileDetails.addFailureData(assertionFailureDataBuilder.toString());
+							
 						}
 					}
 					
@@ -138,6 +147,15 @@ public class BWTestSuiteReportParser
 	public void setSummary(Summary summary) 
 	{
 		this.summary = summary;
+	}
+
+
+	public boolean isShowFailureDetails() {
+		return showFailureDetails;
+	}
+
+	public void setShowFailureDetails(boolean showFailureDetails) {
+		this.showFailureDetails = showFailureDetails;
 	}
 
 
@@ -348,6 +366,7 @@ public class BWTestSuiteReportParser
 		private int failures;
 		private int errors;
 		private List<String> assertionFailures = new ArrayList<>();
+		private List<String> failureDataList = new ArrayList<>();
 		
 		public ProcessFileTestDetails()
 		{
@@ -409,6 +428,14 @@ public class BWTestSuiteReportParser
 		public void addAssertionFailure( String str)
 		{
 			assertionFailures.add(str);
+		}
+
+		public List<String> getFailureData() {
+			return failureDataList;
+		}
+
+		public void addFailureData(String failureData) {
+			failureDataList.add(failureData);
 		}
 		
 	}

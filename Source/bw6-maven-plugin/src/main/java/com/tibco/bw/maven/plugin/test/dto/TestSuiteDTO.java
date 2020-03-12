@@ -17,6 +17,8 @@ public class TestSuiteDTO implements Serializable
 	private List testSetList = new ArrayList();
 
 	private ModuleInfoDTO moduleInfo;
+	
+	private boolean showFailureDetails;
 
 	
 	@SuppressWarnings("rawtypes")
@@ -41,6 +43,15 @@ public class TestSuiteDTO implements Serializable
 	public void setModuleInfo(ModuleInfoDTO moduleInfo) 
 	{
 		this.moduleInfo = moduleInfo;
+	}
+	
+	@XmlElement (name = "showFailureDetails")
+	public boolean isShowFailureDetails() {
+		return showFailureDetails;
+	}
+
+	public void setShowFailureDetails(boolean showFailureDetails) {
+		this.showFailureDetails = showFailureDetails;
 	}
 
 }
