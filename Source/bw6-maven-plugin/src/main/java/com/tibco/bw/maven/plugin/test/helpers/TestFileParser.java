@@ -42,6 +42,8 @@ public class TestFileParser {
 	
 	boolean disableAssertions = false;
 	
+	boolean showFailureDetails = false;
+	
 
 	private TestFileParser() {
 
@@ -51,7 +53,7 @@ public class TestFileParser {
 	@SuppressWarnings({ "unchecked" })
 	public void collectAssertions(String contents , TestSuiteDTO suite , String baseDirectoryPath ) throws Exception,FileNotFoundException
 	{
-		String goldInputFromFile = "false";
+		String assertionMode = "Primitive";
 		
 		InputStream is = null;
 		try {
@@ -72,7 +74,7 @@ public class TestFileParser {
 					if ("ProcessNode".equals(el.getNodeName())) 
 					{
 						
-						
+						suite.setShowFailureDetails(showFailureDetails);
 						String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
 
 						String packageName = BWFileUtils.getFileNameWithoutExtn(processId);
@@ -92,12 +94,20 @@ public class TestFileParser {
 								Element cEl = (Element) cNode;
 								if ("Assertion".equals(cEl.getNodeName()))
 								{
-									if(null != cEl.getAttributes().getNamedItem("goldOutputFromFile")){
-										goldInputFromFile = cEl.getAttributes().getNamedItem("goldOutputFromFile").getNodeValue();
-									}
+									
 									if(!disableAssertions){
+											if(null != cEl.getAttributes().getNamedItem("goldOutputFromFile") && "true".equals(cEl.getAttributes().getNamedItem("goldOutputFromFile").getNodeValue())){
+												assertionMode = "ActivityWithGoldFile";
+											}
+											else if(null != cEl.getAttributes().getNamedItem("assertionType") && "Activity".equals(cEl.getAttributes().getNamedItem("assertionType").getNodeValue())){
+												assertionMode = "Activity";
+											}
+											else{
+												assertionMode = "Primitive";
+											}
 									AssertionDTO ast = new AssertionDTO();
 									ast.setProcessId(processId);
+									ast.setAssertionMode(assertionMode);
 
 									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
 									ast.setLocation(location);
@@ -118,16 +128,24 @@ public class TestFileParser {
 												break;
 											case "Expression":
 												String expression = gcEl.getLastChild().getTextContent();
-												if("true".equals(goldInputFromFile)){
-													String inputFile = StringUtils.substringBetween(expression,"file:///", "')");
+												String replaceInputFile = null;
+												String inputFile = null;
+												if("ActivityWithGoldFile".equals(assertionMode)){
+													inputFile = StringUtils.substringBetween(expression,"file:///", "')");
 													File goldInputFile = new File(inputFile);
 													if(!goldInputFile.isAbsolute()){
-														BWTestConfig.INSTANCE.getLogger().info("Provided Gold File path is relative "+inputFile);
+														BWTestConfig.INSTANCE.getLogger().debug("Provided Gold File path is relative "+inputFile);
 														baseDirectoryPath =	baseDirectoryPath.replace("\\" , "/");
-														String replaceInputFile = baseDirectoryPath.concat("/"+inputFile);
-														BWTestConfig.INSTANCE.getLogger().info("Absolute File path File path is relative "+replaceInputFile);
+														replaceInputFile = baseDirectoryPath.concat("/"+inputFile);
+														BWTestConfig.INSTANCE.getLogger().debug("Absolute File path "+replaceInputFile);
 														expression = StringUtils.replace(expression, inputFile, replaceInputFile);
 													}
+													if(null != replaceInputFile){
+														inputFile = replaceInputFile;
+													}
+												}
+												if(showFailureDetails){
+													setGoldData(assertionMode,expression,ast,inputFile);
 												}
 												ast.setExpression(expression);
 												break;
@@ -211,6 +229,7 @@ public class TestFileParser {
 					}
 				}
 			}
+			
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
 		} catch (FileNotFoundException e) {
@@ -233,6 +252,41 @@ public class TestFileParser {
 	}
 	
 	
+		private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) {
+		switch(assertionMode){
+		case "Primitive":
+				String goldValueWithElement = StringUtils.substringBetween(expression, "test=\"", "\">");
+				String goldValue = StringUtils.substringAfter(goldValueWithElement, "=");
+				if(goldValue.contains("'")){
+					goldValue = StringUtils.substringBetween(goldValue, "'");
+				}
+				String elementNameString = StringUtils.substringBefore(goldValueWithElement, "=");
+				String[] elementNameArray = StringUtils.split(elementNameString, "/");
+				String elementName = elementNameArray[elementNameArray.length-1];
+				String startElementTag = "<".concat(elementName).concat(">");
+				String endElementTag = "</".concat(elementName).concat(">");
+	
+				ast.setGoldInput(startElementTag.concat(goldValue).concat(endElementTag));
+				ast.setStartElementNameTag(startElementTag);
+				ast.setEndElementNameTag(endElementTag);
+				break;
+				
+		case "Activity":
+			   String activityGoldValue = StringUtils.substringBetween(expression,"<xsl:variable name=\"AssertType\" as=\"item()*\"><Activity-Assertion>","</Activity-Assertion>");
+			   activityGoldValue = StringUtils.replace(activityGoldValue, "<xsl:value-of select=\"&quot;" , "");
+			   activityGoldValue = StringUtils.replace(activityGoldValue, "&quot;\"  />", "");
+			   ast.setGoldInput(activityGoldValue);
+			   break;
+		
+		case "ActivityWithGoldFile":
+			  ast.setGoldInput(readXMLFile(inputFile));
+			  break;
+			   
+		}
+		
+	}
+
+
 		public HashSet<String> collectSkipInitActivities(String contents){
 		InputStream is = null;
 		HashSet<String> skipInitActivitiesSet = new HashSet<String>();
@@ -336,6 +390,10 @@ public class TestFileParser {
 	
 	public void setdisbleAssertions(boolean disableAssertions){
 		this.disableAssertions = disableAssertions;
+	}
+	
+	public void setshowFailureDetails(boolean showFailureDetails){
+		this.showFailureDetails = showFailureDetails;
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -14,6 +14,11 @@ public class AssertionResultDTO implements Serializable
 	private String activityName;
 	private String assertionStatus;
 	private String message;
+	private String goldInput;
+	private String assertionMode;
+	private String startElementNameTag;
+	private String endElementNameTag;
+	private String activityOutput;
 	
 	@XmlElement
 	public String getInstanceId() 
@@ -57,6 +62,47 @@ public class AssertionResultDTO implements Serializable
 	public void setMessage(String message) 
 	{
 		this.message = message;
+	}
+
+	public String getGoldInput() {
+		return goldInput;
+	}
+
+	public void setGoldInput(String goldInput) {
+		this.goldInput = goldInput;
+	}
+
+	public String getAssertionMode() {
+		return assertionMode;
+	}
+
+	public void setAssertionMode(String assertionMode) {
+		this.assertionMode = assertionMode;
+	}
+
+	public String getStartElementNameTag() {
+		return startElementNameTag;
+	}
+
+	public void setStartElementNameTag(String startElementNameTag) {
+		this.startElementNameTag = startElementNameTag;
+	}
+
+	public String getEndElementNameTag() {
+		return endElementNameTag;
+	}
+
+	public void setEndElementNameTag(String endElementNameTag) {
+		this.endElementNameTag = endElementNameTag;
+	}
+
+	@XmlElement
+	public String getActivityOutput() {
+		return activityOutput;
+	}
+
+	public void setActivityOutput(String activityOutput) {
+		this.activityOutput = activityOutput;
 	}
 
 }

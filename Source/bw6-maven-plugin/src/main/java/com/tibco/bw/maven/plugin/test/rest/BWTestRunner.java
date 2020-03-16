@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.List;
 import java.util.jar.Manifest;
 
@@ -20,6 +21,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.glassfish.jersey.client.ClientConfig;
@@ -29,8 +31,11 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.Version;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
+import com.tibco.bw.maven.plugin.test.dto.AssertionDTO;
+import com.tibco.bw.maven.plugin.test.dto.AssertionResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.CompleteReportDTO;
 import com.tibco.bw.maven.plugin.test.dto.ModuleInfoDTO;
+import com.tibco.bw.maven.plugin.test.dto.TestCaseDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestCaseResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetResultDTO;
@@ -120,10 +125,10 @@ public class BWTestRunner
 
 			
 			TestSuiteResultDTO resultDTO = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , TestSuiteResultDTO.class);
-			
 			if( null != resultDTO ){
+				int failures = printTestResults(resultDTO, suite);
 				result.getModuleResult().add(resultDTO);
-				int failures = printTestResults(resultDTO);
+				
 				return failures;
 			}
 			else{
@@ -204,15 +209,15 @@ public class BWTestRunner
 		
 	}
 	
-	private int printTestResults( TestSuiteResultDTO result ) throws MojoFailureException
+	private int printTestResults( TestSuiteResultDTO result, TestSuiteDTO suite ) throws MojoFailureException
 	{
 		StringBuilder builder = new StringBuilder();
-		
 		int totaltests = 0;
 		int totalsuccess = 0;
 		int totalfailure = 0;
 		int totalProcessFailure = 0;
 		int finalResult = 0;
+		TestCaseResultDTO testcase = null;
 		for( int i =0 ; i < result.getTestSetResult().size() ; i++ )
 		{
 			StringBuilder processFileBuilder = new StringBuilder();
@@ -227,11 +232,15 @@ public class BWTestRunner
 			
 			for( int j = 0 ; j < testset.getTestCaseResult().size() ; j++ )
 			{
-				TestCaseResultDTO testcase = (TestCaseResultDTO) testset.getTestCaseResult().get( j );
+				 testcase = (TestCaseResultDTO) testset.getTestCaseResult().get( j );
+				
 				if( testcase.getAssertionFailure() > 0 )
 				{
 					failure++;
 					totalfailure++;
+					if(suite.isShowFailureDetails()){
+						printFailureDetails(testcase,testcase.getTestCaseFile(),testset.getProcessName(),result);
+					}
 				}
 				else if( testcase.getProcessFailures() > 0 )
 				{
@@ -246,6 +255,7 @@ public class BWTestRunner
 				}
 				totaltests++;
 			}
+			
 			processFileBuilder.append( "    Success : " + success + " 	Failure : " + failure + "	Errors : " + processFilure);
 			builder.append( processFileBuilder.toString() );
 			writeProcessResult( result.getModuleInfo().getModuleName() , testset , processFileBuilder.toString() );
@@ -265,6 +275,42 @@ public class BWTestRunner
         
 	}
 	
+
+	private void printFailureDetails(TestCaseResultDTO testcase, String testCaseFile, String subProcessName, TestSuiteResultDTO result) {
+		for(int k = 0 ; k < testcase.getAssertionResult().size() ; k++){
+			AssertionResultDTO assertion =  (AssertionResultDTO) testcase.getAssertionResult().get(k);
+			if(!"passed".equals(assertion.getAssertionStatus())){
+			String inputValue = assertion.getActivityOutput();
+				if(assertion.getAssertionMode().equals("Primitive")){
+					inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
+					if(inputValue.contains(assertion.getStartElementNameTag())){
+						inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
+					}
+					inputValue = assertion.getStartElementNameTag().concat(inputValue).concat(assertion.getEndElementNameTag());
+					assertion.setActivityOutput(inputValue);
+				}
+				else{
+					inputValue = assertion.getActivityOutput();
+				}
+
+				StringBuilder assertionFileBuilder = new StringBuilder();
+				assertionFileBuilder.append("-----------------------------------------------------Fault Data---------------------------------------------------------------------\n");
+				assertionFileBuilder.append(" Assertion Failed For Activity with name "+"["+assertion.getActivityName()+"]");
+				assertionFileBuilder.append(" in Sub-Process ["+subProcessName+"]");
+				assertionFileBuilder.append(" for TestCase File ["+testCaseFile+"]");
+				assertionFileBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
+				assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
+				assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
+				assertionFileBuilder.append("\n");
+
+				BWTestConfig.INSTANCE.getLogger().error(assertionFileBuilder.toString());
+			}
+		}
+	}
+		
+	
+
+
 	static File getReportFile(File reportsDirectory , String moduleName , String processName) {
 		String fileName =  moduleName + "-" + processName + "." + "txt";
 		return new File(reportsDirectory, fileName);
