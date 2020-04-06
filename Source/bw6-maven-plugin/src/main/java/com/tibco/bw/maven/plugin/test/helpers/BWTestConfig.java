@@ -2,6 +2,7 @@ package com.tibco.bw.maven.plugin.test.helpers;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
@@ -18,10 +19,16 @@ public class BWTestConfig
 	private Process engineProcess;
 	
 	private List<String> launchConfig;
+	
+	private List<File> testCasesList;
+	
+	private Map<String,List<File>> testSuiteMap;
 
 	private String tibcoHome;
 	
 	private String bwHome;
+	
+	private String testSuiteName;
 	
 	private MavenSession session;
 	
@@ -140,6 +147,30 @@ public class BWTestConfig
 	public void setLogger(Log logger) 
 	{
 		this.logger = logger;
+	}
+
+	public String getTestSuiteName() {
+		return testSuiteName;
+	}
+
+	public void setTestSuiteName(String testSuiteName) {
+		this.testSuiteName = testSuiteName;
+	}
+
+	public List<File> getTestCasesList() {
+		return testCasesList;
+	}
+
+	public void setTestCasesList(List<File> testCasesList) {
+		this.testCasesList = testCasesList;
+	}
+
+	public Map<String, List<File>> getTestSuiteMap() {
+		return testSuiteMap;
+	}
+
+	public void setTestSuiteMap(Map<String, List<File>> testSuiteMap) {
+		this.testSuiteMap = testSuiteMap;
 	}
 	
 }

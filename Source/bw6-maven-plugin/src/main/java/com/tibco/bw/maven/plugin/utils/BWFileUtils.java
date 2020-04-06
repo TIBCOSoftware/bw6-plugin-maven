@@ -27,6 +27,8 @@ public class BWFileUtils {
 	 private static final char UNIX_SEPARATOR = '/';
 
 	 private static final char WINDOWS_SEPARATOR = '\\';
+	 
+	 private static String  testFolderName = null;
 
 	 public static File[] getFilesForType(final File target, final String extension) {
 	    File[] files = target.listFiles( new FileFilter() {
@@ -175,5 +177,52 @@ public class BWFileUtils {
         final int lastUnixPos = filename.lastIndexOf(UNIX_SEPARATOR);
         final int lastWindowsPos = filename.lastIndexOf(WINDOWS_SEPARATOR);
         return Math.max(lastUnixPos, lastWindowsPos);
+    }
+    
+    public static String getTestFolderName( final String location,  final String testSuiteName){
+    	try
+		{
+			
+			Files.walkFileTree( Paths.get( location ), new FileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir , BasicFileAttributes attrs) throws IOException 
+				{
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFile(Path file , BasicFileAttributes attrs) throws IOException 
+				{
+					if( testSuiteName.equalsIgnoreCase(file.toFile().getName()) )
+					{
+						testFolderName = file.toFile().getParent();
+						return FileVisitResult.TERMINATE;
+					}
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFileFailed(Path file, IOException exc)throws IOException 
+				{
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException 
+				{
+
+					return FileVisitResult.CONTINUE;
+				}
+				
+			});
+
+		}
+		catch( Exception e )
+		{
+			
+		}
+		
+    	return testFolderName;
     }
 }

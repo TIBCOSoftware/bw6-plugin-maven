@@ -47,6 +47,9 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "showFailureDetails" , defaultValue = "false" )
     private boolean showFailureDetails;
     
+    @Parameter( property = "testSuiteName" , defaultValue = "" )
+    private String testSuiteName;
+    
     
     
     
@@ -191,9 +194,11 @@ public class BWTestMojo extends AbstractMojo {
 		TestFileParser.INSTANCE.setshowFailureDetails(showFailureDetails);
 		
 		BWTestExecutor.INSTANCE.setEngineDebugPort(engineDebugPort);
-
-    	BWTestConfig.INSTANCE.reset();
 		
+    	BWTestConfig.INSTANCE.reset();
+    	
+    	BWTestConfig.INSTANCE.setTestSuiteName(testSuiteName);
+    	
 		BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, project , getLog() );
 		
 		getLog().info( "" );
