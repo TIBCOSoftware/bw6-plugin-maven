@@ -13,6 +13,7 @@ import org.apache.maven.project.MavenProject;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 import com.tibco.bw.maven.plugin.test.rest.BWTestRunner;
+import com.tibco.bw.maven.plugin.testsuite.BWTestSuiteLoader;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 
 
@@ -73,8 +74,17 @@ public class BWTestExecutor
 		{
 			if( project.getPackaging().equals("bwmodule") )
 			{
+				List<File> files;
 				File baseDir = project.getBasedir();
-				List<File> files = BWFileUtils.getEntitiesfromLocation( baseDir.toString() , "bwt");
+				if(null != BWTestConfig.INSTANCE.getTestSuiteName()){
+					BWTestSuiteLoader testSuiteLoader = new BWTestSuiteLoader();
+					files = 	testSuiteLoader.collectTestCasesList(baseDir.toString());
+				}
+				else{
+					files = BWFileUtils.getEntitiesfromLocation( baseDir.toString() , "bwt");
+
+				}
+				BWTestConfig.INSTANCE.setTestCasesList(files);
 				for( File file : files )
 				{
 					HashSet<String> tempSkipSet = new HashSet<String>();

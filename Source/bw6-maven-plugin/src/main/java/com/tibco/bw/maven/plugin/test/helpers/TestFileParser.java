@@ -187,7 +187,7 @@ public class TestFileParser {
 												String mockOutputFilePath = e1.getTextContent();
 												File file = new File(mockOutputFilePath);
 												if(!file.isAbsolute()){
-													BWTestConfig.INSTANCE.getLogger().info("Provided Mock File path is relative "+file.getPath());
+													BWTestConfig.INSTANCE.getLogger().debug("Provided Mock File path is relative "+file.getPath());
 													mockOutputFilePath = baseDirectoryPath.concat("/"+mockOutputFilePath);
 												}
 												if(!disableMocking){
