@@ -35,21 +35,37 @@ public class AssertionsLoader
 		List testCaseList = new ArrayList();
 		BWTestConfig.INSTANCE.getLogger().info("");
 		BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs End---------------------------------------------------------------------------------------------------------------------------------------------------");
-		for(Map.Entry<String, List<File>> entry : testSuiteMap.entrySet()){
-			BWTestConfig.INSTANCE.getLogger().info("");
-			BWTestConfig.INSTANCE.getLogger().info(" ## Running Test Suite "+ entry.getKey() + " ##");
-		for( File file : entry.getValue() )
-		{
-			BWTestConfig.INSTANCE.getLogger().info("      Running Test for "+ file.getName());
-			
-			String assertionxml = FileUtils.readFileToString( file );
-			
-			TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
-			
-		}
 		
-	}
-		return suite;
+		if(null != BWTestConfig.INSTANCE.getTestSuiteName()){
+			for(Map.Entry<String, List<File>> entry : testSuiteMap.entrySet()){
+				BWTestConfig.INSTANCE.getLogger().info("");
+				BWTestConfig.INSTANCE.getLogger().info(" ## Running Test Suite "+ entry.getKey() + " ##");
+				for( File file : entry.getValue() )
+				{
+					BWTestConfig.INSTANCE.getLogger().info("      Running Test for "+ file.getName());
+
+					String assertionxml = FileUtils.readFileToString( file );
+
+					TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
+
+				}
+
+			}
+			return suite;
+		}
+		else{
+			for( File file : files )
+			{
+				BWTestConfig.INSTANCE.getLogger().info("## Running Test for "+file.getName()+" ##");
+
+				String assertionxml = FileUtils.readFileToString( file );
+
+				TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
+
+			}
+
+			return suite;
+		}
 	}
 	
 	private List<File> getAssertionsFromProject()
