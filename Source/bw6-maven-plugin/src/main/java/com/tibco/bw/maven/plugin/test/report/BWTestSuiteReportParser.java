@@ -11,6 +11,7 @@ import com.tibco.bw.maven.plugin.test.dto.CompleteReportDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestCaseResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
+import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 
 public class BWTestSuiteReportParser 
 {
@@ -47,7 +48,7 @@ public class BWTestSuiteReportParser
 		{
 			TestSuiteResultDTO result = (TestSuiteResultDTO) completeResult.getModuleResult().get( count );
 			
-			setShowFailureDetails( result.getshowFailureDetails());
+			setShowFailureDetails( TestFileParser.INSTANCE.getshowFailureDetails());
 		
 			for( int i =0 ; i < result.getTestSetResult().size() ; i++ )
 			{

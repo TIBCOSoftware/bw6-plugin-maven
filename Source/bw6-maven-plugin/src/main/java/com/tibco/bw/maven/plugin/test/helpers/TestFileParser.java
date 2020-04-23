@@ -396,6 +396,10 @@ public class TestFileParser {
 		this.showFailureDetails = showFailureDetails;
 	}
 	
+	public boolean getshowFailureDetails(){
+		return showFailureDetails;
+	}
+	
 	@SuppressWarnings("unchecked")
 	private TestSetDTO getProcessTestSet( String processName , TestSuiteDTO suite )
 	{

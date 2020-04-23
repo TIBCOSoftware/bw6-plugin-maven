@@ -23,6 +23,7 @@ import org.apache.maven.reporting.MavenReportException;
 
 import com.tibco.bw.maven.plugin.test.dto.CompleteReportDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 
 @Mojo( name = "bwreport", inheritByDefault = false )
 @Execute( lifecycle = "bwtestreport", phase = LifecyclePhase.TEST )
@@ -32,7 +33,8 @@ public class BWTestsReport extends AbstractMavenReport
 	@Parameter(defaultValue="${session}", readonly=true)
 	  private MavenSession session;
 
-
+	  @Parameter( property = "showFailureDetails" , defaultValue = "false" )
+	    private boolean showFailureDetails;
 
 
 	@Override
@@ -107,6 +109,7 @@ public class BWTestsReport extends AbstractMavenReport
 		
 		try {
 			BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, getProject() , logger );
+			TestFileParser.INSTANCE.setshowFailureDetails(showFailureDetails);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
