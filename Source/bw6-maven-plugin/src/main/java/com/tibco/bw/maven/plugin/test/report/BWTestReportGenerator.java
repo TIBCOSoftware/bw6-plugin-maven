@@ -459,24 +459,30 @@ public class BWTestReportGenerator
         
         if( testCase.getAssertionFailures().size() > 0 )
         {
-        	sink.section4();
-        	sink.sectionTitle4();
-            sink.text( testCase.getFileName() );
-            sink.sectionTitle4_();
+           
         	for(String faultData : testCase.getFailureData())
         	{
         		sink.tableRow();
-        		sink.tableCell();
+                sink.tableCell();
         		sink.link( "#" + toHtmlId( testCase.getFileName() ) );
         		sinkIcon( "error", sink );
         		sink.link_();
         		sink.tableCell_();
-        		sinkCell( sink, faultData   );
+        		sinkCell( sink,testCase.getFileName());
+        		sinkCell( sink, faultData );
         		sink.tableRow_();
         	}
         }
         else{
-        	sinkCell(sink, "No failed assertion found for Test case File "+testCase.getFileName());
+        	sink.tableRow();
+        	sink.tableCell();
+    		sink.link( "#" + toHtmlId( testCase.getFileName() ) );
+    		sinkIcon( "success", sink );
+    		sink.link_();
+    		sink.tableCell_();
+    		sinkCell( sink,testCase.getFileName());
+        	sinkCell(sink, "No failed assertions found.");
+        	sink.tableRow_();
         }
 
     
