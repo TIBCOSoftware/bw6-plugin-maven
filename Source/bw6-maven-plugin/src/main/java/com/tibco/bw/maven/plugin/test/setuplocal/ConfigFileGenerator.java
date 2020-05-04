@@ -10,10 +10,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
@@ -40,7 +42,21 @@ public class ConfigFileGenerator
 			}
 			
 			List<MavenProject> projects =  BWTestConfig.INSTANCE.getSession().getProjects();
+
+			for( MavenProject project : projects ) {
+				if (project.getPackaging().equals("bwear")) {
+
+					Set<Artifact> artifacts = project.getDependencyArtifacts();
+					for(Artifact artifact:artifacts) {
+						if(!"provided".equals(artifact.getScope())) {
+							builder.append( "," );
+							addReference(builder, artifact.getFile(), artifact.getArtifactId());
+						}
+					}
+				}
+			}
 			
+
 			for( MavenProject project : projects )
 			{
 				if( project.getPackaging().equals("bwmodule") || project.getPackaging().equals("bwear"))
