@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlType;
 @SuppressWarnings("serial")
 @XmlRootElement
 @XmlType
-@XmlSeeAlso({TestSetResultDTO.class , ProcessCoverageDTO.class})
+@XmlSeeAlso({TestSetResultDTO.class, BWTestSuiteDTO.class , ProcessCoverageDTO.class})
 public class TestSuiteResultDTO implements Serializable 
 {
 
@@ -22,6 +22,10 @@ public class TestSuiteResultDTO implements Serializable
 	
 	@SuppressWarnings("rawtypes")
 	private List testSetResult = new ArrayList();
+	
+	@SuppressWarnings("rawtypes")
+	private List BWTestSuite = new ArrayList();
+	
 
 	@SuppressWarnings("rawtypes")
 	private List codeCoverage = new ArrayList();
@@ -37,6 +41,19 @@ public class TestSuiteResultDTO implements Serializable
 	public void setTestSetResult(List testSetResult) 
 	{
 		this.testSetResult = testSetResult;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@XmlElement(name="BWTestSuite")
+	public List getBWTestSuite() 
+	{
+		return BWTestSuite;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public void setBWTestSuite(List BWTestSuite) 
+	{
+		this.BWTestSuite = BWTestSuite;
 	}
 
 	@SuppressWarnings("rawtypes")
