@@ -1,6 +1,7 @@
 package com.tibco.bw.maven.plugin.test.helpers;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,8 @@ public class BWTestConfig
 	private MavenProject project;
 	
 	private Log logger;
+	
+	public HashMap<String,String> testCaseWithProcessNameMap = new HashMap<>(); 
 	
 	private BWTestConfig()
 	{
@@ -171,6 +174,15 @@ public class BWTestConfig
 
 	public void setTestSuiteMap(Map<String, List<File>> testSuiteMap) {
 		this.testSuiteMap = testSuiteMap;
+	}
+
+	public HashMap<String, String> getTestCaseWithProcessNameMap() {
+		return testCaseWithProcessNameMap;
+	}
+
+	public void setTestCaseWithProcessNameMap(
+			HashMap<String, String> testCaseWithProcessNameMap) {
+		this.testCaseWithProcessNameMap = testCaseWithProcessNameMap;
 	}
 	
 }

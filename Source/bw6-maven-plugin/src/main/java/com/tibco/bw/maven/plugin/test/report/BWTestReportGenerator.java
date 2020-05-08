@@ -14,9 +14,12 @@ import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
 import org.apache.maven.doxia.util.DoxiaUtils;
 
 import com.tibco.bw.maven.plugin.test.dto.CompleteReportDTO;
+import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
+import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.report.BWTestSuiteReportParser.PackageTestDetails;
 import com.tibco.bw.maven.plugin.test.report.BWTestSuiteReportParser.ProcessFileTestDetails;
 import com.tibco.bw.maven.plugin.test.report.BWTestSuiteReportParser.ProcessTestDetails;
+import com.tibco.bw.maven.plugin.test.report.BWTestSuiteReportParser.TestSuiteDetails;
 
 public class BWTestReportGenerator 
 {
@@ -61,13 +64,29 @@ public class BWTestReportGenerator
 
         constructSummarySection(sink);
         
-        constructPackagesSection(sink);
         
-        constructTestCasesSection(sink);
         
-        if(bwTestParser.isShowFailureDetails() && showFailureProcessname){
-        	 constructFailureDetailsSection(sink);
+       
+        
+        if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
+        	
+        	constructTestSuiteSummarySection(sink);
+        	constructTestSuiteWiseSection(sink);
+        	if(bwTestParser.isShowFailureDetails() && showFailureProcessname){
+        		constructFailureDetailsSectionFortestSuite(sink);
+        	}
         }
+        else{
+        	 constructPackagesSection(sink);
+        	 constructTestCasesSection(sink);
+        	 if(bwTestParser.isShowFailureDetails() && showFailureProcessname){
+            	 constructFailureDetailsSection(sink);
+            }
+        }
+        
+        
+        
+       
        
         
         sink.body_();
@@ -266,6 +285,83 @@ public class BWTestReportGenerator
 
     	sink.section1_();
     }
+    
+    private void constructTestSuiteSummarySection( Sink sink)
+    {
+
+
+    	sink.section1();
+    	sink.sectionTitle1();
+    	sink.text( "Test Suite List" );
+    	sink.sectionTitle1_();
+
+    	sinkAnchor( sink, "TestSuite_List" );
+
+    	constructHotLinks( sink );
+
+    	sinkLineBreak( sink );
+
+    	sink.table();
+
+    	sink.tableRows( new int[]{ LEFT , LEFT, LEFT, LEFT, LEFT, LEFT, LEFT }, true );
+
+    	sink.tableRow();
+
+    	sinkHeader( sink, "Test Suite" );
+    	
+    	sinkHeader( sink, "Module" );
+
+    	sinkHeader( sink, "Test");
+
+    	sinkHeader( sink, "Errors" );
+
+    	sinkHeader( sink, "Failures" );
+
+    	sinkHeader( sink, "Skipped" );
+
+    	sinkHeader( sink, "Success Rate");
+
+
+    	sink.tableRow_();
+
+    	
+    	
+    	for ( Map.Entry<String, TestSuiteDetails> entry : bwTestParser.getTestSuiteMap().entrySet() )
+    	{
+    		sink.tableRow();
+
+    		String testSuiteName = entry.getKey();
+
+    		TestSuiteDetails testSuiteDetails = entry.getValue();
+
+    		sinkCellLink( sink, testSuiteName, "#" + testSuiteName );
+    		
+    		sinkCell( sink,  testSuiteDetails.getModuleName() );
+
+    		sinkCell( sink, String.valueOf( testSuiteDetails.getTotalTests() ) );
+
+    		sinkCell( sink, String.valueOf( testSuiteDetails.getErrors() ));
+
+    		sinkCell( sink,  String.valueOf( testSuiteDetails.getFailures()) );
+
+    		sinkCell( sink, "0" );
+
+    		sinkCell( sink, testSuiteDetails.getSuccessRate() + "%" );
+
+
+    		sink.tableRow_();
+    	}
+
+    	sink.tableRows_();
+
+    	sink.table_();
+
+    	
+    	sinkLineBreak( sink );
+
+    	sink.section1_();
+    }
+
 
     
     private void constructTestSuiteSection( Sink sink , ProcessTestDetails suite , String packageName )
@@ -306,6 +402,44 @@ public class BWTestReportGenerator
         sink.tableRow_();
     }
 
+    
+    private void constructTestSuiteTestCaseSection( Sink sink , ProcessFileTestDetails testCase, Map<String, String> testCaseWithProcessMap )
+    {
+        sink.tableRow();
+
+        sink.tableCell();
+
+        if ( testCase.getFailures() > 0 )
+        {
+        	showFailureProcessname = true;
+        	
+            sink.link( "#" + toHtmlId( testCase.getFileName() ) );
+
+            sinkIcon( "error", sink );
+
+            sink.link_();
+        }
+        else
+        {
+            sinkIcon( "success", sink );
+        }
+
+        sink.tableCell_();
+
+        sinkCell(sink, testCase.getFileName() );
+        
+        String text = String.valueOf(testCase.getTotalAssertions() ) + " Assertions run. ";
+        if( testCase.getAssertionFailures().size() > 0 )
+        {
+        	text = text + " Assertions failed for Activities " + testCase.getAssertionFailures().toString() ;
+        }
+       
+		sinkCell( sink, text   );
+
+        sink.tableRow_();
+
+    }
+    
 
     private void constructTestCasesSection( Sink sink )
     {
@@ -362,6 +496,58 @@ public class BWTestReportGenerator
     }
 
     
+    private void constructTestSuiteWiseSection( Sink sink )
+    {
+        
+
+        sink.section1();
+        sink.sectionTitle1();
+        sink.text( "Test Suite Test Cases " );
+        sink.sectionTitle1_();
+
+        sinkAnchor( sink, "Test_Cases" );
+
+        constructHotLinks( sink );
+
+        for ( Map.Entry<String, TestSuiteDetails> entry : bwTestParser.getTestSuiteMap().entrySet() )
+    	{
+    		String testSuiteName = entry.getKey();
+
+    		List<ProcessTestDetails> testSuiteList = entry.getValue().getProcessDetails();
+    		
+    		for( ProcessTestDetails suite : testSuiteList )
+    		{
+    			
+                sink.section2();
+                sink.sectionTitle2();
+                sink.text( suite.getSuiteName().replaceAll(".bwts", "") );
+                sink.sectionTitle2_();
+
+                sinkAnchor( sink, testSuiteName + '.' + suite.getProcessName() );
+
+                sink.table();
+
+                sink.tableRows( new int[]{ LEFT, LEFT, LEFT }, true );
+
+                for ( ProcessFileTestDetails testCase : suite.getFileTestDetails() )
+                {
+                	
+                	constructTestSuiteTestCaseSection( sink, testCase,bwTestParser.getTestCaseWithProcessMap() );
+                	
+                }
+
+                sink.tableRows_();
+
+                sink.table_();
+
+                sink.section2_();
+    		}
+    	}
+
+        sinkLineBreak( sink );
+
+        sink.section1_();
+    }
 
     private void constructFailureDetailsSection( Sink sink )
     {
@@ -392,6 +578,60 @@ public class BWTestReportGenerator
                 sink.sectionTitle2_();
 
                 sinkAnchor( sink, packageName + '.' + suite.getProcessName() );
+
+                sink.table();
+
+                sink.tableRows( new int[]{ LEFT, LEFT }, true );
+
+                for ( ProcessFileTestDetails testCase : suite.getFileTestDetails() )
+                {
+                	
+                	constructFailureDataSection( sink, testCase );
+                	
+                }
+
+                sink.tableRows_();
+
+                sink.table_();
+
+                sink.section2_();
+    		}
+    	}
+
+    sinkLineBreak( sink );
+
+    sink.section1_();
+}
+    
+    private void constructFailureDetailsSectionFortestSuite( Sink sink )
+    {
+        
+
+        sink.section1();
+        sink.sectionTitle1();
+        sink.text( "Failure Details " );
+        sink.sectionTitle1_();
+
+        sinkAnchor( sink, "Failure_Details" );
+
+        constructHotLinks( sink );
+
+        
+        for ( Map.Entry<String, TestSuiteDetails> entry : bwTestParser.getTestSuiteMap().entrySet() )
+    	{
+    		String testSuiteName = entry.getKey();
+
+    		List<ProcessTestDetails> testSuiteList = entry.getValue().getProcessDetails();
+    		
+    		for( ProcessTestDetails suite : testSuiteList )
+    		{
+    			
+                sink.section2();
+                sink.sectionTitle2();
+                sink.text( suite.getProcessName() );
+                sink.sectionTitle2_();
+
+                sinkAnchor( sink, testSuiteName + '.' + suite.getSuiteName() );
 
                 sink.table();
 
@@ -524,18 +764,29 @@ public class BWTestReportGenerator
             sink.text( "[" );
             sinkLink( sink, "Summary", "#Summary" );
             sink.text( "]" );
-
-            sink.text( " [" );
-            sinkLink( sink, "Package List", "#Package_List" );
-            sink.text( "]" );
-
+           if( null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
+        	   sink.text( " [" );
+               sinkLink( sink, "Test Suite List", "#TestSuite_List" );
+               sink.text( "]" );
+           }
+           else{
+        	   sink.text( " [" );
+               sinkLink( sink, "Package List", "#Package_List" );
+               sink.text( "]" );
+           }
+            
             sink.text( " [" );
             sinkLink( sink, "Test Cases", "#Test_Cases" );
             sink.text( "]" );
 
-            sink.text( " [" );
-            sinkLink( sink, "Failure Details", "#Failure_Details" );
-            sink.text( "]" );
+           if( bwTestParser.isShowFailureDetails() ){
+        	   sink.text( " [" );
+               sinkLink( sink, "Failure Details", "#Failure_Details" );
+               sink.text( "]" );
+           }
+            
+            
+            
             
             sink.paragraph_();
     }
@@ -574,13 +825,13 @@ public class BWTestReportGenerator
         sink.tableCell_();
     }
 
-    private static void sinkCellAnchor( Sink sink, String text, String anchor )
+   /* private static void sinkCellAnchor( Sink sink, String text, String anchor )
     {
         sink.tableCell();
         sinkAnchor( sink, anchor );
         sink.text( text );
         sink.tableCell_();
-    }
+    }*/
 
     private static void sinkAnchor( Sink sink, String anchor )
     {
@@ -590,18 +841,18 @@ public class BWTestReportGenerator
         sink.unknown( A.toString(), TAG_TYPE_END, null );
     }
 
-    private static void sinkLink( Sink sink, String href )
+    /*private static void sinkLink( Sink sink, String href )
     {
         // The "'" argument in this JavaScript function would be escaped to "&apos;"
         // sink.link( "javascript:toggleDisplay('" + toHtmlId( testCase.getFullName() ) + "');" );
         sink.unknown( A.toString(), TAG_TYPE_START, new SinkEventAttributeSet( HREF, href ) );
-    }
+    }*/
 
-    @SuppressWarnings( "checkstyle:methodname" )
+    /*@SuppressWarnings( "checkstyle:methodname" )
     private static void sinkLink_( Sink sink )
     {
         sink.unknown( A.toString(), TAG_TYPE_END, null );
-    }
+    }*/
 
 	  private static String javascriptToggleDisplayCode()
 	    {

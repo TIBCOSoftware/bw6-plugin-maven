@@ -35,6 +35,9 @@ public class BWTestsReport extends AbstractMavenReport
 
 	  @Parameter( property = "showFailureDetails" , defaultValue = "false" )
 	    private boolean showFailureDetails;
+	  
+	  @Parameter( property = "testSuiteName" , defaultValue = "" )
+	    private String testSuiteName;
 
 
 	@Override
@@ -110,6 +113,7 @@ public class BWTestsReport extends AbstractMavenReport
 		try {
 			BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, getProject() , logger );
 			TestFileParser.INSTANCE.setshowFailureDetails(showFailureDetails);
+			BWTestConfig.INSTANCE.setTestSuiteName(testSuiteName);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

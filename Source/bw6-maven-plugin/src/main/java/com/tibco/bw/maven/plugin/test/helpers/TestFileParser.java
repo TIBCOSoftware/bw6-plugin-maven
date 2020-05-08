@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -76,7 +77,10 @@ public class TestFileParser {
 						
 						suite.setShowFailureDetails(showFailureDetails);
 						String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
-
+						if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
+							BWTestConfig.INSTANCE.getTestCaseWithProcessNameMap().put(testCaseFile, processId);
+						}
+						
 						String packageName = BWFileUtils.getFileNameWithoutExtn(processId);
 						
 						TestSetDTO testset = getProcessTestSet(processId, suite);
