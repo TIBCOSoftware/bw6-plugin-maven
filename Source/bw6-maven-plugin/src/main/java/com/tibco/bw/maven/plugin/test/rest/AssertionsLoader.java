@@ -36,7 +36,7 @@ public class AssertionsLoader
 		BWTestConfig.INSTANCE.getLogger().info("");
 		BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs End---------------------------------------------------------------------------------------------------------------------------------------------------");
 		
-		if(null != BWTestConfig.INSTANCE.getTestSuiteName()){
+		if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
 			for(Map.Entry<String, List<File>> entry : testSuiteMap.entrySet()){
 				BWTestConfig.INSTANCE.getLogger().info("");
 				BWTestConfig.INSTANCE.getLogger().info(" ## Running Test Suite "+ entry.getKey() + " ##");
