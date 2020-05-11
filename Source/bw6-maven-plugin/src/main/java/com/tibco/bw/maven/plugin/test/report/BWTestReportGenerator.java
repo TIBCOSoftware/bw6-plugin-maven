@@ -73,7 +73,7 @@ public class BWTestReportGenerator
         	constructTestSuiteSummarySection(sink);
         	constructTestSuiteWiseSection(sink);
         	if(bwTestParser.isShowFailureDetails() && showFailureProcessname){
-        		constructFailureDetailsSectionFortestSuite(sink);
+        		constructFailureDetailsSectionForTestSuite(sink);
         	}
         }
         else{
@@ -603,7 +603,7 @@ public class BWTestReportGenerator
     sink.section1_();
 }
     
-    private void constructFailureDetailsSectionFortestSuite( Sink sink )
+    private void constructFailureDetailsSectionForTestSuite( Sink sink )
     {
         
 
@@ -628,7 +628,7 @@ public class BWTestReportGenerator
     			
                 sink.section2();
                 sink.sectionTitle2();
-                sink.text( suite.getProcessName() );
+                sink.text( suite.getSuiteName() );
                 sink.sectionTitle2_();
 
                 sinkAnchor( sink, testSuiteName + '.' + suite.getSuiteName() );

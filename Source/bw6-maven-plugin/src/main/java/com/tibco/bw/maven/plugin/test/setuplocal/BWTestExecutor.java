@@ -76,7 +76,7 @@ public class BWTestExecutor
 			{
 				List<File> files;
 				File baseDir = project.getBasedir();
-				if(null != BWTestConfig.INSTANCE.getTestSuiteName()){
+				if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
 					BWTestSuiteLoader testSuiteLoader = new BWTestSuiteLoader();
 					files = 	testSuiteLoader.collectTestCasesList(baseDir.toString());
 				}
