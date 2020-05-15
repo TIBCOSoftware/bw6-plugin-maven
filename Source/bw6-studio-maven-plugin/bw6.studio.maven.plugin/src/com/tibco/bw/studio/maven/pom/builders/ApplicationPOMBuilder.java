@@ -310,6 +310,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			if( plugin.getArtifactId().equals("bw6-maven-plugin"))
 			{
 				isReporting = true;
+				//Update the existing version of reporting plugin with Latest one
+				plugin.setVersion("2.7.0");
 				break;
 			}
 		}
