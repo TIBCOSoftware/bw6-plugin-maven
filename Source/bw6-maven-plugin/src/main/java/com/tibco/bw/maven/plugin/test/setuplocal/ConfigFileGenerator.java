@@ -44,11 +44,11 @@ public class ConfigFileGenerator
 			List<MavenProject> projects =  BWTestConfig.INSTANCE.getSession().getProjects();
 
 			for( MavenProject project : projects ) {
-				if (project.getPackaging().equals("bwear")) {
+				if (project.getPackaging().equals("bwmodule") || project.getPackaging().equals("bwear")) {
 
 					Set<Artifact> artifacts = project.getDependencyArtifacts();
 					for(Artifact artifact:artifacts) {
-						if(!"provided".equals(artifact.getScope())) {
+						if(!"provided".equals(artifact.getScope()) || !(artifact.getFile().getName().indexOf("com.tibco.bw.palette.shared") != -1)) {
 							builder.append( "," );
 							addReference(builder, artifact.getFile(), artifact.getArtifactId());
 						}
