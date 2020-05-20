@@ -37,19 +37,17 @@ public class AssertionsLoader
 		BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs End---------------------------------------------------------------------------------------------------------------------------------------------------");
 		
 		if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
-			for(Map.Entry<String, List<File>> entry : testSuiteMap.entrySet()){
+			for (String suiteName : BWTestConfig.INSTANCE.getTestSuiteNameList()){
 				BWTestConfig.INSTANCE.getLogger().info("");
-				BWTestConfig.INSTANCE.getLogger().info(" ## Running Test Suite "+ entry.getKey() + " ##");
-				for( File file : entry.getValue() )
-				{
+				BWTestConfig.INSTANCE.getLogger().info(" ## Running Test Suite "+ suiteName + " ##");
+				for( File file : testSuiteMap.get(suiteName) ){
+					
 					BWTestConfig.INSTANCE.getLogger().info("      Running Test for "+ file.getName());
 
 					String assertionxml = FileUtils.readFileToString( file );
 
 					TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
-
 				}
-
 			}
 			return suite;
 		}
