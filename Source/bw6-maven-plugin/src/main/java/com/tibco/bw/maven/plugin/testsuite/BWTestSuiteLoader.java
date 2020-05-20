@@ -30,6 +30,8 @@ public class BWTestSuiteLoader {
 		for(String suiteName :testSuiteNames){
 			testSuiteNameList.add(testFolderPath.concat("//"+suiteName));
 		}
+		
+		BWTestConfig.INSTANCE.setTestSuiteNameList(Arrays.asList(testSuiteNames));
 
 		BWTSFileReaderWrapper fileReader = new BWTSFileReaderWrapper();
 		testSuitefile = fileReader.readBWTSFile(testSuiteNameList,testFolderPath);
