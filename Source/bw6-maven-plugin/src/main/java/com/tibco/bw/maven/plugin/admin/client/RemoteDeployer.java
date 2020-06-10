@@ -60,9 +60,10 @@ public class RemoteDeployer {
 	private final String trustPassword;
 	private final String keyPath;
 	private final String keyPassword;
+	private final boolean createAdminCompo;
 	private Log log;
 
-	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword) {
+	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo) {
 		this.host = host;
 		this.port = port;
 		this.agentAuth = agentAuthType;
@@ -73,6 +74,7 @@ public class RemoteDeployer {
 		this.trustPassword = trustPassword;
 		this.keyPath = keyFilePath;
 		this.keyPassword = keyPassword;
+		this.createAdminCompo = createAdminCompo;
 	}
 
 	private void init() {
@@ -152,6 +154,9 @@ public class RemoteDeployer {
 				return domain;
 			}
 		}
+		if(!createAdminCompo){
+			throw new ClientException("Domain does not exist with Name -> " +name);
+		}
 		log.info("Creating Domain with name -> " + name);
 		return createDomain(name, desc, "owner", null, null);
 	}
@@ -216,6 +221,10 @@ public class RemoteDeployer {
 				return appSpace;
 			}
 		}
+		if(!createAdminCompo){
+			throw new ClientException("AppSpace does not exist with Name -> " +appSpaceName);
+		}
+		
 		log.info("Creating AppSpace with Name -> " + appSpaceName + " in Domain -> "  + domainName);
 		return createAppSpace(domainName, appSpaceName, true, 0, null, desc, "owner");
 	}
@@ -228,6 +237,9 @@ public class RemoteDeployer {
 				log.info("AppNode HTTP Port  -> " + httpPort + ". AppNode OSGi Port -> " + osgiPort);
 				return node;
 			}
+		}
+		if(!createAdminCompo){
+			throw new ClientException("AppNode does not exist with Name -> " +appNodeName);
 		}
 		log.info("Creating AppNode with Name -> " +  appNodeName + " in Domain -> " + domainName  + " and in AppSpace -> " + appSpaceName);
 		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);

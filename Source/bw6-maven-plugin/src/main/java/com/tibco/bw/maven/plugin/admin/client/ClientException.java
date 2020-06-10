@@ -8,6 +8,10 @@ public class ClientException extends Exception {
         super(message, cause);
         this.code = code;
     }
+    ClientException(String message) {
+        super(message);
+        this.code = 100;
+    }
 
     public int getCode() {
         return this.code;

@@ -125,6 +125,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	
 	@Parameter(property = "externalEarLoc")
 	private String externalEarLoc;
+	
+	@Parameter(property = "createAdminCompo" , defaultValue = "true" )
+	private boolean createAdminCompo;
 
 	private String earLoc;
 	private String earName;
@@ -169,7 +172,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
-    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword);
+    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo);
     		deployer.setLog(getLog());
 
     		List<Agent> agents = deployer.getAgentInfo();

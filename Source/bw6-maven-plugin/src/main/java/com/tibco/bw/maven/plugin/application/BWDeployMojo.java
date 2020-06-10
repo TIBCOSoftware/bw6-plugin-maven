@@ -110,6 +110,10 @@ public class BWDeployMojo extends AbstractMojo {
 	private String earLoc;
 
 	private String applicationName;
+	
+	@Parameter(property = "createAdminCompo" , defaultValue = "true" )
+	private boolean createAdminCompo;
+
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -143,7 +147,7 @@ public class BWDeployMojo extends AbstractMojo {
 			RemoteDeployer deployer = new RemoteDeployer(agentHost,
 					Integer.parseInt(agentPort), agentAuth, agentUsername,
 					agentPassword, agentSSL, trustPath, trustPassword, keyPath,
-					keyPassword);
+					keyPassword,createAdminCompo);
 			deployer.setLog(getLog());
 
 			List<Agent> agents = deployer.getAgentInfo();

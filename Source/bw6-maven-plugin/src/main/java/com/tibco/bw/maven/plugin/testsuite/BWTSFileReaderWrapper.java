@@ -15,7 +15,7 @@ import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 public class BWTSFileReaderWrapper {
 	
 	
-	public List<File>	readBWTSFile(List<String> testSuiteList , String TestFolderPath){
+	public List<File>	readBWTSFile(List<String> testSuiteList , String TestFolderPath) throws IOException{
 		List<File> returnList = new ArrayList<>();
 		List<File> tempReturnList ;
 		HashMap<String,List<File>> testSuiteMap = new HashMap<String,List<File>>();
@@ -40,6 +40,7 @@ public class BWTSFileReaderWrapper {
 			BWTestConfig.INSTANCE.setTestSuiteMap(testSuiteMap);
 		} catch (IOException e) {
 			e.printStackTrace();
+			throw e;
 		}
 		return returnList;
 
