@@ -8,14 +8,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.project.MavenProject;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 
 public class BWTestSuiteLoader {
 
-	public List<File> collectTestCasesList(String baseDir) throws IOException{
+	public List<File> collectTestCasesList(String baseDir, MavenProject project) throws IOException{
 		List<File> testSuitefile = new ArrayList<File>();
+		List<String> testSuiteNamePathList = new ArrayList<String>();
 		List<String> testSuiteNameList = new ArrayList<String>();
 		String[] testSuiteNames;
 		
@@ -27,20 +29,25 @@ public class BWTestSuiteLoader {
 		}
 		Arrays.asList(testSuiteNames);
 		
-		String testFolderPath = BWFileUtils.getTestFolderName(baseDir.toString(),testSuiteNames[0]);
-		if(null != testFolderPath){
-			for(String suiteName :testSuiteNames){
-				testSuiteNameList.add(testFolderPath.concat("//"+suiteName));
+		String testFolderPath = "";
+		for(String testSuiteName : testSuiteNames)
+		{
+			String folderPath = BWFileUtils.getTestFolderName(baseDir.toString(),testSuiteName);
+			if(null != folderPath){
+					testFolderPath = folderPath;
+					testSuiteNamePathList.add(folderPath.concat("//"+testSuiteName));
+					testSuiteNameList.add(testSuiteName);
+			}
+			else{
+				//throw new FileNotFoundException("Test Suite file " +testSuiteName+ " is not found");
+				BWTestConfig.INSTANCE.getLogger().debug("Test Suite file " +testSuiteName+ " is not found at "+ baseDir);
 			}
 		}
-		else{
-			throw new FileNotFoundException("Test Suite file " +testSuiteNames[0]+ " is not found");
-		}
 		
-		BWTestConfig.INSTANCE.setTestSuiteNameList(Arrays.asList(testSuiteNames));
+		BWTestConfig.INSTANCE.setTestSuiteNameList(project, testSuiteNameList);
 
 		BWTSFileReaderWrapper fileReader = new BWTSFileReaderWrapper();
-		testSuitefile = fileReader.readBWTSFile(testSuiteNameList,testFolderPath);
+		testSuitefile = fileReader.readBWTSFile(testSuiteNamePathList,testFolderPath, project);
 		return testSuitefile;
 
 

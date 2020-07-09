@@ -15,6 +15,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
@@ -59,11 +60,13 @@ public class WizardPageEnterprise extends WizardPage {
 	private static final String BASIC_AUTH = "BASIC";
 	private static final String DIGEST_AUTH = "DIGEST";
 	private int index=0;
+	private int textHeight = 18;
+	
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;		 
-		setTitle("Deployment Details for Apache Maven and TIBCO BusinessWorks");
-		setDescription("Please Enter the Deployment details to Deploy the EAR file to BWAgent.\r\nThe EAR file will be deployed to the Agent provided below during the Maven \"install\" lifecycle phase.");	
+		setTitle("Deployment Details for TIBCO BusinessWorks(TM) Application");
+		setDescription("Please enter the Deployment details to Deploy the EAR file to BWAgent.");	
 	}
 
 	public boolean validate() {
@@ -203,15 +206,17 @@ public class WizardPageEnterprise extends WizardPage {
 	}
 
 	private void addNotes() {
-		Label label = new Label(container, SWT.NONE);
-		label.setText("Please enter the Host and Port of the Machine where the BWAgent is running. \r\n"
-				+ "Select the BWAgent Authentication Type (if applicable), and enter the Username, Password. \r\n"
-				+ "Enter the Domain, AppSpace and AppNode Information\r\n"
-				+ "Note* : If the Domain, Appspace and AppNode do not exist then they will be created.\r\n"
-				+ "EAR file will be started on deployment");
-		GridData versionData = new GridData();
-		versionData.horizontalSpan = 4;
-		label.setLayoutData(versionData);
+		Group noteGroup = new Group(container, SWT.SHADOW_ETCHED_IN);
+		noteGroup.setText("Note : ");
+		noteGroup.setLayout(new GridLayout(1, false));
+		GridData noteData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		noteData.horizontalSpan = 4;
+		noteGroup.setLayoutData(noteData);
+		Label label = new Label(noteGroup, SWT.NONE);
+		label.setText("- The EAR file will be deployed to the Agent provided below during the Maven \"install\" lifecycle phase.\r\n"
+				+ "- If the Domain, Appspace and AppNode do not exist then they will be created.\r\n"
+				+ "- The Application within EAR file will be started on deployment");
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 	}
 
 	private void addSeperator(Composite parent) {
@@ -272,14 +277,14 @@ public class WizardPageEnterprise extends WizardPage {
 		agentLabel.setText("Agent Host");
 		agentHost = new Text(container, SWT.BORDER | SWT.SINGLE);
 		agentHost.setText(info.getAgentHost());
-		GridData agentData = new GridData(150, 15);
+		GridData agentData = new GridData(150, textHeight);
 		agentHost.setLayoutData(agentData);
 
 		Label agentPortLabel = new Label(container, SWT.NONE);
 		agentPortLabel.setText("Agent Port");
 		agentPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		agentPort.setText(info.getAgentPort());
-		agentPort.setLayoutData(agentData);
+		agentPort.setLayoutData(new GridData(100, textHeight));
 
 		Label agentAuthLabel = new Label(container, SWT.NONE);
 		agentAuthLabel.setText("Agent Authentication");
@@ -288,7 +293,7 @@ public class WizardPageEnterprise extends WizardPage {
 		agentAuth.add(BASIC_AUTH);
 		agentAuth.add(DIGEST_AUTH);
 		agentAuth.setText(info.getAgentAuth());
-		GridData agentAuthData = new GridData(135, 15);
+		GridData agentAuthData = new GridData(135, textHeight);
 		agentAuthData.horizontalSpan = 3;
 		agentAuth.setLayoutData(agentAuthData);
 
@@ -332,15 +337,17 @@ public class WizardPageEnterprise extends WizardPage {
 		agentSslLabel.setText("SSL Connection");
 		agentSSL = new Button(container, SWT.CHECK);
 		agentSSL.setSelection(info.isAgentSSL());
-		GridData sslData = new GridData(150, 15);
+		GridData sslData = new GridData(200, textHeight);
 		sslData.horizontalSpan = 3;
 		agentSSL.setLayoutData(sslData);
 
+		GridData storeData = new GridData(200, textHeight);
+		
 		Label trustPathLabel = new Label(container, SWT.NONE);
 		trustPathLabel.setText("Truststore Path");
 		trustPath = new Text(container, SWT.BORDER | SWT.SINGLE);
 		trustPath.setText(info.getTrustPath());
-		trustPath.setLayoutData(agentData);
+		trustPath.setLayoutData(storeData);
 
 		Label trustPassLabel = new Label(container, SWT.NONE);
 		trustPassLabel.setText("Truststore Password");
@@ -352,7 +359,7 @@ public class WizardPageEnterprise extends WizardPage {
 		keyPathLabel.setText("Keystore Path");
 		keyPath = new Text(container, SWT.BORDER | SWT.SINGLE);
 		keyPath.setText(info.getKeyPath());
-		keyPath.setLayoutData(agentData);
+		keyPath.setLayoutData(storeData);
 
 		Label keyPassLabel = new Label(container, SWT.NONE);
 		keyPassLabel.setText("Keystore Password");
@@ -406,7 +413,7 @@ public class WizardPageEnterprise extends WizardPage {
 			domain.setText(appModule.getArtifactId() + "-Domain");	
 		}
 
-		GridData domainData = new GridData(150, 15);
+		GridData domainData = new GridData(200, textHeight);
 		domain.setLayoutData(domainData);
 
 		Label domainDescLabel = new Label(container, SWT.NONE);
@@ -414,7 +421,7 @@ public class WizardPageEnterprise extends WizardPage {
 
 		domainDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		domainDesc.setText(info.getDomainDesc());
-		GridData domainDescData = new GridData(300, 15);
+		GridData domainDescData = new GridData(300, textHeight);
 		domainDesc.setLayoutData(domainDescData);
 	}
 
@@ -429,7 +436,7 @@ public class WizardPageEnterprise extends WizardPage {
 			appspace.setText(appModule.getArtifactId() + "-AppSpace");	
 		}
 
-		GridData appspaceData = new GridData(150, 15);
+		GridData appspaceData = new GridData(200, textHeight);
 		appspace.setLayoutData(appspaceData);
 
 		Label appspaceDescLabel = new Label(container, SWT.NONE);
@@ -437,7 +444,7 @@ public class WizardPageEnterprise extends WizardPage {
 
 		appspaceDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appspaceDesc.setText(info.getAppspaceDesc());
-		GridData appspaceDescData = new GridData(300, 15);
+		GridData appspaceDescData = new GridData(300, textHeight);
 		appspaceDesc.setLayoutData(appspaceDescData);
 	}
 
@@ -452,7 +459,7 @@ public class WizardPageEnterprise extends WizardPage {
 			appNode.setText(appModule.getArtifactId() + "-AppNode");	
 		}
 
-		GridData appNodeData = new GridData(150, 15);
+		GridData appNodeData = new GridData(200, textHeight);
 		appNode.setLayoutData(appNodeData);
 
 		Label appnodeDescLabel = new Label(container, SWT.NONE);
@@ -460,7 +467,7 @@ public class WizardPageEnterprise extends WizardPage {
 
 		appNodeDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appNodeDesc.setText(info.getAppNodeDesc());
-		GridData appnodeDescData = new GridData(300, 15);
+		GridData appnodeDescData = new GridData(300, textHeight);
 		appNodeDesc.setLayoutData(appnodeDescData);
 
 		Label httpLabel = new Label(container, SWT.NONE);
@@ -468,14 +475,14 @@ public class WizardPageEnterprise extends WizardPage {
 
 		httpPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		httpPort.setText(info.getHttpPort());
-		httpPort.setLayoutData(appNodeData);
+		httpPort.setLayoutData(new GridData(100, textHeight));
 
 		Label osgiPortLabel = new Label(container, SWT.NONE);
 		osgiPortLabel.setText("OSGI Port");
 
 		osgiPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		osgiPort.setText(info.getOsgiPort());
-		osgiPort.setLayoutData(appNodeData);
+		osgiPort.setLayoutData(new GridData(100, textHeight));
 	}
 
 	private void addProfile() {
@@ -493,8 +500,8 @@ public class WizardPageEnterprise extends WizardPage {
 			profile.select(index);	
 		}
 
-		GridData profileData = new GridData(135, 15);
-		profileData.horizontalSpan = 3;
+		GridData profileData = new GridData(135, textHeight);
+		profileData.horizontalSpan = 1;
 		profile.setLayoutData(profileData);
 		profile.addSelectionListener(new SelectionListener() {
 			
@@ -529,35 +536,42 @@ public class WizardPageEnterprise extends WizardPage {
 		externalProfileLocLabel.setText("External Profile Location");
 		externalProfileLoc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		externalProfileLoc.setText(info.getexternalProfileLoc());
-		GridData externalProfileLocData = new GridData(150, 15);
+		GridData externalProfileLocData = new GridData(300, textHeight);
 		externalProfileLoc.setLayoutData(externalProfileLocData);
 		externalProfileLoc.setEnabled(false);
 
 	}
 
 	private void addRedeployBox() {
+		
+		Label domainLabel = new Label(container, SWT.NONE);
+		domainLabel.setText("Redeploy the Application if exists");
+		domainLabel.setToolTipText("Redeploy the Application if exists.");
+
+		GridData deployData = new GridData(250, 25);
+		deployData.horizontalSpan = 1;
+		domainLabel.setLayoutData(deployData);
+		
 		redeploy = new Button(container, SWT.CHECK);
 		redeploy.setSelection(info.isRedeploy());
 		redeploy.setToolTipText("If this is checked, then the Application will be redeployed if exists.");
-
-		Label domainLabel = new Label(container, SWT.NONE);
-		domainLabel.setText("Re Deploy the Application if exists.");
-		domainLabel.setToolTipText("Re Deploy the Application if exists.");
-
-		GridData deployData = new GridData(350, 25);
-		deployData.horizontalSpan = 1;
-
-		domainLabel.setLayoutData(deployData);
+		GridData redeployData = new GridData();
+		redeployData.horizontalSpan = 3;
+		redeploy.setLayoutData(redeployData);
+		
+		
 	}
 
 	private void addBackupEarBox() {
+		Label backupLabel = new Label(container, SWT.NONE);
+		backupLabel.setText("Backup Application EAR if exists");
+		backupLabel.setToolTipText("Backup Application EAR if exists.");
+		
 		backup = new Button(container, SWT.CHECK);
 		backup.setSelection(info.isBackup());
 		backup.setToolTipText("If this is checked, then the Application EAR will be backed up if exists.");
-		Label backupLabel = new Label(container, SWT.NONE);
-		backupLabel.setText("Backup Application EAR if exists.");
-		backupLabel.setToolTipText("Backup Application EAR if exists.");
-		GridData backupData = new GridData(350, 25);
+		
+		GridData backupData = new GridData(250, 25);
 		backupData.horizontalAlignment = GridData.BEGINNING;
 		backupData.horizontalSpan = 0;
 		backupLabel.setLayoutData(backupData);
@@ -566,8 +580,8 @@ public class WizardPageEnterprise extends WizardPage {
 		backupLocLabel.setText("Backup Location");
 		backupLocation = new Text(container, SWT.BORDER | SWT.SINGLE);
 		backupLocation.setText(info.getBackupLocation());
-		GridData backupLocationData = new GridData(150, 15);
-		backupLocationData.horizontalAlignment = GridData.FILL;
+		GridData backupLocationData = new GridData(300, textHeight);
+		//backupLocationData.horizontalAlignment = GridData.FILL;
 
 		backupLocation.setLayoutData(backupLocationData);
 		backupLocation.setEnabled(false);

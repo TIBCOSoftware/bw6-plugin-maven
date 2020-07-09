@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<contexts>
+    <context id="MavenHelp">
+        <description> Maven Plugin for TIBCO Business Works(TM) </description>
+        <topic href="https://github.com/TIBCOSoftware/bw6-plugin-maven/wiki" label="Wiki" />
+    </context>
+</contexts>

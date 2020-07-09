@@ -182,7 +182,7 @@ public class BWFileUtils {
     public static String getTestFolderName( final String location,  final String testSuiteName){
     	try
 		{
-			
+    		testFolderName = null;
 			Files.walkFileTree( Paths.get( location ), new FileVisitor<Path>() {
 
 				@Override

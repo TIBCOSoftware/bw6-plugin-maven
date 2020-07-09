@@ -2,15 +2,19 @@ package com.tibco.bw.studio.maven.wizard;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.eclipse.core.internal.resources.Project;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -26,6 +30,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -44,6 +49,7 @@ import com.tibco.bw.studio.maven.modules.model.BWParent;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 import com.tibco.bw.studio.maven.modules.model.BWTestInfo;
+import com.tibco.bw.studio.maven.plugin.Activator;
 
 public class WizardPageConfiguration extends WizardPage {
 	private BWProject project;
@@ -58,6 +64,7 @@ public class WizardPageConfiguration extends WizardPage {
 	private Text engineDebugPort;
 	private Button runTests;
 	private Button failIfSkip;
+	private int textHeight = 18;
 
 
 	private Map<String, Button> buttonMap = new HashMap<String, Button>();
@@ -68,9 +75,9 @@ public class WizardPageConfiguration extends WizardPage {
 	public WizardPageConfiguration(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;
-		setTitle("Maven Configuration Details for Plugin Code for Apache Maven and TIBCO BusinessWorks(TM)");
+		setTitle("Maven Configuration Details for TIBCO BusinessWorks(TM) Application");
 		if(project.getType() == BWProjectType.Application){
-			setDescription("Enter the GroupId and ArtifactId for Maven POM File generation.\nPOM files will be generated for Projects listed below and Parent POM file will be generated aggregating the Projects");
+			setDescription("Enter the GroupId and ArtifactId for Maven POM File generation.");
 
 
 			BWApplication application = (BWApplication) ModuleHelper.getApplication(project.getModules());
@@ -165,18 +172,18 @@ public class WizardPageConfiguration extends WizardPage {
 		addNotes();
 		addSeperator(parent);
 		setApplicationPOMFields();
-		addSeperator(parent);
+		//addSeperator(parent);
 		
 		setTestFields();
 		
-		addSeperator(parent);
+		//addSeperator(parent);
 		
 		if(project.getType() == BWProjectType.Application){
 			setDeploymentComboBox();
 			addSeperator(parent);
 		
 			Label label = new Label(container, SWT.NONE);
-			label.setText("Note* : The POM File will be generated/updated (if exists) for following Projects");
+			label.setText("Selected Projects : ");
 			GridData versionData = new GridData();
 			versionData.horizontalSpan = 4;
 			label.setLayoutData(versionData);
@@ -189,17 +196,19 @@ public class WizardPageConfiguration extends WizardPage {
 	}
 
 	private void addNotes() {
-		Label label = new Label(container, SWT.NONE);
-		label.setText("Note* : Maven ArtifactId and Bundle-SymbolicName should be same.");
-		GridData versionData = new GridData();
-		versionData.horizontalSpan = 4;
-		label.setLayoutData(versionData);
-
-		Label label1 = new Label(container, SWT.NONE);
-		label1.setText("Note* : Maven Version and Bundle-Version should be same.");
-		versionData = new GridData();
-		versionData.horizontalSpan = 4;
-		label1.setLayoutData(versionData);
+		Group noteGroup = new Group(container, SWT.SHADOW_ETCHED_IN);
+		noteGroup.setText("Note : ");
+		noteGroup.setLayout(new GridLayout(1, false));
+		GridData noteData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		noteData.horizontalSpan = 4;
+		noteGroup.setLayoutData(noteData);
+		
+		Label label = new Label(noteGroup, SWT.NONE);
+		label.setText("- POM files will be generated for Projects listed below and Parent POM file will be generated aggregating the Projects. \r\n"
+				+ "- Maven ArtifactId and Bundle-SymbolicName should be same.\r\n"
+				+ "- Maven Version and Bundle-Version should be same.\r\n"
+				+ "- TIBCO Home and BW Home values are required to run the Unit tests defined in the Project.");
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 	}
 
 	private void addSeperator(Composite parent) {
@@ -297,19 +306,22 @@ public class WizardPageConfiguration extends WizardPage {
 			}
 		}
 		if(null != info){
-			Composite innerContainer = new Composite(container, SWT.NONE);
+			Group innerContainer = new Group(container, SWT.SHADOW_ETCHED_IN);
+			innerContainer.setText("Unit Test Configuration : ");
 			GridLayout layout = new GridLayout();
 			innerContainer.setLayout(layout);
 			layout.numColumns = 2;
+			innerContainer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+			
 
 			//		Label label = new Label(container, SWT.NONE);
 			//		label.setText("Note* : Tibco Home and BW Home values are required to run the Unit-Tests on the Project");
 
-			Label label = new Label(innerContainer, SWT.NONE);
-			label.setText("Note* : Tibco Home and BW Home values are required to run the Unit-Tests defined in the Project.");
+			/*Label label = new Label(innerContainer, SWT.NONE);
+			label.setText("Note : TIBCO Home and BW Home values are required to run the Unit-Tests defined in the Project.");
 			GridData versionData = new GridData();
 			versionData.horizontalSpan = 2;
-			label.setLayoutData(versionData);
+			label.setLayoutData(versionData);*/
 
 			Label runTestsLabel = new Label(innerContainer, SWT.NONE);
 
@@ -327,35 +339,67 @@ public class WizardPageConfiguration extends WizardPage {
 
 
 			Label tibcoHomeLabel = new Label(innerContainer, SWT.NONE);
-			tibcoHomeLabel.setText("Tibco Home : ");
+			tibcoHomeLabel.setText("TIBCO Home : ");
 
+			//find tibco home
+			String tibcoHomePath = "";
+			String bwHomePath = "";
+			File bundleFile;
+			try {
+				//bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
+				bundleFile = FileLocator.getBundleFile(Platform.getBundle("org.eclipse.platform"));
+				if(bundleFile != null)
+				{
+					if(bundleFile.getPath().contains("studio"))
+					{
+						tibcoHomePath = bundleFile.getPath().substring(0,bundleFile.getPath().indexOf(bundleFile.separator + "studio"));
+						File bwFolder = new File(tibcoHomePath + bundleFile.separator + "bw");
+						for(String folder : bwFolder.list())
+						{
+							if(isNumeric(folder))
+							{
+								bwHomePath = bundleFile.separator + "bw" + bundleFile.separator + folder;
+								break;
+							}
+						}						
+					}
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		    
+			
 			tibcoHome = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-			tibcoHome.setText( info.getTibcoHome() != null && !info.getTibcoHome().isEmpty() ? info.getTibcoHome() : "") ;
-			GridData groupData = new GridData(200, 15);
+			tibcoHome.setText( info.getTibcoHome() != null && !info.getTibcoHome().isEmpty() ? info.getTibcoHome() : tibcoHomePath) ;
+			GridData groupData = new GridData(200, textHeight);
 			tibcoHome.setLayoutData(groupData);
-
+			
 			Label bwHomeLabel = new Label(innerContainer, SWT.NONE);
 			bwHomeLabel.setText( "BW Home : ");
 
 			bwHome = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
-			bwHome.setText( info.getBwHome() != null && !info.getBwHome().isEmpty() ? info.getBwHome() : "" );
-			GridData artifactData = new GridData(200, 15);
+			bwHome.setText( info.getBwHome() != null && !info.getBwHome().isEmpty() ? info.getBwHome() : bwHomePath );
+			GridData artifactData = new GridData(200, textHeight);
 			bwHome.setLayoutData(artifactData);
-			
 			
 			Label engineDebugPortLabel = new Label(innerContainer, SWT.NONE);
 			engineDebugPortLabel.setText( "Engine Debug Port : ");
 
 			engineDebugPort = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
 			engineDebugPort.setText("8090");
-			GridData engineDebugPortData = new GridData(200, 15);
+			GridData engineDebugPortData = new GridData(200, textHeight);
 			bwHome.setLayoutData(engineDebugPortData);
 
-}
+		}
 		
 	}
 	
 
+	public static boolean isNumeric(String str) {
+		  return str.matches("\\d+(\\.\\d+)?"); 
+	}
+	
 	private void setApplicationPOMFields() {
 		Composite innerContainer = new Composite(container, SWT.NONE);
 
@@ -387,7 +431,7 @@ public class WizardPageConfiguration extends WizardPage {
 			appGroupId.setText(readModel(pomFile).getGroupId());
 		else
 		appGroupId.setText(module.getGroupId());
-		GridData groupData = new GridData(200, 15);
+		GridData groupData = new GridData(250, textHeight);
 		appGroupId.setLayoutData(groupData);
 
 		Label artifactLabel = new Label(innerContainer, SWT.NONE);
@@ -401,7 +445,7 @@ public class WizardPageConfiguration extends WizardPage {
 
 		appArtifactId = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
 		appArtifactId.setText(module.getArtifactId());
-		GridData artifactData = new GridData(200, 15);
+		GridData artifactData = new GridData(250, textHeight);
 		appArtifactId.setLayoutData(artifactData);
 		if(project.getType() == BWProjectType.SharedModule){
 			appArtifactId.setEditable(false);
@@ -412,7 +456,7 @@ public class WizardPageConfiguration extends WizardPage {
 
 		appVersion = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
 		appVersion.setText(module.getVersion());
-		GridData versionData = new GridData(120, 15);
+		GridData versionData = new GridData(120, textHeight);
 //		versionData.horizontalSpan = 3;
 		appVersion.setLayoutData(versionData);
 		appVersion.setEditable(false);
@@ -441,7 +485,7 @@ public class WizardPageConfiguration extends WizardPage {
 		//GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		GridData data = new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1);
 		data.horizontalSpan = 4;
-		data.heightHint = 50;
+		data.heightHint = 70;
 		table.setLayoutData(data);
 
 		String[] titles = { "Module Name", "Module Type", "ArtifactId" };

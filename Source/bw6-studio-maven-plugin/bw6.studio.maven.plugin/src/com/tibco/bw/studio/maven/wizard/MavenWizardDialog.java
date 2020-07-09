@@ -6,16 +6,19 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 
 public class MavenWizardDialog extends WizardDialog {
 
 	public MavenWizardDialog(Shell parentShell, IWizard newWizard) {
 		super(parentShell, newWizard);
+		this.setHelpAvailable(true);
 	}
 
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		super.createButtonsForButtonBar(parent);
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "bw6.studio.maven.plugin.MavenHelp");
 		MavenWizardContext.INSTANCE.setNextButton(getButton(IDialogConstants.NEXT_ID));
 		MavenWizardContext.INSTANCE.setPreviousButton(getButton(IDialogConstants.BACK_ID));
 		MavenWizardContext.INSTANCE.setFinishButton(getButton(IDialogConstants.FINISH_ID));
@@ -27,4 +30,6 @@ public class MavenWizardDialog extends WizardDialog {
 		return super.getInitialSize();
 		// return new Point(750, 610);
 	}
+	
+	
 }

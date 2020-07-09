@@ -78,13 +78,13 @@ public class BWTestExecutor
 				File baseDir = project.getBasedir();
 				if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
 					BWTestSuiteLoader testSuiteLoader = new BWTestSuiteLoader();
-					files = 	testSuiteLoader.collectTestCasesList(baseDir.toString());
+					files = 	testSuiteLoader.collectTestCasesList(baseDir.toString(), project);
 				}
 				else{
 					files = BWFileUtils.getEntitiesfromLocation( baseDir.toString() , "bwt");
 
 				}
-				BWTestConfig.INSTANCE.setTestCasesList(files);
+				BWTestConfig.INSTANCE.setTestCasesList(project, files);
 				for( File file : files )
 				{
 					HashSet<String> tempSkipSet = new HashSet<String>();

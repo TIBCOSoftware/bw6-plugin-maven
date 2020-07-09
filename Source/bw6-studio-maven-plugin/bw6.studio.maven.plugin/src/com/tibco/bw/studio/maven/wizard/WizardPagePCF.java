@@ -22,6 +22,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
@@ -34,7 +35,7 @@ import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
 import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
 
 public class WizardPagePCF extends WizardPage {
-	private Composite container;
+	private Group container;
 	private BWProject project;
 
 	private Text appPCFTarget;
@@ -51,21 +52,25 @@ public class WizardPagePCF extends WizardPage {
 	private Map<String, String> properties= new HashMap();
 	private FileInputStream devPropfile = null;
 	private StringBuilder envStr = new StringBuilder();
+	private int textHeight = 18;
 
 
 	protected WizardPagePCF(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;
-		setTitle("CloudFoundry Plugin for Apache Maven and TIBCO BusinessWorks Container Edition");
+		setTitle("CloudFoundry Configuration for TIBCO BusinessWorks Container Edition Application");
 		setDescription("Enter CloudFoundry Platform details for pushing and running BWCE apps");
 	}
 
 	@Override
 	public void createControl(Composite parent) {
-		container = new Composite(parent, SWT.NONE);
+		//container = new Composite(parent, SWT.NONE);
+		container = new Group(parent, SWT.NONE);
+		container.setText("PCF Configuration : ");
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
 		layout.numColumns = 4;
+		container.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		setApplicationPCFPOMFields();
 		setControl(container);
 		setPageComplete(true);
@@ -126,7 +131,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFTarget.setText(properties.get("bwpcf.target"));
 		else	
 			appPCFTarget.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_Target(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_Target("https://api.run.pivotal.io")));
-		GridData targetData = new GridData(150, 15);
+		GridData targetData = new GridData(300, textHeight);
 		appPCFTarget.setLayoutData(targetData);
 
 		Label credLabel = new Label(container, SWT.RIGHT);
@@ -137,7 +142,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFCred.setText(properties.get("bwpcf.server"));
 		else
 			appPCFCred.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_ServerName(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_ServerName("PCF_UK_credential")));
-		GridData credData = new GridData(100, 15);
+		GridData credData = new GridData(300, textHeight);
 		appPCFCred.setLayoutData(credData);
 
 		Label orgLabel = new Label(container, SWT.RIGHT);
@@ -148,7 +153,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFOrg.setText(properties.get("bwpcf.org"));
 		else
 			appPCFOrg.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_Org(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_Org("tibco")));
-		GridData orgData = new GridData(100, 15);
+		GridData orgData = new GridData(300, textHeight);
 		appPCFOrg.setLayoutData(orgData);
 
 		Label spaceLabel = new Label(container, SWT.RIGHT);
@@ -159,7 +164,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFSpace.setText(properties.get("bwpcf.space"));
 		else
 			appPCFSpace.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_Space(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_Space("development")));
-		GridData spaceData = new GridData(100, 15);
+		GridData spaceData = new GridData(300, textHeight);
 		appPCFSpace.setLayoutData(spaceData);
 
 		Label appNameLabel = new Label(container, SWT.RIGHT);
@@ -170,7 +175,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFAppName.setText(properties.get("bwpcf.appName"));
 		else
 			appPCFAppName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_AppName(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_AppName("AppName")));
-		GridData appNameData = new GridData(100, 15);
+		GridData appNameData = new GridData(300, textHeight);
 		appPCFAppName.setLayoutData(appNameData);
 		
 		Label pcfDomainLabel = new Label(container, SWT.RIGHT);
@@ -178,8 +183,8 @@ public class WizardPagePCF extends WizardPage {
 		
 		appPCFDomain = new Text(container, SWT.BORDER | SWT.SINGLE);
 		
-		GridData appDomainData = new GridData(100, 15);
-		appPCFAppName.setLayoutData(appDomainData);
+		GridData appDomainData = new GridData(300, textHeight);
+		appPCFDomain.setLayoutData(appDomainData);
 
 		Label instancesLabel = new Label(container, SWT.RIGHT);
 		instancesLabel.setText("App Instances");
@@ -189,7 +194,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFInstances.setText(properties.get("bwpcf.instances"));
 		else
 			appPCFInstances.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_AppInstances(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_AppInstances("1")));
-		GridData instancesData = new GridData(50, 15);
+		GridData instancesData = new GridData(50, textHeight);
 		appPCFInstances.setLayoutData(instancesData);
 
 		Label memoryLabel = new Label(container, SWT.RIGHT);
@@ -200,7 +205,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFMemory.setText(properties.get("bwpcf.memory"));
 		else
 			appPCFMemory.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_AppMemory(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_AppMemory("1024")));
-		GridData memoryData = new GridData(50, 15);
+		GridData memoryData = new GridData(80, textHeight);
 		appPCFMemory.setLayoutData(memoryData);
 		
 		Label diskLabel = new Label(container, SWT.RIGHT);
@@ -211,7 +216,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFDiskQuota.setText(properties.get("bwpcf.diskQuota"));
 		else
 			appPCFDiskQuota.setText("1024");
-		GridData diskData = new GridData(50, 15);
+		GridData diskData = new GridData(80, textHeight);
 		appPCFDiskQuota.setLayoutData(diskData);
 
 		Label buildpackLabel = new Label(container, SWT.RIGHT);
@@ -222,7 +227,7 @@ public class WizardPagePCF extends WizardPage {
 			appPCFBuildpack.setText(properties.get("bwpcf.buildpack"));
 		else
 			appPCFBuildpack.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_AppBuildpack(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_AppBuildpack("buildpack")));
-		GridData buildpackData = new GridData(200, 15);
+		GridData buildpackData = new GridData(300, textHeight);
 		appPCFBuildpack.setLayoutData(buildpackData);
 
 		Label envVarsLabel = new Label(container, SWT.NONE);
@@ -235,7 +240,7 @@ public class WizardPagePCF extends WizardPage {
 		}
 		else
 			cfEnvVars.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_EnvVars("APP_CONFIG_PROFILE=PCF, BW_LOGLEVEL=DEBUG")));
-		GridData envvarData = new GridData(400, 15);
+		GridData envvarData = new GridData(400, textHeight);
 		//envvarData.horizontalSpan = 3;
 		cfEnvVars.setLayoutData(envvarData);
 

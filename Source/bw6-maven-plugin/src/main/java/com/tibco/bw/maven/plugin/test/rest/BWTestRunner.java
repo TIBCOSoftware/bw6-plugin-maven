@@ -130,7 +130,7 @@ public class BWTestRunner
 			
 			TestSuiteResultDTO resultDTO = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , TestSuiteResultDTO.class);
 			if( null != resultDTO ){
-				int failures = printTestResults(resultDTO, suite);
+				int failures = printTestResults(resultDTO, suite, project);
 				result.getModuleResult().add(resultDTO);
 				
 				return failures;
@@ -213,7 +213,7 @@ public class BWTestRunner
 		
 	}
 	
-	private int printTestResults( TestSuiteResultDTO result, TestSuiteDTO suite ) throws MojoFailureException
+	private int printTestResults( TestSuiteResultDTO result, TestSuiteDTO suite, MavenProject project ) throws MojoFailureException
 	{
 		StringBuilder builder = new StringBuilder();
 		int totaltests = 0;
@@ -224,8 +224,7 @@ public class BWTestRunner
 		TestCaseResultDTO testcase = null;
 		
 		if (null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()) {
-			Map<String, List<File>> testSuiteMap = BWTestConfig.INSTANCE
-					.getTestSuiteMap();
+			Map<String, List<File>> testSuiteMap = BWTestConfig.INSTANCE.getTestSuiteMap(project);
 			finalResult = printTestSuiteWiseResult(result, testSuiteMap);
 			return finalResult;
 		}

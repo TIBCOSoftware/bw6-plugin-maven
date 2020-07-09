@@ -21,6 +21,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
@@ -48,6 +49,8 @@ public class WizardPageDocker extends WizardPage {
 	private Text dockerPort;
 	private Text dockerEnv;
 	private WizardPageK8S k8sPage;
+	private int textHeight = 18;
+	
 	// private static int numDockerElements=0;//24;
 	private FileInputStream devPropfile = null;
 	Map<String, String> properties = new HashMap();
@@ -58,7 +61,7 @@ public class WizardPageDocker extends WizardPage {
 	protected WizardPageDocker(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;
-		setTitle("Docker Plugin for Apache Maven and TIBCO BusinessWorks Container Edition");
+		setTitle("Docker Configuration for TIBCO BusinessWorks Container Edition");
 		setDescription("Enter Docker and Platform details for pushing and running docker image.");
 	}
 
@@ -69,10 +72,10 @@ public class WizardPageDocker extends WizardPage {
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 4;
 		container.setLayout(layout);
-		setApplicationDockerBuildPOMFields();
-		addSeperator(parent);
-		setApplicationDockerRunPOMFields();
-		addSeperator(parent);
+		final File dkrdevfile = setApplicationDockerBuildPOMFields();
+		//addSeperator(parent);
+		setApplicationDockerRunPOMFields(dkrdevfile);
+		//addSeperator(parent);
 		selectDockerDeploymentPlatforms();
 		// addSeperator(parent);
 		setControl(container);
@@ -92,17 +95,26 @@ public class WizardPageDocker extends WizardPage {
 	}
 
 	private void selectDockerDeploymentPlatforms() {
-		Label lLabel = new Label(container, SWT.NONE);
-		lLabel.setText("Select platform where you want to deploy your docker image:");
-		GridData lData = new GridData(400, 15);
+		/*Label lLabel = new Label(container, SWT.NONE);
+		lLabel.setText("Select Platform :");
+		GridData lData = new GridData(500, textHeight+5);
 		lData.horizontalSpan = 4;
-		lLabel.setLayoutData(lData);
+		lLabel.setLayoutData(lData);*/
 
-		platform = new Text(container, SWT.NONE);
+		Group dockerDeploymentPlatformConfig = new Group(container, SWT.SHADOW_ETCHED_IN);
+		dockerDeploymentPlatformConfig.setText("Select Platform : ");
+		GridData lData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		lData.horizontalSpan = 4;
+		dockerDeploymentPlatformConfig.setLayoutData(lData);
+		dockerDeploymentPlatformConfig.setLayout(new GridLayout(4, false));
+		
+		platform = new Text(dockerDeploymentPlatformConfig, SWT.NONE);
 		platform.setVisible(false);
 		platform.setText("");
+		GridData platformData = new GridData(20, textHeight);
+		platform.setLayoutData(platformData);
 
-		Composite innerContainer = new Composite(container, SWT.NONE);
+		Composite innerContainer = new Composite(dockerDeploymentPlatformConfig, SWT.NONE);
 
 		GridLayout layout = new GridLayout();
 		innerContainer.setLayout(layout);
@@ -145,7 +157,7 @@ public class WizardPageDocker extends WizardPage {
 		return page;
 	}
 
-	private void setApplicationDockerBuildPOMFields() {
+	private File setApplicationDockerBuildPOMFields() {
 		final File dkrdevfile = new File(getWorkspacepath() + File.separator
 				+ "docker-dev.properties");
 		final File dkrdevEnvfile = new File(getWorkspacepath() + File.separator
@@ -204,66 +216,74 @@ public class WizardPageDocker extends WizardPage {
 			}
 		}
 
-		Label lLabel = new Label(container, SWT.NONE);
+		/*Label lLabel = new Label(container, SWT.NONE);
 		lLabel.setText("Docker host build configuration:");
-		GridData lData = new GridData(300, 15);
+		GridData lData = new GridData(300, textHeight+5);
 		lData.horizontalSpan = 4;
-		lLabel.setLayoutData(lData);
+		lLabel.setLayoutData(lData);*/
 
-		Label l1Label = new Label(container, SWT.NONE);
+		Group dockerHostConfig = new Group(container, SWT.SHADOW_ETCHED_IN);
+		dockerHostConfig.setText("Docker Host Build Configuration : ");
+		GridData lData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		lData.horizontalSpan = 4;
+		dockerHostConfig.setLayoutData(lData);
+		dockerHostConfig.setLayout(new GridLayout(4, false));
+		
+		
+		Label l1Label = new Label(dockerHostConfig, SWT.NONE);
 		l1Label.setText("");
-		GridData l1Data = new GridData(300, 15);
+		GridData l1Data = new GridData(300, textHeight);
 		l1Data.horizontalSpan = 4;
 		l1Label.setLayoutData(l1Data);
 
-		Label targetLabel = new Label(container, SWT.NONE);
+		Label targetLabel = new Label(dockerHostConfig, SWT.NONE);
 		targetLabel.setText("Docker Host");
 
-		dockerHost = new Text(container, SWT.BORDER | SWT.SINGLE);
+		dockerHost = new Text(dockerHostConfig, SWT.BORDER | SWT.SINGLE);
 		if (properties.containsKey("bwdocker.host"))
 			dockerHost.setText(properties.get("bwdocker.host"));
 		else
 			dockerHost.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_URL(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_URL("tcp://0.0.0.0:2376")));
-		GridData dockerHostData = new GridData(200, 15);
+		GridData dockerHostData = new GridData(300, textHeight);
 		dockerHost.setLayoutData(dockerHostData);
 
-		Label certLabel = new Label(container, SWT.NONE);
+		Label certLabel = new Label(dockerHostConfig, SWT.NONE);
 		certLabel.setText("Cert Path");
 
-		dockerHostCertPath = new Text(container, SWT.BORDER | SWT.SINGLE);
+		dockerHostCertPath = new Text(dockerHostConfig, SWT.BORDER | SWT.SINGLE);
 		if (properties.containsKey("bwdocker.certPath"))
 			dockerHostCertPath.setText(properties.get("bwdocker.certPath"));
 		else
 			dockerHostCertPath.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_CertPath(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_CertPath("</home/user/machine/>")));
-		GridData dockerHostCertData = new GridData(200, 15);
+		GridData dockerHostCertData = new GridData(300, textHeight);
 		dockerHostCertPath.setLayoutData(dockerHostCertData);
 
-		Label imgNameLabel = new Label(container, SWT.NONE);
+		Label imgNameLabel = new Label(dockerHostConfig, SWT.NONE);
 		imgNameLabel.setText("Image Name");
 
-		dockerImageName = new Text(container, SWT.BORDER | SWT.SINGLE);
+		dockerImageName = new Text(dockerHostConfig, SWT.BORDER | SWT.SINGLE);
 		if (properties.containsKey("docker.image"))
 			dockerImageName.setText(properties.get("docker.image"));
 		else
 			dockerImageName.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_ImageName(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_ImageName("gcr.io/<project_id>/<image-name>")));
-		GridData dockerImgNameData = new GridData(200, 15);
+		GridData dockerImgNameData = new GridData(300, textHeight);
 		dockerImageName.setLayoutData(dockerImgNameData);
 
-		Label imgFromLabel = new Label(container, SWT.NONE);
+		Label imgFromLabel = new Label(dockerHostConfig, SWT.NONE);
 		imgFromLabel.setText("BWCE Image");
 
-		dockerImageFrom = new Text(container, SWT.BORDER | SWT.SINGLE);
+		dockerImageFrom = new Text(dockerHostConfig, SWT.BORDER | SWT.SINGLE);
 		if (properties.containsKey("bwdocker.from"))
 			dockerImageFrom.setText(properties.get("bwdocker.from"));
 		else
 			dockerImageFrom.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_BWCEImage(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_BWCEImage("tibco/bwce")));
-		GridData imgFromData = new GridData(100, 15);
+		GridData imgFromData = new GridData(300, textHeight);
 		dockerImageFrom.setLayoutData(imgFromData);
 		
-		Label autoPullLabel = new Label(container, SWT.NONE);
+		Label autoPullLabel = new Label(dockerHostConfig, SWT.NONE);
 		autoPullLabel.setText("Auto Pull Base Image");
-		GridData autoPullData = new GridData(50, 15);
-		autoPullImage= new Button(container, SWT.CHECK);
+		GridData autoPullData = new GridData(50, textHeight);
+		autoPullImage= new Button(dockerHostConfig, SWT.CHECK);
 		autoPullImage.setSelection(false);
 		autoPullImage.setLayoutData(autoPullData);
 		autoPullImage.addSelectionListener(new SelectionListener(){
@@ -287,25 +307,54 @@ public class WizardPageDocker extends WizardPage {
 			
 		});
 
-		Label maintainerLabel = new Label(container, SWT.NONE);
+		Label maintainerLabel = new Label(dockerHostConfig, SWT.NONE);
 		maintainerLabel.setText("Maintainer");
 
-		dockerImageMaintainer = new Text(container, SWT.BORDER | SWT.SINGLE);
+		dockerImageMaintainer = new Text(dockerHostConfig, SWT.BORDER | SWT.SINGLE);
 		if (properties.containsKey("bwdocker.maintainer"))
 			dockerImageMaintainer.setText(properties.get("bwdocker.maintainer"));
 		else
 			dockerImageMaintainer.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_Maintainer(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_Maintainer("abc@tibco.com")));
-		GridData maintainerData = new GridData(200, 15);
+		GridData maintainerData = new GridData(300, textHeight);
 
 		dockerImageMaintainer.setLayoutData(maintainerData);
 		
-		
-		Composite innerContainer = new Composite(container, SWT.NONE);
+		return dkrdevfile;
+		// createContents(container);
+	}
 
-		GridLayout layout = new GridLayout();
-		innerContainer.setLayout(layout);
-		layout.numColumns = 2;
-		final Button dkr = new Button(innerContainer, SWT.CHECK);
+	private void setApplicationDockerRunPOMFields(final File dkrdevfile) {
+		/*Label lLabel = new Label(container, SWT.NONE);
+		lLabel.setText("Docker host run configuration:");
+		GridData lData = new GridData(300, textHeight+5);
+		lData.horizontalSpan = 4;
+		lLabel.setLayoutData(lData);
+		 */
+		
+		Group dockerHostRunConfig = new Group(container, SWT.SHADOW_ETCHED_IN);
+		dockerHostRunConfig.setText("Docker Host Run Configuration : ");
+		GridData lData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		lData.horizontalSpan = 4;
+		dockerHostRunConfig.setLayoutData(lData);
+		dockerHostRunConfig.setLayout(new GridLayout(4, false));
+		
+		Label l1Label = new Label(dockerHostRunConfig, SWT.NONE);
+		l1Label.setText("");
+		GridData l1Data = new GridData(300, textHeight);
+		l1Data.horizontalSpan = 4;
+		l1Label.setLayoutData(l1Data);
+
+		//Composite innerContainer = new Composite(dockerHostRunConfig, SWT.NONE);
+
+		Label dkrlabel = new Label(dockerHostRunConfig, SWT.NONE);
+		dkrlabel.setText("Run on docker host");
+		GridData dkrlabelData = new GridData(150, textHeight);
+		dkrlabel.setLayoutData(dkrlabelData);
+		
+		final Button dkr = new Button(dockerHostRunConfig, SWT.CHECK);
+		GridData dkrData = new GridData();
+		dkrData.horizontalSpan = 3;
+		dkr.setLayoutData(dkrData);
 		
 		dkr.setSelection(false);
 
@@ -364,65 +413,46 @@ public class WizardPageDocker extends WizardPage {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-		
-		
-		Label dkrlabel = new Label(innerContainer, SWT.NONE);
-		dkrlabel.setText("Run on docker host");
-		
-		// createContents(container);
-	}
 
-	private void setApplicationDockerRunPOMFields() {
-		Label lLabel = new Label(container, SWT.NONE);
-		lLabel.setText("Docker host run configuration:");
-		GridData lData = new GridData(300, 15);
-		lData.horizontalSpan = 4;
-		lLabel.setLayoutData(lData);
-
-		Label l1Label = new Label(container, SWT.NONE);
-		l1Label.setText("");
-		GridData l1Data = new GridData(300, 15);
-		l1Data.horizontalSpan = 4;
-		l1Label.setLayoutData(l1Data);
-
-		Label appNameLabel = new Label(container, SWT.NONE);
+		
+		Label appNameLabel = new Label(dockerHostRunConfig, SWT.NONE);
 		appNameLabel.setText("App Name");
 
-		dockerAppName = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+		dockerAppName = new Text(dockerHostRunConfig, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerAppName.setText("");
-		GridData appNameData = new GridData(100, 15);
+		GridData appNameData = new GridData(300, textHeight);
 		dockerAppName.setLayoutData(appNameData);
 
-		Label volumeLabel = new Label(container, SWT.NONE);
+		Label volumeLabel = new Label(dockerHostRunConfig, SWT.NONE);
 		volumeLabel.setText("Volumes");
 
-		dockerVolume = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+		dockerVolume = new Text(dockerHostRunConfig, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerVolume.setText("");
-		GridData volData = new GridData(200, 15);
+		GridData volData = new GridData(300, textHeight);
 		dockerVolume.setLayoutData(volData);
 
-		Label portLabel = new Label(container, SWT.NONE);
+		Label portLabel = new Label(dockerHostRunConfig, SWT.NONE);
 		portLabel.setText("Ports");
 
-		dockerPort = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+		dockerPort = new Text(dockerHostRunConfig, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerPort.setText("");
-		GridData port1Data = new GridData(200, 15);
+		GridData port1Data = new GridData(300, textHeight);
 		dockerPort.setLayoutData(port1Data);
 
-		Label linkLabel = new Label(container, SWT.NONE);
+		Label linkLabel = new Label(dockerHostRunConfig, SWT.NONE);
 		linkLabel.setText("Links");
 
-		dockerLink = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+		dockerLink = new Text(dockerHostRunConfig, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerLink.setText("");
-		GridData linkData = new GridData(200, 15);
+		GridData linkData = new GridData(300, textHeight);
 		dockerLink.setLayoutData(linkData);
 
-		Label envLabel = new Label(container, SWT.NONE);
+		Label envLabel = new Label(dockerHostRunConfig, SWT.NONE);
 		envLabel.setText("Env Vars");
 
-		dockerEnv = new Text(container, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+		dockerEnv = new Text(dockerHostRunConfig, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerEnv.setText("");
-		GridData envData = new GridData(200, 15);
+		GridData envData = new GridData(300, textHeight);
 		dockerEnv.setLayoutData(envData);
 	}
 
