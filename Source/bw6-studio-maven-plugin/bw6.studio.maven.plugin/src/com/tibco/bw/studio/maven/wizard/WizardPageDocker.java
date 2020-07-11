@@ -15,14 +15,26 @@ import java.util.Properties;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import com.tibco.bw.studio.maven.modules.model.BWDockerModule;
@@ -47,9 +59,10 @@ public class WizardPageDocker extends WizardPage {
 	private Text dockerVolume;
 	private Text dockerLink;
 	private Text dockerPort;
-	private Text dockerEnv;
+	//private Text dockerEnv;
 	private WizardPageK8S k8sPage;
 	private int textHeight = 18;
+	private Table tableEnvVars;
 	
 	// private static int numDockerElements=0;//24;
 	private FileInputStream devPropfile = null;
@@ -372,10 +385,30 @@ public class WizardPageDocker extends WizardPage {
 					dockerVolume.setEditable(true);
 					dockerLink.setEditable(true);
 					dockerPort.setEditable(true);
-					dockerEnv.setEditable(true);
+					//dockerEnv.setEditable(true);
+					tableEnvVars.setEnabled(true);
 					if (envStr.length() != 0)
-						dockerEnv.setText(envStr.substring(0, envStr.length() - 1));
-
+					{
+						String envVars = "";
+						if(dkrdevfile.exists()){
+							if (envStr.length() != 0)
+								envVars = envStr.substring(0, envStr.length() - 1);
+						}
+						else
+							envVars = MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_EnvVars("APP_CONFIG_PROFILE=docker"));
+						
+						String[] vars = envVars.split(",");
+						for(String var : vars)
+						{
+							String[] varItem = var.split("=");
+							TableItem item = new TableItem (tableEnvVars, SWT.NONE);
+							if(varItem.length == 2)
+							{
+							item.setText (0, (varItem[0] != null ? varItem[0].trim() : ""));
+							item.setText (1, (varItem[1] != null ? varItem[1].trim() : ""));
+							}
+						}
+					}
 					if (dkrdevfile.exists()) {
 						setPropertyVars(dockerVolume, "bwdocker.volume.v");
 						setPropertyVars(dockerLink, "bwdocker.link.l");
@@ -386,7 +419,8 @@ public class WizardPageDocker extends WizardPage {
 
 					container.layout();
 				} else {
-					setEditableFalseForAllText(dockerAppName, dockerVolume,dockerLink, dockerEnv, dockerPort);
+					setEditableFalseForAllText(dockerAppName, dockerVolume,dockerLink, dockerPort);
+					tableEnvVars.setEnabled(false);
 					container.layout();
 				}
 			}
@@ -448,12 +482,145 @@ public class WizardPageDocker extends WizardPage {
 		dockerLink.setLayoutData(linkData);
 
 		Label envLabel = new Label(dockerHostRunConfig, SWT.NONE);
-		envLabel.setText("Env Vars");
+		envLabel.setText("Environment Variables");
 
-		dockerEnv = new Text(dockerHostRunConfig, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+		/*dockerEnv = new Text(dockerHostRunConfig, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
 		dockerEnv.setText("");
 		GridData envData = new GridData(300, textHeight);
-		dockerEnv.setLayoutData(envData);
+		dockerEnv.setLayoutData(envData);*/
+		
+		tableEnvVars = new Table (dockerHostRunConfig, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+		tableEnvVars.setLinesVisible(true);
+		tableEnvVars.setHeaderVisible(true);
+		GridData data = new GridData(SWT.FILL, SWT.NONE, true, false);
+		data.heightHint = 150;
+		data.horizontalSpan = 2;
+		tableEnvVars.setLayoutData(data);
+		String[] titles = {"Variable Name            ", "Value                                                     "};
+		for (String title : titles) {
+			TableColumn column = new TableColumn (tableEnvVars, SWT.NONE);
+			column.setText (title);
+			column.setResizable(true);
+			//column.setWidth(tableEnvVars.getBounds().width / 2);
+		}
+		
+		String envVars = "";
+		if(dkrdevfile.exists()){
+			if (envStr.length() != 0)
+				envVars = envStr.substring(0, envStr.length() - 1);
+		}
+		else
+			envVars = MavenProjectPreferenceHelper.INSTANCE.getDefaultDocker_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultDocker_EnvVars("APP_CONFIG_PROFILE=docker, BW_LOGLEVEL=DEBUG"));
+		
+		String[] vars = envVars.split(",");
+		for(String var : vars)
+		{
+			String[] varItem = var.split("=");
+			TableItem item = new TableItem (tableEnvVars, SWT.NONE);
+			if(varItem.length == 2)
+			{
+				item.setText (0, (varItem[0] != null ? varItem[0].trim() : ""));
+				item.setText (1, (varItem[1] != null ? varItem[1].trim() : ""));
+			}
+		}
+	
+		for (int i=0; i<titles.length; i++) {
+			tableEnvVars.getColumn (i).pack ();
+		}
+		
+		final TableEditor editor = new TableEditor(tableEnvVars);
+		//The editor must have the same size as the cell and must
+		//not be any smaller than 50 pixels.
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.grabHorizontal = true;
+		editor.minimumWidth = 50;
+		// editing the second column
+		final int EDITABLECOLUMN = 1;
+
+		tableEnvVars.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseUp(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent e) {
+				// Clean up any previous editor control
+				Control oldEditor = editor.getEditor();
+				if (oldEditor != null)
+					oldEditor.dispose();
+
+				TableItem item = (tableEnvVars.getSelection().length > 0 ? tableEnvVars.getSelection()[0] : null);
+				if(item == null)
+					return;
+				
+				int column = EDITABLECOLUMN;
+				Point pt = new Point (e.x, e.y);
+				for(int i=0;i<tableEnvVars.getColumnCount();i++)
+				{
+					Rectangle rect = item.getBounds (i);
+					if (rect.contains (pt)) {
+						column = i;
+					}
+				}
+				// The control that will be the editor must be a child of the Table
+				final Text newEditor = new Text(tableEnvVars, SWT.NONE);
+				newEditor.setText(item.getText(column));
+				newEditor.setData(column);
+				newEditor.addModifyListener(new ModifyListener() {
+					
+					@Override
+					public void modifyText(ModifyEvent arg0) {
+						Text text = (Text) editor.getEditor();
+						int column = (int) newEditor.getData();
+						editor.getItem().setText(column, text.getText());
+					}
+				});
+				newEditor.selectAll();
+				newEditor.setFocus();
+				editor.setEditor(newEditor, item, column);
+
+				
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+					
+		Composite buttonComp = new Composite(dockerHostRunConfig, SWT.NONE | SWT.TOP);
+		GridData gd = new GridData(150, 150);
+		buttonComp.setLayoutData(gd);
+		buttonComp.setLayout(new GridLayout(1, false));
+		Button addVar = new Button(buttonComp, SWT.PUSH);
+		addVar.setText("Add");
+		addVar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				TableItem item = new TableItem (tableEnvVars, SWT.NONE);
+				item.setText (0, "ENV_VAR");
+				item.setText (1, "value");
+			}
+		});
+		
+		Button removeVar = new Button(buttonComp, SWT.PUSH);
+		removeVar.setText("Remove");
+		removeVar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				tableEnvVars.remove(tableEnvVars.getSelectionIndices());
+				for(Control ctrl : tableEnvVars.getChildren())
+					if(ctrl.getClass() == Text.class)
+						ctrl.dispose();
+				tableEnvVars.redraw();
+			}
+		});
+
 	}
 
 	private BWDockerModule setBWCEDockerValues(BWModule module) {
@@ -493,7 +660,7 @@ public class WizardPageDocker extends WizardPage {
 			bwdocker.setDockerPorts(ports);
 		}
 
-		List<String> envs = new ArrayList<String>();
+		/*List<String> envs = new ArrayList<String>();
 		if (dockerEnv.getText() != null && !dockerEnv.getText().isEmpty()) {
 			envs = Arrays.asList(dockerEnv.getText().split("\\s*,\\s*"));
 		}
@@ -505,7 +672,15 @@ public class WizardPageDocker extends WizardPage {
 				envMap.put(keyval[0].trim(), keyval[1].trim());
 			}
 		}
+		bwdocker.setDockerEnvs(envMap);*/
+		
+		Map<String, String> envMap = new HashMap<String, String>();
+		for(TableItem item : tableEnvVars.getItems()){
+			envMap.put(item.getText(0).trim(), item.getText(1).trim());
+		}
 		bwdocker.setDockerEnvs(envMap);
+		
+		
 		// Run ends
 
 		bwdocker.setPlatform(platform.getText());

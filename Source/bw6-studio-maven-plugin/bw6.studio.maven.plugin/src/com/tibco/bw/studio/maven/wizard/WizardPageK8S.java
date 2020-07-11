@@ -15,14 +15,21 @@ import java.util.Properties;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
@@ -311,36 +318,103 @@ public class WizardPageK8S extends WizardPage {
 		data.heightHint = 150;
 		data.horizontalSpan = 2;
 		tableEnvVars.setLayoutData(data);
-		String[] titles = {"Environment Variable", "Value"};
+		String[] titles = {"Variable Name            ", "Value                                                     "};
 		for (String title : titles) {
 			TableColumn column = new TableColumn (tableEnvVars, SWT.NONE);
 			column.setText (title);
 			column.setResizable(true);
-			column.setWidth(tableEnvVars.getBounds().width / 2);
+			//column.setWidth(tableEnvVars.getBounds().width / 2);
 		}
-		int count = 1;
-		for (int i=0; i<count; i++) {
-			String k8sEnvVars = "";
-			if(devfile.exists()){
-				if (envStr.length() != 0)
-					k8sEnvVars = envStr.substring(0, envStr.length() - 1);
-			}
-			else
-				k8sEnvVars = MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_EnvVars("APP_CONFIG_PROFILE=docker"));
-			
-			String[] vars = k8sEnvVars.split(",");
-			for(String var : vars)
+		
+		String k8sEnvVars = "";
+		if(devfile.exists()){
+			if (envStr.length() != 0)
+				k8sEnvVars = envStr.substring(0, envStr.length() - 1);
+		}
+		else
+			k8sEnvVars = MavenProjectPreferenceHelper.INSTANCE.getDefaultKubernetes_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultKubernetes_EnvVars("APP_CONFIG_PROFILE=docker"));
+		
+		String[] vars = k8sEnvVars.split(",");
+		for(String var : vars)
+		{
+			String[] varItem = var.split("=");
+			TableItem item = new TableItem (tableEnvVars, SWT.NONE);
+			if(varItem.length == 2)
 			{
-				String[] varItem = var.split("=");
-				TableItem item = new TableItem (tableEnvVars, SWT.NONE);
-				item.setText (0, (varItem[0] != null ? varItem[0] : ""));
-				item.setText (1, (varItem[1] != null ? varItem[1] : ""));
+			item.setText (0, (varItem[0] != null ? varItem[0].trim() : ""));
+			item.setText (1, (varItem[1] != null ? varItem[1].trim() : ""));
 			}
 		}
+	
 		for (int i=0; i<titles.length; i++) {
 			tableEnvVars.getColumn (i).pack ();
 		}
 		
+		final TableEditor editor = new TableEditor(tableEnvVars);
+		//The editor must have the same size as the cell and must
+		//not be any smaller than 50 pixels.
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.grabHorizontal = true;
+		editor.minimumWidth = 50;
+		// editing the second column
+		final int EDITABLECOLUMN = 1;
+
+		tableEnvVars.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseUp(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent e) {
+				// Clean up any previous editor control
+				Control oldEditor = editor.getEditor();
+				if (oldEditor != null)
+					oldEditor.dispose();
+
+				TableItem item = (tableEnvVars.getSelection().length > 0 ? tableEnvVars.getSelection()[0] : null);
+				if(item == null)
+					return;
+				
+				int column = EDITABLECOLUMN;
+				Point pt = new Point (e.x, e.y);
+				for(int i=0;i<tableEnvVars.getColumnCount();i++)
+				{
+					Rectangle rect = item.getBounds (i);
+					if (rect.contains (pt)) {
+						column = i;
+					}
+				}
+				// The control that will be the editor must be a child of the Table
+				final Text newEditor = new Text(tableEnvVars, SWT.NONE);
+				newEditor.setText(item.getText(column));
+				newEditor.setData(column);
+				newEditor.addModifyListener(new ModifyListener() {
+					
+					@Override
+					public void modifyText(ModifyEvent arg0) {
+						Text text = (Text) editor.getEditor();
+						int column = (int) newEditor.getData();
+						editor.getItem().setText(column, text.getText());
+					}
+				});
+				newEditor.selectAll();
+				newEditor.setFocus();
+				editor.setEditor(newEditor, item, column);
+
+				
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+					
 		Composite buttonComp = new Composite(kubeConfig, SWT.NONE | SWT.TOP);
 		GridData gd = new GridData(150, 150);
 		buttonComp.setLayoutData(gd);
@@ -362,6 +436,10 @@ public class WizardPageK8S extends WizardPage {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				tableEnvVars.remove(tableEnvVars.getSelectionIndices());
+				for(Control ctrl : tableEnvVars.getChildren())
+					if(ctrl.getClass() == Text.class)
+						ctrl.dispose();
+				tableEnvVars.redraw();
 			}
 		});
 
@@ -395,7 +473,7 @@ public class WizardPageK8S extends WizardPage {
 		
 		Map<String, String> envMap = new HashMap<String, String>();
 		for(TableItem item : tableEnvVars.getItems()){
-			envMap.put(item.getText(0), item.getText(1));
+			envMap.put(item.getText(0).trim(), item.getText(1).trim());
 		}
 		bwk8s.setK8sEnvVariables(envMap);
 		

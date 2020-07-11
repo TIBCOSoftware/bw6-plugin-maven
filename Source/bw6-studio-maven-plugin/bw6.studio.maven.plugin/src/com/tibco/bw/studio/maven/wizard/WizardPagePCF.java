@@ -4,11 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -16,21 +13,31 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWPCFModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
-import com.tibco.bw.studio.maven.preferences.MavenDefaultsPreferencePage;
 import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
 import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
 
@@ -48,12 +55,12 @@ public class WizardPagePCF extends WizardPage {
 	private Text appPCFMemory;
 	private Text appPCFDiskQuota;
 	private Text appPCFBuildpack;
-	private Text cfEnvVars;
+	//private Text cfEnvVars;
 	private Map<String, String> properties= new HashMap();
 	private FileInputStream devPropfile = null;
 	private StringBuilder envStr = new StringBuilder();
 	private int textHeight = 18;
-
+	private Table tableEnvVars;
 
 	protected WizardPagePCF(String pageName, BWProject project) {
 		super(pageName);
@@ -230,20 +237,6 @@ public class WizardPagePCF extends WizardPage {
 		GridData buildpackData = new GridData(300, textHeight);
 		appPCFBuildpack.setLayoutData(buildpackData);
 
-		Label envVarsLabel = new Label(container, SWT.NONE);
-		envVarsLabel.setText("Env Vars");
-
-		cfEnvVars = new Text(container, SWT.BORDER | SWT.SINGLE);
-		if(devfile.exists()){
-			if (envStr.length() != 0)
-				cfEnvVars.setText(envStr.substring(0, envStr.length() - 1));
-		}
-		else
-			cfEnvVars.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_EnvVars("APP_CONFIG_PROFILE=PCF, BW_LOGLEVEL=DEBUG")));
-		GridData envvarData = new GridData(400, textHeight);
-		//envvarData.horizontalSpan = 3;
-		cfEnvVars.setLayoutData(envvarData);
-
 		Label pcfServicesLabel = new Label(container, SWT.RIGHT);
 		pcfServicesLabel.setText("PCF Services");
 
@@ -273,7 +266,162 @@ public class WizardPagePCF extends WizardPage {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-	}
+
+		Label fillerLabel1 = new Label(container, SWT.RIGHT);
+		fillerLabel1.setText("");
+		
+		Label fillerLabel2 = new Label(container, SWT.RIGHT);
+		fillerLabel2.setText("");
+		
+		Label envVarsLabel = new Label(container, SWT.NONE);
+		envVarsLabel.setText("Environment Variables");
+
+		/*cfEnvVars = new Text(container, SWT.BORDER | SWT.SINGLE);
+		if(devfile.exists()){
+			if (envStr.length() != 0)
+				cfEnvVars.setText(envStr.substring(0, envStr.length() - 1));
+		}
+		else
+			cfEnvVars.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_EnvVars("APP_CONFIG_PROFILE=PCF, BW_LOGLEVEL=DEBUG")));
+		GridData envvarData = new GridData(400, textHeight);
+		//envvarData.horizontalSpan = 3;
+		cfEnvVars.setLayoutData(envvarData);*/
+		
+		tableEnvVars = new Table (container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+		tableEnvVars.setLinesVisible(true);
+		tableEnvVars.setHeaderVisible(true);
+		GridData data = new GridData(SWT.FILL, SWT.NONE, true, false);
+		data.heightHint = 150;
+		data.horizontalSpan = 2;
+		tableEnvVars.setLayoutData(data);
+		String[] titles = {"Variable Name            ", "Value                                                     "};
+		for (String title : titles) {
+			TableColumn column = new TableColumn (tableEnvVars, SWT.NONE);
+			column.setText (title);
+			column.setResizable(true);
+			//column.setWidth(tableEnvVars.getBounds().width / 2);
+		}
+		
+		String envVars = "";
+		if(devfile.exists()){
+			if (envStr.length() != 0)
+				envVars = envStr.substring(0, envStr.length() - 1);
+		}
+		else
+			envVars = MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_EnvVars(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_EnvVars("APP_CONFIG_PROFILE=PCF,BW_LOGLEVEL=DEBUG"));
+		
+		String[] vars = envVars.split(",");
+		for(String var : vars)
+		{
+			String[] varItem = var.split("=");
+			TableItem item = new TableItem (tableEnvVars, SWT.NONE);
+			if(varItem.length == 2)
+			{
+				item.setText (0, (varItem[0] != null ? varItem[0].trim() : ""));
+				item.setText (1, (varItem[1] != null ? varItem[1].trim() : ""));
+			}
+		}
+	
+		for (int i=0; i<titles.length; i++) {
+			tableEnvVars.getColumn (i).pack ();
+		}
+		
+		final TableEditor editor = new TableEditor(tableEnvVars);
+		//The editor must have the same size as the cell and must
+		//not be any smaller than 50 pixels.
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.grabHorizontal = true;
+		editor.minimumWidth = 50;
+		// editing the second column
+		final int EDITABLECOLUMN = 1;
+
+		tableEnvVars.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseUp(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent e) {
+				// Clean up any previous editor control
+				Control oldEditor = editor.getEditor();
+				if (oldEditor != null)
+					oldEditor.dispose();
+
+				TableItem item = (tableEnvVars.getSelection().length > 0 ? tableEnvVars.getSelection()[0] : null);
+				if(item == null)
+					return;
+				
+				int column = EDITABLECOLUMN;
+				Point pt = new Point (e.x, e.y);
+				for(int i=0;i<tableEnvVars.getColumnCount();i++)
+				{
+					Rectangle rect = item.getBounds (i);
+					if (rect.contains (pt)) {
+						column = i;
+					}
+				}
+				// The control that will be the editor must be a child of the Table
+				final Text newEditor = new Text(tableEnvVars, SWT.NONE);
+				newEditor.setText(item.getText(column));
+				newEditor.setData(column);
+				newEditor.addModifyListener(new ModifyListener() {
+					
+					@Override
+					public void modifyText(ModifyEvent arg0) {
+						Text text = (Text) editor.getEditor();
+						int column = (int) newEditor.getData();
+						editor.getItem().setText(column, text.getText());
+					}
+				});
+				newEditor.selectAll();
+				newEditor.setFocus();
+				editor.setEditor(newEditor, item, column);
+
+				
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+					
+		Composite buttonComp = new Composite(container, SWT.NONE | SWT.TOP);
+		GridData gd = new GridData(150, 150);
+		buttonComp.setLayoutData(gd);
+		buttonComp.setLayout(new GridLayout(1, false));
+		Button addVar = new Button(buttonComp, SWT.PUSH);
+		addVar.setText("Add");
+		addVar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				TableItem item = new TableItem (tableEnvVars, SWT.NONE);
+				item.setText (0, "ENV_VAR");
+				item.setText (1, "value");
+			}
+		});
+		
+		Button removeVar = new Button(buttonComp, SWT.PUSH);
+		removeVar.setText("Remove");
+		removeVar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				tableEnvVars.remove(tableEnvVars.getSelectionIndices());
+				for(Control ctrl : tableEnvVars.getChildren())
+					if(ctrl.getClass() == Text.class)
+						ctrl.dispose();
+				tableEnvVars.redraw();
+			}
+		});
+
+		
+
+}
 
 	private BWPCFModule setBWPCFValues(BWModule module) {
 		// BWPCFModule will not be null if its set through Services Wizard
@@ -293,7 +441,7 @@ public class WizardPagePCF extends WizardPage {
 		bwpcf.setDiskQuota(appPCFDiskQuota.getText());
 		bwpcf.setBuildpack(appPCFBuildpack.getText());
 
-		List<String> envvars = new ArrayList<String>();
+		/*List<String> envvars = new ArrayList<String>();
 		if (cfEnvVars.getText() != null && !cfEnvVars.getText().isEmpty()) {
 			envvars = Arrays.asList(cfEnvVars.getText().split("\\s*,\\s*"));
 		}
@@ -304,6 +452,11 @@ public class WizardPagePCF extends WizardPage {
 			if (keyval[0] != null && keyval[1] != null) {
 				envMap.put(keyval[0].trim(), keyval[1].trim());
 			}
+		}*/
+		
+		Map<String, String> envMap = new HashMap<String, String>();
+		for(TableItem item : tableEnvVars.getItems()){
+			envMap.put(item.getText(0).trim(), item.getText(1).trim());
 		}
 		bwpcf.setCfEnvVariables(envMap);
 		return bwpcf;
