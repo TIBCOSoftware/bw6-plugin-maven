@@ -30,6 +30,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.Version;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
@@ -127,7 +128,9 @@ public class BWTestRunner
 	        
 	        r.path("tests").path("enabledebug").request().get();
 
-			
+	        /*String response = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , String.class);
+	        BWTestConfig.INSTANCE.getLogger().info(response);*/
+	        
 			TestSuiteResultDTO resultDTO = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , TestSuiteResultDTO.class);
 			if( null != resultDTO ){
 				int failures = printTestResults(resultDTO, suite, project);
@@ -136,7 +139,7 @@ public class BWTestRunner
 				return failures;
 			}
 			else{
-				throw new MojoFailureException("An Exception occurred");
+				throw new MojoFailureException("An Exception occurred while running test. Please enable BW debug logs to know more.");
 			}
 		
 

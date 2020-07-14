@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Manifest;
 import java.nio.file.Files;
@@ -128,6 +129,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	
 	@Parameter(property = "createAdminCompo" , defaultValue = "true" )
 	private boolean createAdminCompo;
+	
+	@Parameter(property = "appNodeConfig")
+	protected Map appNodeConfig;
 
 	private String earLoc;
 	private String earName;
@@ -190,7 +194,14 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		deployer.getOrCreateDomain(domain, domainDesc);
     		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
     		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
-    		if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
+    		if(!appNodeConfig.isEmpty())
+			{
+	    		//Set AppNode config
+				getLog().debug("Input AppNode Config : "+ appNodeConfig);
+				deployer.setAppNodeConfig(domain,appSpace,appNode,appNodeConfig);
+			}
+    		
+			if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
     			deployer.startAppSpace(domain, appSpace);
     		} else {
     			getLog().info("AppSpace is Running.");

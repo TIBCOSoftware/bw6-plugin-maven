@@ -8,15 +8,27 @@ import java.util.Map;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
 
@@ -61,6 +73,7 @@ public class WizardPageEnterprise extends WizardPage {
 	private static final String DIGEST_AUTH = "DIGEST";
 	private int index=0;
 	private int textHeight = 18;
+	private Table tableAppNodeConfig;
 	
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
@@ -254,6 +267,9 @@ public class WizardPageEnterprise extends WizardPage {
 				info.setBackupLocation(backupLocation.getText());
 				info.setexternalProfile(info.isexternalProfile());
 				info.setexternalProfileLoc(externalProfileLoc.getText());
+				for(TableItem item : tableAppNodeConfig.getItems()){
+					info.getAppNodeConfig().put(item.getText(0), item.getText(1));
+				}
 			}
 			module.setOverridePOM(true);
 		}
@@ -267,11 +283,144 @@ public class WizardPageEnterprise extends WizardPage {
 		addAppSpace();
 		addSeperator(parent);
 		addAppNode();
+		addAppNodeConfig();
 		addSeperator(parent);
 		addProfile();
 		addSeperator(parent);
 	}
 
+	private void addAppNodeConfig(){
+		Label appNodeConfigLabel = new Label(container, SWT.NONE);
+		appNodeConfigLabel.setText("AppNode Configuration");
+		
+		tableAppNodeConfig = new Table (container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+		tableAppNodeConfig.setLinesVisible(true);
+		tableAppNodeConfig.setHeaderVisible(true);
+		GridData data = new GridData(SWT.FILL, SWT.NONE, true, false);
+		data.heightHint = 80;
+		data.horizontalSpan = 2;
+		tableAppNodeConfig.setLayoutData(data);
+		String[] titles = {"Config Name            ", "Value                                    "};
+		for (String title : titles) {
+			TableColumn column = new TableColumn (tableAppNodeConfig, SWT.NONE);
+			column.setText (title);
+			column.setResizable(true);
+			//column.setWidth(tableAppNodeConfig.getBounds().width / 2);
+		}
+		
+		if(info.getAppNodeConfig()!= null && !info.getAppNodeConfig().isEmpty())
+		{
+		for(String key : info.getAppNodeConfig().keySet())
+		{
+			TableItem item = new TableItem (tableAppNodeConfig, SWT.NONE);
+			item.setText (0, (key != null ? key.trim() : ""));
+			item.setText (1, (info.getAppNodeConfig().get(key) != null ? info.getAppNodeConfig().get(key).trim() : ""));
+		}
+		} else {
+			TableItem item = new TableItem (tableAppNodeConfig, SWT.NONE);
+			item.setText (0, "bw.rest.docApi.port");
+			item.setText (1, "7777");
+		}
+	
+		for (int i=0; i<titles.length; i++) {
+			tableAppNodeConfig.getColumn (i).pack ();
+		}
+		
+		final TableEditor editor = new TableEditor(tableAppNodeConfig);
+		//The editor must have the same size as the cell and must
+		//not be any smaller than 50 pixels.
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.grabHorizontal = true;
+		editor.minimumWidth = 50;
+		// editing the second column
+		final int EDITABLECOLUMN = 1;
+
+		tableAppNodeConfig.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseUp(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent e) {
+				// Clean up any previous editor control
+				Control oldEditor = editor.getEditor();
+				if (oldEditor != null)
+					oldEditor.dispose();
+
+				TableItem item = (tableAppNodeConfig.getSelection().length > 0 ? tableAppNodeConfig.getSelection()[0] : null);
+				if(item == null)
+					return;
+				
+				int column = EDITABLECOLUMN;
+				Point pt = new Point (e.x, e.y);
+				for(int i=0;i<tableAppNodeConfig.getColumnCount();i++)
+				{
+					Rectangle rect = item.getBounds (i);
+					if (rect.contains (pt)) {
+						column = i;
+					}
+				}
+				// The control that will be the editor must be a child of the Table
+				final Text newEditor = new Text(tableAppNodeConfig, SWT.NONE);
+				newEditor.setText(item.getText(column));
+				newEditor.setData(column);
+				newEditor.addModifyListener(new ModifyListener() {
+					
+					@Override
+					public void modifyText(ModifyEvent arg0) {
+						Text text = (Text) editor.getEditor();
+						int column = (int) newEditor.getData();
+						editor.getItem().setText(column, text.getText());
+					}
+				});
+				newEditor.selectAll();
+				newEditor.setFocus();
+				editor.setEditor(newEditor, item, column);
+
+				
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+					
+		Composite buttonComp = new Composite(container, SWT.NONE | SWT.TOP);
+		GridData gd = new GridData(150, 80);
+		buttonComp.setLayoutData(gd);
+		buttonComp.setLayout(new GridLayout(1, false));
+		Button addVar = new Button(buttonComp, SWT.PUSH);
+		addVar.setText("Add");
+		addVar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				TableItem item = new TableItem (tableAppNodeConfig, SWT.NONE);
+				item.setText (0, "VariableName");
+				item.setText (1, "value");
+			}
+		});
+		
+		Button removeVar = new Button(buttonComp, SWT.PUSH);
+		removeVar.setText("Remove");
+		removeVar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				tableAppNodeConfig.remove(tableAppNodeConfig.getSelectionIndices());
+				for(Control ctrl : tableAppNodeConfig.getChildren())
+					if(ctrl.getClass() == Text.class)
+						ctrl.dispose();
+				tableAppNodeConfig.redraw();
+			}
+		});
+
+	}
+	
 	private void addAgentInfo() {
 		Label agentLabel = new Label(container, SWT.NONE);
 		agentLabel.setText("Agent Host");

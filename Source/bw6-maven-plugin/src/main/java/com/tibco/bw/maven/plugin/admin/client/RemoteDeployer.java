@@ -9,6 +9,7 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
@@ -577,6 +578,33 @@ public class RemoteDeployer {
 	private void addQueryParam(final String name, final String value) {
 		if(value != null) {
 			r = r.queryParam(name, value);
+		}
+	}
+
+	public void setAppNodeConfig(String domain, String appSpace,
+			String appNode, Map<String,String> appNodeConfig) throws Exception {
+		init();
+		try {
+			//update config
+			log.info("Updating AppNode Config ("+ appNode+") -> "+ appNodeConfig);
+			Response responseUpdate = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/config").request(MediaType.APPLICATION_JSON_TYPE).put(Entity.entity(appNodeConfig, MediaType.APPLICATION_JSON));
+			processErrorResponse(responseUpdate);
+			
+			//restart appnode
+			//stop appnode
+			log.info("Stopping AppNode ("+ appNode+")");
+			Response responseStop = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/stop").request(MediaType.APPLICATION_JSON_TYPE).post(null);
+			processErrorResponse(responseStop);
+			
+			//start appnode
+			log.info("Starting AppNode ("+ appNode+")");
+			Response responseStart = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
+			processErrorResponse(responseStart);
+			
+		} catch (ProcessingException pe) {
+			throw getConnectionException(pe);
+		} catch (Exception ex) {
+			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}
 }

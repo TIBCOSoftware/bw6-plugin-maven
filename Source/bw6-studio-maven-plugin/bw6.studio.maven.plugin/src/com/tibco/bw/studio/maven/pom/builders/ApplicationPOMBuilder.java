@@ -110,6 +110,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.getProperties().remove("profile");
 			model.getProperties().remove("externalProfile");
 			model.getProperties().remove("externalProfileLoc");
+			model.getProperties().remove("appNodeConfig");
 			return;
 		}
 
@@ -241,6 +242,18 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		model.addProperty("externalProfileLoc", info.getexternalProfileLoc());
 		properties.put("externalProfileLoc", info.getexternalProfileLoc());
 		
+		//appnodeConfig
+		Xpp3Dom appNodeConfig  = new Xpp3Dom("appNodeConfig");
+		
+		for(String key : info.getAppNodeConfig().keySet()){
+			Xpp3Dom nodeConfig  = new Xpp3Dom(key);
+			nodeConfig.setValue("${appNodeConfig_"+key+"_value}");
+			model.addProperty("appNodeConfig_"+key+"_value", info.getAppNodeConfig().get(key));
+			properties.put("appNodeConfig_"+key+"_value", info.getAppNodeConfig().get(key));
+			appNodeConfig.addChild(nodeConfig);
+		}
+		
+		
 		config.addChild(deployToAdmin);
 		config.addChild(agentHost);
 		config.addChild(agentPort);
@@ -266,6 +279,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		config.addChild(profile);
 		config.addChild(externalProfile);
 		config.addChild(externalProfileLoc);
+		config.addChild(appNodeConfig);
 
 		plugin.setConfiguration(config);
 

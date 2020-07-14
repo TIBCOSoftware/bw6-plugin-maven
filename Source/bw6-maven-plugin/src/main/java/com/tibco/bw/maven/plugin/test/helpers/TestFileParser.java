@@ -136,6 +136,11 @@ public class TestFileParser {
 												String inputFile = null;
 												if("ActivityWithGoldFile".equals(assertionMode)){
 													inputFile = StringUtils.substringBetween(expression,"file:///", "')");
+													BWTestConfig.INSTANCE.getLogger().debug("Expression - "+ expression);
+													if(inputFile == null){
+														BWTestConfig.INSTANCE.getLogger().debug("Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
+														throw new Exception("Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
+													}
 													File goldInputFile = new File(inputFile);
 													if(!goldInputFile.isAbsolute()){
 														BWTestConfig.INSTANCE.getLogger().debug("Provided Gold File path is relative "+inputFile);
@@ -189,6 +194,10 @@ public class TestFileParser {
 											if ("MockOutputFilePath".equals(e1.getNodeName()))
 											{
 												String mockOutputFilePath = e1.getTextContent();
+												if(mockOutputFilePath == null || mockOutputFilePath.trim().length() == 0){
+													BWTestConfig.INSTANCE.getLogger().debug("Invalid Mock Output File Path - "+mockOutputFilePath);
+													throw new Exception("Invalid Mock Output File Path - "+mockOutputFilePath);
+												}
 												File file = new File(mockOutputFilePath);
 												if(!file.isAbsolute()){
 													BWTestConfig.INSTANCE.getLogger().debug("Provided Mock File path is relative "+file.getPath());

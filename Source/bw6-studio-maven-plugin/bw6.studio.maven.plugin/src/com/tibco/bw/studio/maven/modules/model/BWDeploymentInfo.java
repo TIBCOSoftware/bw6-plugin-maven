@@ -1,7 +1,9 @@
 package com.tibco.bw.studio.maven.modules.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BWDeploymentInfo {
 	private boolean deployToAdmin = false;
@@ -30,6 +32,7 @@ public class BWDeploymentInfo {
 	private boolean externalProfile = false;
 	private String externalProfileLoc = "";
 	private List<String> profiles = new ArrayList<String>();
+	private Map<String,String> appNodeConfig = new HashMap<String,String>();
 
 	public boolean isDeployToAdmin() {
 		return deployToAdmin;
@@ -236,5 +239,17 @@ public class BWDeploymentInfo {
 
 	public void setKeyPassword(String keyPassword) {
 		this.keyPassword = keyPassword;
+	}
+
+	public Map<String,String> getAppNodeConfig() {
+		if(appNodeConfig != null) {
+			return appNodeConfig;
+		} else {
+			return new HashMap<String,String>();
+		}
+	}
+
+	public void setAppNodeConfig(Map<String,String> appNodeConfig) {
+		this.appNodeConfig = appNodeConfig;
 	}
 }
