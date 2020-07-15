@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.project.MavenProject;
@@ -19,24 +20,16 @@ public class BWTestSuiteLoader {
 		List<File> testSuitefile = new ArrayList<File>();
 		List<String> testSuiteNamePathList = new ArrayList<String>();
 		List<String> testSuiteNameList = new ArrayList<String>();
-		String[] testSuiteNames;
-		
-		if(BWTestConfig.INSTANCE.getTestSuiteName().contains("/")){
-			testSuiteNames = StringUtils.splitByWholeSeparator(BWTestConfig.INSTANCE.getTestSuiteName(), "/");
-		}
-		else{
-			testSuiteNames = new String []{BWTestConfig.INSTANCE.getTestSuiteName()};
-		}
-		Arrays.asList(testSuiteNames);
 		
 		String testFolderPath = "";
-		for(String testSuiteName : testSuiteNames)
+		for(String testSuiteName : BWTestConfig.INSTANCE.getUserTestSuiteNames().keySet())
 		{
 			String folderPath = BWFileUtils.getTestFolderName(baseDir.toString(),testSuiteName);
 			if(null != folderPath){
 					testFolderPath = folderPath;
 					testSuiteNamePathList.add(folderPath.concat("//"+testSuiteName));
 					testSuiteNameList.add(testSuiteName);
+					BWTestConfig.INSTANCE.getUserTestSuiteNames().replace(testSuiteName, true);
 			}
 			else{
 				//throw new FileNotFoundException("Test Suite file " +testSuiteName+ " is not found");

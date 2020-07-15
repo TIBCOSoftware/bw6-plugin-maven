@@ -3,10 +3,14 @@ package com.tibco.bw.maven.plugin.test.setuplocal;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 
@@ -70,13 +74,32 @@ public class BWTestExecutor
 	public void collectSkipInitActivityName() throws Exception,FileNotFoundException
 	{
 		List<MavenProject> projects = BWTestConfig.INSTANCE.getSession().getProjects();
+		
+		//user provided testsuite names in mvn goal
+		if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty())
+		{
+			String[] testSuiteNames;
+			
+			if(BWTestConfig.INSTANCE.getTestSuiteName().contains("/")){
+				testSuiteNames = StringUtils.splitByWholeSeparator(BWTestConfig.INSTANCE.getTestSuiteName(), "/");
+			}
+			else{
+				testSuiteNames = new String []{BWTestConfig.INSTANCE.getTestSuiteName()};
+			}
+			Map<String,Boolean> userTestSuiteNames = new HashMap<String, Boolean>();
+			for(String testSuite : testSuiteNames)
+				userTestSuiteNames.put(testSuite, false);
+			
+			BWTestConfig.INSTANCE.setUserTestSuiteNames(userTestSuiteNames);
+		}
+		
 		for( MavenProject project : projects )
 		{
 			if( project.getPackaging().equals("bwmodule") )
 			{
 				List<File> files;
 				File baseDir = project.getBasedir();
-				if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
+				if(!BWTestConfig.INSTANCE.getUserTestSuiteNames().isEmpty()){
 					BWTestSuiteLoader testSuiteLoader = new BWTestSuiteLoader();
 					files = 	testSuiteLoader.collectTestCasesList(baseDir.toString(), project);
 				}
@@ -99,6 +122,13 @@ public class BWTestExecutor
 				}
 			}
 
+		}
+		//throw error if test suite not found in any module
+		if(BWTestConfig.INSTANCE.getUserTestSuiteNames().containsValue(false))
+		{
+			for(Map.Entry<String, Boolean> testSuite : BWTestConfig.INSTANCE.getUserTestSuiteNames().entrySet())
+				if(testSuite.getValue() == false)
+					throw new Exception("Test Suite not found - "+ testSuite.getKey());
 		}
 	}
 	

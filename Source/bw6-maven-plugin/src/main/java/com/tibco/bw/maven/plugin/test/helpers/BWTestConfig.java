@@ -42,6 +42,8 @@ public class BWTestConfig
 	
 	public Map<MavenProject,List<String>> testSuiteNameList = new HashMap<>();
 	
+	Map<String,Boolean> userTestSuiteNames = new HashMap<String,Boolean>();
+	
 	private BWTestConfig()
 	{
 		
@@ -194,6 +196,14 @@ public class BWTestConfig
 
 	public void setTestSuiteNameList(MavenProject project, List<String> testSuiteNameList) {
 		this.testSuiteNameList.put(project, testSuiteNameList);
+	}
+
+	public Map<String, Boolean> getUserTestSuiteNames() {
+		return userTestSuiteNames;
+	}
+
+	public void setUserTestSuiteNames(Map<String, Boolean> userTestSuiteNames) {
+		this.userTestSuiteNames = userTestSuiteNames;
 	}
 	
 }

@@ -128,7 +128,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 
 	private List<String> createUtilityArgument(List<String> params) {
 
-		String utilityName = executorHome.concat("//bwdesign.exe");
+		String utilityName = executorHome.concat("//bwdesign");
 		String workSpaceLocation = project.getBasedir().getParent();
 		params.add(utilityName);
 		params.add("-data");
