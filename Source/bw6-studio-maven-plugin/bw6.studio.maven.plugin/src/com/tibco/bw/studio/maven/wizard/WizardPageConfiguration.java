@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.tibco.amf.sca.policy.intent.helpers.IntentApplicability.Applicability;
@@ -354,11 +356,13 @@ public class WizardPageConfiguration extends WizardPage {
 					{
 						tibcoHomePath = bundleFile.getPath().substring(0,bundleFile.getPath().indexOf(bundleFile.separator + "studio"));
 						File bwFolder = new File(tibcoHomePath + bundleFile.separator + "bw");
+						if(bwFolder == null)
+							bwFolder = new File(tibcoHomePath + bundleFile.separator + "bwce");
 						for(String folder : bwFolder.list())
 						{
 							if(isNumeric(folder))
 							{
-								bwHomePath = bundleFile.separator + "bw" + bundleFile.separator + folder;
+								bwHomePath = bundleFile.separator + bwFolder.getName() + bundleFile.separator + folder;
 								break;
 							}
 						}						
@@ -582,4 +586,22 @@ public class WizardPageConfiguration extends WizardPage {
 		}
 		return project;
 	}
+
+	@Override
+	public void performHelp() {
+		// TODO Auto-generated method stub
+		super.performHelp();
+		
+		try {
+			PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL("https://github.com/TIBCOSoftware/bw6-plugin-maven/wiki"));
+		} catch (PartInitException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
 }

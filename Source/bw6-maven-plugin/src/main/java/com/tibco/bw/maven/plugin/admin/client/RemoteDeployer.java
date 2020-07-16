@@ -582,7 +582,7 @@ public class RemoteDeployer {
 	}
 
 	public void setAppNodeConfig(String domain, String appSpace,
-			String appNode, Map<String,String> appNodeConfig) throws Exception {
+			String appNode, Map<String,String> appNodeConfig, boolean restartAppNode) throws Exception {
 		init();
 		try {
 			//update config
@@ -591,16 +591,20 @@ public class RemoteDeployer {
 			processErrorResponse(responseUpdate);
 			
 			//restart appnode
-			//stop appnode
-			log.info("Stopping AppNode ("+ appNode+")");
-			Response responseStop = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/stop").request(MediaType.APPLICATION_JSON_TYPE).post(null);
-			processErrorResponse(responseStop);
-			
-			//start appnode
-			log.info("Starting AppNode ("+ appNode+")");
-			Response responseStart = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
-			processErrorResponse(responseStart);
-			
+			if(restartAppNode)
+			{
+				//stop appnode
+				log.info("Stopping AppNode ("+ appNode+")");
+				Response responseStop = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/stop").request(MediaType.APPLICATION_JSON_TYPE).post(null);
+				processErrorResponse(responseStop);
+				
+				//start appnode
+				log.info("Starting AppNode ("+ appNode+")");
+				Response responseStart = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
+				processErrorResponse(responseStart);
+			} else {
+				log.info("Restart AppNode flag is false. The AppNode state will be Out-of-sync.");
+			}
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {

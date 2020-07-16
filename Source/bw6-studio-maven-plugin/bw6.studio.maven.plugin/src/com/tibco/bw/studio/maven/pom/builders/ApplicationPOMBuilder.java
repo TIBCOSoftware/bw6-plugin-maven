@@ -111,6 +111,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.getProperties().remove("externalProfile");
 			model.getProperties().remove("externalProfileLoc");
 			model.getProperties().remove("appNodeConfig");
+			model.getProperties().remove("restartAppNode");
 			return;
 		}
 
@@ -253,6 +254,11 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			appNodeConfig.addChild(nodeConfig);
 		}
 		
+		Xpp3Dom restartAppNode  = new Xpp3Dom("restartAppNode");
+		restartAppNode.setValue("${restartAppNode}");
+		model.addProperty("restartAppNode", Boolean.toString(info.isRestartAppNode()));
+		properties.put("restartAppNode", Boolean.toString(info.isRestartAppNode()));
+		
 		
 		config.addChild(deployToAdmin);
 		config.addChild(agentHost);
@@ -280,6 +286,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		config.addChild(externalProfile);
 		config.addChild(externalProfileLoc);
 		config.addChild(appNodeConfig);
+		config.addChild(restartAppNode);
 
 		plugin.setConfiguration(config);
 

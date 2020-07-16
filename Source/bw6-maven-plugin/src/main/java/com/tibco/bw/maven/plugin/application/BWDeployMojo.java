@@ -110,6 +110,10 @@ public class BWDeployMojo extends AbstractMojo {
 	@Parameter(property = "appNodeConfig")
 	protected Map appNodeConfig;
 	
+	@Parameter(property = "restartAppNode")
+	private boolean restartAppNode;
+	
+	
 	private String earName;
 	private String earLoc;
 
@@ -199,7 +203,7 @@ public class BWDeployMojo extends AbstractMojo {
 			if(!appNodeConfig.isEmpty())
 			{
 				getLog().debug("Input AppNode Config -> "+ appNodeConfig);
-				deployer.setAppNodeConfig(domain,appSpace,appNode,appNodeConfig);
+				deployer.setAppNodeConfig(domain,appSpace,appNode,appNodeConfig, restartAppNode);
 			}
 			
 			if (appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {

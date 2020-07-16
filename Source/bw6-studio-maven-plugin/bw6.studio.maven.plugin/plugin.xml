@@ -75,8 +75,5 @@
           name="Maven Defaults">
     </page>
  </extension>
- <extension point="org.eclipse.help.contexts">
-         <contexts file="help.xml"></contexts>
- </extension>
 
 </plugin>

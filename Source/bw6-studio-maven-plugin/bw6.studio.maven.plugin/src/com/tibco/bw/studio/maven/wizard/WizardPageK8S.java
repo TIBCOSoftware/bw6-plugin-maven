@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -40,6 +42,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 
 import com.tibco.bw.studio.maven.modules.model.BWK8SModule;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
@@ -420,7 +424,9 @@ public class WizardPageK8S extends WizardPage {
 		buttonComp.setLayoutData(gd);
 		buttonComp.setLayout(new GridLayout(1, false));
 		Button addVar = new Button(buttonComp, SWT.PUSH);
-		addVar.setText("Add");
+		Image imageAdd = new Image(buttonComp.getDisplay(),  getClass().getClassLoader().getResourceAsStream("icons/add_16_16.png"));
+		addVar.setImage(imageAdd);
+		//addVar.setText("Add");
 		addVar.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -431,7 +437,9 @@ public class WizardPageK8S extends WizardPage {
 		});
 		
 		Button removeVar = new Button(buttonComp, SWT.PUSH);
-		removeVar.setText("Remove");
+		Image imageRemove = new Image(buttonComp.getDisplay(),  getClass().getClassLoader().getResourceAsStream("icons/remove_16_16.png"));
+		removeVar.setImage(imageRemove);
+		//removeVar.setText("Remove");
 		removeVar.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -494,5 +502,21 @@ public class WizardPageK8S extends WizardPage {
 	public boolean canFlipToNextPage() 
 	{
 		return false;
+	}
+	
+	@Override
+	public void performHelp() {
+		// TODO Auto-generated method stub
+		super.performHelp();
+		
+		try {
+			PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL("https://github.com/TIBCOSoftware/bw6-plugin-maven/wiki"));
+		} catch (PartInitException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

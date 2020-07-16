@@ -2,6 +2,8 @@ package com.tibco.bw.studio.maven.wizard;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,7 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -31,6 +34,8 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
@@ -74,6 +79,7 @@ public class WizardPageEnterprise extends WizardPage {
 	private int index=0;
 	private int textHeight = 18;
 	private Table tableAppNodeConfig;
+	private Button restartAppNode;
 	
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
@@ -270,6 +276,7 @@ public class WizardPageEnterprise extends WizardPage {
 				for(TableItem item : tableAppNodeConfig.getItems()){
 					info.getAppNodeConfig().put(item.getText(0), item.getText(1));
 				}
+				info.setRestartAppNode(restartAppNode.getSelection());
 			}
 			module.setOverridePOM(true);
 		}
@@ -396,7 +403,9 @@ public class WizardPageEnterprise extends WizardPage {
 		buttonComp.setLayoutData(gd);
 		buttonComp.setLayout(new GridLayout(1, false));
 		Button addVar = new Button(buttonComp, SWT.PUSH);
-		addVar.setText("Add");
+		Image imageAdd = new Image(buttonComp.getDisplay(),  getClass().getClassLoader().getResourceAsStream("icons/add_16_16.png"));
+		addVar.setImage(imageAdd);
+		//addVar.setText("Add");
 		addVar.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -407,7 +416,9 @@ public class WizardPageEnterprise extends WizardPage {
 		});
 		
 		Button removeVar = new Button(buttonComp, SWT.PUSH);
-		removeVar.setText("Remove");
+		Image imageRemove = new Image(buttonComp.getDisplay(),  getClass().getClassLoader().getResourceAsStream("icons/remove_16_16.png"));
+		removeVar.setImage(imageRemove);
+		//removeVar.setText("Remove");
 		removeVar.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -418,6 +429,11 @@ public class WizardPageEnterprise extends WizardPage {
 				tableAppNodeConfig.redraw();
 			}
 		});
+		
+		Label restartAppNodeLabel = new Label(container, SWT.NONE);
+		restartAppNodeLabel.setText("Restart AppNode");
+		restartAppNode = new Button(container, SWT.CHECK);
+		restartAppNode.setSelection(info.isRestartAppNode());
 
 	}
 	
@@ -803,5 +819,21 @@ public class WizardPageEnterprise extends WizardPage {
 	public boolean canFlipToNextPage() 
 	{
 		return false;
+	}
+	
+	@Override
+	public void performHelp() {
+		// TODO Auto-generated method stub
+		super.performHelp();
+		
+		try {
+			PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL("https://github.com/TIBCOSoftware/bw6-plugin-maven/wiki"));
+		} catch (PartInitException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

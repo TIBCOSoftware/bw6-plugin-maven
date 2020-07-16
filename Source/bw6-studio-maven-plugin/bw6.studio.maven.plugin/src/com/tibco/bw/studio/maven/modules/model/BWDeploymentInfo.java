@@ -33,6 +33,7 @@ public class BWDeploymentInfo {
 	private String externalProfileLoc = "";
 	private List<String> profiles = new ArrayList<String>();
 	private Map<String,String> appNodeConfig = new HashMap<String,String>();
+	private boolean restartAppNode = false;
 
 	public boolean isDeployToAdmin() {
 		return deployToAdmin;
@@ -251,5 +252,13 @@ public class BWDeploymentInfo {
 
 	public void setAppNodeConfig(Map<String,String> appNodeConfig) {
 		this.appNodeConfig = appNodeConfig;
+	}
+
+	public boolean isRestartAppNode() {
+		return restartAppNode;
+	}
+
+	public void setRestartAppNode(boolean restartAppNode) {
+		this.restartAppNode = restartAppNode;
 	}
 }

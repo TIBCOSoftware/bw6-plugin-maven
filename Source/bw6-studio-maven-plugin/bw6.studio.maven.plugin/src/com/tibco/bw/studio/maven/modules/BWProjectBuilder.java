@@ -188,6 +188,7 @@ BWTestInfo testInfo = application.getTestInfo();
 		info.setBackup(getBooleanValuefromDom("backup", dom, model));
 		info.setBackupLocation(getStringValuefromDom("backupLocation", dom, model));
 		info.setAppNodeConfig(getMapValuesFromDom("appNodeConfig", dom, model));
+		info.setRestartAppNode(getBooleanValuefromDom("restartAppNode", dom, model));
 	}
 
 	private Map<String,String> getMapValuesFromDom(String name, Xpp3Dom dom, Model model) {

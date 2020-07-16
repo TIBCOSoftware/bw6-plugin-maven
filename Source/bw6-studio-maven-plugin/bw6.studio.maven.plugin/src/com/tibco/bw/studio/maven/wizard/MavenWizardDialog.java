@@ -18,7 +18,6 @@ public class MavenWizardDialog extends WizardDialog {
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		super.createButtonsForButtonBar(parent);
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "bw6.studio.maven.plugin.MavenHelp");
 		MavenWizardContext.INSTANCE.setNextButton(getButton(IDialogConstants.NEXT_ID));
 		MavenWizardContext.INSTANCE.setPreviousButton(getButton(IDialogConstants.BACK_ID));
 		MavenWizardContext.INSTANCE.setFinishButton(getButton(IDialogConstants.FINISH_ID));
