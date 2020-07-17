@@ -1,19 +1,6 @@
 package com.tibco.bw.maven.plugin.process;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang.StringUtils;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -22,6 +9,13 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 @Mojo(name = "bwdesignUtility")
 public class BWDesignUtilityExecutorMojo extends AbstractMojo{
@@ -70,16 +64,19 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 				throw new MojoFailureException("Value for BW Home is empty");
 			}
 				
-				binDir = tibcoHome.concat(bwHome).concat("//bin");
+				binDir = tibcoHome.concat(bwHome).concat(File.separator).concat("bin");
 				executorHome = binDir;
 				if(null != commandName && commandName.equals("validate")){
+					importWorkspace();
 					validateBWProject();
 				}
 				else if(null != commandName && commandName.equals("gen_diagrams"))
 				{
+					importWorkspace();
 					generateProcessDiagram();
 				}
 				else {
+					importWorkspace();
 					validateBWProject();
 					generateProcessDiagram();
 				}
@@ -92,43 +89,41 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	private void generateProcessDiagram() throws MojoExecutionException {
 		List<String> params = new ArrayList<>();
 		params = createUtilityArgument(params);
+		params.add("diagram:gen_diagrams");
+		params.add(project.getName());
+		if(null != diagramLoc && !diagramLoc.isEmpty()){
+			params.add(diagramLoc);
+		}
+
 		try {
 			ProcessBuilder builder = new ProcessBuilder( params);
-	        builder.directory( new File( executorHome ) );
-	        final Process process = builder.start();	
+	        	builder.directory( new File( executorHome ) );
+			// redirect error stream to /dev/null
+			if(BWProjectUtils.OS.WINDOWS.equals(BWProjectUtils.getOS())) {
+				builder.redirectError(new File("NUL"));
+			} else {
+				builder.redirectError(new File("/dev/null"));
+			}
+			final Process process = builder.start();
 	        logger.info("---------------------Generating Process diagram-----------------------");
-	        
-	        BufferedWriter writer = new BufferedWriter(
-	                new OutputStreamWriter(process.getOutputStream()));
-	        if(null != diagramLoc && !diagramLoc.isEmpty()){
-	        	writer.write("diagram:gen_diagrams "+project.getName()+" "+diagramLoc);
-	        }
-	        else{
-	        	writer.write("diagram:gen_diagrams "+project.getName());
-	        }
-	        writer.close();
-	        
-	        BufferedReader reader = new BufferedReader(new InputStreamReader(
-	                process.getInputStream()));
-	        String line;
-	        while ((line = reader.readLine()) != null) {
-	            System.out.println(line);
-	        }
-	        reader.close();
-	        
+			logger.debug("Launching bwdesign utility with params: " + params);
+
+			printProcessOutput(process);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new MojoExecutionException( e.getMessage(), e);
 		}
-		
-		
 	}
 
 	
 
 	private List<String> createUtilityArgument(List<String> params) {
 
-		String utilityName = executorHome.concat("//bwdesign.exe");
+		String utilityName = executorHome.concat(File.separator).concat("bwdesign.exe");
+		if(BWProjectUtils.OS.UNIX.equals(BWProjectUtils.getOS())) {
+			utilityName = executorHome.concat(File.separator).concat("bwdesign");
+		}
 		String workSpaceLocation = project.getBasedir().getParent();
 		params.add(utilityName);
 		params.add("-data");
@@ -138,36 +133,81 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 
 	
 	private void validateBWProject() throws MojoExecutionException{
-		Process validateProcess = null;
-		List<String> validateParam = new ArrayList<>();
-		validateParam = createUtilityArgument(validateParam);
+		List<String> params = new ArrayList<>();
+		params = createUtilityArgument(params);
+		params.add("validate");
+		params.add(projectList());
+
 		try {
-			ProcessBuilder validateBuilder = new ProcessBuilder( validateParam);
-			validateBuilder.directory( new File( executorHome ) );
+			ProcessBuilder builder = new ProcessBuilder( params);
+			builder.directory( new File( executorHome ) );
+			// redirect error stream to /dev/null
+			if(BWProjectUtils.OS.WINDOWS.equals(BWProjectUtils.getOS())) {
+				builder.redirectError(new File("NUL"));
+			} else {
+				builder.redirectError(new File("/dev/null"));
+			}
 			logger.info("---------------------Validating BW Project-----------------------");
-			validateProcess = validateBuilder.start();
-			String applicationName = project.getName();
-			String moduleName = applicationName.replace(".application", "");
-			
-			 BufferedWriter writer = new BufferedWriter(
-		                new OutputStreamWriter(validateProcess.getOutputStream()));
-		        writer.write("validate "+moduleName+","+applicationName);
-		        writer.close();
-			
-		        BufferedReader reader = new BufferedReader(new InputStreamReader(
-		        		validateProcess.getInputStream()));
-		        String line;
-		        while ((line = reader.readLine()) != null) {
-		            System.out.println(line);
-		        }
+			logger.debug("Launching bwdesign utility with params: " + params);
+			final Process process = builder.start();
+
+			printProcessOutput(process);
 
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new MojoExecutionException( e.getMessage(), e);
 		}
-		
-		
-		
 	}
-	
+
+	/*
+	Should run import task before validate and diagram:gen_diagrams if you don't run mvn into existing eclipse workspace
+	 */
+	private void importWorkspace() throws MojoExecutionException {
+		List<String> params = new ArrayList<>();
+		params = createUtilityArgument(params);
+		params.add("import");
+		params.add(project.getBasedir().getParent());
+
+		try {
+			ProcessBuilder builder = new ProcessBuilder( params);
+			builder.directory( new File( executorHome ) );
+			// redirect error stream to /dev/null
+			if(BWProjectUtils.OS.WINDOWS.equals(BWProjectUtils.getOS())) {
+				builder.redirectError(new File("NUL"));
+			} else {
+				builder.redirectError(new File("/dev/null"));
+			}
+			final Process process = builder.start();
+			logger.info("-----------------Import Projects to Workspaces-------------------");
+			logger.debug("Launching bwdesign utility with params: " + params);
+
+			printProcessOutput(process);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new MojoExecutionException( e.getMessage(), e);
+		}
+
+
+	}
+
+	private String projectList() {
+		List<String> projectList = new ArrayList<String>();
+		for (MavenProject mvnProject: session.getProjects()) {
+			projectList.add(mvnProject.getName());
+		}
+		return String.join(",", projectList);
+	}
+
+	private void printProcessOutput(Process process) throws IOException {
+		BufferedReader reader= null;
+		String line = null;
+
+		reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		while ((line = reader.readLine()) != null) {
+			System.err.println(line);
+		}
+
+		reader.close();
+	}
 }
