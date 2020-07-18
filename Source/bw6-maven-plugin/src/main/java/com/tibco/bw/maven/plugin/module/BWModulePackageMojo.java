@@ -96,7 +96,8 @@ public class BWModulePackageMojo extends AbstractMojo {
             getLog().info("Updated the Manifest version ");
             
             ManifestWriter.updateManifestVersion(project, manifest);
-            updateManifestVersion();
+            getLog().info("The OSGi version is " + manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION) + " for Maven version of " + project.getVersion());
+            //updateManifestVersion();
             
             getLog().info("Removing the externals entries if any. ");
             removeExternals();
@@ -318,12 +319,14 @@ public class BWModulePackageMojo extends AbstractMojo {
     	return manifest.getMainAttributes().getValue(Constants.TIBCO_SHARED_MODULE) == null ? false : true;
     }
 
+/*
     private void updateManifestVersion() {
     	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
     	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
-    	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
+		getLog().info("The OSGi version is " + qualifierVersion + " for Maven version of " + version);
     	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
-    }
+	}
+*/
 
     private void removeExternals() {
     	String bundlePath = manifest.getMainAttributes().getValue(Constants.BUNDLE_CLASSPATH);
