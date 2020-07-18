@@ -42,9 +42,14 @@ public class ManifestWriter {
         	projectVersion = projectVersion.replace("-SNAPSHOT", ".qualifier");
         	projectVersion = getManifestVersion(mf, projectVersion);
         }
+
+        //For shared modules (external dependencies from pom.xml), in order to be loaded by BWEngine, the Bundle-Version should ends with .qualifier
+        if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE) {
+            projectVersion += "." + VersionParser.QUALIFIER;
+        }
         
     	attributes.put(Name.MANIFEST_VERSION, projectVersion);
-        attributes.putValue("Bundle-Version", projectVersion );
+        attributes.putValue(Constants.BUNDLE_VERSION, projectVersion );
 
         //Updating provide capability for Shared Modules
 //        if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
