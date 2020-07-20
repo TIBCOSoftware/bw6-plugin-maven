@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
+import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -27,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -74,6 +76,10 @@ public class BWTestRunner
 			ClientConfig clientConfig = new ClientConfig();
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			
+			if(BWTestConfig.INSTANCE.getLogger().isDebugEnabled()){
+				Logger logger = Logger.getLogger(getClass().getName());
+				clientConfig.register(new LoggingFilter(logger, true));
+			}
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
 		this.r = this.jerseyClient.target(UriBuilder.fromPath(CONTEXT_ROOT).scheme(this.scheme).host(this.host).port(this.port).build());
@@ -390,10 +396,10 @@ public class BWTestRunner
 			String inputValue = assertion.getActivityOutput();
 				if(assertion.getAssertionMode().equals("Primitive")){
 					inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
-					if(inputValue.contains(assertion.getStartElementNameTag())){
+					if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
 						inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
 					}
-					inputValue = assertion.getStartElementNameTag().concat(inputValue).concat(assertion.getEndElementNameTag());
+					inputValue = assertion.getStartElementNameTag().concat(inputValue!= null ? inputValue : "").concat(assertion.getEndElementNameTag());
 					assertion.setActivityOutput(inputValue);
 				}
 				else{

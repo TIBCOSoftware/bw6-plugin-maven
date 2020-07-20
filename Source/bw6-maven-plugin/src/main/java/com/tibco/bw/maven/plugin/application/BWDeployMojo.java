@@ -104,8 +104,8 @@ public class BWDeployMojo extends AbstractMojo {
 	@Parameter(property = "externalProfileLoc")
 	private String externalProfileLoc;
 
-	@Parameter(property = "version")
-	private String version;
+	/*@Parameter(property = "version")
+	private String version;*/
 	
 	@Parameter(property = "appNodeConfig")
 	protected Map appNodeConfig;
@@ -187,6 +187,13 @@ public class BWDeployMojo extends AbstractMojo {
 				getLog().info("Agent Name -> " + agentName);
 			}
 
+			String[] versionNum = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION).split("\\.");
+			String version = null;
+			if(versionNum.length > 2)
+        		version =  versionNum[0]+"."+versionNum[1];
+			else 
+				throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue("Bundle-Version"));
+			
 			deployer.getOrCreateDomain(domain, domainDesc);
 			AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain,
 					appSpace, appSpaceDesc);

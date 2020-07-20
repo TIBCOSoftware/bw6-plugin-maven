@@ -198,6 +198,7 @@ public class RemoteDeployer {
 
 	private AppSpace setProfile(final String domainName, final String appSpaceName, final String version,final String appName,final String externalProfileLoc) throws ClientException {
 		init();
+		log.info("Setting external profile for AppName -> "+ appName + ", Version -> "+ version + ", External profile location -> "+ externalProfileLoc);
 		try {
 			final FileDataBodyPart filePart = new FileDataBodyPart("file", new File(externalProfileLoc));
 			FormDataMultiPart formDataMultiPart  = new FormDataMultiPart();
