@@ -23,7 +23,7 @@ public class EngineRunner
         process = builder.start();
         
         BWTestConfig.INSTANCE.getLogger().info( "## Starting BW Engine in Test Mode ##");
-        BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs Start---------------------------------------------------------------------------------------------------------------------------------------------------");
+        BWTestConfig.INSTANCE.getLogger().info("-----------------BW Engine Logs Start--------------------");
         BWTestConfig.INSTANCE.getLogger().info( "" );
         BWTestConfig.INSTANCE.setEngineProcess(process);
         

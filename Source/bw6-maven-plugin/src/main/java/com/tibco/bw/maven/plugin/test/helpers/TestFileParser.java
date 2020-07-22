@@ -131,7 +131,11 @@ public class TestFileParser {
 												}
 												break;
 											case "Expression":
-												String expression = gcEl.getLastChild().getTextContent();
+												String expression = null;
+												if(gcEl.getLastChild() != null)
+													expression = gcEl.getLastChild().getTextContent();
+												else
+													throw new Exception("Invalid Activity Assertion Configuration.");
 												String replaceInputFile = null;
 												String inputFile = null;
 												if("ActivityWithGoldFile".equals(assertionMode)){

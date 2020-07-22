@@ -332,7 +332,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			{
 				isReporting = true;
 				//Update the existing version of reporting plugin with Latest one
-				plugin.setVersion("2.8.0");
+				plugin.setVersion("2.7.1");
 				break;
 			}
 		}
@@ -342,7 +342,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			ReportPlugin p = new ReportPlugin();
 			p.setGroupId("com.tibco.plugins");
 			p.setArtifactId("bw6-maven-plugin");
-			p.setVersion("2.8.0");
+			p.setVersion("2.7.1");
 			reporting.getPlugins().add(p);
 		}
 		

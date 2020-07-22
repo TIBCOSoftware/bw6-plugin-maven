@@ -489,7 +489,7 @@ public class WizardPageConfiguration extends WizardPage {
 		//GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		GridData data = new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1);
 		data.horizontalSpan = 4;
-		data.heightHint = 70;
+		data.heightHint = 100;
 		table.setLayoutData(data);
 
 		String[] titles = { "Module Name", "Module Type", "ArtifactId" };
