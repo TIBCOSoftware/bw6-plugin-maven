@@ -183,20 +183,21 @@ public class BWModulePackageMojo extends AbstractMojo {
 				continue;
 			}
 			
-			
+			boolean isSharedModule = false;
 			Manifest mf = ManifestParser.parseManifestFromJAR( file);
 			for( Object str : mf.getMainAttributes().keySet())
 			{
 				getLog().debug( str.toString() );
-				if( "TIBCO-BW-SharedModule".equals(str.toString() ))
-				{
-					continue;
-					
+				if("TIBCO-BW-SharedModule".equals(str.toString())) {
+					isSharedModule = true;
+					break;
 				}
 			}
-			getLog().debug("Dependency added with name " + file.toString());
-			jarArchiver.addFile(file, "lib/" + file.getName());
-			buffer.append(",lib/" + file.getName());
+			if(!isSharedModule) {
+				getLog().debug("Dependency added with name " + file.toString());
+				jarArchiver.addFile(file, "lib/" + file.getName());
+				buffer.append(",lib/" + file.getName());
+			}
 		}
 
 		String bundleClasspath = manifest.getMainAttributes().getValue(Constants.BUNDLE_CLASSPATH);
