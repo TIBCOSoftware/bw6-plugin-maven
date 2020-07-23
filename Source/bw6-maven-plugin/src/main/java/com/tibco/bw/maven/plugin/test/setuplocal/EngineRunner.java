@@ -1,11 +1,8 @@
 package com.tibco.bw.maven.plugin.test.setuplocal;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.io.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
@@ -22,35 +19,39 @@ public class EngineRunner
 		ProcessBuilder builder = new ProcessBuilder( BWTestConfig.INSTANCE.getLaunchConfig());
         process = builder.start();
         
-        BWTestConfig.INSTANCE.getLogger().info( "## Starting BW Engine in Test Mode ##");
-        BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs Start---------------------------------------------------------------------------------------------------------------------------------------------------");
-        BWTestConfig.INSTANCE.getLogger().info( "" );
+        BWTestConfig.INSTANCE.getLogger().info("## Starting BW Engine in Test Mode ##");
+        BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs Start------------------------------------------------");
+        BWTestConfig.INSTANCE.getLogger().info("" );
         BWTestConfig.INSTANCE.setEngineProcess(process);
-        
-        final StringBuilder sb  = new StringBuilder();
 
-        Runnable input = getInputRunnable(process, sb);
-        Runnable error = getErrorRunnable(process, sb);
+        Runnable input = getInputRunnable(process);
+        Runnable error = getErrorRunnable(process);
 
         Thread inputThread = new Thread( input );
 		Thread errorThread = new Thread( error );
 		inputThread.start();
 		errorThread.start();
 
-		TimerTask task = new TimerTask() {
-	        public void run() {
-	            System.out.print( "." );
-	        }
-	    };
-	    Timer timer = new Timer("Timer");
-	     
-	    timer.schedule(task, 0, 1500);
-		
-		latch.await();
-		
-		timer.cancel();
+		latch.await(5, TimeUnit.MINUTES); //if the node don't starts in 5 minutes ... for sure somethings is wrong
 		
 		if(!isEngineStarted.get()){
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+			// use OSGi Console to issue commands in order to see the state of server
+			writer.newLine();
+			Thread.currentThread().sleep(1000);
+			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+			BWTestConfig.INSTANCE.getLogger().info("## Issue OSGi Console commands to print BWApp state ##");
+			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+
+			writer.write("la"); //Print information about all applications.
+			writer.newLine();
+			writer.flush();
+
+			Thread.currentThread().sleep(5000); //wait for prev commands output
+			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+
+			writer.close();
+
 			throw new EngineProcessException("BW Engine not started successfully.Please see logs for more details");
 		}
 		
@@ -62,7 +63,7 @@ public class EngineRunner
 	
 	
 	
-	private Runnable getErrorRunnable(final Process process, final StringBuilder sb) {
+	private Runnable getErrorRunnable(final Process process) {
 		Runnable error = new Runnable() {
 			public void run() {
 				try {
@@ -72,18 +73,17 @@ public class EngineRunner
 					String line;
 					
 			        while((line = br.readLine()) != null) {
-			            //System.out.println( line);
-			            sb.append( line );
+						BWTestConfig.INSTANCE.getLogger().error(line);
 			        }
 				} catch(Exception e) {
-		        	//logger.error ( e.getMessage() , e);
+					BWTestConfig.INSTANCE.getLogger().error(e);
 		        }
 			}
 		};
 		return error;
 	}
 
-	private Runnable getInputRunnable(final Process process, final StringBuilder sb){
+	private Runnable getInputRunnable(final Process process){
 		Runnable input = new Runnable() {
 			public void run() {
 				try {
@@ -92,13 +92,18 @@ public class EngineRunner
 					BufferedReader br = new BufferedReader(isr);
 					String line;
 			        while((line = br.readLine()) != null) {
-			        	System.out.println(line);
-			        	if( line.contains( "Started BW Application") )
+						BWTestConfig.INSTANCE.getLogger().info(line);
+						//TIBCO-THOR-FRWK-300006: Started BW Application
+						if( line.contains( "TIBCO-THOR-FRWK-300006") )
 						{
 							latch.countDown();
 						}
-			        	
-			            sb.append( line );
+						//TIBCO-THOR-FRWK-300019: BW Application is impaired
+						if( line.contains( "TIBCO-THOR-FRWK-300019") )
+						{
+							isEngineStarted.set(false);
+							latch.countDown();
+						}
 			        }
 			        if(latch.getCount()>0){
 			        	isEngineStarted.set(false);
@@ -106,7 +111,7 @@ public class EngineRunner
 			        }
 			        
 				} catch(Exception e) {
-					e.printStackTrace();
+					BWTestConfig.INSTANCE.getLogger().error(e);
 		        }
 			}
 		};
