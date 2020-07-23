@@ -164,6 +164,7 @@ public class BWTestMojo extends AbstractMojo {
     private boolean checkForTest()
     {
     	List<MavenProject> projects = session.getProjects();
+    	
     	for( MavenProject project : projects )
 		{
 			if( project.getPackaging().equals("bwmodule") )

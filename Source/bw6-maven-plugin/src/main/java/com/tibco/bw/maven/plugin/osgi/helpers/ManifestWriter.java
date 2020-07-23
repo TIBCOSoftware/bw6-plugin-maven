@@ -44,7 +44,7 @@ public class ManifestWriter {
         }
         
     	attributes.put(Name.MANIFEST_VERSION, projectVersion);
-        attributes.putValue("Bundle-Version", projectVersion );
+        attributes.putValue(Constants.BUNDLE_VERSION, projectVersion );
 
         //Updating provide capability for Shared Modules
 //        if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
