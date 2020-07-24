@@ -20,6 +20,7 @@ import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWTestInfo;
+import com.tibco.bw.studio.maven.plugin.Activator;
 import com.tibco.bw.studio.maven.wizard.BWProjectTypes;
 import com.tibco.bw.studio.maven.wizard.MavenWizardContext;
 
@@ -325,6 +326,9 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			reporting.setPlugins( new ArrayList<ReportPlugin>());
 		}
 		
+		String version = Activator.getBundleContext().getBundle().getVersion().toString();
+		version = version.substring(0, version.indexOf(".qualifier"));
+		
 		boolean isReporting = false;
 		for( ReportPlugin plugin : plugins )
 		{
@@ -332,7 +336,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			{
 				isReporting = true;
 				//Update the existing version of reporting plugin with Latest one
-				plugin.setVersion("2.7.1");
+				plugin.setVersion(version);
 				break;
 			}
 		}
@@ -342,7 +346,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			ReportPlugin p = new ReportPlugin();
 			p.setGroupId("com.tibco.plugins");
 			p.setArtifactId("bw6-maven-plugin");
-			p.setVersion("2.7.1");
+			p.setVersion(version);
 			reporting.getPlugins().add(p);
 		}
 		
