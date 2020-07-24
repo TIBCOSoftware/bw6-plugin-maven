@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -196,22 +197,54 @@ public class RemoteDeployer {
 		}
 	}
 
+	private boolean isValidURL(String url){
+	  try { 
+	       new URL(url).toURI(); 
+	       return true; 
+	  } catch (Exception e) { 
+	       return false; 
+	  } 
+	}
+	
 	private AppSpace setProfile(final String domainName, final String appSpaceName, final String version,final String appName,final String externalProfileLoc) throws ClientException {
 		init();
 		log.info("Setting external profile for AppName -> "+ appName + ", Version -> "+ version + ", External profile location -> "+ externalProfileLoc);
+		File profilefile = null;
+		boolean fromURL = false;
 		try {
-			final FileDataBodyPart filePart = new FileDataBodyPart("file", new File(externalProfileLoc));
+			if(externalProfileLoc.contains("http") && isValidURL(externalProfileLoc)){
+				log.debug("Profile file is from external URL, creating temporary local file - "+ Constants.TEMP_SUBSTVAR);
+				profilefile = new File(Constants.TEMP_SUBSTVAR);
+				FileUtils.copyURLToFile(new URL(externalProfileLoc), profilefile);
+				fromURL = true;
+			} else {
+				profilefile = new File(externalProfileLoc);
+				if(!profilefile.exists()){
+					throw new Exception("External profile file not found - "+ externalProfileLoc);
+				}
+			}
+			final FileDataBodyPart filePart = new FileDataBodyPart("file", profilefile);
 			FormDataMultiPart formDataMultiPart  = new FormDataMultiPart();
 		    final FormDataMultiPart multipart = (FormDataMultiPart) formDataMultiPart.bodyPart(filePart);
 			  MediaType contentType = formDataMultiPart .getMediaType();
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("config").path("externalprofile").request().put(Entity.entity(multipart , contentType));
 			processErrorResponse(response);
 			AppSpace appSpace = response.readEntity(AppSpace.class);
+			
+			if(fromURL){
+				profilefile.delete();
+				log.debug("Removed temporary file - "+ Constants.TEMP_SUBSTVAR);
+			}
+			
 			return appSpace;
 			
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {
+			if(fromURL && profilefile != null){
+				profilefile.delete();
+				log.debug("Removed temporary file - "+ Constants.TEMP_SUBSTVAR);
+			}
 			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}

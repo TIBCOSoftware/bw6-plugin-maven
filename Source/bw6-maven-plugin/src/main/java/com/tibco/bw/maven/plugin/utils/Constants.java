@@ -15,4 +15,5 @@ public interface Constants {
 	public static final String BASIC_AUTH = "BASIC";
 	public static final String DIGEST_AUTH = "DIGEST";
 	public static final String TIBCO_SHARED_MODULE = "TIBCO-BW-SharedModule";
+	public static final String TEMP_SUBSTVAR= "temp.substvar";
 }
