@@ -89,6 +89,10 @@ public class BWTestRunner
 	
 	public void runTests() throws MojoFailureException, Exception
 	{
+		init();
+		
+		r.path("tests").path("enabledebug").request().get();
+		
 		List<MavenProject> projects = BWTestConfig.INSTANCE.getSession().getProjects();
 		
 		CompleteReportDTO result = new CompleteReportDTO();
@@ -119,9 +123,6 @@ public class BWTestRunner
 	{
 			AssertionsLoader loader = new AssertionsLoader( project);
 			TestSuiteDTO suite = loader.loadAssertions();
-			
-			init();
-			
 
 			BWTestConfig.INSTANCE.getLogger().info( "Starting Tests in Module : " + project.getArtifactId() );			
 			
@@ -129,10 +130,7 @@ public class BWTestRunner
 			
 			suite.setModuleInfo(minfo);
 
-
 	        printTestStats(suite);
-	        
-	        r.path("tests").path("enabledebug").request().get();
 
 	        /*String response = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , String.class);
 	        BWTestConfig.INSTANCE.getLogger().info(response);*/

@@ -8,10 +8,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 
 public class EngineRunner 
-{     
+{   
+	private int engineStartupWaitTime = 2;
 	CountDownLatch latch = new CountDownLatch(1);
 	AtomicBoolean isEngineStarted = new AtomicBoolean(false);
 	AtomicBoolean isImpaired = new AtomicBoolean(false);
+	
+	public EngineRunner(int engineStartupWaitTime){
+		this.engineStartupWaitTime = engineStartupWaitTime;
+	}
 	
 	public void run() throws Exception
 	{
@@ -33,7 +38,8 @@ public class EngineRunner
 		inputThread.start();
 		errorThread.start();
 
-		latch.await(2, TimeUnit.MINUTES);
+		BWTestConfig.INSTANCE.getLogger().debug("Engine Startup wait time -> "+ this.engineStartupWaitTime + " mins");
+		latch.await(this.engineStartupWaitTime, TimeUnit.MINUTES);
 		
 		if(isImpaired.get() && !isEngineStarted.get()){
 			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");

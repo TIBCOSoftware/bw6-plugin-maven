@@ -50,7 +50,8 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "testSuiteName" , defaultValue = "" )
     private String testSuiteName;
     
-    
+    @Parameter( property = "engineStartupWaitTime" , defaultValue = "2" )
+    private int engineStartupWaitTime;
     
     
     public void execute() throws MojoExecutionException , MojoFailureException
@@ -195,6 +196,8 @@ public class BWTestMojo extends AbstractMojo {
 		TestFileParser.INSTANCE.setshowFailureDetails(showFailureDetails);
 		
 		BWTestExecutor.INSTANCE.setEngineDebugPort(engineDebugPort);
+		
+		BWTestExecutor.INSTANCE.setEngineStartupWaitTime(engineStartupWaitTime);
 		
     	BWTestConfig.INSTANCE.reset();
     	

@@ -27,7 +27,9 @@ public class BWTestExecutor
 	public static BWTestExecutor INSTANCE = new BWTestExecutor();
 	
 	int engineDebugPort;
+	int engineStartupWaitTime;
 	
+
 	List<String> mockActivity = new ArrayList<String>();
 	
 	
@@ -148,7 +150,7 @@ public class BWTestExecutor
 
 	private void runEngine() throws Exception
 	{
-		EngineRunner runner = new EngineRunner();
+		EngineRunner runner = new EngineRunner(BWTestExecutor.INSTANCE.getEngineStartupWaitTime());
 		runner.run();
 	}
 	
@@ -172,6 +174,14 @@ public class BWTestExecutor
 
 	public void setMockActivityList(List<String> mockActivity) {
 		this.mockActivity = mockActivity;
+	}
+	
+	public int getEngineStartupWaitTime() {
+		return engineStartupWaitTime;
+	}
+
+	public void setEngineStartupWaitTime(int engineStartupWaitTime) {
+		this.engineStartupWaitTime = engineStartupWaitTime;
 	}
 	
 }
