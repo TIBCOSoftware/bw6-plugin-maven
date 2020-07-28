@@ -356,7 +356,7 @@ public class WizardPageConfiguration extends WizardPage {
 					{
 						tibcoHomePath = bundleFile.getPath().substring(0,bundleFile.getPath().indexOf(bundleFile.separator + "studio"));
 						File bwFolder = new File(tibcoHomePath + bundleFile.separator + "bw");
-						if(bwFolder == null)
+						if(bwFolder == null || !bwFolder.exists() || !bwFolder.isDirectory())
 							bwFolder = new File(tibcoHomePath + bundleFile.separator + "bwce");
 						for(String folder : bwFolder.list())
 						{

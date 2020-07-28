@@ -326,8 +326,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			reporting.setPlugins( new ArrayList<ReportPlugin>());
 		}
 		
-		String version = Activator.getBundleContext().getBundle().getVersion().toString();
-		version = version.substring(0, version.indexOf(".qualifier"));
+		String version = Activator.getBundleVersion();
 		
 		boolean isReporting = false;
 		for( ReportPlugin plugin : plugins )
