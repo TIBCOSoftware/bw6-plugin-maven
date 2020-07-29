@@ -28,6 +28,7 @@ public class BWTestExecutor
 	
 	int engineDebugPort;
 	int engineStartupWaitTime;
+	List<String> osgiCommands;
 	
 
 	List<String> mockActivity = new ArrayList<String>();
@@ -150,7 +151,7 @@ public class BWTestExecutor
 
 	private void runEngine() throws Exception
 	{
-		EngineRunner runner = new EngineRunner(BWTestExecutor.INSTANCE.getEngineStartupWaitTime());
+		EngineRunner runner = new EngineRunner(BWTestExecutor.INSTANCE.getEngineStartupWaitTime(), BWTestExecutor.INSTANCE.getOsgiCommands());
 		runner.run();
 	}
 	
@@ -182,6 +183,14 @@ public class BWTestExecutor
 
 	public void setEngineStartupWaitTime(int engineStartupWaitTime) {
 		this.engineStartupWaitTime = engineStartupWaitTime;
+	}
+
+	public List<String> getOsgiCommands() {
+		return osgiCommands;
+	}
+
+	public void setOsgiCommands(List<String> osgiCommands) {
+		this.osgiCommands = osgiCommands;
 	}
 	
 }

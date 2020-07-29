@@ -1,6 +1,8 @@
 package com.tibco.bw.maven.plugin.test.setuplocal;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -10,18 +12,20 @@ import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 public class EngineRunner 
 {   
 	private int engineStartupWaitTime = 2;
+	private List<String> osgiCommands= new ArrayList<String>();
 	CountDownLatch latch = new CountDownLatch(1);
 	AtomicBoolean isEngineStarted = new AtomicBoolean(false);
 	AtomicBoolean isImpaired = new AtomicBoolean(false);
 	
-	public EngineRunner(int engineStartupWaitTime){
+	public EngineRunner(int engineStartupWaitTime, List<String> osgiCommands){
 		this.engineStartupWaitTime = engineStartupWaitTime;
+		this.osgiCommands = osgiCommands;
 	}
 	
 	public void run() throws Exception
 	{
 		Process process = null;
-	
+		
 		ProcessBuilder builder = new ProcessBuilder( BWTestConfig.INSTANCE.getLaunchConfig());
         process = builder.start();
         
@@ -39,23 +43,25 @@ public class EngineRunner
 		errorThread.start();
 
 		BWTestConfig.INSTANCE.getLogger().debug("Engine Startup wait time -> "+ this.engineStartupWaitTime + " mins");
+		BWTestConfig.INSTANCE.getLogger().debug("OSGi Commands -> "+ this.osgiCommands);
 		latch.await(this.engineStartupWaitTime, TimeUnit.MINUTES);
 		
 		if(isImpaired.get() && !isEngineStarted.get()){
-			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
-			BWTestConfig.INSTANCE.getLogger().info("## Issue OSGi command (la) to print Application state ##");
-			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
-			
 			OSGICommandExecutor cmdExecutor = new OSGICommandExecutor();
-			cmdExecutor.executeCommand("la");
-
-			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+			
+			for(String command : osgiCommands)
+			{
+				BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+				BWTestConfig.INSTANCE.getLogger().info("## Executing OSGi command ("+ command +") ##");
+				BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+				
+				cmdExecutor.executeCommand(command);
+			}
 		}
 		
 		if(!isEngineStarted.get()){
 			throw new EngineProcessException("BW Engine not started successfully.Please see logs for more details");
 		}
-		
 		
         BWTestConfig.INSTANCE.getLogger().info( "## BW Engine Successfully Started ##");
 

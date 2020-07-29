@@ -53,6 +53,8 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "engineStartupWaitTime" , defaultValue = "2" )
     private int engineStartupWaitTime;
     
+    @Parameter( property = "osgiCommands" , defaultValue = "la,lp" )
+    private List<String> osgiCommands;
     
     public void execute() throws MojoExecutionException , MojoFailureException
     {
@@ -198,6 +200,8 @@ public class BWTestMojo extends AbstractMojo {
 		BWTestExecutor.INSTANCE.setEngineDebugPort(engineDebugPort);
 		
 		BWTestExecutor.INSTANCE.setEngineStartupWaitTime(engineStartupWaitTime);
+		
+		BWTestExecutor.INSTANCE.setOsgiCommands(osgiCommands);
 		
     	BWTestConfig.INSTANCE.reset();
     	
