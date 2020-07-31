@@ -46,10 +46,20 @@ public class EngineRunner
 		BWTestConfig.INSTANCE.getLogger().debug("OSGi Commands -> "+ this.osgiCommands);
 		latch.await(this.engineStartupWaitTime, TimeUnit.MINUTES);
 		
-		if(isImpaired.get() && !isEngineStarted.get()){
-			OSGICommandExecutor cmdExecutor = new OSGICommandExecutor();
+		OSGICommandExecutor cmdExecutor = new OSGICommandExecutor();
+		
+		for(String command : osgiCommands)
+		{
+			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+			BWTestConfig.INSTANCE.getLogger().info("## Executing OSGi command ("+ command +") ##");
+			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
 			
-			for(String command : osgiCommands)
+			cmdExecutor.executeCommand(command);
+		}
+		
+		if(isImpaired.get() && !isEngineStarted.get()){
+			String command = "la";
+			if(osgiCommands.isEmpty())	//execute la command if no command is specified and app is impaired
 			{
 				BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
 				BWTestConfig.INSTANCE.getLogger().info("## Executing OSGi command ("+ command +") ##");
@@ -60,7 +70,7 @@ public class EngineRunner
 		}
 		
 		if(!isEngineStarted.get()){
-			throw new EngineProcessException("BW Engine not started successfully.Please see logs for more details");
+			throw new EngineProcessException("Failed to start BW Engine. Please see logs for more details");
 		}
 		
         BWTestConfig.INSTANCE.getLogger().info( "## BW Engine Successfully Started ##");

@@ -276,11 +276,23 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		return projectName;
 	}
 
-	protected void addModulesToProjectDependencies(final List<BWExternalDependencyRecord> modules, IProject sourceProject){
-		for(BWExternalDependencyRecord handler : modules){
-			IProject project = handler.getProject();
-			ModelHelper.INSTANCE.addModuleRequireCapabilities(project, sourceProject);
-		}					
+	protected void addModulesToProjectDependencies(final List<BWExternalDependencyRecord> modules, final IProject sourceProject){
+		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
+		if(editingDomain != null){
+
+			RecordingCommand command = new RecordingCommand(editingDomain) {
+				@Override
+				protected void doExecute() {
+					for(BWExternalDependencyRecord handler : modules){
+						final IProject project = handler.getProject();
+						ModelHelper.INSTANCE.addModuleRequireCapabilities(project, sourceProject);
+					}
+				}
+			};
+
+			editingDomain.getCommandStack().execute(command);
+		}
+		
 	}
 
 	protected void addModulesToApplication(List<BWExternalDependencyRecord> modules, final IProject sourceProject){
@@ -289,17 +301,40 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		for(BWExternalDependencyRecord handler : modules){
 			projects.add(handler.getProject());
 		}
+		
+		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
+		if(editingDomain != null){
 
+			RecordingCommand command = new RecordingCommand(editingDomain) {
+				@Override
+				protected void doExecute() {
+					ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
+				}
+			};
 
-		ModelHelper.INSTANCE.addModulesToApplication(projects, sourceProject);
-
+			editingDomain.getCommandStack().execute(command);
+		}
+		
 	}
 
-	protected void registerDependencies(List<BWExternalDependencyRecord>records, IProject hostProject){
-		BWExternalDependenciesRegistry registry = BWExternalDependenciesRegistry.INSTANCE;
-		for(BWExternalDependencyRecord record : records){
-			registry.addDependencyRecord(hostProject, record);
+	protected void registerDependencies(final List<BWExternalDependencyRecord>records, final IProject hostProject){
+		
+		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
+		if(editingDomain != null){
+
+			RecordingCommand command = new RecordingCommand(editingDomain) {
+				@Override
+				protected void doExecute() {
+					BWExternalDependenciesRegistry registry = BWExternalDependenciesRegistry.INSTANCE;
+					for(BWExternalDependencyRecord record : records){
+						registry.addDependencyRecord(hostProject, record);
+					}
+				}
+			};
+
+			editingDomain.getCommandStack().execute(command);
 		}
+		
 	}
 
 	protected void removeDependencies(final IProject hostProject, List<Dependency> dependencies, Set<IProject> projectsToValidate){
@@ -389,29 +424,43 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		BWMavenValidationJob.schedule(projectsToValidate, 1000);
 	}
 
-	protected void addProjectDependencies(IProject hostProject, List<BWExternalDependencyRecord >records){
-		List<IProject> projectsToAdd = new ArrayList<IProject>();
-		Set<IProject> referencedProjects = ProjectUtil.getReferencedProjectsHierarchy(hostProject, null);
-		for(BWExternalDependencyRecord record : records){
-			if(referencedProjects != null){
-				if(!referencedProjects.contains(record.getProject())){
-					projectsToAdd.add(record.getProject());
+	protected void addProjectDependencies(final IProject hostProject, final List<BWExternalDependencyRecord >records){
+		
+		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
+		if(editingDomain != null){
+
+			RecordingCommand command = new RecordingCommand(editingDomain) {
+				@Override
+				protected void doExecute() {
+					List<IProject> projectsToAdd = new ArrayList<IProject>();
+					Set<IProject> referencedProjects = ProjectUtil.getReferencedProjectsHierarchy(hostProject, null);
+					for(BWExternalDependencyRecord record : records){
+						if(referencedProjects != null){
+							if(!referencedProjects.contains(record.getProject())){
+								projectsToAdd.add(record.getProject());
+							}
+						}
+					}
+
+					//Add projects to the reference
+					if(projectsToAdd.size() > 0){
+						IProject[] referencedProjectsToAdd = projectsToAdd.toArray(new IProject[projectsToAdd.size()]);
+						AddProjectDependenciesOp addDependenciesOp = new AddProjectDependenciesOp(hostProject, referencedProjectsToAdd);
+						try {
+							addDependenciesOp.run(null);
+						} catch (InvocationTargetException e) {
+							Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
+						} catch (InterruptedException e) {
+							Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
+						}
+					}
+
 				}
-			}
-		}
+			};
 
-		//Add projects to the reference
-		if(projectsToAdd.size() > 0){
-			IProject[] referencedProjectsToAdd = projectsToAdd.toArray(new IProject[projectsToAdd.size()]);
-			AddProjectDependenciesOp addDependenciesOp = new AddProjectDependenciesOp(hostProject, referencedProjectsToAdd);
-			try {
-				addDependenciesOp.run(null);
-			} catch (InvocationTargetException e) {
-				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
-			} catch (InterruptedException e) {
-				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
-			}
+			editingDomain.getCommandStack().execute(command);
 		}
-
+		
+		
 	}
 }

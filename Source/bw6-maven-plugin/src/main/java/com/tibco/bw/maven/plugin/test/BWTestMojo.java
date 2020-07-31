@@ -53,7 +53,7 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "engineStartupWaitTime" , defaultValue = "2" )
     private int engineStartupWaitTime;
     
-    @Parameter( property = "osgiCommands" , defaultValue = "la,lp" )
+    @Parameter( property = "osgiCommands" )
     private List<String> osgiCommands;
     
     public void execute() throws MojoExecutionException , MojoFailureException
