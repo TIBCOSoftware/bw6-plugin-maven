@@ -192,7 +192,7 @@ public class BWDeployMojo extends AbstractMojo {
 			if(versionNum.length > 2)
         		version =  versionNum[0]+"."+versionNum[1];
 			else 
-				throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue("Bundle-Version"));
+				throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
 			
 			deployer.getOrCreateDomain(domain, domainDesc);
 			AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain,

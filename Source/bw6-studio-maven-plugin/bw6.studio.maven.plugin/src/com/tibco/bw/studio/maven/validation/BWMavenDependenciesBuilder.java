@@ -61,6 +61,8 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		if(project == null){
 			return;
 		}
+		
+		Activator.getDefault().getLog().log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Kind:"+ kind + ", Project:"+ project.getName()));
 
 		if(!isMavenProject(project)){
 			return;
@@ -291,8 +293,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			};
 
 			editingDomain.getCommandStack().execute(command);
-		}
-		
+		}					
 	}
 
 	protected void addModulesToApplication(List<BWExternalDependencyRecord> modules, final IProject sourceProject){
@@ -314,11 +315,9 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 
 			editingDomain.getCommandStack().execute(command);
 		}
-		
 	}
 
 	protected void registerDependencies(final List<BWExternalDependencyRecord>records, final IProject hostProject){
-		
 		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
 		if(editingDomain != null){
 
@@ -334,7 +333,6 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 
 			editingDomain.getCommandStack().execute(command);
 		}
-		
 	}
 
 	protected void removeDependencies(final IProject hostProject, List<Dependency> dependencies, Set<IProject> projectsToValidate){
@@ -424,43 +422,29 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		BWMavenValidationJob.schedule(projectsToValidate, 1000);
 	}
 
-	protected void addProjectDependencies(final IProject hostProject, final List<BWExternalDependencyRecord >records){
-		
-		TransactionalEditingDomain editingDomain = EditingDomainUtil.INSTANCE.getEditingDomain(); 
-		if(editingDomain != null){
-
-			RecordingCommand command = new RecordingCommand(editingDomain) {
-				@Override
-				protected void doExecute() {
-					List<IProject> projectsToAdd = new ArrayList<IProject>();
-					Set<IProject> referencedProjects = ProjectUtil.getReferencedProjectsHierarchy(hostProject, null);
-					for(BWExternalDependencyRecord record : records){
-						if(referencedProjects != null){
-							if(!referencedProjects.contains(record.getProject())){
-								projectsToAdd.add(record.getProject());
-							}
-						}
-					}
-
-					//Add projects to the reference
-					if(projectsToAdd.size() > 0){
-						IProject[] referencedProjectsToAdd = projectsToAdd.toArray(new IProject[projectsToAdd.size()]);
-						AddProjectDependenciesOp addDependenciesOp = new AddProjectDependenciesOp(hostProject, referencedProjectsToAdd);
-						try {
-							addDependenciesOp.run(null);
-						} catch (InvocationTargetException e) {
-							Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
-						} catch (InterruptedException e) {
-							Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
-						}
-					}
-
+	protected void addProjectDependencies(IProject hostProject, List<BWExternalDependencyRecord >records){
+		List<IProject> projectsToAdd = new ArrayList<IProject>();
+		Set<IProject> referencedProjects = ProjectUtil.getReferencedProjectsHierarchy(hostProject, null);
+		for(BWExternalDependencyRecord record : records){
+			if(referencedProjects != null){
+				if(!referencedProjects.contains(record.getProject())){
+					projectsToAdd.add(record.getProject());
 				}
-			};
-
-			editingDomain.getCommandStack().execute(command);
+			}
 		}
-		
-		
+
+		//Add projects to the reference
+		if(projectsToAdd.size() > 0){
+			IProject[] referencedProjectsToAdd = projectsToAdd.toArray(new IProject[projectsToAdd.size()]);
+			AddProjectDependenciesOp addDependenciesOp = new AddProjectDependenciesOp(hostProject, referencedProjectsToAdd);
+			try {
+				addDependenciesOp.run(null);
+			} catch (InvocationTargetException e) {
+				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
+			} catch (InterruptedException e) {
+				Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage()));
+			}
+		}
+
 	}
 }
