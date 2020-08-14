@@ -77,6 +77,7 @@ public class TestFileParser {
 						
 						suite.setShowFailureDetails(showFailureDetails);
 						String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
+						String processName = el.getAttributes().getNamedItem("Name").getNodeValue();
 						if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
 							BWTestConfig.INSTANCE.getTestCaseWithProcessNameMap().put(testCaseFile, processId);
 						}
@@ -114,6 +115,7 @@ public class TestFileParser {
 									ast.setAssertionMode(assertionMode);
 
 									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
+									String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
 									ast.setLocation(location);
 
 									NodeList gChildNodes = cEl.getChildNodes();
@@ -135,15 +137,15 @@ public class TestFileParser {
 												if(gcEl.getLastChild() != null)
 													expression = gcEl.getLastChild().getTextContent();
 												else
-													throw new Exception("Invalid Activity Assertion Configuration.");
+													throw new Exception("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Activity Assertion Configuration.");
 												String replaceInputFile = null;
 												String inputFile = null;
 												if("ActivityWithGoldFile".equals(assertionMode)){
 													inputFile = StringUtils.substringBetween(expression,"file:///", "')");
 													BWTestConfig.INSTANCE.getLogger().debug("Expression - "+ expression);
 													if(inputFile == null){
-														BWTestConfig.INSTANCE.getLogger().debug("Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
-														throw new Exception("Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
+														BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
+														throw new Exception("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
 													}
 													File goldInputFile = new File(inputFile);
 													if(!goldInputFile.isAbsolute()){
@@ -188,6 +190,7 @@ public class TestFileParser {
 									MockActivityDTO mockActivity = new MockActivityDTO();
 									
 									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
+									String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
 									mockActivity.setLocation(location);
 									
 									NodeList gChildNodes = cEl.getChildNodes();
@@ -199,8 +202,8 @@ public class TestFileParser {
 											{
 												String mockOutputFilePath = e1.getTextContent();
 												if(mockOutputFilePath == null || mockOutputFilePath.trim().length() == 0){
-													BWTestConfig.INSTANCE.getLogger().debug("Invalid Mock Output File Path - "+mockOutputFilePath);
-													throw new Exception("Invalid Mock Output File Path - "+mockOutputFilePath);
+													BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Mock Output File Path - "+mockOutputFilePath);
+													throw new Exception("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Mock Output File Path - "+mockOutputFilePath);
 												}
 												File file = new File(mockOutputFilePath);
 												if(!file.isAbsolute()){
@@ -208,7 +211,7 @@ public class TestFileParser {
 													mockOutputFilePath = baseDirectoryPath.concat("/"+mockOutputFilePath);
 												}
 												if(!disableMocking){
-													boolean isValidFile = validateMockXMLFile(mockOutputFilePath);
+													boolean isValidFile = validateMockXMLFile(mockOutputFilePath, activityName, processName);
 													if(isValidFile){
 														mockActivity.setmockOutputFilePath(mockOutputFilePath);
 														testcase.setmockOutputFilePath(mockOutputFilePath);
@@ -366,7 +369,7 @@ public class TestFileParser {
 
 	}
 	
-	private boolean validateMockXMLFile(String mockOutputFilePath) throws Exception {
+	private boolean validateMockXMLFile(String mockOutputFilePath, String activityName, String processName) throws Exception {
 		File mockOutputFile = new File(mockOutputFilePath);
 		if(mockOutputFile.exists()){
 			try {
@@ -374,13 +377,13 @@ public class TestFileParser {
 				 DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(mockOutputString)));
 				 return true;
 		    } catch (Exception e) {
-		    	String errorMessage = "Provided XML file "+ mockOutputFilePath +" is not valid";
+		    	String errorMessage = "Process : "+ processName + ", Activity : "+ activityName + "Error : Provided XML file "+ mockOutputFilePath +" is not valid";
 		    	BWTestConfig.INSTANCE.getLogger().error(errorMessage, e);
 		    	throw e;
 		    }
 		}
 		else{
-			String errorMessage = "Provided XML file "+ mockOutputFilePath +" is not Present";
+			String errorMessage = "Process : "+ processName + ", Activity : "+ activityName + ", Error: Provided XML file "+ mockOutputFilePath +" is not Present";
 	    	BWTestConfig.INSTANCE.getLogger().error(errorMessage, new FileNotFoundException());
 			throw new Exception();
 		}
