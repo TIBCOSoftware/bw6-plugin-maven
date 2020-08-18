@@ -29,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.Boundary;
@@ -63,9 +64,11 @@ public class RemoteDeployer {
 	private final String keyPath;
 	private final String keyPassword;
 	private final boolean createAdminCompo;
+	private final long connectTimeout;
+	private final long readTimeout;
 	private Log log;
 
-	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo) {
+	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo, final long connectTimeout, final long readTimeout) {
 		this.host = host;
 		this.port = port;
 		this.agentAuth = agentAuthType;
@@ -77,11 +80,15 @@ public class RemoteDeployer {
 		this.keyPath = keyFilePath;
 		this.keyPassword = keyPassword;
 		this.createAdminCompo = createAdminCompo;
+		this.connectTimeout = connectTimeout;
+		this.readTimeout = readTimeout;
 	}
 
 	private void init() {
 		if (this.jerseyClient == null) {
 			ClientConfig clientConfig = new ClientConfig();
+			clientConfig = clientConfig.property(ClientProperties.CONNECT_TIMEOUT, connectTimeout);
+			clientConfig = clientConfig.property(ClientProperties.READ_TIMEOUT, readTimeout);
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			// Configuration for SSL enabled BWAgent
 			if(agentSSL) {
@@ -344,12 +351,34 @@ public class RemoteDeployer {
 		}
 	}
 
-	public void startAppSpace(final String domainName, final String appSpaceName) throws ClientException {
+	public void startAppSpace(final String domainName, final String appSpaceName, int retryCount) throws ClientException {
 		init();
 		log.info("Starting AppSpace with name -> " + appSpaceName + " in Domain -> " + domainName);
 		try {
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
-			processErrorResponse(response);
+			//retry and check appspace status if appspace is not running.
+			if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+				boolean isRunning = false;
+				int count = 0;
+				log.info("Retry Count ->"+ retryCount);
+				while(!isRunning && count < retryCount ){
+					Response resp = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).queryParam("status","true").queryParam("full","false").request(MediaType.APPLICATION_JSON_TYPE).get();
+					processErrorResponse(resp);
+					AppSpace appSpace = resp.readEntity(AppSpace.class);
+					log.info("AppSpace -> "+ appSpaceName + ", Status -> "+ appSpace.getStatus());
+					if(appSpace.getStatus().equals(AppSpace.AppSpaceRuntimeStatus.Running))
+					{
+						isRunning = true;
+						break;
+					}
+					count++;
+					Thread.sleep(2000);
+				}
+				if(!isRunning){
+					processErrorResponse(response);
+				}
+			}
+			
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {

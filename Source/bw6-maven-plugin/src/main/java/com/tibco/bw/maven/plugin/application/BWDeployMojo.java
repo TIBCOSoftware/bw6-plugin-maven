@@ -113,6 +113,15 @@ public class BWDeployMojo extends AbstractMojo {
 	@Parameter(property = "restartAppNode")
 	private boolean restartAppNode;
 	
+	@Parameter(property="retryCount", defaultValue = "10")
+	private int retryCount;
+	
+	@Parameter(property="connectTimeout", defaultValue = "30000")
+	private long connectTimeout;
+	
+	@Parameter(property="readTimeout", defaultValue = "30000")
+	private long readTimeout;
+	
 	
 	private String earName;
 	private String earLoc;
@@ -172,7 +181,7 @@ public class BWDeployMojo extends AbstractMojo {
 			RemoteDeployer deployer = new RemoteDeployer(agentHost,
 					Integer.parseInt(agentPort), agentAuth, agentUsername,
 					agentPassword, agentSSL, trustPath, trustPassword, keyPath,
-					keyPassword,createAdminCompo);
+					keyPassword,createAdminCompo, connectTimeout, readTimeout);
 			deployer.setLog(getLog());
 
 			List<Agent> agents = deployer.getAgentInfo();
@@ -214,7 +223,7 @@ public class BWDeployMojo extends AbstractMojo {
 			}
 			
 			if (appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
-				deployer.startAppSpace(domain, appSpace);
+				deployer.startAppSpace(domain, appSpace, retryCount);
 			} else {
 				getLog().info("AppSpace is Running.");
 			}
