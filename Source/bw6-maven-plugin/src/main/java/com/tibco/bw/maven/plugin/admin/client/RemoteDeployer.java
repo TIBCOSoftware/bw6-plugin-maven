@@ -316,15 +316,15 @@ public class RemoteDeployer {
 		deployApplication(domainName, appSpaceName, earName, null, true, replace, profile,externalProfile);
 		if(externalProfile){
 			setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
-			Thread.sleep(SLEEP_INTERVAL);
+			/*Thread.sleep(SLEEP_INTERVAL);
 			log.info("Stopping Application -> "+ appName);
 			stopApplication(domainName,appSpaceName,appName,version,appNodeName);
-			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Stopped);
-			Thread.sleep(SLEEP_INTERVAL);
+			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Stopped);*/
 			log.info("Starting Application -> "+ appName);
 			startApplication(domainName,appSpaceName,appName,version,appNodeName);
-			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
-			}
+		}
+		Thread.sleep(SLEEP_INTERVAL);
+		checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
 	}
 
 	private List<AppSpace> getAppSpaces(final String domainName, final String filter, final boolean full, final boolean status) throws ClientException {
@@ -371,7 +371,7 @@ public class RemoteDeployer {
 			if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
 				boolean isRunning = false;
 				int count = 0;
-				log.info("Retry Count ->"+ retryCount);
+				log.debug("Retry Count ->"+ retryCount);
 				while(!isRunning && count < retryCount ){
 					Response resp = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).queryParam("status","true").queryParam("full","false").request(MediaType.APPLICATION_JSON_TYPE).get();
 					processErrorResponse(resp);
@@ -468,12 +468,14 @@ public class RemoteDeployer {
 		try {
 			r = r.queryParam("archivename", archiveName);
 			addQueryParam("path", path);
-			r = r.queryParam("startondeploy", String.valueOf(startOnDeploy)).queryParam("replace", String.valueOf(replace));
+			
 			if(externalProfile){
+				r = r.queryParam("startondeploy", "false").queryParam("replace", String.valueOf(replace));
 				addQueryParam("profile", "default.substvar");
 			}
 			else{
-			addQueryParam("profile", profile);
+				r = r.queryParam("startondeploy", String.valueOf(startOnDeploy)).queryParam("replace", String.valueOf(replace));
+				addQueryParam("profile", profile);
 			}
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
@@ -531,7 +533,7 @@ public class RemoteDeployer {
 	private void checkApplicationState(final String domainName, final String appSpaceName, final String appName, final String version, final Application.ApplicationRuntimeStates state) throws ClientException, InterruptedException{
 		int count = 0;
 		boolean isState= false;
-		log.info("Retry Count ->"+ retryCount);
+		log.debug("Retry Count ->"+ retryCount);
 		while(!isState && count < retryCount ){
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
