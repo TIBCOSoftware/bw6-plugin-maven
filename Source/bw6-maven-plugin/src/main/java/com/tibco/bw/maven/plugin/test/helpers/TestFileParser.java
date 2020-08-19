@@ -137,15 +137,15 @@ public class TestFileParser {
 												if(gcEl.getLastChild() != null)
 													expression = gcEl.getLastChild().getTextContent();
 												else
-													throw new Exception("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Activity Assertion Configuration.");
+													throw new Exception("Process : "+ processName + ", Activity : "+ activityName + ", Id : "+ location +", Error : Invalid Activity Assertion Configuration.");
 												String replaceInputFile = null;
 												String inputFile = null;
 												if("ActivityWithGoldFile".equals(assertionMode)){
 													inputFile = StringUtils.substringBetween(expression,"file:///", "')");
 													BWTestConfig.INSTANCE.getLogger().debug("Expression - "+ expression);
 													if(inputFile == null){
-														BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
-														throw new Exception("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
+														BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
+														throw new Exception("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
 													}
 													File goldInputFile = new File(inputFile);
 													if(!goldInputFile.isAbsolute()){
@@ -202,8 +202,8 @@ public class TestFileParser {
 											{
 												String mockOutputFilePath = e1.getTextContent();
 												if(mockOutputFilePath == null || mockOutputFilePath.trim().length() == 0){
-													BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Mock Output File Path - "+mockOutputFilePath);
-													throw new Exception("Process : "+ processName + ", Activity : "+ activityName +", Error : Invalid Mock Output File Path - "+mockOutputFilePath);
+													BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Mock Output File Path - "+mockOutputFilePath);
+													throw new Exception("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Mock Output File Path - "+mockOutputFilePath);
 												}
 												File file = new File(mockOutputFilePath);
 												if(!file.isAbsolute()){

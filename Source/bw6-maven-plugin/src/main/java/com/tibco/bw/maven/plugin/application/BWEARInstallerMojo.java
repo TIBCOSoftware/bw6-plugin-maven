@@ -139,11 +139,11 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="retryCount", defaultValue = "10")
 	private int retryCount;
 	
-	@Parameter(property="connectTimeout", defaultValue = "30000")
-	private long connectTimeout;
+	@Parameter(property="connectTimeout", defaultValue = "120000")
+	private int connectTimeout;
 	
-	@Parameter(property="readTimeout", defaultValue = "30000")
-	private long readTimeout;
+	@Parameter(property="readTimeout", defaultValue = "120000")
+	private int readTimeout;
 
 	private String earLoc;
 	private String earName;
@@ -188,7 +188,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
-    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo, connectTimeout, readTimeout);
+    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo, connectTimeout, readTimeout, retryCount);
     		deployer.setLog(getLog());
 
     		List<Agent> agents = deployer.getAgentInfo();
@@ -220,12 +220,12 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			}
     		
 			if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
-    			deployer.startAppSpace(domain, appSpace, retryCount);
+    			deployer.startAppSpace(domain, appSpace);
     		} else {
     			getLog().info("AppSpace is Running.");
     		}
     		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc);
+    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc, appNode);
     		deployer.close();
     	} catch(Exception e) {
     		getLog().error(e);

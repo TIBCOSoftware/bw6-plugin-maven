@@ -64,11 +64,13 @@ public class RemoteDeployer {
 	private final String keyPath;
 	private final String keyPassword;
 	private final boolean createAdminCompo;
-	private final long connectTimeout;
-	private final long readTimeout;
+	private final int connectTimeout;
+	private final int readTimeout;
+	private final int retryCount;
 	private Log log;
+	private int SLEEP_INTERVAL = 10000;
 
-	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo, final long connectTimeout, final long readTimeout) {
+	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo, final int connectTimeout, final int readTimeout, final int retryCount) {
 		this.host = host;
 		this.port = port;
 		this.agentAuth = agentAuthType;
@@ -82,6 +84,7 @@ public class RemoteDeployer {
 		this.createAdminCompo = createAdminCompo;
 		this.connectTimeout = connectTimeout;
 		this.readTimeout = readTimeout;
+		this.retryCount = retryCount;
 	}
 
 	private void init() {
@@ -287,7 +290,7 @@ public class RemoteDeployer {
 		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);
 	}
 
-	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc) throws ClientException {
+	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc, final String appNodeName) throws ClientException, InterruptedException {
 		List<Application> applications = getApplications(domainName, appSpaceName, null, true);
 		for(Application application : applications) {
 			if(application.getName().equals(appName)) {
@@ -313,6 +316,14 @@ public class RemoteDeployer {
 		deployApplication(domainName, appSpaceName, earName, null, true, replace, profile,externalProfile);
 		if(externalProfile){
 			setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
+			Thread.sleep(SLEEP_INTERVAL);
+			log.info("Stopping Application -> "+ appName);
+			stopApplication(domainName,appSpaceName,appName,version,appNodeName);
+			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Stopped);
+			Thread.sleep(SLEEP_INTERVAL);
+			log.info("Starting Application -> "+ appName);
+			startApplication(domainName,appSpaceName,appName,version,appNodeName);
+			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
 			}
 	}
 
@@ -351,7 +362,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	public void startAppSpace(final String domainName, final String appSpaceName, int retryCount) throws ClientException {
+	public void startAppSpace(final String domainName, final String appSpaceName) throws ClientException {
 		init();
 		log.info("Starting AppSpace with name -> " + appSpaceName + " in Domain -> " + domainName);
 		try {
@@ -372,7 +383,7 @@ public class RemoteDeployer {
 						break;
 					}
 					count++;
-					Thread.sleep(2000);
+					Thread.sleep(SLEEP_INTERVAL);
 				}
 				if(!isRunning){
 					processErrorResponse(response);
@@ -491,7 +502,6 @@ public class RemoteDeployer {
 		}
 	}
 
-	@SuppressWarnings("unused")
 	private void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
 		init();
 		try {
@@ -502,6 +512,37 @@ public class RemoteDeployer {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {
 			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+	
+	private void stopApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
+		init();
+		try {
+			addQueryParam("appnode", appNodeName);
+			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("stop").request(MediaType.APPLICATION_JSON_TYPE).post(null);
+			processErrorResponse(response);
+		} catch (ProcessingException pe) {
+			throw getConnectionException(pe);
+		} catch (Exception ex) {
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+	
+	private void checkApplicationState(final String domainName, final String appSpaceName, final String appName, final String version, final Application.ApplicationRuntimeStates state) throws ClientException, InterruptedException{
+		int count = 0;
+		boolean isState= false;
+		log.info("Retry Count ->"+ retryCount);
+		while(!isState && count < retryCount ){
+			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).request(MediaType.APPLICATION_JSON_TYPE).get();
+			processErrorResponse(response);
+			Application app = response.readEntity(Application.class);
+			log.info("AppName -> "+ appName + ", State -> "+ app.getState());
+			if(app.getState().equals(state)){
+				isState = true;
+				return;
+			}
+			count++;
+			Thread.sleep(SLEEP_INTERVAL);
 		}
 	}
 
@@ -665,6 +706,7 @@ public class RemoteDeployer {
 				log.info("Starting AppNode ("+ appNode+")");
 				Response responseStart = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 				processErrorResponse(responseStart);
+				
 			} else {
 				log.info("Restart AppNode flag is false. The AppNode state will be Out-of-sync.");
 			}
@@ -674,4 +716,5 @@ public class RemoteDeployer {
 			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}
+	
 }

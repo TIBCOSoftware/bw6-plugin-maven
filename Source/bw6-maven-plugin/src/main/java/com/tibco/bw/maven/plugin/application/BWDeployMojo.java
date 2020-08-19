@@ -116,11 +116,11 @@ public class BWDeployMojo extends AbstractMojo {
 	@Parameter(property="retryCount", defaultValue = "10")
 	private int retryCount;
 	
-	@Parameter(property="connectTimeout", defaultValue = "30000")
-	private long connectTimeout;
+	@Parameter(property="connectTimeout", defaultValue = "120000")
+	private int connectTimeout;
 	
-	@Parameter(property="readTimeout", defaultValue = "30000")
-	private long readTimeout;
+	@Parameter(property="readTimeout", defaultValue = "120000")
+	private int readTimeout;
 	
 	
 	private String earName;
@@ -181,7 +181,7 @@ public class BWDeployMojo extends AbstractMojo {
 			RemoteDeployer deployer = new RemoteDeployer(agentHost,
 					Integer.parseInt(agentPort), agentAuth, agentUsername,
 					agentPassword, agentSSL, trustPath, trustPassword, keyPath,
-					keyPassword,createAdminCompo, connectTimeout, readTimeout);
+					keyPassword,createAdminCompo, connectTimeout, readTimeout, retryCount);
 			deployer.setLog(getLog());
 
 			List<Agent> agents = deployer.getAgentInfo();
@@ -223,7 +223,7 @@ public class BWDeployMojo extends AbstractMojo {
 			}
 			
 			if (appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
-				deployer.startAppSpace(domain, appSpace, retryCount);
+				deployer.startAppSpace(domain, appSpace);
 			} else {
 				getLog().info("AppSpace is Running.");
 			}
@@ -234,7 +234,7 @@ public class BWDeployMojo extends AbstractMojo {
 			deployer.addAndDeployApplication(domain, appSpace, applicationName,
 					earName, earFile.getAbsolutePath(), redeploy, profile,
 					backup, backupLocation, version, externalProfile,
-					externalProfileLoc);
+					externalProfileLoc, appNode);
 			deployer.close();
 			deployer.close();
 			BWEarUtils.deleteEARFileEntries(earLocation);
