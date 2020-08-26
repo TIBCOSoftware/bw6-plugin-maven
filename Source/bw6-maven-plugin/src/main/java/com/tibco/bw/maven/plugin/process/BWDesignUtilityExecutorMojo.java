@@ -211,3 +211,4 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 		reader.close();
 	}
 }
+
