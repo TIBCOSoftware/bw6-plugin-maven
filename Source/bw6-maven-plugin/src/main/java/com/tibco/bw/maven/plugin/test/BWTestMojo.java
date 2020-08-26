@@ -44,7 +44,7 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "engineDebugPort" , defaultValue = "8090" )
     private int engineDebugPort;
     
-    @Parameter( property = "showFailureDetails" , defaultValue = "false" )
+    @Parameter( property = "showFailureDetails" , defaultValue = "true" )
     private boolean showFailureDetails;
     
     @Parameter( property = "testSuiteName" , defaultValue = "" )
