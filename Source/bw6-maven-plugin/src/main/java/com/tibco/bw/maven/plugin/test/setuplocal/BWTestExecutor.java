@@ -14,6 +14,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 
+import com.tibco.bw.maven.plugin.test.helpers.BWMFileParser;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 import com.tibco.bw.maven.plugin.test.rest.BWTestRunner;
@@ -122,6 +123,21 @@ public class BWTestExecutor
 						
 					}
 
+				}
+				
+				//skip init for main processes
+				List<File> bwmfiles = BWFileUtils.getEntitiesfromLocation( baseDir.toString() , "bwm");
+				for( File file : bwmfiles )
+				{
+					BWTestConfig.INSTANCE.getLogger().debug("Parsing bwm file -> "+ file.getPath());
+					HashSet<String> tempSkipSet = new HashSet<String>();
+					String scaxml = FileUtils.readFileToString( file );
+					tempSkipSet = BWMFileParser.INSTANCE.collectMainProcesses(scaxml);
+					if(!tempSkipSet.isEmpty()){
+						mockActivity.addAll(tempSkipSet);
+						BWTestExecutor.INSTANCE.setMockActivityList(mockActivity);;
+						
+					}
 				}
 			}
 
