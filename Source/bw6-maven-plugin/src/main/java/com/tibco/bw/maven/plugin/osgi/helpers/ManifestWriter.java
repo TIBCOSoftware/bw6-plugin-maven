@@ -32,7 +32,7 @@ public class ManifestWriter {
     }
     
     
-    public static void updateManifestVersion(MavenProject project , Manifest mf)
+    public static void updateManifestVersion(MavenProject project , Manifest mf, String qualifierReplacement)
     {
         Attributes attributes = mf.getMainAttributes();
         
@@ -40,11 +40,11 @@ public class ManifestWriter {
         if( projectVersion.indexOf("-SNAPSHOT") != -1 )
         {
         	projectVersion = projectVersion.replace("-SNAPSHOT", ".qualifier");
-        	projectVersion = getManifestVersion(mf, projectVersion);
+        	projectVersion = getManifestVersion(mf, projectVersion, qualifierReplacement);
         }
         
     	attributes.put(Name.MANIFEST_VERSION, projectVersion);
-        attributes.putValue("Bundle-Version", projectVersion );
+        attributes.putValue(Constants.BUNDLE_VERSION, projectVersion );
 
         //Updating provide capability for Shared Modules
 //        if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
@@ -54,9 +54,9 @@ public class ManifestWriter {
 
     }
     
-    private static String getManifestVersion( Manifest manifest , String version) 
+    private static String getManifestVersion( Manifest manifest , String version, String qualifierReplacement) 
     {    	
-    	return VersionParser.getcalculatedOSGiVersion(version);
+    	return VersionParser.getcalculatedOSGiVersion(version, qualifierReplacement);
     }
 
 }

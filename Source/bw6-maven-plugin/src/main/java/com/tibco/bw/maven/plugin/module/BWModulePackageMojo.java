@@ -64,6 +64,9 @@ public class BWModulePackageMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project.build.outputDirectory}", required = true)
     private File classesDirectory;
+    
+    @Parameter(defaultValue = Constants.TIMESTAMP)
+    private String qualifierReplacement;
 
     private Manifest manifest;
 
@@ -95,7 +98,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 
             getLog().info("Updated the Manifest version ");
             
-            ManifestWriter.updateManifestVersion(project, manifest);
+            ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement);
             updateManifestVersion();
             
             getLog().info("Removing the externals entries if any. ");
@@ -188,7 +191,8 @@ public class BWModulePackageMojo extends AbstractMojo {
 			for( Object str : mf.getMainAttributes().keySet())
 			{
 				getLog().debug( str.toString() );
-				if("TIBCO-BW-SharedModule".equals(str.toString())) {
+				if( Constants.TIBCO_SHARED_MODULE.equals(str.toString() ))
+				{
 					isSharedModule = true;
 					break;
 				}
@@ -321,7 +325,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 
     private void updateManifestVersion() {
     	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-    	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
+    	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version, qualifierReplacement);
     	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
     	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
     }

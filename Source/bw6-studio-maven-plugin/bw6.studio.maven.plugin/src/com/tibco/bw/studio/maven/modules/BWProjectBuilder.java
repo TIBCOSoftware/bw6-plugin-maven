@@ -187,8 +187,31 @@ BWTestInfo testInfo = application.getTestInfo();
 		info.setRedeploy(getBooleanValuefromDom("redeploy", dom, model));
 		info.setBackup(getBooleanValuefromDom("backup", dom, model));
 		info.setBackupLocation(getStringValuefromDom("backupLocation", dom, model));
+		info.setAppNodeConfig(getMapValuesFromDom("appNodeConfig", dom, model));
+		info.setRestartAppNode(getBooleanValuefromDom("restartAppNode", dom, model));
 	}
 
+	private Map<String,String> getMapValuesFromDom(String name, Xpp3Dom dom, Model model) {
+		Map<String,String> appNodeConfig = new HashMap<String,String>();
+		Xpp3Dom appNodeConfigNode = dom.getChild(name);
+		if(appNodeConfigNode == null) {
+			return null;
+		}
+		for(Xpp3Dom config : appNodeConfigNode.getChildren())
+		{
+			String configName = config.getName();
+			String configValue = config.getValue();
+			if(configValue.startsWith("$")){
+				String property = configValue.substring(configValue.indexOf("{")+1, configValue.indexOf("}"));
+				configValue = model.getProperties().getProperty(property);
+			}
+			
+			appNodeConfig.put(configName, configValue);
+		}
+		
+		return appNodeConfig;
+	}
+	
 	private String getStringValuefromDom(String name, Xpp3Dom dom, Model model) {
 		Xpp3Dom child = dom.getChild(name);
 		if(child == null) {

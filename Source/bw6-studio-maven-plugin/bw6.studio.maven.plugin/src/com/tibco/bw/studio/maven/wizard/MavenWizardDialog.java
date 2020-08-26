@@ -6,11 +6,13 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 
 public class MavenWizardDialog extends WizardDialog {
 
 	public MavenWizardDialog(Shell parentShell, IWizard newWizard) {
 		super(parentShell, newWizard);
+		this.setHelpAvailable(true);
 	}
 
 	@Override
@@ -27,4 +29,6 @@ public class MavenWizardDialog extends WizardDialog {
 		return super.getInitialSize();
 		// return new Point(750, 610);
 	}
+	
+	
 }

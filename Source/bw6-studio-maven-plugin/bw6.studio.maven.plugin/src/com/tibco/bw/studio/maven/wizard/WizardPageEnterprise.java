@@ -2,22 +2,40 @@ package com.tibco.bw.studio.maven.wizard;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 
 import com.tibco.bw.studio.maven.helpers.ManifestParser;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
@@ -59,11 +77,15 @@ public class WizardPageEnterprise extends WizardPage {
 	private static final String BASIC_AUTH = "BASIC";
 	private static final String DIGEST_AUTH = "DIGEST";
 	private int index=0;
+	private int textHeight = 18;
+	private Table tableAppNodeConfig;
+	private Button restartAppNode;
+	
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
 		this.project = project;		 
-		setTitle("Deployment Details for Apache Maven and TIBCO BusinessWorks");
-		setDescription("Please Enter the Deployment details to Deploy the EAR file to BWAgent.\r\nThe EAR file will be deployed to the Agent provided below during the Maven \"install\" lifecycle phase.");	
+		setTitle("Deployment Details for TIBCO BusinessWorks(TM) Application");
+		setDescription("Please enter the Deployment details to Deploy the EAR file to BWAgent.");	
 	}
 
 	public boolean validate() {
@@ -203,15 +225,17 @@ public class WizardPageEnterprise extends WizardPage {
 	}
 
 	private void addNotes() {
-		Label label = new Label(container, SWT.NONE);
-		label.setText("Please enter the Host and Port of the Machine where the BWAgent is running. \r\n"
-				+ "Select the BWAgent Authentication Type (if applicable), and enter the Username, Password. \r\n"
-				+ "Enter the Domain, AppSpace and AppNode Information\r\n"
-				+ "Note* : If the Domain, Appspace and AppNode do not exist then they will be created.\r\n"
-				+ "EAR file will be started on deployment");
-		GridData versionData = new GridData();
-		versionData.horizontalSpan = 4;
-		label.setLayoutData(versionData);
+		Group noteGroup = new Group(container, SWT.SHADOW_ETCHED_IN);
+		noteGroup.setText("Note : ");
+		noteGroup.setLayout(new GridLayout(1, false));
+		GridData noteData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		noteData.horizontalSpan = 4;
+		noteGroup.setLayoutData(noteData);
+		Label label = new Label(noteGroup, SWT.NONE);
+		label.setText("- The EAR file will be deployed to the Agent provided below during the Maven \"install\" lifecycle phase.\r\n"
+				+ "- If the Domain, Appspace and AppNode do not exist then they will be created.\r\n"
+				+ "- The Application within EAR file will be started on deployment");
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 	}
 
 	private void addSeperator(Composite parent) {
@@ -249,6 +273,10 @@ public class WizardPageEnterprise extends WizardPage {
 				info.setBackupLocation(backupLocation.getText());
 				info.setexternalProfile(info.isexternalProfile());
 				info.setexternalProfileLoc(externalProfileLoc.getText());
+				for(TableItem item : tableAppNodeConfig.getItems()){
+					info.getAppNodeConfig().put(item.getText(0), item.getText(1));
+				}
+				info.setRestartAppNode(restartAppNode.getSelection());
 			}
 			module.setOverridePOM(true);
 		}
@@ -262,24 +290,166 @@ public class WizardPageEnterprise extends WizardPage {
 		addAppSpace();
 		addSeperator(parent);
 		addAppNode();
+		addAppNodeConfig();
 		addSeperator(parent);
 		addProfile();
 		addSeperator(parent);
 	}
 
+	private void addAppNodeConfig(){
+		Label appNodeConfigLabel = new Label(container, SWT.NONE);
+		appNodeConfigLabel.setText("AppNode Configuration");
+		
+		tableAppNodeConfig = new Table (container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+		tableAppNodeConfig.setLinesVisible(true);
+		tableAppNodeConfig.setHeaderVisible(true);
+		GridData data = new GridData(SWT.FILL, SWT.NONE, true, false);
+		data.heightHint = 80;
+		data.horizontalSpan = 2;
+		tableAppNodeConfig.setLayoutData(data);
+		String[] titles = {"Config Name            ", "Value                                    "};
+		for (String title : titles) {
+			TableColumn column = new TableColumn (tableAppNodeConfig, SWT.NONE);
+			column.setText (title);
+			column.setResizable(true);
+			//column.setWidth(tableAppNodeConfig.getBounds().width / 2);
+		}
+		
+		if(info.getAppNodeConfig()!= null && !info.getAppNodeConfig().isEmpty())
+		{
+		for(String key : info.getAppNodeConfig().keySet())
+		{
+			TableItem item = new TableItem (tableAppNodeConfig, SWT.NONE);
+			item.setText (0, (key != null ? key.trim() : ""));
+			item.setText (1, (info.getAppNodeConfig().get(key) != null ? info.getAppNodeConfig().get(key).trim() : ""));
+		}
+		} else {
+			TableItem item = new TableItem (tableAppNodeConfig, SWT.NONE);
+			item.setText (0, "bw.rest.docApi.port");
+			item.setText (1, "7777");
+		}
+	
+		for (int i=0; i<titles.length; i++) {
+			tableAppNodeConfig.getColumn (i).pack ();
+		}
+		
+		final TableEditor editor = new TableEditor(tableAppNodeConfig);
+		//The editor must have the same size as the cell and must
+		//not be any smaller than 50 pixels.
+		editor.horizontalAlignment = SWT.LEFT;
+		editor.grabHorizontal = true;
+		editor.minimumWidth = 50;
+		// editing the second column
+		final int EDITABLECOLUMN = 1;
+
+		tableAppNodeConfig.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseUp(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent e) {
+				// Clean up any previous editor control
+				Control oldEditor = editor.getEditor();
+				if (oldEditor != null)
+					oldEditor.dispose();
+
+				TableItem item = (tableAppNodeConfig.getSelection().length > 0 ? tableAppNodeConfig.getSelection()[0] : null);
+				if(item == null)
+					return;
+				
+				int column = EDITABLECOLUMN;
+				Point pt = new Point (e.x, e.y);
+				for(int i=0;i<tableAppNodeConfig.getColumnCount();i++)
+				{
+					Rectangle rect = item.getBounds (i);
+					if (rect.contains (pt)) {
+						column = i;
+					}
+				}
+				// The control that will be the editor must be a child of the Table
+				final Text newEditor = new Text(tableAppNodeConfig, SWT.NONE);
+				newEditor.setText(item.getText(column));
+				newEditor.setData(column);
+				newEditor.addModifyListener(new ModifyListener() {
+					
+					@Override
+					public void modifyText(ModifyEvent arg0) {
+						Text text = (Text) editor.getEditor();
+						int column = (int) newEditor.getData();
+						editor.getItem().setText(column, text.getText());
+					}
+				});
+				newEditor.selectAll();
+				newEditor.setFocus();
+				editor.setEditor(newEditor, item, column);
+
+				
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+					
+		Composite buttonComp = new Composite(container, SWT.NONE | SWT.TOP);
+		GridData gd = new GridData(150, 80);
+		buttonComp.setLayoutData(gd);
+		buttonComp.setLayout(new GridLayout(1, false));
+		Button addVar = new Button(buttonComp, SWT.PUSH);
+		Image imageAdd = new Image(buttonComp.getDisplay(),  getClass().getClassLoader().getResourceAsStream("icons/add_16_16.png"));
+		addVar.setImage(imageAdd);
+		//addVar.setText("Add");
+		addVar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				TableItem item = new TableItem (tableAppNodeConfig, SWT.NONE);
+				item.setText (0, "VariableName");
+				item.setText (1, "value");
+			}
+		});
+		
+		Button removeVar = new Button(buttonComp, SWT.PUSH);
+		Image imageRemove = new Image(buttonComp.getDisplay(),  getClass().getClassLoader().getResourceAsStream("icons/remove_16_16.png"));
+		removeVar.setImage(imageRemove);
+		//removeVar.setText("Remove");
+		removeVar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				tableAppNodeConfig.remove(tableAppNodeConfig.getSelectionIndices());
+				for(Control ctrl : tableAppNodeConfig.getChildren())
+					if(ctrl.getClass() == Text.class)
+						ctrl.dispose();
+				tableAppNodeConfig.redraw();
+			}
+		});
+		
+		Label restartAppNodeLabel = new Label(container, SWT.NONE);
+		restartAppNodeLabel.setText("Restart AppNode");
+		restartAppNode = new Button(container, SWT.CHECK);
+		restartAppNode.setSelection(info.isRestartAppNode());
+
+	}
+	
 	private void addAgentInfo() {
 		Label agentLabel = new Label(container, SWT.NONE);
 		agentLabel.setText("Agent Host");
 		agentHost = new Text(container, SWT.BORDER | SWT.SINGLE);
 		agentHost.setText(info.getAgentHost());
-		GridData agentData = new GridData(150, 15);
+		GridData agentData = new GridData(150, textHeight);
 		agentHost.setLayoutData(agentData);
 
 		Label agentPortLabel = new Label(container, SWT.NONE);
 		agentPortLabel.setText("Agent Port");
 		agentPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		agentPort.setText(info.getAgentPort());
-		agentPort.setLayoutData(agentData);
+		agentPort.setLayoutData(new GridData(100, textHeight));
 
 		Label agentAuthLabel = new Label(container, SWT.NONE);
 		agentAuthLabel.setText("Agent Authentication");
@@ -288,7 +458,7 @@ public class WizardPageEnterprise extends WizardPage {
 		agentAuth.add(BASIC_AUTH);
 		agentAuth.add(DIGEST_AUTH);
 		agentAuth.setText(info.getAgentAuth());
-		GridData agentAuthData = new GridData(135, 15);
+		GridData agentAuthData = new GridData(135, textHeight);
 		agentAuthData.horizontalSpan = 3;
 		agentAuth.setLayoutData(agentAuthData);
 
@@ -332,15 +502,17 @@ public class WizardPageEnterprise extends WizardPage {
 		agentSslLabel.setText("SSL Connection");
 		agentSSL = new Button(container, SWT.CHECK);
 		agentSSL.setSelection(info.isAgentSSL());
-		GridData sslData = new GridData(150, 15);
+		GridData sslData = new GridData(200, textHeight);
 		sslData.horizontalSpan = 3;
 		agentSSL.setLayoutData(sslData);
 
+		GridData storeData = new GridData(200, textHeight);
+		
 		Label trustPathLabel = new Label(container, SWT.NONE);
 		trustPathLabel.setText("Truststore Path");
 		trustPath = new Text(container, SWT.BORDER | SWT.SINGLE);
 		trustPath.setText(info.getTrustPath());
-		trustPath.setLayoutData(agentData);
+		trustPath.setLayoutData(storeData);
 
 		Label trustPassLabel = new Label(container, SWT.NONE);
 		trustPassLabel.setText("Truststore Password");
@@ -352,7 +524,7 @@ public class WizardPageEnterprise extends WizardPage {
 		keyPathLabel.setText("Keystore Path");
 		keyPath = new Text(container, SWT.BORDER | SWT.SINGLE);
 		keyPath.setText(info.getKeyPath());
-		keyPath.setLayoutData(agentData);
+		keyPath.setLayoutData(storeData);
 
 		Label keyPassLabel = new Label(container, SWT.NONE);
 		keyPassLabel.setText("Keystore Password");
@@ -406,7 +578,7 @@ public class WizardPageEnterprise extends WizardPage {
 			domain.setText(appModule.getArtifactId() + "-Domain");	
 		}
 
-		GridData domainData = new GridData(150, 15);
+		GridData domainData = new GridData(200, textHeight);
 		domain.setLayoutData(domainData);
 
 		Label domainDescLabel = new Label(container, SWT.NONE);
@@ -414,7 +586,7 @@ public class WizardPageEnterprise extends WizardPage {
 
 		domainDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		domainDesc.setText(info.getDomainDesc());
-		GridData domainDescData = new GridData(300, 15);
+		GridData domainDescData = new GridData(300, textHeight);
 		domainDesc.setLayoutData(domainDescData);
 	}
 
@@ -429,7 +601,7 @@ public class WizardPageEnterprise extends WizardPage {
 			appspace.setText(appModule.getArtifactId() + "-AppSpace");	
 		}
 
-		GridData appspaceData = new GridData(150, 15);
+		GridData appspaceData = new GridData(200, textHeight);
 		appspace.setLayoutData(appspaceData);
 
 		Label appspaceDescLabel = new Label(container, SWT.NONE);
@@ -437,7 +609,7 @@ public class WizardPageEnterprise extends WizardPage {
 
 		appspaceDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appspaceDesc.setText(info.getAppspaceDesc());
-		GridData appspaceDescData = new GridData(300, 15);
+		GridData appspaceDescData = new GridData(300, textHeight);
 		appspaceDesc.setLayoutData(appspaceDescData);
 	}
 
@@ -452,7 +624,7 @@ public class WizardPageEnterprise extends WizardPage {
 			appNode.setText(appModule.getArtifactId() + "-AppNode");	
 		}
 
-		GridData appNodeData = new GridData(150, 15);
+		GridData appNodeData = new GridData(200, textHeight);
 		appNode.setLayoutData(appNodeData);
 
 		Label appnodeDescLabel = new Label(container, SWT.NONE);
@@ -460,7 +632,7 @@ public class WizardPageEnterprise extends WizardPage {
 
 		appNodeDesc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		appNodeDesc.setText(info.getAppNodeDesc());
-		GridData appnodeDescData = new GridData(300, 15);
+		GridData appnodeDescData = new GridData(300, textHeight);
 		appNodeDesc.setLayoutData(appnodeDescData);
 
 		Label httpLabel = new Label(container, SWT.NONE);
@@ -468,14 +640,14 @@ public class WizardPageEnterprise extends WizardPage {
 
 		httpPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		httpPort.setText(info.getHttpPort());
-		httpPort.setLayoutData(appNodeData);
+		httpPort.setLayoutData(new GridData(100, textHeight));
 
 		Label osgiPortLabel = new Label(container, SWT.NONE);
 		osgiPortLabel.setText("OSGI Port");
 
 		osgiPort = new Text(container, SWT.BORDER | SWT.SINGLE);
 		osgiPort.setText(info.getOsgiPort());
-		osgiPort.setLayoutData(appNodeData);
+		osgiPort.setLayoutData(new GridData(100, textHeight));
 	}
 
 	private void addProfile() {
@@ -493,8 +665,8 @@ public class WizardPageEnterprise extends WizardPage {
 			profile.select(index);	
 		}
 
-		GridData profileData = new GridData(135, 15);
-		profileData.horizontalSpan = 3;
+		GridData profileData = new GridData(135, textHeight);
+		profileData.horizontalSpan = 1;
 		profile.setLayoutData(profileData);
 		profile.addSelectionListener(new SelectionListener() {
 			
@@ -529,35 +701,42 @@ public class WizardPageEnterprise extends WizardPage {
 		externalProfileLocLabel.setText("External Profile Location");
 		externalProfileLoc = new Text(container, SWT.BORDER | SWT.SINGLE);
 		externalProfileLoc.setText(info.getexternalProfileLoc());
-		GridData externalProfileLocData = new GridData(150, 15);
+		GridData externalProfileLocData = new GridData(300, textHeight);
 		externalProfileLoc.setLayoutData(externalProfileLocData);
 		externalProfileLoc.setEnabled(false);
 
 	}
 
 	private void addRedeployBox() {
+		
+		Label domainLabel = new Label(container, SWT.NONE);
+		domainLabel.setText("Redeploy the Application if exists");
+		domainLabel.setToolTipText("Redeploy the Application if exists.");
+
+		GridData deployData = new GridData(250, 25);
+		deployData.horizontalSpan = 1;
+		domainLabel.setLayoutData(deployData);
+		
 		redeploy = new Button(container, SWT.CHECK);
 		redeploy.setSelection(info.isRedeploy());
 		redeploy.setToolTipText("If this is checked, then the Application will be redeployed if exists.");
-
-		Label domainLabel = new Label(container, SWT.NONE);
-		domainLabel.setText("Re Deploy the Application if exists.");
-		domainLabel.setToolTipText("Re Deploy the Application if exists.");
-
-		GridData deployData = new GridData(350, 25);
-		deployData.horizontalSpan = 1;
-
-		domainLabel.setLayoutData(deployData);
+		GridData redeployData = new GridData();
+		redeployData.horizontalSpan = 3;
+		redeploy.setLayoutData(redeployData);
+		
+		
 	}
 
 	private void addBackupEarBox() {
+		Label backupLabel = new Label(container, SWT.NONE);
+		backupLabel.setText("Backup Application EAR if exists");
+		backupLabel.setToolTipText("Backup Application EAR if exists.");
+		
 		backup = new Button(container, SWT.CHECK);
 		backup.setSelection(info.isBackup());
 		backup.setToolTipText("If this is checked, then the Application EAR will be backed up if exists.");
-		Label backupLabel = new Label(container, SWT.NONE);
-		backupLabel.setText("Backup Application EAR if exists.");
-		backupLabel.setToolTipText("Backup Application EAR if exists.");
-		GridData backupData = new GridData(350, 25);
+		
+		GridData backupData = new GridData(250, 25);
 		backupData.horizontalAlignment = GridData.BEGINNING;
 		backupData.horizontalSpan = 0;
 		backupLabel.setLayoutData(backupData);
@@ -566,8 +745,8 @@ public class WizardPageEnterprise extends WizardPage {
 		backupLocLabel.setText("Backup Location");
 		backupLocation = new Text(container, SWT.BORDER | SWT.SINGLE);
 		backupLocation.setText(info.getBackupLocation());
-		GridData backupLocationData = new GridData(150, 15);
-		backupLocationData.horizontalAlignment = GridData.FILL;
+		GridData backupLocationData = new GridData(300, textHeight);
+		//backupLocationData.horizontalAlignment = GridData.FILL;
 
 		backupLocation.setLayoutData(backupLocationData);
 		backupLocation.setEnabled(false);
@@ -640,5 +819,21 @@ public class WizardPageEnterprise extends WizardPage {
 	public boolean canFlipToNextPage() 
 	{
 		return false;
+	}
+	
+	@Override
+	public void performHelp() {
+		// TODO Auto-generated method stub
+		super.performHelp();
+		
+		try {
+			PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL("https://github.com/TIBCOSoftware/bw6-plugin-maven/wiki"));
+		} catch (PartInitException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

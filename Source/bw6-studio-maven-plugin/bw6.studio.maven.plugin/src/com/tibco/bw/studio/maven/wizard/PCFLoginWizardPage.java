@@ -34,6 +34,7 @@ public class PCFLoginWizardPage extends WizardPage {
 	private Text space;
 	private Text username;
 	private Text password;
+	private int textHeight = 18;
 
 	protected PCFLoginWizardPage(String pageName, BWProject project) {
 		super(pageName);
@@ -62,7 +63,7 @@ public class PCFLoginWizardPage extends WizardPage {
 
 		target = new Text(container, SWT.BORDER | SWT.SINGLE);
 		target.setText(appmodule.getBwpcfModule().getTarget());
-		GridData targetData = new GridData(150, 15);
+		GridData targetData = new GridData(200, textHeight);
 		target.setLayoutData(targetData);
 		target.setEditable(false);
 
@@ -71,7 +72,7 @@ public class PCFLoginWizardPage extends WizardPage {
 
 		username = new Text(container, SWT.BORDER | SWT.SINGLE);
 		username.setText(MavenProjectPreferenceHelper.INSTANCE.getDefaultPCF_Username(MavenPropertiesFileDefaults.INSTANCE.getDefaultPCF_Username("admin")));
-		GridData usernameData = new GridData(150, 15);
+		GridData usernameData = new GridData(200, textHeight);
 		username.setLayoutData(usernameData);
 
 		Label pswdLabel = new Label(container, SWT.RIGHT);
@@ -79,7 +80,7 @@ public class PCFLoginWizardPage extends WizardPage {
 
 		password = new Text(container, SWT.BORDER | SWT.PASSWORD);
 		password.setText("");
-		GridData pswdData = new GridData(150, 15);
+		GridData pswdData = new GridData(200, textHeight);
 		password.setLayoutData(pswdData);
 
 		Label orgLabel = new Label(container, SWT.NONE);
@@ -87,7 +88,7 @@ public class PCFLoginWizardPage extends WizardPage {
 
 		org = new Text(container, SWT.BORDER | SWT.SINGLE);
 		org.setText(appmodule.getBwpcfModule().getOrg());
-		GridData orgData = new GridData(150, 15);
+		GridData orgData = new GridData(200, textHeight);
 		org.setLayoutData(orgData);
 		org.setEditable(false);
 
@@ -96,7 +97,7 @@ public class PCFLoginWizardPage extends WizardPage {
 
 		space = new Text(container, SWT.BORDER | SWT.SINGLE);
 		space.setText(appmodule.getBwpcfModule().getSpace());
-		GridData spaceData = new GridData(150, 15);
+		GridData spaceData = new GridData(200, textHeight);
 		space.setLayoutData(spaceData);
 		space.setEditable(false);
 

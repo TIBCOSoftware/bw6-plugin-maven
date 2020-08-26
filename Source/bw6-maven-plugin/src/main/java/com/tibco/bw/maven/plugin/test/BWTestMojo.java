@@ -44,14 +44,17 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "engineDebugPort" , defaultValue = "8090" )
     private int engineDebugPort;
     
-    @Parameter( property = "showFailureDetails" , defaultValue = "false" )
+    @Parameter( property = "showFailureDetails" , defaultValue = "true" )
     private boolean showFailureDetails;
     
     @Parameter( property = "testSuiteName" , defaultValue = "" )
     private String testSuiteName;
     
+    @Parameter( property = "engineStartupWaitTime" , defaultValue = "2" )
+    private int engineStartupWaitTime;
     
-    
+    @Parameter( property = "osgiCommands" )
+    private List<String> osgiCommands;
     
     public void execute() throws MojoExecutionException , MojoFailureException
     {
@@ -164,6 +167,7 @@ public class BWTestMojo extends AbstractMojo {
     private boolean checkForTest()
     {
     	List<MavenProject> projects = session.getProjects();
+    	
     	for( MavenProject project : projects )
 		{
 			if( project.getPackaging().equals("bwmodule") )
@@ -194,6 +198,10 @@ public class BWTestMojo extends AbstractMojo {
 		TestFileParser.INSTANCE.setshowFailureDetails(showFailureDetails);
 		
 		BWTestExecutor.INSTANCE.setEngineDebugPort(engineDebugPort);
+		
+		BWTestExecutor.INSTANCE.setEngineStartupWaitTime(engineStartupWaitTime);
+		
+		BWTestExecutor.INSTANCE.setOsgiCommands(osgiCommands);
 		
     	BWTestConfig.INSTANCE.reset();
     	

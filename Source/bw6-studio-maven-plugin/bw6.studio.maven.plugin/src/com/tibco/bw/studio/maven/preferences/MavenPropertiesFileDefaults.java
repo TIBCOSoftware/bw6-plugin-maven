@@ -23,6 +23,7 @@ public class MavenPropertiesFileDefaults {
 	public static final String MavenDefaultsPreferencePage_defaultdocker_Maintainer_value = "tibco.preference.bw.MavenDefaults.docker.Maintainer.value";
 	public static final String MavenDefaultsPreferencePage_defaultdocker_AppName_value = "tibco.preference.bw.MavenDefaults.docker.AppName.value";
 	public static final String MavenDefaultsPreferencePage_defaultdocker_Ports_value = "tibco.preference.bw.MavenDefaults.docker.Ports.value";
+	public static final String MavenDefaultsPreferencePage_defaultdocker_EnvVars_value = "tibco.preference.bw.MavenDefaults.docker.EnvVars.value";
 	public static final String MavenDefaultsPreferencePage_defaultKubernetes_DeploymentName_value = "tibco.preference.bw.MavenDefaults.Kubernetes.DeploymentName.value";
 	public static final String MavenDefaultsPreferencePage_defaultKubernetes_NoOfReplicas_value = "tibco.preference.bw.MavenDefaults.Kubernetes.NoOfReplicas.value";
 	public static final String MavenDefaultsPreferencePage_defaultKubernetes_ServiceName_value = "tibco.preference.bw.MavenDefaults.Kubernetes.ServiceName.value";
@@ -156,6 +157,18 @@ public class MavenPropertiesFileDefaults {
 
 	public void setDefaultPCF_EnvVars(String EnvVars) {
 		setPreference(MavenDefaultsPreferencePage_defaultPCF_EnvVars_value, EnvVars);
+	}
+	
+	public String getDefaultDocker_EnvVars(String defaultValue) {
+		String value = getStringPreference(MavenDefaultsPreferencePage_defaultdocker_EnvVars_value );
+		if (value == null || value.equals("")) { // $NON-NLS-1$
+			value = defaultValue;
+		}
+		return value;
+	}
+
+	public void setDefaultDocker_EnvVars(String EnvVars) {
+		setPreference(MavenDefaultsPreferencePage_defaultdocker_EnvVars_value, EnvVars);
 	}
 	
 	public String getDefaultPCF_Username(String defaultValue) {

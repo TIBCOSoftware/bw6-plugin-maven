@@ -2,6 +2,7 @@ package com.tibco.bw.studio.maven.plugin;
 
 import java.lang.reflect.Field;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.m2e.core.embedder.IMavenConfiguration;
@@ -24,6 +25,8 @@ public class Activator extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.tibco.bw.studio.maven.plugin"; 
 
+	private static BundleContext bundleContext = null;
+	
 	// The shared instance
 	private static Activator plugin;
 	
@@ -59,6 +62,7 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
+		bundleContext = context; 
 		plugin = this;
 	}
 
@@ -99,6 +103,20 @@ public class Activator extends AbstractUIPlugin {
 	public static void logException( String message , int level , Throwable t)
 	{
 		getDefault().getLog().log(new Status( level , Activator.PLUGIN_ID, message , t ));
+	}
+	
+	public static BundleContext getBundleContext(){
+		return bundleContext;
+	}
+	
+	public static String getBundleVersion() {
+		String version = Activator.getDefault().getBundle().getVersion().toString();
+		String[] versionStr = version.split("\\.");
+		if(versionStr.length >= 3)
+			version = versionStr[0]+"."+versionStr[1]+"."+versionStr[2];
+		Activator.log("Maven Plugin bundle version -> "+ version, IStatus.INFO);
+		return version;
+		
 	}
 
 

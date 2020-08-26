@@ -29,7 +29,7 @@ public class Application {
 
 
     public enum ApplicationRuntimeStates {
-        Running, Stopped, Impaired, FlowControlled, Paused, StartFailed, AppError, DeployFailed, Unreachable, Deploying, Stopping, Degraded
+        Running, Stopped, Impaired, FlowControlled, Paused, StartFailed, AppError, DeployFailed, Unreachable, Deploying, Stopping, Degraded, Starting
     }
 
 

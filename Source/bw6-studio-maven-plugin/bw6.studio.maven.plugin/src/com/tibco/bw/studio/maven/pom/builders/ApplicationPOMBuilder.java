@@ -20,6 +20,7 @@ import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWTestInfo;
+import com.tibco.bw.studio.maven.plugin.Activator;
 import com.tibco.bw.studio.maven.wizard.BWProjectTypes;
 import com.tibco.bw.studio.maven.wizard.MavenWizardContext;
 
@@ -110,6 +111,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.getProperties().remove("profile");
 			model.getProperties().remove("externalProfile");
 			model.getProperties().remove("externalProfileLoc");
+			model.getProperties().remove("appNodeConfig");
+			model.getProperties().remove("restartAppNode");
 			return;
 		}
 
@@ -241,6 +244,23 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		model.addProperty("externalProfileLoc", info.getexternalProfileLoc());
 		properties.put("externalProfileLoc", info.getexternalProfileLoc());
 		
+		//appnodeConfig
+		Xpp3Dom appNodeConfig  = new Xpp3Dom("appNodeConfig");
+		
+		for(String key : info.getAppNodeConfig().keySet()){
+			Xpp3Dom nodeConfig  = new Xpp3Dom(key);
+			nodeConfig.setValue("${appNodeConfig_"+key+"_value}");
+			model.addProperty("appNodeConfig_"+key+"_value", info.getAppNodeConfig().get(key));
+			properties.put("appNodeConfig_"+key+"_value", info.getAppNodeConfig().get(key));
+			appNodeConfig.addChild(nodeConfig);
+		}
+		
+		Xpp3Dom restartAppNode  = new Xpp3Dom("restartAppNode");
+		restartAppNode.setValue("${restartAppNode}");
+		model.addProperty("restartAppNode", Boolean.toString(info.isRestartAppNode()));
+		properties.put("restartAppNode", Boolean.toString(info.isRestartAppNode()));
+		
+		
 		config.addChild(deployToAdmin);
 		config.addChild(agentHost);
 		config.addChild(agentPort);
@@ -266,6 +286,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		config.addChild(profile);
 		config.addChild(externalProfile);
 		config.addChild(externalProfileLoc);
+		config.addChild(appNodeConfig);
+		config.addChild(restartAppNode);
 
 		plugin.setConfiguration(config);
 
@@ -304,6 +326,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			reporting.setPlugins( new ArrayList<ReportPlugin>());
 		}
 		
+		String version = Activator.getBundleVersion();
+		
 		boolean isReporting = false;
 		for( ReportPlugin plugin : plugins )
 		{
@@ -311,7 +335,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			{
 				isReporting = true;
 				//Update the existing version of reporting plugin with Latest one
-				plugin.setVersion("2.7.0");
+				plugin.setVersion(version);
 				break;
 			}
 		}
@@ -321,7 +345,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			ReportPlugin p = new ReportPlugin();
 			p.setGroupId("com.tibco.plugins");
 			p.setArtifactId("bw6-maven-plugin");
-			p.setVersion("2.7.0");
+			p.setVersion(version);
 			reporting.getPlugins().add(p);
 		}
 		

@@ -36,6 +36,7 @@ public class SharedModulePOMActionHandler extends AbstractHandler{
 			project = builder.buildSMProject(selectedProject);
 			MavenWizard wizard = new MavenWizard(project);
 			MavenWizardDialog dialog = new MavenWizardDialog(ProjectHelper.getActiveShell(), wizard);
+			dialog.setMinimumPageSize(500, 300);
 			if(dialog.open() == Window.OK){
 				project = wizard.getProject();
 				generatePOMs();

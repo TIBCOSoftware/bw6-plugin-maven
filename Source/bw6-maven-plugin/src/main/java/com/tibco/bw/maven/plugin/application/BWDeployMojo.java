@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
@@ -103,9 +104,25 @@ public class BWDeployMojo extends AbstractMojo {
 	@Parameter(property = "externalProfileLoc")
 	private String externalProfileLoc;
 
-	@Parameter(property = "version")
-	private String version;
-
+	/*@Parameter(property = "version")
+	private String version;*/
+	
+	@Parameter(property = "appNodeConfig")
+	protected Map appNodeConfig;
+	
+	@Parameter(property = "restartAppNode")
+	private boolean restartAppNode;
+	
+	@Parameter(property="retryCount", defaultValue = "10")
+	private int retryCount;
+	
+	@Parameter(property="connectTimeout", defaultValue = "120000")
+	private int connectTimeout;
+	
+	@Parameter(property="readTimeout", defaultValue = "120000")
+	private int readTimeout;
+	
+	
 	private String earName;
 	private String earLoc;
 
@@ -119,11 +136,28 @@ public class BWDeployMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		try {
 			getLog().info("BW Deployer Mojo started");
-			File[] files = BWFileUtils.getFilesForType(earLocation, ".ear");
-			if (files.length == 0) {
-				throw new Exception("EAR file not found for the Application");
+			if(earLocation == null){
+				getLog().debug("Invalid EAR location.");
+				throw new Exception("Invalid EAR location");
 			}
-			BWEarUtils.extractEARFile(earLocation, files[0]);
+			File earFile = null;
+			if(earLocation.isDirectory())
+			{
+				File[] files = BWFileUtils.getFilesForType(earLocation, ".ear");
+				if (files == null || files.length == 0) {
+					throw new Exception("EAR file not found for the Application at earLocation - "+ earLocation.getPath());
+				}
+				getLog().debug("Found EAR file - "+ files[0].getName());
+				earFile = files[0];
+			} else if(earLocation.isFile() && earLocation.getName().contains(".ear")){
+				earFile = earLocation;
+				earLocation = earFile.getParentFile();
+			} else {
+				getLog().debug("Invalid EAR location - " + earLocation);
+				throw new Exception("Invalid EAR location - " + earLocation);
+			}
+			getLog().debug("EarLocation : " + earLocation.getPath() + ", EarFile : "+ earFile.getName());
+			BWEarUtils.extractEARFile(earLocation, earFile);
 			Manifest manifest = ManifestParser.parseManifest(earLocation);
 			String bwEdition = manifest.getMainAttributes().getValue(
 					Constants.TIBCO_BW_EDITION);
@@ -140,14 +174,14 @@ public class BWDeployMojo extends AbstractMojo {
 				getLog().error("Validation failed. Skipping EAR Deployment.");
 				return;
 			}
-			deriveEARInformation(files[0]);
+			deriveEARInformation(earFile);
 			applicationName = manifest.getMainAttributes().getValue(
 					Constants.BUNDLE_SYMBOLIC_NAME);
 
 			RemoteDeployer deployer = new RemoteDeployer(agentHost,
 					Integer.parseInt(agentPort), agentAuth, agentUsername,
 					agentPassword, agentSSL, trustPath, trustPassword, keyPath,
-					keyPassword,createAdminCompo);
+					keyPassword,createAdminCompo, connectTimeout, readTimeout, retryCount);
 			deployer.setLog(getLog());
 
 			List<Agent> agents = deployer.getAgentInfo();
@@ -162,9 +196,17 @@ public class BWDeployMojo extends AbstractMojo {
 				getLog().info("Agent Name -> " + agentName);
 			}
 
+			String[] versionNum = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION).split("\\.");
+			String version = null;
+			if(versionNum.length > 2)
+        		version =  versionNum[0]+"."+versionNum[1];
+			else 
+				throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
+			
 			deployer.getOrCreateDomain(domain, domainDesc);
 			AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain,
 					appSpace, appSpaceDesc);
+			
 			deployer.getOrCreateAppNode(
 					domain,
 					appSpace,
@@ -172,6 +214,14 @@ public class BWDeployMojo extends AbstractMojo {
 					Integer.parseInt(httpPort),
 					osgiPort == null || osgiPort.isEmpty() ? -1 : Integer
 							.parseInt(osgiPort), appNodeDesc, agentName);
+			
+			//Set AppNode config
+			if(!appNodeConfig.isEmpty())
+			{
+				getLog().debug("Input AppNode Config -> "+ appNodeConfig);
+				deployer.setAppNodeConfig(domain,appSpace,appNode,appNodeConfig, restartAppNode);
+			}
+			
 			if (appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
 				deployer.startAppSpace(domain, appSpace);
 			} else {
@@ -180,11 +230,11 @@ public class BWDeployMojo extends AbstractMojo {
 			getLog().info(
 					"domain -> " + domain + " earName -> " + earName
 							+ " Ear file to be uploaded -> "
-							+ files[0].getAbsolutePath());
+							+ earFile.getAbsolutePath());
 			deployer.addAndDeployApplication(domain, appSpace, applicationName,
-					earName, files[0].getAbsolutePath(), redeploy, profile,
+					earName, earFile.getAbsolutePath(), redeploy, profile,
 					backup, backupLocation, version, externalProfile,
-					externalProfileLoc);
+					externalProfileLoc, appNode);
 			deployer.close();
 			deployer.close();
 			BWEarUtils.deleteEARFileEntries(earLocation);
@@ -194,6 +244,7 @@ public class BWDeployMojo extends AbstractMojo {
 					"Failed to deploy BW Application ", e);
 		}
 	}
+
 
 	public void deriveEARInformation(File file) {
 		earLoc = file.getAbsolutePath();

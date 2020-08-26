@@ -47,11 +47,14 @@ public class ConfigFileGenerator
 				if (project.getPackaging().equals("bwmodule") || project.getPackaging().equals("bwear")) {
 
 					Set<Artifact> artifacts = project.getDependencyArtifacts();
+					if(artifacts != null)
+					{
 					for(Artifact artifact:artifacts) {
 						if(!"provided".equals(artifact.getScope()) || !(artifact.getFile().getName().indexOf("com.tibco.bw.palette.shared") != -1)) {
 							builder.append( "," );
 							addReference(builder, artifact.getFile(), artifact.getArtifactId());
 						}
+					}
 					}
 				}
 			}

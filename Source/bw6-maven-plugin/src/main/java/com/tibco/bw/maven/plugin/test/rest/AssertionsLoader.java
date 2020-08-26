@@ -30,14 +30,14 @@ public class AssertionsLoader
 	public TestSuiteDTO loadAssertions() throws Exception
 	{
 		List<File> files = getAssertionsFromProject();
-		Map<String, List<File>> testSuiteMap = BWTestConfig.INSTANCE.getTestSuiteMap();
+		Map<String, List<File>> testSuiteMap = BWTestConfig.INSTANCE.getTestSuiteMap(this.project);
 		TestSuiteDTO suite = new TestSuiteDTO();
 		List testCaseList = new ArrayList();
 		BWTestConfig.INSTANCE.getLogger().info("");
-		BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs End---------------------------------------------------------------------------------------------------------------------------------------------------");
-		
+		BWTestConfig.INSTANCE.getLogger().info("-----------------BW Engine Logs End--------------------");
+
 		if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
-			for (String suiteName : BWTestConfig.INSTANCE.getTestSuiteNameList()){
+			for (String suiteName : BWTestConfig.INSTANCE.getTestSuiteNameList(this.project)){
 				BWTestConfig.INSTANCE.getLogger().info("");
 				BWTestConfig.INSTANCE.getLogger().info(" ## Running Test Suite "+ suiteName + " ##");
 				for( File file : testSuiteMap.get(suiteName) ){
@@ -68,7 +68,7 @@ public class AssertionsLoader
 	
 	private List<File> getAssertionsFromProject()
 	{
-			return BWTestConfig.INSTANCE.getTestCasesList();
+			return BWTestConfig.INSTANCE.getTestCasesList(this.project);
 	
 	}
 	

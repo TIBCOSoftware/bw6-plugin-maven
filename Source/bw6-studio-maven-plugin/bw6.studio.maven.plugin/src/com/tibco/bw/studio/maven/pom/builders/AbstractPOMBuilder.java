@@ -34,6 +34,7 @@ import com.tibco.bw.studio.maven.modules.model.BWModuleType;
 import com.tibco.bw.studio.maven.modules.model.BWPCFServicesModule;
 import com.tibco.bw.studio.maven.modules.model.BWParent;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
+import com.tibco.bw.studio.maven.plugin.Activator;
 import com.tibco.bw.studio.maven.wizard.MavenWizardContext;
 
 public abstract class AbstractPOMBuilder {
@@ -108,7 +109,8 @@ public abstract class AbstractPOMBuilder {
 		}
 		plugin.setGroupId("com.tibco.plugins");
 		plugin.setArtifactId("bw6-maven-plugin");
-		plugin.setVersion("2.7.0");
+		String version = Activator.getBundleVersion();
+		plugin.setVersion(version);
 		plugin.setExtensions("true");
 		addDeploymentDetails(plugin);
 	}

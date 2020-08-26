@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
+import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -27,9 +28,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.Version;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
@@ -73,6 +76,10 @@ public class BWTestRunner
 			ClientConfig clientConfig = new ClientConfig();
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			
+			if(BWTestConfig.INSTANCE.getLogger().isDebugEnabled()){
+				Logger logger = Logger.getLogger(getClass().getName());
+				clientConfig.register(new LoggingFilter(logger, true));
+			}
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
 		this.r = this.jerseyClient.target(UriBuilder.fromPath(CONTEXT_ROOT).scheme(this.scheme).host(this.host).port(this.port).build());
@@ -82,6 +89,10 @@ public class BWTestRunner
 	
 	public void runTests() throws MojoFailureException, Exception
 	{
+		init();
+		
+		r.path("tests").path("enabledebug").request().get();
+		
 		List<MavenProject> projects = BWTestConfig.INSTANCE.getSession().getProjects();
 		
 		CompleteReportDTO result = new CompleteReportDTO();
@@ -112,9 +123,6 @@ public class BWTestRunner
 	{
 			AssertionsLoader loader = new AssertionsLoader( project);
 			TestSuiteDTO suite = loader.loadAssertions();
-			
-			init();
-			
 
 			BWTestConfig.INSTANCE.getLogger().info( "Starting Tests in Module : " + project.getArtifactId() );			
 			
@@ -122,21 +130,20 @@ public class BWTestRunner
 			
 			suite.setModuleInfo(minfo);
 
-
 	        printTestStats(suite);
-	        
-	        r.path("tests").path("enabledebug").request().get();
 
-			
+	        /*String response = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , String.class);
+	        BWTestConfig.INSTANCE.getLogger().info(response);*/
+	        
 			TestSuiteResultDTO resultDTO = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , TestSuiteResultDTO.class);
 			if( null != resultDTO ){
-				int failures = printTestResults(resultDTO, suite);
+				int failures = printTestResults(resultDTO, suite, project);
 				result.getModuleResult().add(resultDTO);
 				
 				return failures;
 			}
 			else{
-				throw new MojoFailureException("An Exception occurred");
+				throw new MojoFailureException("An Exception occurred while running test. Please enable BW debug logs to know more.");
 			}
 		
 
@@ -213,7 +220,7 @@ public class BWTestRunner
 		
 	}
 	
-	private int printTestResults( TestSuiteResultDTO result, TestSuiteDTO suite ) throws MojoFailureException
+	private int printTestResults( TestSuiteResultDTO result, TestSuiteDTO suite, MavenProject project ) throws MojoFailureException
 	{
 		StringBuilder builder = new StringBuilder();
 		int totaltests = 0;
@@ -224,8 +231,7 @@ public class BWTestRunner
 		TestCaseResultDTO testcase = null;
 		
 		if (null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()) {
-			Map<String, List<File>> testSuiteMap = BWTestConfig.INSTANCE
-					.getTestSuiteMap();
+			Map<String, List<File>> testSuiteMap = BWTestConfig.INSTANCE.getTestSuiteMap(project);
 			finalResult = printTestSuiteWiseResult(result, testSuiteMap);
 			return finalResult;
 		}
@@ -388,10 +394,10 @@ public class BWTestRunner
 			String inputValue = assertion.getActivityOutput();
 				if(assertion.getAssertionMode().equals("Primitive")){
 					inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
-					if(inputValue.contains(assertion.getStartElementNameTag())){
+					if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
 						inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
 					}
-					inputValue = assertion.getStartElementNameTag().concat(inputValue).concat(assertion.getEndElementNameTag());
+					inputValue = assertion.getStartElementNameTag().concat(inputValue!= null ? inputValue : "").concat(assertion.getEndElementNameTag());
 					assertion.setActivityOutput(inputValue);
 				}
 				else{

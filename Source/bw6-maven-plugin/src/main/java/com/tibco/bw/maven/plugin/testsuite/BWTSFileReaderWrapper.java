@@ -9,13 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.project.MavenProject;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 
 public class BWTSFileReaderWrapper {
 	
 	
-	public List<File>	readBWTSFile(List<String> testSuiteList , String TestFolderPath) throws IOException{
+	public List<File>	readBWTSFile(List<String> testSuiteList , String TestFolderPath, MavenProject project) throws IOException{
 		List<File> returnList = new ArrayList<>();
 		List<File> tempReturnList ;
 		HashMap<String,List<File>> testSuiteMap = new HashMap<String,List<File>>();
@@ -37,7 +38,7 @@ public class BWTSFileReaderWrapper {
 				testSuiteMap.put(testSuite, tempReturnList);
 			}
 			
-			BWTestConfig.INSTANCE.setTestSuiteMap(testSuiteMap);
+			BWTestConfig.INSTANCE.setTestSuiteMap(project, testSuiteMap);
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw e;

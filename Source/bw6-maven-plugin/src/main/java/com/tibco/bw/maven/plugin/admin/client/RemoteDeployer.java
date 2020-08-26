@@ -5,10 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
@@ -27,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.Boundary;
@@ -61,9 +64,13 @@ public class RemoteDeployer {
 	private final String keyPath;
 	private final String keyPassword;
 	private final boolean createAdminCompo;
+	private final int connectTimeout;
+	private final int readTimeout;
+	private final int retryCount;
 	private Log log;
+	private int SLEEP_INTERVAL = 10000;
 
-	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo) {
+	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo, final int connectTimeout, final int readTimeout, final int retryCount) {
 		this.host = host;
 		this.port = port;
 		this.agentAuth = agentAuthType;
@@ -75,11 +82,16 @@ public class RemoteDeployer {
 		this.keyPath = keyFilePath;
 		this.keyPassword = keyPassword;
 		this.createAdminCompo = createAdminCompo;
+		this.connectTimeout = connectTimeout;
+		this.readTimeout = readTimeout;
+		this.retryCount = retryCount;
 	}
 
 	private void init() {
 		if (this.jerseyClient == null) {
 			ClientConfig clientConfig = new ClientConfig();
+			clientConfig = clientConfig.property(ClientProperties.CONNECT_TIMEOUT, connectTimeout);
+			clientConfig = clientConfig.property(ClientProperties.READ_TIMEOUT, readTimeout);
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
 			// Configuration for SSL enabled BWAgent
 			if(agentSSL) {
@@ -195,21 +207,54 @@ public class RemoteDeployer {
 		}
 	}
 
+	private boolean isValidURL(String url){
+	  try { 
+	       new URL(url).toURI(); 
+	       return true; 
+	  } catch (Exception e) { 
+	       return false; 
+	  } 
+	}
+	
 	private AppSpace setProfile(final String domainName, final String appSpaceName, final String version,final String appName,final String externalProfileLoc) throws ClientException {
 		init();
+		log.info("Setting external profile for AppName -> "+ appName + ", Version -> "+ version + ", External profile location -> "+ externalProfileLoc);
+		File profilefile = null;
+		boolean fromURL = false;
 		try {
-			final FileDataBodyPart filePart = new FileDataBodyPart("file", new File(externalProfileLoc));
+			if(externalProfileLoc.contains("http") && isValidURL(externalProfileLoc)){
+				log.debug("Profile file is from external URL, creating temporary local file - "+ Constants.TEMP_SUBSTVAR);
+				profilefile = new File(Constants.TEMP_SUBSTVAR);
+				FileUtils.copyURLToFile(new URL(externalProfileLoc), profilefile);
+				fromURL = true;
+			} else {
+				profilefile = new File(externalProfileLoc);
+				if(!profilefile.exists()){
+					throw new Exception("External profile file not found - "+ externalProfileLoc);
+				}
+			}
+			final FileDataBodyPart filePart = new FileDataBodyPart("file", profilefile);
 			FormDataMultiPart formDataMultiPart  = new FormDataMultiPart();
 		    final FormDataMultiPart multipart = (FormDataMultiPart) formDataMultiPart.bodyPart(filePart);
 			  MediaType contentType = formDataMultiPart .getMediaType();
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("config").path("externalprofile").request().put(Entity.entity(multipart , contentType));
 			processErrorResponse(response);
 			AppSpace appSpace = response.readEntity(AppSpace.class);
+			
+			if(fromURL){
+				profilefile.delete();
+				log.debug("Removed temporary file - "+ Constants.TEMP_SUBSTVAR);
+			}
+			
 			return appSpace;
 			
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {
+			if(fromURL && profilefile != null){
+				profilefile.delete();
+				log.debug("Removed temporary file - "+ Constants.TEMP_SUBSTVAR);
+			}
 			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}
@@ -245,7 +290,7 @@ public class RemoteDeployer {
 		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);
 	}
 
-	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc) throws ClientException {
+	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc, final String appNodeName) throws ClientException, InterruptedException {
 		List<Application> applications = getApplications(domainName, appSpaceName, null, true);
 		for(Application application : applications) {
 			if(application.getName().equals(appName)) {
@@ -271,7 +316,15 @@ public class RemoteDeployer {
 		deployApplication(domainName, appSpaceName, earName, null, true, replace, profile,externalProfile);
 		if(externalProfile){
 			setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
-			}
+			/*Thread.sleep(SLEEP_INTERVAL);
+			log.info("Stopping Application -> "+ appName);
+			stopApplication(domainName,appSpaceName,appName,version,appNodeName);
+			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Stopped);*/
+			log.info("Starting Application -> "+ appName);
+			startApplication(domainName,appSpaceName,appName,version,appNodeName);
+		}
+		Thread.sleep(SLEEP_INTERVAL);
+		checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
 	}
 
 	private List<AppSpace> getAppSpaces(final String domainName, final String filter, final boolean full, final boolean status) throws ClientException {
@@ -314,7 +367,29 @@ public class RemoteDeployer {
 		log.info("Starting AppSpace with name -> " + appSpaceName + " in Domain -> " + domainName);
 		try {
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
-			processErrorResponse(response);
+			//retry and check appspace status if appspace is not running.
+			if (!Family.SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+				boolean isRunning = false;
+				int count = 0;
+				log.debug("Retry Count ->"+ retryCount);
+				while(!isRunning && count < retryCount ){
+					Response resp = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).queryParam("status","true").queryParam("full","false").request(MediaType.APPLICATION_JSON_TYPE).get();
+					processErrorResponse(resp);
+					AppSpace appSpace = resp.readEntity(AppSpace.class);
+					log.info("AppSpace -> "+ appSpaceName + ", Status -> "+ appSpace.getStatus());
+					if(appSpace.getStatus().equals(AppSpace.AppSpaceRuntimeStatus.Running))
+					{
+						isRunning = true;
+						break;
+					}
+					count++;
+					Thread.sleep(SLEEP_INTERVAL);
+				}
+				if(!isRunning){
+					processErrorResponse(response);
+				}
+			}
+			
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {
@@ -393,12 +468,14 @@ public class RemoteDeployer {
 		try {
 			r = r.queryParam("archivename", archiveName);
 			addQueryParam("path", path);
-			r = r.queryParam("startondeploy", String.valueOf(startOnDeploy)).queryParam("replace", String.valueOf(replace));
+			
 			if(externalProfile){
+				r = r.queryParam("startondeploy", "false").queryParam("replace", String.valueOf(replace));
 				addQueryParam("profile", "default.substvar");
 			}
 			else{
-			addQueryParam("profile", profile);
+				r = r.queryParam("startondeploy", String.valueOf(startOnDeploy)).queryParam("replace", String.valueOf(replace));
+				addQueryParam("profile", profile);
 			}
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
@@ -427,7 +504,6 @@ public class RemoteDeployer {
 		}
 	}
 
-	@SuppressWarnings("unused")
 	private void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
 		init();
 		try {
@@ -438,6 +514,37 @@ public class RemoteDeployer {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {
 			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+	
+	private void stopApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
+		init();
+		try {
+			addQueryParam("appnode", appNodeName);
+			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("stop").request(MediaType.APPLICATION_JSON_TYPE).post(null);
+			processErrorResponse(response);
+		} catch (ProcessingException pe) {
+			throw getConnectionException(pe);
+		} catch (Exception ex) {
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+	
+	private void checkApplicationState(final String domainName, final String appSpaceName, final String appName, final String version, final Application.ApplicationRuntimeStates state) throws ClientException, InterruptedException{
+		int count = 0;
+		boolean isState= false;
+		log.debug("Retry Count ->"+ retryCount);
+		while(!isState && count < retryCount ){
+			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).request(MediaType.APPLICATION_JSON_TYPE).get();
+			processErrorResponse(response);
+			Application app = response.readEntity(Application.class);
+			log.info("AppName -> "+ appName + ", State -> "+ app.getState());
+			if(app.getState().equals(state)){
+				isState = true;
+				return;
+			}
+			count++;
+			Thread.sleep(SLEEP_INTERVAL);
 		}
 	}
 
@@ -579,4 +686,37 @@ public class RemoteDeployer {
 			r = r.queryParam(name, value);
 		}
 	}
+
+	public void setAppNodeConfig(String domain, String appSpace,
+			String appNode, Map<String,String> appNodeConfig, boolean restartAppNode) throws Exception {
+		init();
+		try {
+			//update config
+			log.info("Updating AppNode Config ("+ appNode+") -> "+ appNodeConfig);
+			Response responseUpdate = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/config").request(MediaType.APPLICATION_JSON_TYPE).put(Entity.entity(appNodeConfig, MediaType.APPLICATION_JSON));
+			processErrorResponse(responseUpdate);
+			
+			//restart appnode
+			if(restartAppNode)
+			{
+				//stop appnode
+				log.info("Stopping AppNode ("+ appNode+")");
+				Response responseStop = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/stop").request(MediaType.APPLICATION_JSON_TYPE).post(null);
+				processErrorResponse(responseStop);
+				
+				//start appnode
+				log.info("Starting AppNode ("+ appNode+")");
+				Response responseStart = r.path("/domains").path(domain).path("appspaces").path(appSpace).path("appnodes").path(appNode).path("/start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
+				processErrorResponse(responseStart);
+				
+			} else {
+				log.info("Restart AppNode flag is false. The AppNode state will be Out-of-sync.");
+			}
+		} catch (ProcessingException pe) {
+			throw getConnectionException(pe);
+		} catch (Exception ex) {
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+	
 }

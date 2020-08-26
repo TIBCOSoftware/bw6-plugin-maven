@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Manifest;
 import java.nio.file.Files;
@@ -114,8 +115,8 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="externalProfileLoc")
 	private String externalProfileLoc;
 	
-	@Parameter(property="version")
-	private String version;
+	/*@Parameter(property="version")
+	private String version;*/
 	
 	@Parameter(property="backupLocation")
 	private String backupLocation;
@@ -128,6 +129,21 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	
 	@Parameter(property = "createAdminCompo" , defaultValue = "true" )
 	private boolean createAdminCompo;
+	
+	@Parameter(property = "appNodeConfig")
+	protected Map appNodeConfig;
+	
+	@Parameter(property="restartAppNode")
+	private boolean restartAppNode;
+	
+	@Parameter(property="retryCount", defaultValue = "10")
+	private int retryCount;
+	
+	@Parameter(property="connectTimeout", defaultValue = "120000")
+	private int connectTimeout;
+	
+	@Parameter(property="readTimeout", defaultValue = "120000")
+	private int readTimeout;
 
 	private String earLoc;
 	private String earName;
@@ -172,7 +188,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			
     		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 
-    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo);
+    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo, connectTimeout, readTimeout, retryCount);
     		deployer.setLog(getLog());
 
     		List<Agent> agents = deployer.getAgentInfo();
@@ -186,17 +202,30 @@ public class BWEARInstallerMojo extends AbstractMojo {
         		agentName = agent.getName();
         		getLog().info("Agent Name -> " + agentName);
         	}
-        	version=manifest.getMainAttributes().getValue("Manifest-Version");
+        	String[] versionNum = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION).split("\\.");
+			String version = null;
+			if(versionNum.length > 2)
+        		version =  versionNum[0]+"."+versionNum[1];
+			else 
+				throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue("Bundle-Version"));
+			
     		deployer.getOrCreateDomain(domain, domainDesc);
     		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
     		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
-    		if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
+    		if(!appNodeConfig.isEmpty())
+			{
+	    		//Set AppNode config
+				getLog().debug("Input AppNode Config : "+ appNodeConfig);
+				deployer.setAppNodeConfig(domain,appSpace,appNode,appNodeConfig, restartAppNode);
+			}
+    		
+			if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
     			deployer.startAppSpace(domain, appSpace);
     		} else {
     			getLog().info("AppSpace is Running.");
     		}
     		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc);
+    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc, appNode);
     		deployer.close();
     	} catch(Exception e) {
     		getLog().error(e);

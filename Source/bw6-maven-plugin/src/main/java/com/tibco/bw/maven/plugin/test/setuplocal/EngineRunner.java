@@ -1,6 +1,8 @@
 package com.tibco.bw.maven.plugin.test.setuplocal;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -8,19 +10,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 
 public class EngineRunner 
-{     
+{   
+	private int engineStartupWaitTime = 2;
+	private List<String> osgiCommands= new ArrayList<String>();
 	CountDownLatch latch = new CountDownLatch(1);
-	AtomicBoolean isEngineStarted = new AtomicBoolean(true);
-
+	AtomicBoolean isEngineStarted = new AtomicBoolean(false);
+	AtomicBoolean isImpaired = new AtomicBoolean(false);
+	
+	public EngineRunner(int engineStartupWaitTime, List<String> osgiCommands){
+		this.engineStartupWaitTime = engineStartupWaitTime;
+		this.osgiCommands = osgiCommands;
+	}
+	
 	public void run() throws Exception
 	{
 		Process process = null;
-	
+		
 		ProcessBuilder builder = new ProcessBuilder( BWTestConfig.INSTANCE.getLaunchConfig());
         process = builder.start();
         
         BWTestConfig.INSTANCE.getLogger().info("## Starting BW Engine in Test Mode ##");
-        BWTestConfig.INSTANCE.getLogger().info("----BW Engine Logs Start------------------------------------------------");
+        BWTestConfig.INSTANCE.getLogger().info("----------------------BW Engine Logs Start------------------------------");
         BWTestConfig.INSTANCE.getLogger().info("" );
         BWTestConfig.INSTANCE.setEngineProcess(process);
 
@@ -32,27 +42,35 @@ public class EngineRunner
 		inputThread.start();
 		errorThread.start();
 
-		latch.await(5, TimeUnit.MINUTES); //if the node don't starts in 5 minutes ... for sure somethings is wrong
+		BWTestConfig.INSTANCE.getLogger().debug("Engine Startup wait time -> "+ this.engineStartupWaitTime + " mins");
+		BWTestConfig.INSTANCE.getLogger().debug("OSGi Commands -> "+ this.osgiCommands);
+		latch.await(this.engineStartupWaitTime, TimeUnit.MINUTES);
+		
+		OSGICommandExecutor cmdExecutor = new OSGICommandExecutor();
+		
+		for(String command : osgiCommands)
+		{
+			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+			BWTestConfig.INSTANCE.getLogger().info("## Executing OSGi command ("+ command +") ##");
+			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+			
+			cmdExecutor.executeCommand(command);
+		}
+		
+		if(isImpaired.get() && !isEngineStarted.get()){
+			String command = "la";
+			if(osgiCommands.isEmpty())	//execute la command if no command is specified and app is impaired
+			{
+				BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+				BWTestConfig.INSTANCE.getLogger().info("## Executing OSGi command ("+ command +") ##");
+				BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
+				
+				cmdExecutor.executeCommand(command);
+			}
+		}
 		
 		if(!isEngineStarted.get()){
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-			// use OSGi Console to issue commands in order to see the state of server
-			writer.newLine();
-			Thread.currentThread().sleep(1000);
-			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
-			BWTestConfig.INSTANCE.getLogger().info("## Issue OSGi Console commands to print BWApp state ##");
-			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
-
-			writer.write("la"); //Print information about all applications.
-			writer.newLine();
-			writer.flush();
-
-			Thread.currentThread().sleep(5000); //wait for prev commands output
-			BWTestConfig.INSTANCE.getLogger().info("------------------------------------------------------------------------");
-
-			writer.close();
-
-			throw new EngineProcessException("BW Engine not started successfully.Please see logs for more details");
+			throw new EngineProcessException("Failed to start BW Engine. Please see logs for more details");
 		}
 		
         BWTestConfig.INSTANCE.getLogger().info( "## BW Engine Successfully Started ##");
@@ -94,15 +112,15 @@ public class EngineRunner
 			        while((line = br.readLine()) != null) {
 						BWTestConfig.INSTANCE.getLogger().info(line);
 						//TIBCO-THOR-FRWK-300006: Started BW Application
-						if( line.contains( "TIBCO-THOR-FRWK-300006") )
+						if( line.contains( "TIBCO-THOR-FRWK-300006") && line.contains( "Started BW Application") )
 						{
+							isEngineStarted.set(true);
 							latch.countDown();
 						}
 						//TIBCO-THOR-FRWK-300019: BW Application is impaired
-						if( line.contains( "TIBCO-THOR-FRWK-300019") )
+						if( line.contains( "TIBCO-THOR-FRWK-300019") && line.contains("impaired"))
 						{
-							isEngineStarted.set(false);
-							latch.countDown();
+							isImpaired.set(true);
 						}
 			        }
 			        if(latch.getCount()>0){

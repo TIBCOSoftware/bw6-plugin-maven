@@ -103,7 +103,7 @@ public class BWEARTestPackagerMojo extends AbstractMojo {
     	    archiveConfiguration = new MavenArchiveConfiguration();
     	    moduleVersionMap = new HashMap<String, String>();
             manifest = ManifestParser.parseManifest(projectBasedir);
-            ManifestWriter.updateManifestVersion(project, manifest);
+            ManifestWriter.updateManifestVersion(project, manifest, Constants.TIMESTAMP);
             getLog().info("Updated the Manifest version ");
             updateManifestVersion();
     	    getLog().info("Adding Modules to the EAR file");
@@ -556,7 +556,7 @@ public class BWEARTestPackagerMojo extends AbstractMojo {
      */
     private void updateManifestVersion() {
     	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-    	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version);
+    	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version, Constants.TIMESTAMP);
     	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
     	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
     }

@@ -22,9 +22,9 @@ public class BWTestConfig
 	
 	private List<String> launchConfig;
 	
-	private List<File> testCasesList;
+	private Map<MavenProject,List<File>> testCasesList = new HashMap<>();
 	
-	private Map<String,List<File>> testSuiteMap;
+	private Map<MavenProject,Map<String,List<File>>> testSuiteMap = new HashMap<>();
 
 	private String tibcoHome;
 	
@@ -40,7 +40,9 @@ public class BWTestConfig
 	
 	public HashMap<String,String> testCaseWithProcessNameMap = new HashMap<>(); 
 	
-	public List<String> testSuiteNameList = new ArrayList<String>();
+	public Map<MavenProject,List<String>> testSuiteNameList = new HashMap<>();
+	
+	Map<String,Boolean> userTestSuiteNames = new HashMap<String,Boolean>();
 	
 	private BWTestConfig()
 	{
@@ -163,20 +165,20 @@ public class BWTestConfig
 		this.testSuiteName = testSuiteName;
 	}
 
-	public List<File> getTestCasesList() {
-		return testCasesList;
+	public List<File> getTestCasesList(MavenProject project) {
+		return testCasesList.get(project);
 	}
 
-	public void setTestCasesList(List<File> testCasesList) {
-		this.testCasesList = testCasesList;
+	public void setTestCasesList(MavenProject project, List<File> testCasesList) {
+		this.testCasesList.put(project, testCasesList);
 	}
 
-	public Map<String, List<File>> getTestSuiteMap() {
-		return testSuiteMap;
+	public Map<String, List<File>> getTestSuiteMap(MavenProject project) {
+		return testSuiteMap.get(project);
 	}
 
-	public void setTestSuiteMap(Map<String, List<File>> testSuiteMap) {
-		this.testSuiteMap = testSuiteMap;
+	public void setTestSuiteMap(MavenProject project, Map<String, List<File>> testSuiteMap) {
+		this.testSuiteMap.put(project, testSuiteMap);
 	}
 
 	public HashMap<String, String> getTestCaseWithProcessNameMap() {
@@ -188,12 +190,20 @@ public class BWTestConfig
 		this.testCaseWithProcessNameMap = testCaseWithProcessNameMap;
 	}
 	
-	public List<String> getTestSuiteNameList() {
-		return testSuiteNameList;
+	public List<String> getTestSuiteNameList(MavenProject project) {
+		return testSuiteNameList.get(project);
 	}
 
-	public void setTestSuiteNameList(List<String> testSuiteNameList) {
-		this.testSuiteNameList = testSuiteNameList;
+	public void setTestSuiteNameList(MavenProject project, List<String> testSuiteNameList) {
+		this.testSuiteNameList.put(project, testSuiteNameList);
+	}
+
+	public Map<String, Boolean> getUserTestSuiteNames() {
+		return userTestSuiteNames;
+	}
+
+	public void setUserTestSuiteNames(Map<String, Boolean> userTestSuiteNames) {
+		this.userTestSuiteNames = userTestSuiteNames;
 	}
 	
 }
