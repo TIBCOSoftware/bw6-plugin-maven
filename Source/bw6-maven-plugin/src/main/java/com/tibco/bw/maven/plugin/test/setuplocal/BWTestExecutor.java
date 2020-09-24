@@ -30,6 +30,8 @@ public class BWTestExecutor
 	int engineDebugPort;
 	int engineStartupWaitTime;
 	List<String> osgiCommands;
+	boolean skipInitMainProcessActivities;
+	boolean skipInitAllNonTestProcessActivities;
 	
 
 	List<String> mockActivity = new ArrayList<String>();
@@ -140,8 +142,8 @@ public class BWTestExecutor
 					}
 				}
 			}
-
 		}
+		
 		//throw error if test suite not found in any module
 		if(BWTestConfig.INSTANCE.getUserTestSuiteNames().containsValue(false))
 		{
@@ -208,5 +210,25 @@ public class BWTestExecutor
 	public void setOsgiCommands(List<String> osgiCommands) {
 		this.osgiCommands = osgiCommands;
 	}
+
+	public boolean isSkipInitMainProcessActivities() {
+		return skipInitMainProcessActivities;
+	}
+
+	public void setSkipInitMainProcessActivities(
+			boolean skipInitMainProcessActivities) {
+		this.skipInitMainProcessActivities = skipInitMainProcessActivities;
+	}
+
+	public boolean isSkipInitAllNonTestProcessActivities() {
+		return skipInitAllNonTestProcessActivities;
+	}
+
+	public void setSkipInitAllNonTestProcessActivities(
+			boolean skipInitAllNonTestProcessActivities) {
+		this.skipInitAllNonTestProcessActivities = skipInitAllNonTestProcessActivities;
+	}
+	
+	
 	
 }

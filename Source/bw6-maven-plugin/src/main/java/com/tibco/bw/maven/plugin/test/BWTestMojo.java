@@ -56,6 +56,12 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "osgiCommands" )
     private List<String> osgiCommands;
     
+    @Parameter( property = "skipInitMainProcessActivities" , defaultValue = "false" )
+    private boolean skipInitMainProcessActivities;
+    
+    @Parameter( property = "skipInitAllNonTestProcessActivities" , defaultValue = "false" )
+    private boolean skipInitAllNonTestProcessActivities;
+    
     public void execute() throws MojoExecutionException , MojoFailureException
     {
     	
@@ -202,6 +208,10 @@ public class BWTestMojo extends AbstractMojo {
 		BWTestExecutor.INSTANCE.setEngineStartupWaitTime(engineStartupWaitTime);
 		
 		BWTestExecutor.INSTANCE.setOsgiCommands(osgiCommands);
+		
+		BWTestExecutor.INSTANCE.setSkipInitMainProcessActivities(skipInitMainProcessActivities);
+		
+		BWTestExecutor.INSTANCE.setSkipInitAllNonTestProcessActivities(skipInitAllNonTestProcessActivities);
 		
     	BWTestConfig.INSTANCE.reset();
     	
