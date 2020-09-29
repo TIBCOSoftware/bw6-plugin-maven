@@ -32,6 +32,9 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	
 	@Parameter( property = "commandName" , defaultValue = "" )
     private String commandName;
+	
+	@Parameter( property = "arguments" , defaultValue = "" )
+    private String arguments;
     
 	private Log logger = getLog();
 	
@@ -74,6 +77,9 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 				{
 					importWorkspace();
 					generateProcessDiagram();
+				} else if(null != commandName && commandName.trim().length() > 0) {
+					importWorkspace();
+					executeCommand();
 				}
 				else {
 					importWorkspace();
@@ -84,6 +90,35 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	}catch(MojoFailureException e){
 		throw e;
 	}
+	}
+	
+	private void executeCommand() throws MojoExecutionException {
+		List<String> params = new ArrayList<>();
+		params = createUtilityArgument(params);
+		params.add(commandName);
+		if(arguments != null && !arguments.isEmpty())
+			params.add(arguments);
+		
+		try {
+			ProcessBuilder builder = new ProcessBuilder( params);
+	        builder.directory( new File( executorHome ) );
+			// redirect error stream to /dev/null
+			if(BWProjectUtils.OS.WINDOWS.equals(BWProjectUtils.getOS())) {
+				builder.redirectError(new File("NUL"));
+			} else {
+				builder.redirectError(new File("/dev/null"));
+			}
+			final Process process = builder.start();
+	        logger.info("--------------------- Executing BWDesign Utility Command : "+ commandName +" -----------------------");
+			logger.debug("Launching bwdesign utility with params: " + params);
+
+			printProcessOutput(process);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new MojoExecutionException( e.getMessage(), e);
+		}
+
 	}
 	
 	private void generateProcessDiagram() throws MojoExecutionException {
@@ -205,7 +240,8 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 
 		reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		while ((line = reader.readLine()) != null) {
-			System.err.println(line);
+			//System.err.println(line);
+			logger.info(line);
 		}
 
 		reader.close();
