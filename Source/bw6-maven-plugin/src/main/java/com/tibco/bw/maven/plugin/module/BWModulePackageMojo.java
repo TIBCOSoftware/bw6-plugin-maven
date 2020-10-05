@@ -153,10 +153,12 @@ public class BWModulePackageMojo extends AbstractMojo {
             throw new MojoExecutionException("Error assembling JAR", e);
         } catch (DependencyResolutionRequiredException e) {
             throw new MojoExecutionException("Error assembling JAR", e);
-        }
+        } catch (Exception e) {
+        	throw new MojoExecutionException("Error assembling JAR", e);
+		}
     }
 
-	private void addDependencies() {
+	private void addDependencies() throws Exception {
 		getLog().debug("Adding Maven dependencies to the JAR file");
 		Set<Artifact> artifacts = project.getDependencyArtifacts();
 		HashMap<File,String> artifactFiles = new HashMap<File,String>(); 
@@ -188,6 +190,9 @@ public class BWModulePackageMojo extends AbstractMojo {
 			
 			boolean isSharedModule = false;
 			Manifest mf = ManifestParser.parseManifestFromJAR( file);
+			if(mf == null){
+				throw new Exception("Failed to get Manifest for - "+ file.getName() +". Please verify if jar file is valid, the MANIFEST.MF should be first or second entry in the jar file. Use Command - jar tf <Jar_File_Path> to verify.");
+			}
 			for( Object str : mf.getMainAttributes().keySet())
 			{
 				getLog().debug( str.toString() );

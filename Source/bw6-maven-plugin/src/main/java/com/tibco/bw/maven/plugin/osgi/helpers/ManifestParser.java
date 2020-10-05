@@ -42,7 +42,6 @@ public class ManifestParser {
 			JarInputStream jarStream = new JarInputStream( new FileInputStream( jarFile ));
 			moduleManifest = jarStream.getManifest();
 			jarStream.close();
-			
 		}
 		catch( Exception e )
 		{
