@@ -115,6 +115,9 @@ public class EngineLaunchConfigurator
 					{
 						list.add(currentLine);
 						list.add( "file:" + file.toString());
+					} else {
+						list.add(currentLine);
+						list.add( "file:" + BWTestConfig.INSTANCE.getConfigDir().toString().replace("\\", "/") + "/dev.properties");
 					}
 					continue;
 

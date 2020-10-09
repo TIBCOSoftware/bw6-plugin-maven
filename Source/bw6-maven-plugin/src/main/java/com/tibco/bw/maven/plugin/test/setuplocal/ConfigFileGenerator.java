@@ -41,6 +41,8 @@ public class ConfigFileGenerator
 				addPluginsFromDir(target, builder);
 			}
 			
+			List<String> cxfProjects = new ArrayList<String>();
+			
 			List<MavenProject> projects =  BWTestConfig.INSTANCE.getSession().getProjects();
 
 			for( MavenProject project : projects ) {
@@ -49,12 +51,19 @@ public class ConfigFileGenerator
 					Set<Artifact> artifacts = project.getDependencyArtifacts();
 					if(artifacts != null)
 					{
-					for(Artifact artifact:artifacts) {
-						if(!"provided".equals(artifact.getScope()) || !(artifact.getFile().getName().indexOf("com.tibco.bw.palette.shared") != -1)) {
-							builder.append( "," );
-							addReference(builder, artifact.getFile(), artifact.getArtifactId());
+						boolean isCXF = false;
+						for(Artifact artifact:artifacts) {
+							if(!"provided".equals(artifact.getScope()) && !(artifact.getFile().getName().contains("com.tibco.bw.palette.shared")) && !(artifact.getFile().getName().contains("com.tibco.xml.cxf.common"))) {
+								builder.append( "," );
+								addReference(builder, artifact.getFile(), artifact.getArtifactId());
+							}
+							if(artifact.getFile().getName().contains("com.tibco.xml.cxf.common")){
+								isCXF = true;
+							}
 						}
-					}
+						if(isCXF){
+							cxfProjects.add(project.getName());
+						}
 					}
 				}
 			}
@@ -81,6 +90,8 @@ public class ConfigFileGenerator
 			properties.store(stream, "Configuration File"); 
 			stream.flush();
 			stream.close();
+		
+			generateDevPropertiesFile(cxfProjects);
 		}
 		
 		catch(Exception e )
@@ -89,6 +100,33 @@ public class ConfigFileGenerator
 		}
 
 	} 
+	
+	private void generateDevPropertiesFile(List<String> cxfProjects) throws IOException{
+		File devProps = new File( BWTestConfig.INSTANCE.getConfigDir() , "dev.properties");
+		devProps.createNewFile();
+		
+		Properties properties = new Properties();
+		for(String cxfProject : cxfProjects)
+		{
+			properties.put(cxfProject,"bin,target/classes");
+			 BWTestConfig.INSTANCE.getLogger().debug("Adding CXF project to dev.properties -> "+ cxfProject);
+		}
+		
+		/*properties.put("com.tibco.bx.core","bin,src/restbt-types.jar");
+		properties.put("com.tibco.bw.core.runtime","bin");
+		properties.put("@ignoredot@","true");
+		properties.put("bw6.studio.maven.plugin","lib/commons-io-2.4.jar,lib/maven-model-3.0.5.jar,lib/plexus-utils-3.0.10.jar,bin");
+		properties.put("com.tibco.bw.core.design.emulation.model","bin");
+		properties.put("com.tibco.bw.core.runtime.bw.tests","bin");
+		properties.put("com.tibco.bw.core.design.unittest.ui","bin");
+		properties.put("com.tibco.bw.core.design.unittest","bin");*/
+		
+		FileOutputStream stream = new FileOutputStream(devProps);
+		properties.store(stream, "dev properties"); 
+		stream.flush();
+		stream.close();
+
+	}
 	
 	
 	private void addPluginsFromDir( File target , StringBuilder builder )
