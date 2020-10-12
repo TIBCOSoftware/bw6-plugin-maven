@@ -127,7 +127,7 @@ public class BWTestMojo extends AbstractMojo {
 		if( tibcoHome == null || tibcoHome.isEmpty() || bwHome == null || bwHome.isEmpty() )
 		{
 			getLog().info( "-------------------------------------------------------" );
-			getLog().info( "Tibco Home or BW Home is not provided. Skipping Test Phase.");
+			getLog().info( "TIBCO Home or BW Home is not provided. Skipping Test Phase.");
 			getLog().info( "-------------------------------------------------------" );
 
 			return false;
@@ -137,7 +137,7 @@ public class BWTestMojo extends AbstractMojo {
 		if( !file.exists() || !file.isDirectory()  )
 		{
 			getLog().info( "-------------------------------------------------------" );
-			getLog().info( "Provided TibcoHome directory is invalid. Skipping Test Phase.");
+			getLog().info( "Provided TibcoHome directory - "+ (tibcoHome + bwHome) +" is invalid. Skipping Test Phase.");
 			getLog().info( "-------------------------------------------------------" );
 	
 			return false;
