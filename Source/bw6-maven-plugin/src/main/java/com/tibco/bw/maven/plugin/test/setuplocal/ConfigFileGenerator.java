@@ -12,12 +12,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Properties;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.project.MavenProject;
 
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 
 public class ConfigFileGenerator 
@@ -41,7 +44,7 @@ public class ConfigFileGenerator
 				addPluginsFromDir(target, builder);
 			}
 			
-			List<String> cxfProjects = new ArrayList<String>();
+			List<MavenProject> cxfProjects = new ArrayList<MavenProject>();
 			
 			List<MavenProject> projects =  BWTestConfig.INSTANCE.getSession().getProjects();
 
@@ -62,7 +65,7 @@ public class ConfigFileGenerator
 							}
 						}
 						if(isCXF){
-							cxfProjects.add(project.getName());
+							cxfProjects.add(project);
 						}
 					}
 				}
@@ -101,16 +104,27 @@ public class ConfigFileGenerator
 
 	} 
 	
-	private void generateDevPropertiesFile(List<String> cxfProjects) throws IOException{
+	private void generateDevPropertiesFile(List<MavenProject> cxfProjects) throws IOException, DependencyResolutionRequiredException{
 		File devProps = new File( BWTestConfig.INSTANCE.getConfigDir() , "dev.properties");
 		devProps.createNewFile();
 		
 		Properties properties = new Properties();
 		properties.put("@ignoredot@","true");
-		for(String cxfProject : cxfProjects)
+		for(MavenProject cxfProject : cxfProjects)
 		{
-			properties.put(cxfProject,"bin,target/classes");
-			BWTestConfig.INSTANCE.getLogger().debug("Adding CXF project to dev.properties -> "+ cxfProject);
+			//find classpath
+			Manifest projectManifest = ManifestParser.parseManifest( cxfProject.getBasedir() );
+			String bundleClassPath = projectManifest.getMainAttributes().getValue("Bundle-ClassPath");
+			BWTestConfig.INSTANCE.getLogger().debug("Bundle-Classpath for project "+ cxfProject.getName() +" -> "+bundleClassPath);
+			String pathEntries[] = bundleClassPath.split(",");
+			String pathString = "";
+			for(String path : pathEntries){
+				if(!path.equals("."))
+					pathString += "," + path;
+			}
+			pathString = "bin,target/classes" + pathString;
+			properties.put(cxfProject.getName(), pathString);
+			BWTestConfig.INSTANCE.getLogger().debug("Adding CXF project entry to dev.properties -> "+ cxfProject.getName()+ "="+ pathString);
 		}
 		
 		FileOutputStream stream = new FileOutputStream(devProps);
