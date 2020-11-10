@@ -20,13 +20,16 @@ public class ManifestParser {
             is = new FileInputStream(mfile);
             mf = new Manifest(is);
         } catch(FileNotFoundException f) {
+        	f.printStackTrace();
         } catch(IOException e) {
+        	e.printStackTrace();
         } finally {
             try {
             	if(is != null) {
             		is.close();	
             	}
 			} catch(IOException e) {
+				e.printStackTrace();
 			}
         }
         return mf;

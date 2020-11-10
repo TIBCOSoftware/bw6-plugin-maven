@@ -95,7 +95,9 @@ public class BWModulePackageMojo extends AbstractMojo {
             archiver.setArchiver(jarArchiver);
 
             manifest = ManifestParser.parseManifest(projectBasedir);
-
+            if(manifest == null){
+            	throw new Exception("Failed to parse MANIFEST.MF for project -> "+ projectBasedir);
+            }
             getLog().info("Updated the Manifest version ");
             
             ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement);
