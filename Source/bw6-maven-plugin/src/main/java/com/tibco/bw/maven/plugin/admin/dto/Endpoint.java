@@ -8,6 +8,7 @@
 
 package com.tibco.bw.maven.plugin.admin.dto;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -22,7 +23,7 @@ public class Endpoint {
     private String              name;
     private String              url;
     private String              reverseProxyUrl;
-    private Map<String, String> properties;
+    private List<Map<String, String>> properties;
     private String              type;
 
     public Endpoint() {
@@ -65,7 +66,7 @@ public class Endpoint {
      * @return the properties
      */
     @XmlElement
-    public Map<String, String> getProperties() {
+    public List<Map<String, String>> getProperties() {
         return this.properties;
     }
 
@@ -73,7 +74,7 @@ public class Endpoint {
      * @param properties
      *            the properties to set
      */
-    public void setProperties(final Map<String, String> properties) {
+    public void setProperties(final List<Map<String, String>> properties) {
         this.properties = properties;
     }
 

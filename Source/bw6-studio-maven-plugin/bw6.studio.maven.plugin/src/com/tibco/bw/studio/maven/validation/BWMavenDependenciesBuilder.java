@@ -15,6 +15,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
@@ -22,18 +23,28 @@ import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.embedder.IMavenConfiguration;
 import org.eclipse.m2e.core.internal.embedder.MavenImpl;
 import org.eclipse.m2e.core.internal.preferences.MavenConfigurationImpl;
+import org.eclipse.m2e.core.project.IProjectConfigurationManager;
+import org.eclipse.m2e.core.project.ResolverConfiguration;
 import org.eclipse.pde.internal.core.PDECore;
 
 import com.tibco.bw.design.api.BWAbstractBuilder;
@@ -100,6 +111,9 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 					}
 				}
 			}
+			/*if(isCXF(jarFile)){
+				createCXFProjectFromDependency(dependency, jarFile);
+			}*/
 		}
 
 		//3. Add new modules to project dependencies section
@@ -228,8 +242,30 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 		}
 		return false;
 	}
-
-	protected BWExternalDependencyRecord createProjectFromDependency(Dependency dependency, File jarFile){
+	
+	private boolean isCXF(File file){
+		
+		if(file != null){
+			try {
+				JarFile jarFile = new JarFile(file);
+				Manifest manifest = jarFile.getManifest();
+				if(manifest != null){	
+					Attributes attr = manifest.getMainAttributes();
+					String value = attr.getValue("Import-Package");
+					jarFile.close();
+					if(value != null && value.contains("com.tibco.xml.cxf.common.annotations")){
+						return true;
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		return false;
+	}
+	
+	/*protected BWExternalDependencyRecord createCXFProjectFromDependency(Dependency dependency, File jarFile){
 		if(jarFile == null || dependency == null){
 			return null;
 		}
@@ -245,6 +281,68 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 			pathStr = pathStr.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
 			try {
 				URI zipURI = new URI(BWMavenConstants.EXTERNAL_SM_URI_SCHEME + pathStr);
+				BWExternalDependencyRecord handler = new BWExternalDependencyRecord(projectName, dependencyId, dependencyVersion, zipURI);
+				
+				//import code starts here
+				IProgressMonitor monitor = new NullProgressMonitor();
+				Artifact pomArtifact = maven.resolve(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), "jar"  type , dependency.getClassifier()  classifier , maven.getArtifactRepositories(), monitor);
+
+				ResolverConfiguration resolverConfig = new ResolverConfiguration();
+				//resolverConfig.setLifecycleMappingId(LIFECYCLE_MAPPING_ID);
+
+				IPath stateLocation = Platform.getStateLocation(Activator.getDefault().getBundle());
+
+				IPath projectLocation = stateLocation.append(projectName);
+				projectLocation.toFile().mkdirs();
+				projectLocation.toFile().setReadOnly();
+
+				File pomFile = new File(projectLocation.toFile(), "pom.xml");
+
+				try {
+				      FileUtils.copyFile(pomArtifact.getFile(), pomFile);
+				} catch (IOException e) {
+				      e.printStackTrace();
+				}
+
+				IWorkspace workspace = ResourcesPlugin.getWorkspace();
+				IWorkspaceRoot root = workspace.getRoot();
+
+				IProject project = root.getProject(projectName);
+
+				IProjectDescription description = workspace.newProjectDescription(projectName);
+				description.setLocation(projectLocation);
+				project.create(description, monitor);
+				project.open(monitor);
+				project.setPersistentProperty(PDECore.EXTERNAL_PROJECT_PROPERTY, PDECore.BINARY_PROJECT_VALUE);
+
+				
+				IProjectConfigurationManager configManager = MavenPlugin.getProjectConfigurationManager();
+				configManager.enableMavenNature(project, resolverConfig, monitor);
+				
+				return handler;
+			} catch (URISyntaxException | CoreException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+*/
+	protected BWExternalDependencyRecord createProjectFromDependency(Dependency dependency, File jarFile){
+		if(jarFile == null || dependency == null){
+			return null;
+		}
+
+		String projectName = getProjectName(jarFile);
+		String dependencyId = dependency.getGroupId() + "." + dependency.getArtifactId();
+		String dependencyVersion = dependency.getVersion();
+
+		String pathStr = jarFile.getAbsolutePath();
+		Path jarPath = new Path(pathStr);
+
+		if("jar".equalsIgnoreCase(jarPath.getFileExtension())){	
+			pathStr = pathStr.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
+			try {
+				URI zipURI = new URI(BWMavenConstants.EXTERNAL_SM_URI_SCHEME + pathStr);			
 				BWExternalDependencyRecord handler = new BWExternalDependencyRecord(projectName, dependencyId, dependencyVersion, zipURI);
 				handler.setESMPropertValue(PLUGIN_PROPERTY_VALUE_MAVEN_ESM);
 				handler = BWExternalDependenciesHelper.INSTANCE.createExternalProjectDependency(handler);
@@ -268,7 +366,10 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 					String value = attr.getValue(BWMavenConstants.HEADER_BUNDLE_NAME);
 					jarFile.close();
 					if(value != null ){
-						projectName = value;
+						if(value.contains(";"))
+							projectName = value.substring(0,value.indexOf(";"));
+						else	
+							projectName = value;
 					}
 				}
 			} catch (IOException e) {
