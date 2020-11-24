@@ -3,11 +3,14 @@ package com.tibco.bw.maven.plugin.application;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -112,6 +115,9 @@ public class BWDeployMojo extends AbstractMojo {
 	
 	@Parameter(property = "restartAppNode")
 	private boolean restartAppNode;
+	
+	@Parameter(property = "earUploadPath")
+	private String earUploadPath;
 	
 	@Parameter(property="retryCount", defaultValue = "10")
 	private int retryCount;
@@ -234,7 +240,7 @@ public class BWDeployMojo extends AbstractMojo {
 			deployer.addAndDeployApplication(domain, appSpace, applicationName,
 					earName, earFile.getAbsolutePath(), redeploy, profile,
 					backup, backupLocation, version, externalProfile,
-					externalProfileLoc, appNode);
+					externalProfileLoc, appNode, earUploadPath);
 			deployer.close();
 			deployer.close();
 			BWEarUtils.deleteEARFileEntries(earLocation);
@@ -258,18 +264,41 @@ public class BWDeployMojo extends AbstractMojo {
 			return false;
 		}
 		String deploymentFile = deploymentConfigfile;
-		File file = new File(deploymentFile);
-		if (!file.exists()) {
-			getLog().info("Deployment Config File not found.");
-			return false;
+		if(deploymentFile.contains("http") && isValidURL(deploymentFile)){
+			getLog().info("External Deployment Config file provided. Loading configuration from the same.");	
+			return true;
+		} else {
+			File file = new File(deploymentFile);
+			if (!file.exists()) {
+				getLog().info("Deployment Config File not found.");
+				return false;
+			}
+			getLog().info("Deployment Config File found. Loading configuration from the Config file.");
+			return true;
 		}
-		getLog().info(
-				"Deployment Config File found. Loading configuration from the Config file.");
-		return true;
+	}
+	
+	private boolean isValidURL(String url){
+		  try { 
+		       new URL(url).toURI(); 
+		       return true; 
+		  } catch (Exception e) { 
+		       return false; 
+		  } 
 	}
 
-	private void loadFromDeploymentProperties() {
-		File file = new File(deploymentConfigfile);
+	private void loadFromDeploymentProperties() throws MalformedURLException, IOException {
+		File file = null;
+		if(deploymentConfigfile.contains("http") && isValidURL(deploymentConfigfile)){
+			String localFileName = deploymentConfigfile.substring(deploymentConfigfile.lastIndexOf("/")+1);
+			getLog().info("Deployment config file is from external URL, creating temporary local file - "+ localFileName);
+			file = new File(localFileName);
+			file.delete();
+			file.createNewFile();
+			FileUtils.copyURLToFile(new URL(deploymentConfigfile), file);
+		} else {
+			file = new File(deploymentConfigfile);
+		}
 		Properties deployment = new Properties();
 		FileInputStream stream = null;
 		try {
@@ -313,6 +342,7 @@ public class BWDeployMojo extends AbstractMojo {
 			externalProfile = Boolean.parseBoolean(deployment
 					.getProperty("externalProfile"));
 			externalProfileLoc = deployment.getProperty("externalProfileLoc");
+			earUploadPath = deployment.getProperty("earUploadPath");
 		} catch (Exception e) {
 			getLog().error(e);
 			getLog().info(

@@ -113,6 +113,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.getProperties().remove("externalProfileLoc");
 			model.getProperties().remove("appNodeConfig");
 			model.getProperties().remove("restartAppNode");
+			model.getProperties().remove("earUploadPath");
 			return;
 		}
 
@@ -260,6 +261,10 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		model.addProperty("restartAppNode", Boolean.toString(info.isRestartAppNode()));
 		properties.put("restartAppNode", Boolean.toString(info.isRestartAppNode()));
 		
+		Xpp3Dom earUploadPath  = new Xpp3Dom("earUploadPath");
+		earUploadPath.setValue("${earUploadPath}");
+		model.addProperty("earUploadPath", info.getEarUploadPath());
+		properties.put("earUploadPath", info.getEarUploadPath());
 		
 		config.addChild(deployToAdmin);
 		config.addChild(agentHost);
@@ -288,7 +293,8 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		config.addChild(externalProfileLoc);
 		config.addChild(appNodeConfig);
 		config.addChild(restartAppNode);
-
+		config.addChild(earUploadPath);
+		
 		plugin.setConfiguration(config);
 
 		if(ModuleHelper.getParentModule(project.getModules()).getProject() != null) {

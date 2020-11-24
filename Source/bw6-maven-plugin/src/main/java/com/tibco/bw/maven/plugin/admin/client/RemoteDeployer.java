@@ -223,8 +223,11 @@ public class RemoteDeployer {
 		boolean fromURL = false;
 		try {
 			if(externalProfileLoc.contains("http") && isValidURL(externalProfileLoc)){
-				log.debug("Profile file is from external URL, creating temporary local file - "+ Constants.TEMP_SUBSTVAR);
-				profilefile = new File(Constants.TEMP_SUBSTVAR);
+				String localFileName = externalProfileLoc.substring(externalProfileLoc.lastIndexOf("/")+1);
+				log.debug("Profile file is from external URL, creating temporary local file - "+ localFileName);
+				profilefile = new File(localFileName);
+				profilefile.delete();
+				profilefile.createNewFile();
 				FileUtils.copyURLToFile(new URL(externalProfileLoc), profilefile);
 				fromURL = true;
 			} else {
@@ -243,7 +246,7 @@ public class RemoteDeployer {
 			
 			if(fromURL){
 				profilefile.delete();
-				log.debug("Removed temporary file - "+ Constants.TEMP_SUBSTVAR);
+				log.debug("Removed temporary file - "+ profilefile.getName());
 			}
 			
 			return appSpace;
@@ -253,7 +256,7 @@ public class RemoteDeployer {
 		} catch (Exception ex) {
 			if(fromURL && profilefile != null){
 				profilefile.delete();
-				log.debug("Removed temporary file - "+ Constants.TEMP_SUBSTVAR);
+				log.debug("Removed temporary file - "+ profilefile.getName());
 			}
 			throw new ClientException(500, ex.getMessage(), ex);
 		}
@@ -290,17 +293,22 @@ public class RemoteDeployer {
 		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);
 	}
 
-	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc, final String appNodeName) throws ClientException, InterruptedException {
+	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc, final String appNodeName, final String path) throws ClientException, InterruptedException {
 		List<Application> applications = getApplications(domainName, appSpaceName, null, true);
 		for(Application application : applications) {
 			if(application.getName().equals(appName)) {
 				if(replace) {
 					// Backup ear and profile
 					if(backupEar) {
+						String earPath = (path.isEmpty() ? "" : path+":") + application.getArchiveName().toString();
 						log.info("Generating backup ear file for application -> " + appName);
-						downloadArchive(domainName, backupLocation, application.getArchiveName().toString());
-						log.info("Generating backup substvar file for profile -> " + application.getProfileName());
-						downloadProfileAplication(domainName, backupLocation, application.getArchiveName().toString(), application.getProfileName());
+						downloadArchive(domainName, backupLocation, earPath);
+						if(externalProfile) {
+							log.info("Skipping backup for external profile");
+						} else {
+							log.info("Generating backup substvar file for profile -> " + application.getProfileName());
+							downloadProfileAplication(domainName, backupLocation, earPath, application.getProfileName());
+						}
 					}
 					log.info("Application exists with name -> " + appName + ". Undeploying the Application as Redeploy flag is true.");
 					undeployApplication(domainName, appSpaceName, appName, application.getVersion());	
@@ -310,10 +318,10 @@ public class RemoteDeployer {
 				}
 			}
 		}
-		log.info("Uploading the Archive file -> " + earName);
-		uploadArchive(domainName, null, file, true);
+		log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
+		uploadArchive(domainName, path, file, true);
 		log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
-		deployApplication(domainName, appSpaceName, earName, null, true, replace, profile,externalProfile);
+		deployApplication(domainName, appSpaceName, earName, path, true, replace, profile,externalProfile);
 		if(externalProfile){
 			setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
 			/*Thread.sleep(SLEEP_INTERVAL);
@@ -605,7 +613,7 @@ public class RemoteDeployer {
 		try {
 			Response response = r.path("/domains").path(domainName).path("archives").path(name).path("content").request().get();
 			processErrorResponse(response);
-			saveArchive(response, path, name);
+			saveArchive(response, path, name.replace(":", "_"));
 		} catch (ProcessingException pe) {
 			throw getConnectionException(pe);
 		} catch (Exception ex) {

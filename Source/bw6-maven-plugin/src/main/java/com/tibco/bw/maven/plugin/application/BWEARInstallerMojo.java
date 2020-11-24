@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Manifest;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -136,6 +138,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="restartAppNode")
 	private boolean restartAppNode;
 	
+	@Parameter(property = "earUploadPath")
+	private String earUploadPath;
+	
 	@Parameter(property="retryCount", defaultValue = "10")
 	private int retryCount;
 	
@@ -225,7 +230,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			getLog().info("AppSpace is Running.");
     		}
     		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc, appNode);
+    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath);
     		deployer.close();
     	} catch(Exception e) {
     		getLog().error(e);
@@ -245,13 +250,27 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			return false;
 		}
 		String deploymentFile = deploymentConfigfile;
-		File file = new File(deploymentFile);
-		if(!file.exists()) {
-			getLog().info("Deployment Config File not found. Reading the deployment Properties from POM File.");
-			return false;
+		if(deploymentFile.contains("http") && isValidURL(deploymentFile)){
+			getLog().info("External Deployment Config file provided. Loading configuration from the same.");	
+			return true;
+		} else {
+			File file = new File(deploymentFile);
+			if(!file.exists()) {
+				getLog().info("Deployment Config File not found. Reading the deployment Properties from POM File.");
+				return false;
+			}
+			getLog().info("Deployment Config File found. Loading configuration from the same.");	
+			return true;
 		}
-		getLog().info("Deployment Config File found. Loading configuration from the same.");
-		return true;
+	}
+		
+	private boolean isValidURL(String url){
+		  try { 
+		       new URL(url).toURI(); 
+		       return true; 
+		  } catch (Exception e) { 
+		       return false; 
+		  } 
 	}
 	
 	private boolean externalEarLocExists() {
@@ -262,14 +281,25 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			return true;
 	}
 
-	private void loadFromDeploymentProperties() {
-		File file = new File(deploymentConfigfile);
+	private void loadFromDeploymentProperties() throws MalformedURLException, IOException {
+		File file = null;
+		if(deploymentConfigfile.contains("http") && isValidURL(deploymentConfigfile)){
+			String localFileName = deploymentConfigfile.substring(deploymentConfigfile.lastIndexOf("/")+1);
+			getLog().info("Deployment config file is from external URL, creating temporary local file - "+ localFileName);
+			file = new File(localFileName);
+			file.delete();
+			file.createNewFile();
+			FileUtils.copyURLToFile(new URL(deploymentConfigfile), file);
+		} else {
+			file = new File(deploymentConfigfile);
+		}
 		Properties deployment = new Properties();
 		FileInputStream stream = null;
 		try {
 			stream = new FileInputStream(file);
 			deployment.load(stream);	
 		} catch(Exception e) {
+			e.printStackTrace();
 			getLog().info("Failed to load Propeties from Deployment Config File");
 		} finally {
 			if(stream != null) {
@@ -307,6 +337,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			externalProfile=Boolean.parseBoolean(deployment.getProperty("externalProfile"));
 			externalProfileLoc=deployment.getProperty("externalProfileLoc");
 			externalEarLoc=deployment.getProperty("externalEarLoc");
+			earUploadPath = deployment.getProperty("earUploadPath");
 		} catch(Exception e) {
 			deployToAdmin = false;
 			getLog().error(e);
