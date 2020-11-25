@@ -515,7 +515,7 @@ public class RemoteDeployer {
 	private void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
 		init();
 		try {
-			addQueryParam("appnode", appNodeName);
+			//addQueryParam("appnode", appNodeName);
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 		} catch (ProcessingException pe) {

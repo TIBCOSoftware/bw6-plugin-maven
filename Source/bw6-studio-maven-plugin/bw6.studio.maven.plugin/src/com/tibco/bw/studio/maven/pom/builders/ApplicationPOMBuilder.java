@@ -308,7 +308,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			try {
 				deploymentProperties.createNewFile();
 				fileOut = new FileOutputStream(deploymentProperties);
-				String msg = "EAR Deployment Properties. Pass -DdeploymentConfig.file=<File Location/File Name> if you are running from Command Line. Otherwise add 'deploymentConfig.file' property to the POM File";
+				String msg = "EAR Deployment Properties. Pass -DdeploymentConfigFile=<File Location/File Name> if you are running from Command Line. Otherwise add 'deploymentConfigFile' property to the POM File";
 				properties.store(fileOut, msg);
 				fileOut.close();
 			} catch (Exception e) {
