@@ -190,6 +190,7 @@ BWTestInfo testInfo = application.getTestInfo();
 		info.setAppNodeConfig(getMapValuesFromDom("appNodeConfig", dom, model));
 		info.setRestartAppNode(getBooleanValuefromDom("restartAppNode", dom, model));
 		info.setEarUploadPath(getStringValuefromDom("earUploadPath", dom, model));
+		info.setRollingDeployment(getBooleanValuefromDom("rollingDeployment", dom, model));
 	}
 
 	private Map<String,String> getMapValuesFromDom(String name, Xpp3Dom dom, Model model) {

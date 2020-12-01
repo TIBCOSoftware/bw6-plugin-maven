@@ -8,6 +8,7 @@ import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 
 import com.tibco.bw.maven.plugin.admin.dto.Agent;
+import com.tibco.bw.maven.plugin.admin.dto.AppInstance;
 import com.tibco.bw.maven.plugin.admin.dto.AppNode;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace;
 import com.tibco.bw.maven.plugin.admin.dto.Application;
@@ -293,46 +295,121 @@ public class RemoteDeployer {
 		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);
 	}
 
-	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc, final String appNodeName, final String path) throws ClientException, InterruptedException {
+	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc, final String appNodeName, final String path, final boolean rollingDeployment) throws Exception {
 		List<Application> applications = getApplications(domainName, appSpaceName, null, true);
-		for(Application application : applications) {
-			if(application.getName().equals(appName)) {
-				if(replace) {
-					// Backup ear and profile
-					if(backupEar) {
-						String earPath = (path.isEmpty() ? "" : path+":") + application.getArchiveName().toString();
-						log.info("Generating backup ear file for application -> " + appName);
-						downloadArchive(domainName, backupLocation, earPath);
-						if(externalProfile) {
-							log.info("Skipping backup for external profile");
-						} else {
-							log.info("Generating backup substvar file for profile -> " + application.getProfileName());
-							downloadProfileAplication(domainName, backupLocation, earPath, application.getProfileName());
+		
+		if(!rollingDeployment)
+		{
+			//--------------plain deployment-----------------------
+			for(Application application : applications) {
+				if(application.getName().equals(appName)) {
+					if(replace) {
+						// Backup ear and profile
+						if(backupEar) {
+							String earPath = (path.isEmpty() ? "" : path+":") + application.getArchiveName().toString();
+							log.info("Generating backup ear file for application -> " + appName);
+							downloadArchive(domainName, backupLocation, earPath);
+							if(externalProfile) {
+								log.info("Skipping backup for external profile");
+							} else {
+								log.info("Generating backup substvar file for profile -> " + application.getProfileName());
+								downloadProfileAplication(domainName, backupLocation, earPath, application.getProfileName());
+							}
 						}
+						log.info("Application exists with name -> " + appName + ". Undeploying the Application as Redeploy flag is true.");
+						undeployApplication(domainName, appSpaceName, appName, application.getVersion());	
+					} else {
+						log.info("Application exists with name -> " + appName + ". Not Re-deploying the Application as Redeploy flag is false.");
+						return;
 					}
-					log.info("Application exists with name -> " + appName + ". Undeploying the Application as Redeploy flag is true.");
-					undeployApplication(domainName, appSpaceName, appName, application.getVersion());	
-				} else {
-					log.info("Application exists with name -> " + appName + ". Not Re-deploying the Application as Redeploy flag is false.");
-					return;
 				}
 			}
+			log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
+			uploadArchive(domainName, path, file, true);
+			log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
+			deployApplication(domainName, appSpaceName, earName, path, true, replace, profile,externalProfile);
+			if(externalProfile){
+				setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
+				log.info("Starting Application -> "+ appName);
+				startApplication(domainName,appSpaceName,appName,version,appNodeName, true);
+			}
+			Thread.sleep(SLEEP_INTERVAL);
+			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+		} else {
+			//--------------rolling deployment----------------
+			log.info("Rolling deployment started...");
+			Application existingApp = null;
+			for(Application application : applications) {
+				if(application.getName().equals(appName)) {
+					existingApp = application;
+					break;
+				}
+			}
+			//new application
+			if(existingApp == null){
+				log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
+				uploadArchive(domainName, path, file, true);
+				log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
+				deployApplication(domainName, appSpaceName, earName, path, true, replace, profile,externalProfile);
+				if(externalProfile){
+					setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
+					log.info("Starting Application -> "+ appName);
+					startApplication(domainName,appSpaceName,appName,version,appNodeName, true);
+				}
+				Thread.sleep(SLEEP_INTERVAL);
+				checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+			} else {
+				boolean replaceFlag = false;
+				if(version.equalsIgnoreCase(existingApp.getVersion()))
+					replaceFlag = true;
+				// Backup ear and profile
+				if(backupEar) {
+					String earPath = (path.isEmpty() ? "" : path+":") + existingApp.getArchiveName().toString();
+					log.info("Generating backup ear file for application -> " + appName);
+					downloadArchive(domainName, backupLocation, earPath);
+					if(externalProfile) {
+						log.info("Skipping backup for external profile");
+					} else {
+						log.info("Generating backup substvar file for profile -> " + existingApp.getProfileName());
+						downloadProfileAplication(domainName, backupLocation, earPath, existingApp.getProfileName());
+					}
+				}
+				log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
+				uploadArchive(domainName, path, file, replaceFlag);
+				log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
+				deployApplication(domainName, appSpaceName, earName, path, false, replaceFlag, profile,externalProfile);
+				if(externalProfile){
+					setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
+				}
+				for(AppInstance appInstance : existingApp.getInstances()) 
+				{
+					String appNode = appInstance.getAppNodeName();
+					
+					log.info("Stopping existing Application -> "+ appName + ", version -> "+ existingApp.getVersion() + ", On AppNode -> "+ appNode);
+					stopApplication(domainName,appSpaceName,appName,existingApp.getVersion(), appNode, false);
+					
+					Thread.sleep(SLEEP_INTERVAL);
+					checkAppInstanceState(domainName, appSpaceName, appName, existingApp.getVersion(), Application.ApplicationRuntimeStates.Stopped, appNode);
+					
+					log.info("Starting Application -> "+ appName + ", version -> "+ version + ", On AppNode -> "+ appNode);
+					startApplication(domainName,appSpaceName,appName,version,appNode, false);
+					
+					Thread.sleep(SLEEP_INTERVAL);
+					checkAppInstanceState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running, appNode);
+					
+				}
+				
+				if(!replaceFlag)
+				{
+					log.info("Undeploying the old Application -> "+ appName + ", Version -> "+ existingApp.getVersion());
+					undeployApplication(domainName, appSpaceName, appName, existingApp.getVersion());
+				
+					log.info("Removing old Application archive -> "+ appName + ", Version -> "+ existingApp.getVersion()+ ", Archive name -> "+ existingApp.getArchiveName().toString());
+					removeArchive(domainName, path, existingApp.getArchiveName().toString());
+				}
+			}
+			
 		}
-		log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
-		uploadArchive(domainName, path, file, true);
-		log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
-		deployApplication(domainName, appSpaceName, earName, path, true, replace, profile,externalProfile);
-		if(externalProfile){
-			setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
-			/*Thread.sleep(SLEEP_INTERVAL);
-			log.info("Stopping Application -> "+ appName);
-			stopApplication(domainName,appSpaceName,appName,version,appNodeName);
-			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Stopped);*/
-			log.info("Starting Application -> "+ appName);
-			startApplication(domainName,appSpaceName,appName,version,appNodeName);
-		}
-		Thread.sleep(SLEEP_INTERVAL);
-		checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
 	}
 
 	private List<AppSpace> getAppSpaces(final String domainName, final String filter, final boolean full, final boolean status) throws ClientException {
@@ -437,13 +514,35 @@ public class RemoteDeployer {
 			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}
+	
+	private void removeArchive(final String domainName, final String path, final String file) throws ClientException {
+		init();
+		String earPath = (path.isEmpty() ? "" : path+":") + file;
+		log.debug("Removing archive at path -> "+ earPath + ", Domain Name -> "+ domainName);
+		try {
+			r = r.path("/domains").path(domainName).path("archives").path(earPath);
+			Response response = r.request(MediaType.APPLICATION_JSON_TYPE).delete();
+			if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+				if (response.getMediaType().getType().equals(MediaType.TEXT_HTML_TYPE.getType()) && response.getMediaType().getSubtype().equals(MediaType.TEXT_HTML_TYPE.getSubtype())) {
+					throw new ClientException(response.getStatus(), response.readEntity(String.class), null);
+				} else {
+					processErrorResponse(response);
+				}
+			}
+		} catch (ProcessingException pe) {
+			throw getConnectionException(pe);
+		} catch (Exception ex) {
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
 
 	private void uploadArchive(final String domainName, final String path, final String file, final boolean replace) throws ClientException {
 		init();
+		String earPath = path.isEmpty()? null : path;
 		try (MultiPart multipart = new FormDataMultiPart()) {
 			r = r.path("/domains").path(domainName).path("archives");
 			r = r.queryParam("replace", replace);
-			addQueryParam("path", path);
+			addQueryParam("path", earPath);
 
 			File fileEntity = new File(file);
 			final FileDataBodyPart filePart = new FileDataBodyPart("file", fileEntity, MediaType.APPLICATION_OCTET_STREAM_TYPE);
@@ -512,10 +611,11 @@ public class RemoteDeployer {
 		}
 	}
 
-	private void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
+	private void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName, final boolean startOnAllAppNodes) throws ClientException {
 		init();
 		try {
-			//addQueryParam("appnode", appNodeName);
+			if(!startOnAllAppNodes)
+				addQueryParam("appnode", appNodeName);
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("start").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 		} catch (ProcessingException pe) {
@@ -525,10 +625,11 @@ public class RemoteDeployer {
 		}
 	}
 	
-	private void stopApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName) throws ClientException {
+	private void stopApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName, final boolean stopOnAllAppnodes) throws ClientException {
 		init();
 		try {
-			addQueryParam("appnode", appNodeName);
+			if(!stopOnAllAppnodes)
+				addQueryParam("appnode", appNodeName);
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).path("stop").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 		} catch (ProcessingException pe) {
@@ -554,6 +655,33 @@ public class RemoteDeployer {
 			count++;
 			Thread.sleep(SLEEP_INTERVAL);
 		}
+	}
+	
+	private void checkAppInstanceState(final String domainName, final String appSpaceName, final String appName, final String version, final Application.ApplicationRuntimeStates state, final String appNode) throws Exception{
+		int count = 0;
+		boolean isState= false;
+		log.debug("Retry Count ->"+ retryCount);
+		while(!isState && count < retryCount ){
+			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).request(MediaType.APPLICATION_JSON_TYPE).get();
+			processErrorResponse(response);
+			Application app = response.readEntity(Application.class);
+			AppInstance appInst = null;
+			for(AppInstance appInstance : app.getInstances()){
+				if(appInstance.getAppNodeName().equalsIgnoreCase(appNode))
+				{
+					appInst = appInstance;
+					break;
+				}
+			}
+			log.info("AppName -> "+ appName + ", AppNode -> "+ appNode + ", State -> "+ appInst.getState());
+			if(appInst.getState().equals(state.toString())){
+				isState = true;
+				return;
+			}
+			count++;
+			Thread.sleep(SLEEP_INTERVAL);
+		}
+		throw new Exception("Failed application instance status check, expected state -> "+ state.toString()+". Please adjust retry count if application takes longer time.");
 	}
 
 	private List<AppNode> getAppNodes(final String domainName, final String appSpaceName, final String filter, final boolean status) throws ClientException {

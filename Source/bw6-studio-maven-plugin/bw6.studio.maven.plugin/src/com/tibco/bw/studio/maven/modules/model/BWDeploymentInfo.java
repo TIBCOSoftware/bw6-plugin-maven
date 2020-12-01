@@ -35,6 +35,7 @@ public class BWDeploymentInfo {
 	private Map<String,String> appNodeConfig = new HashMap<String,String>();
 	private boolean restartAppNode = false;
 	private String earUploadPath = "";
+	private boolean rollingDeployment = false;
 
 	public boolean isDeployToAdmin() {
 		return deployToAdmin;
@@ -269,5 +270,13 @@ public class BWDeploymentInfo {
 
 	public void setEarUploadPath(String earUploadPath) {
 		this.earUploadPath = earUploadPath;
+	}
+
+	public boolean isRollingDeployment() {
+		return rollingDeployment;
+	}
+
+	public void setRollingDeployment(boolean rollingDeployment) {
+		this.rollingDeployment = rollingDeployment;
 	}
 }

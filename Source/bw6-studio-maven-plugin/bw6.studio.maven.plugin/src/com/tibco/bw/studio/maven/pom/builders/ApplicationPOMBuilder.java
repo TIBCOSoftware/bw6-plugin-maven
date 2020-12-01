@@ -114,6 +114,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.getProperties().remove("appNodeConfig");
 			model.getProperties().remove("restartAppNode");
 			model.getProperties().remove("earUploadPath");
+			model.getProperties().remove("rollingDeployment");
 			return;
 		}
 
@@ -266,6 +267,11 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		model.addProperty("earUploadPath", info.getEarUploadPath());
 		properties.put("earUploadPath", info.getEarUploadPath());
 		
+		Xpp3Dom rollingDeployment  = new Xpp3Dom("rollingDeployment");
+		rollingDeployment.setValue("${rollingDeployment}");
+		model.addProperty("rollingDeployment", Boolean.toString(info.isRollingDeployment()));
+		properties.put("rollingDeployment", Boolean.toString(info.isRollingDeployment()));
+		
 		config.addChild(deployToAdmin);
 		config.addChild(agentHost);
 		config.addChild(agentPort);
@@ -294,6 +300,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 		config.addChild(appNodeConfig);
 		config.addChild(restartAppNode);
 		config.addChild(earUploadPath);
+		config.addChild(rollingDeployment);
 		
 		plugin.setConfiguration(config);
 

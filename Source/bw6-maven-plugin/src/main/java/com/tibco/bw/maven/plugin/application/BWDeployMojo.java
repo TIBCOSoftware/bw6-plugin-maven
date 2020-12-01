@@ -119,6 +119,9 @@ public class BWDeployMojo extends AbstractMojo {
 	@Parameter(property = "earUploadPath")
 	private String earUploadPath;
 	
+	@Parameter(property = "rollingDeployment", defaultValue = "false")
+	private boolean rollingDeployment;
+	
 	@Parameter(property="retryCount", defaultValue = "10")
 	private int retryCount;
 	
@@ -240,7 +243,7 @@ public class BWDeployMojo extends AbstractMojo {
 			deployer.addAndDeployApplication(domain, appSpace, applicationName,
 					earName, earFile.getAbsolutePath(), redeploy, profile,
 					backup, backupLocation, version, externalProfile,
-					externalProfileLoc, appNode, earUploadPath);
+					externalProfileLoc, appNode, earUploadPath, rollingDeployment);
 			deployer.close();
 			deployer.close();
 			BWEarUtils.deleteEARFileEntries(earLocation);
