@@ -116,11 +116,14 @@ public class ConfigFileGenerator
 			Manifest projectManifest = ManifestParser.parseManifest( cxfProject.getBasedir() );
 			String bundleClassPath = projectManifest.getMainAttributes().getValue("Bundle-ClassPath");
 			BWTestConfig.INSTANCE.getLogger().debug("Bundle-Classpath for project "+ cxfProject.getName() +" -> "+bundleClassPath);
-			String pathEntries[] = bundleClassPath.split(",");
 			String pathString = "";
-			for(String path : pathEntries){
-				if(!path.equals("."))
-					pathString += "," + path;
+			if(bundleClassPath != null)
+			{
+				String pathEntries[] = bundleClassPath.split(",");
+				for(String path : pathEntries){
+					if(!path.equals("."))
+						pathString += "," + path;
+				}
 			}
 			pathString = "bin,target/classes" + pathString;
 			properties.put(cxfProject.getName(), pathString);
