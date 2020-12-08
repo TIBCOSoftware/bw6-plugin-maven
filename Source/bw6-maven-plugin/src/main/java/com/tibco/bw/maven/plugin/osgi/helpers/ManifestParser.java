@@ -15,22 +15,25 @@ public class ManifestParser {
 	public static Manifest parseManifest(File baseDir) {
 		Manifest mf = null;
         File mfile = new File(baseDir , "META-INF/MANIFEST.MF");
-        InputStream is = null;
-        try {
-            is = new FileInputStream(mfile);
-            mf = new Manifest(is);
-        } catch(FileNotFoundException f) {
-        	f.printStackTrace();
-        } catch(IOException e) {
-        	e.printStackTrace();
-        } finally {
-            try {
-            	if(is != null) {
-            		is.close();	
-            	}
-			} catch(IOException e) {
-				e.printStackTrace();
-			}
+        if(mfile.exists())
+        {
+	        InputStream is = null;
+	        try {
+	            is = new FileInputStream(mfile);
+	            mf = new Manifest(is);
+	        } catch(FileNotFoundException f) {
+	        	f.printStackTrace();
+	        } catch(IOException e) {
+	        	e.printStackTrace();
+	        } finally {
+	            try {
+	            	if(is != null) {
+	            		is.close();	
+	            	}
+				} catch(IOException e) {
+					e.printStackTrace();
+				}
+	        }
         }
         return mf;
 	}

@@ -141,9 +141,6 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property = "earUploadPath")
 	private String earUploadPath;
 	
-	@Parameter(property = "rollingDeployment", defaultValue = "false")
-	private boolean rollingDeployment;
-	
 	@Parameter(property="retryCount", defaultValue = "10")
 	private int retryCount;
 	
@@ -233,7 +230,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
     			getLog().info("AppSpace is Running.");
     		}
     		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath, rollingDeployment);
+    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath);
     		deployer.close();
     	} catch(Exception e) {
     		getLog().error(e);

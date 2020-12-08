@@ -81,7 +81,6 @@ public class WizardPageEnterprise extends WizardPage {
 	private Table tableAppNodeConfig;
 	private Button restartAppNode;
 	private Text earUploadPath;
-	private Button rollingDeployment;
 	
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
@@ -280,7 +279,6 @@ public class WizardPageEnterprise extends WizardPage {
 				}
 				info.setRestartAppNode(restartAppNode.getSelection());
 				info.setEarUploadPath(earUploadPath.getText());
-				info.setRollingDeployment(rollingDeployment.getSelection());
 			}
 			module.setOverridePOM(true);
 		}
@@ -696,26 +694,7 @@ public class WizardPageEnterprise extends WizardPage {
 		addexternalProfileBox();
 		addRedeployBox();
 		addBackupEarBox();
-		addRollingDeploymentBox();
 		
-	}
-
-	private void addRollingDeploymentBox() {
-		
-		Label rollingDeploymentLabel = new Label(container, SWT.NONE);
-		rollingDeploymentLabel.setText("Rolling Deployment");
-		rollingDeploymentLabel.setToolTipText("Rolling Deployment");
-
-		GridData rollingDeploymentLabelData = new GridData(250, 25);
-		rollingDeploymentLabelData.horizontalSpan = 1;
-		rollingDeploymentLabel.setLayoutData(rollingDeploymentLabelData);
-		
-		rollingDeployment = new Button(container, SWT.CHECK);
-		rollingDeployment.setSelection(info.isRollingDeployment());
-		rollingDeployment.setToolTipText("If this is checked, then the Application will be rolling deployed.");
-		GridData rollingDeploymentData = new GridData();
-		rollingDeploymentData.horizontalSpan = 3;
-		rollingDeployment.setLayoutData(rollingDeploymentData);
 	}
 	
 	private void addexternalProfileBox() {
