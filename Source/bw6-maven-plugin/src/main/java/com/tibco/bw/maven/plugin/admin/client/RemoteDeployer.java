@@ -460,7 +460,7 @@ public class RemoteDeployer {
 
 	private void uploadArchive(final String domainName, final String path, final String file, final boolean replace) throws ClientException {
 		init();
-		String earPath = path.isEmpty()? null : path;
+		String earPath = (path == null || path.isEmpty())? null : path;
 		try (MultiPart multipart = new FormDataMultiPart()) {
 			r = r.path("/domains").path(domainName).path("archives");
 			r = r.queryParam("replace", replace);
