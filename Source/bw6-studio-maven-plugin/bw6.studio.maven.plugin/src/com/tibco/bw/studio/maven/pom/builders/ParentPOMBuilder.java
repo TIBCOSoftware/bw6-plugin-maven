@@ -79,30 +79,38 @@ public class ParentPOMBuilder extends AbstractPOMBuilder implements IPOMBuilder 
 		} else if (MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.Docker) {
 			//|| MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.K8S
 			boolean dockerPlugin = false;
+			boolean fabric8Plugin = false;
 
 			for (Plugin plg : plugins) {
 				if (plg.getArtifactId().equals("docker-maven-plugin")) {
 					dockerPlugin = true;
 				}
+				if (plg.getArtifactId().equals("fabric8-maven-plugin")) {
+					fabric8Plugin = true;
+				}
 			}
 
-			if (!dockerPlugin) {
+			if (!dockerPlugin || !fabric8Plugin) {
 				// Add docker and platform plugins if doesn't exist
-				addDockerWithSkipMavenPlugin(build);
+				if(!dockerPlugin)
+					addDockerWithSkipMavenPlugin(build);
 
-				String platform = "";
-				for (BWModule module : project.getModules()) {
-					if (module.getType() == BWModuleType.Application) {
-						platform = module.getBwDockerModule().getPlatform();
+				if(!fabric8Plugin)
+				{
+					String platform = "";
+					for (BWModule module : project.getModules()) {
+						if (module.getType() == BWModuleType.Application) {
+							platform = module.getBwDockerModule().getPlatform();
+						}
 					}
-				}
-
-				if (platform.equals("K8S")) {
-					addDockerK8SMavenPlugin(build, true);
-				} else if (platform.equals("Mesos")) {
-
-				} else if (platform.equals("Swarm")) {
-
+	
+					if (platform.equals("K8S")) {
+						addDockerK8SMavenPlugin(build, true);
+					} else if (platform.equals("Mesos")) {
+	
+					} else if (platform.equals("Swarm")) {
+	
+					}
 				}
 			}
 		}

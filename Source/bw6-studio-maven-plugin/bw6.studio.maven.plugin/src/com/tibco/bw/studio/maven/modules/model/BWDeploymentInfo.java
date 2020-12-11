@@ -34,6 +34,7 @@ public class BWDeploymentInfo {
 	private List<String> profiles = new ArrayList<String>();
 	private Map<String,String> appNodeConfig = new HashMap<String,String>();
 	private boolean restartAppNode = false;
+	private String earUploadPath = "";
 
 	public boolean isDeployToAdmin() {
 		return deployToAdmin;
@@ -261,4 +262,13 @@ public class BWDeploymentInfo {
 	public void setRestartAppNode(boolean restartAppNode) {
 		this.restartAppNode = restartAppNode;
 	}
+
+	public String getEarUploadPath() {
+		return earUploadPath;
+	}
+
+	public void setEarUploadPath(String earUploadPath) {
+		this.earUploadPath = earUploadPath;
+	}
+
 }

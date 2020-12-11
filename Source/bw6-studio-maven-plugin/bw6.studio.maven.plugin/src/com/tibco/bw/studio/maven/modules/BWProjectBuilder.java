@@ -184,11 +184,14 @@ BWTestInfo testInfo = application.getTestInfo();
 		info.setHttpPort(getStringValuefromDom("httpPort", dom, model));
 		info.setOsgiPort(getStringValuefromDom("osgiPort", dom, model));
 		info.setProfile(getStringValuefromDom("profile", dom, model));
+		info.setexternalProfile(getBooleanValuefromDom("externalProfile", dom, model));
+		info.setexternalProfileLoc(getStringValuefromDom("externalProfileLoc", dom, model));
 		info.setRedeploy(getBooleanValuefromDom("redeploy", dom, model));
 		info.setBackup(getBooleanValuefromDom("backup", dom, model));
 		info.setBackupLocation(getStringValuefromDom("backupLocation", dom, model));
 		info.setAppNodeConfig(getMapValuesFromDom("appNodeConfig", dom, model));
 		info.setRestartAppNode(getBooleanValuefromDom("restartAppNode", dom, model));
+		info.setEarUploadPath(getStringValuefromDom("earUploadPath", dom, model));
 	}
 
 	private Map<String,String> getMapValuesFromDom(String name, Xpp3Dom dom, Model model) {

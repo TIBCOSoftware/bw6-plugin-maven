@@ -56,6 +56,12 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "osgiCommands" )
     private List<String> osgiCommands;
     
+    @Parameter( property = "skipInitMainProcessActivities" , defaultValue = "false" )
+    private boolean skipInitMainProcessActivities;
+    
+    @Parameter( property = "skipInitAllNonTestProcessActivities" , defaultValue = "false" )
+    private boolean skipInitAllNonTestProcessActivities;
+    
     public void execute() throws MojoExecutionException , MojoFailureException
     {
     	
@@ -121,7 +127,7 @@ public class BWTestMojo extends AbstractMojo {
 		if( tibcoHome == null || tibcoHome.isEmpty() || bwHome == null || bwHome.isEmpty() )
 		{
 			getLog().info( "-------------------------------------------------------" );
-			getLog().info( "Tibco Home or BW Home is not provided. Skipping Test Phase.");
+			getLog().info( "TIBCO Home or BW Home is not provided. Skipping Test Phase.");
 			getLog().info( "-------------------------------------------------------" );
 
 			return false;
@@ -131,7 +137,7 @@ public class BWTestMojo extends AbstractMojo {
 		if( !file.exists() || !file.isDirectory()  )
 		{
 			getLog().info( "-------------------------------------------------------" );
-			getLog().info( "Provided TibcoHome directory is invalid. Skipping Test Phase.");
+			getLog().info( "Provided TibcoHome directory - "+ (tibcoHome + bwHome) +" is invalid. Skipping Test Phase.");
 			getLog().info( "-------------------------------------------------------" );
 	
 			return false;
@@ -202,6 +208,10 @@ public class BWTestMojo extends AbstractMojo {
 		BWTestExecutor.INSTANCE.setEngineStartupWaitTime(engineStartupWaitTime);
 		
 		BWTestExecutor.INSTANCE.setOsgiCommands(osgiCommands);
+		
+		BWTestExecutor.INSTANCE.setSkipInitMainProcessActivities(skipInitMainProcessActivities);
+		
+		BWTestExecutor.INSTANCE.setSkipInitAllNonTestProcessActivities(skipInitAllNonTestProcessActivities);
 		
     	BWTestConfig.INSTANCE.reset();
     	

@@ -80,6 +80,7 @@ public class WizardPageEnterprise extends WizardPage {
 	private int textHeight = 18;
 	private Table tableAppNodeConfig;
 	private Button restartAppNode;
+	private Text earUploadPath;
 	
 	protected WizardPageEnterprise(String pageName, BWProject project) {
 		super(pageName);
@@ -277,6 +278,7 @@ public class WizardPageEnterprise extends WizardPage {
 					info.getAppNodeConfig().put(item.getText(0), item.getText(1));
 				}
 				info.setRestartAppNode(restartAppNode.getSelection());
+				info.setEarUploadPath(earUploadPath.getText());
 			}
 			module.setOverridePOM(true);
 		}
@@ -665,6 +667,11 @@ public class WizardPageEnterprise extends WizardPage {
 			profile.select(index);	
 		}
 
+		if(info.isexternalProfile())
+			profile.setText("other");
+		else
+			profile.setText(info.getProfile());
+		
 		GridData profileData = new GridData(135, textHeight);
 		profileData.horizontalSpan = 1;
 		profile.setLayoutData(profileData);
@@ -679,6 +686,7 @@ public class WizardPageEnterprise extends WizardPage {
 				}
 				else{
 					externalProfileLoc.setEnabled(false);
+					externalProfileLoc.setText("");
 				}
 				
 			}
@@ -694,16 +702,19 @@ public class WizardPageEnterprise extends WizardPage {
 		addBackupEarBox();
 		
 	}
-
+	
 	private void addexternalProfileBox() {
 
 		Label externalProfileLocLabel = new Label(container, SWT.NONE);
 		externalProfileLocLabel.setText("External Profile Location");
 		externalProfileLoc = new Text(container, SWT.BORDER | SWT.SINGLE);
-		externalProfileLoc.setText(info.getexternalProfileLoc());
 		GridData externalProfileLocData = new GridData(300, textHeight);
 		externalProfileLoc.setLayoutData(externalProfileLocData);
-		externalProfileLoc.setEnabled(false);
+		if(info.isexternalProfile() || info.getProfile().equalsIgnoreCase("other"))
+			externalProfileLoc.setEnabled(true);
+		else
+			externalProfileLoc.setEnabled(false);
+		externalProfileLoc.setText(info.getexternalProfileLoc());
 
 	}
 
@@ -721,9 +732,22 @@ public class WizardPageEnterprise extends WizardPage {
 		redeploy.setSelection(info.isRedeploy());
 		redeploy.setToolTipText("If this is checked, then the Application will be redeployed if exists.");
 		GridData redeployData = new GridData();
-		redeployData.horizontalSpan = 3;
+		redeployData.horizontalSpan = 1;
 		redeploy.setLayoutData(redeployData);
 		
+		//earuploadpath
+		Label earUploadPathLabel = new Label(container, SWT.NONE);
+		earUploadPathLabel.setText("EAR Upload Path");
+		earUploadPathLabel.setToolTipText("EAR Upload Path.");
+
+		GridData earUploadPathData = new GridData(250, 25);
+		earUploadPathData.horizontalSpan = 1;
+		earUploadPathLabel.setLayoutData(earUploadPathData);
+		
+		earUploadPath = new Text(container, SWT.BORDER | SWT.SINGLE);
+		earUploadPath.setText(info.getEarUploadPath());
+		GridData backupLocationTextData = new GridData(300, textHeight);
+		earUploadPath.setLayoutData(backupLocationTextData);
 		
 	}
 
@@ -749,7 +773,10 @@ public class WizardPageEnterprise extends WizardPage {
 		//backupLocationData.horizontalAlignment = GridData.FILL;
 
 		backupLocation.setLayoutData(backupLocationData);
-		backupLocation.setEnabled(false);
+		if(info.isBackup())
+			backupLocation.setEnabled(true);
+		else
+			backupLocation.setEnabled(false);
 		backup.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {

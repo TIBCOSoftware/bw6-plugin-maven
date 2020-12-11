@@ -92,6 +92,13 @@ public class EngineLaunchConfigurator
 						BWTestExecutor.INSTANCE.getMockActivityList().clear();
 					}
 					
+					//set skipinit system properties
+					if(BWTestExecutor.INSTANCE.isSkipInitMainProcessActivities())
+						list.add("-Dbw.unittest.skipinit.mainprocessactivities=true");
+					
+					if(BWTestExecutor.INSTANCE.isSkipInitAllNonTestProcessActivities())
+						list.add("-Dbw.unittest.skipinit.allnontestprocessactivities=true");
+					
 				}
 
 				if( currentLine.contains("%%CONFIG_DIR%%"))
@@ -108,6 +115,9 @@ public class EngineLaunchConfigurator
 					{
 						list.add(currentLine);
 						list.add( "file:" + file.toString());
+					} else {
+						list.add(currentLine);
+						list.add( "file:" + BWTestConfig.INSTANCE.getConfigDir().toString().replace("\\", "/") + "/dev.properties");
 					}
 					continue;
 

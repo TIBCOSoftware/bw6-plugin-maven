@@ -15,19 +15,25 @@ public class ManifestParser {
 	public static Manifest parseManifest(File baseDir) {
 		Manifest mf = null;
         File mfile = new File(baseDir , "META-INF/MANIFEST.MF");
-        InputStream is = null;
-        try {
-            is = new FileInputStream(mfile);
-            mf = new Manifest(is);
-        } catch(FileNotFoundException f) {
-        } catch(IOException e) {
-        } finally {
-            try {
-            	if(is != null) {
-            		is.close();	
-            	}
-			} catch(IOException e) {
-			}
+        if(mfile.exists())
+        {
+	        InputStream is = null;
+	        try {
+	            is = new FileInputStream(mfile);
+	            mf = new Manifest(is);
+	        } catch(FileNotFoundException f) {
+	        	f.printStackTrace();
+	        } catch(IOException e) {
+	        	e.printStackTrace();
+	        } finally {
+	            try {
+	            	if(is != null) {
+	            		is.close();	
+	            	}
+				} catch(IOException e) {
+					e.printStackTrace();
+				}
+	        }
         }
         return mf;
 	}
@@ -42,7 +48,6 @@ public class ManifestParser {
 			JarInputStream jarStream = new JarInputStream( new FileInputStream( jarFile ));
 			moduleManifest = jarStream.getManifest();
 			jarStream.close();
-			
 		}
 		catch( Exception e )
 		{

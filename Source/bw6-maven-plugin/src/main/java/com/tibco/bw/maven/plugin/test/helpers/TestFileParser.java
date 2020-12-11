@@ -18,6 +18,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -172,16 +173,48 @@ public class TestFileParser {
 								}
 								else if( "Operation".equals(cEl.getNodeName()))
 								{
-									NodeList gChildNodes = cEl.getChildNodes();
-									for (int k = 0; k < gChildNodes.getLength(); k++) {
-										Node gcNode = gChildNodes.item(k);
-										if (gcNode instanceof Element) {
-											Element e1 = (Element) gcNode;
-											if ("resolvedInput".equals(e1.getNodeName()))
-											{
-												String inputValue = e1.getAttribute("inputValue");
-												testcase.setXmlInput(inputValue);
-												break;
+									//support input from file
+									boolean isInputFile = false;
+									NodeList inputNodes = cEl.getElementsByTagName("Inputs");
+									if(inputNodes != null && inputNodes.getLength() > 0){
+										Element input = (Element) inputNodes.item(0);
+										if(input.hasAttribute("isInputFile")){
+											if("true".equals(input.getAttribute("isInputFile"))){
+												isInputFile = true;
+												if(input.hasAttribute("inputFile")){
+													BWTestConfig.INSTANCE.getLogger().debug("Reading start activity input from file -> "+ input.getAttribute("inputFile"));
+													String inputFilePath = input.getAttribute("inputFile");
+													if(inputFilePath == null || inputFilePath.isEmpty()){
+														BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : Start "+ ", Error : Invalid Start Input File Path - "+inputFilePath);
+														throw new Exception("Process : "+ processName + ", Activity : Start"+ ", Error : Invalid Start Input File Path - "+inputFilePath);
+													}
+													File file = new File(inputFilePath);
+													if(!file.isAbsolute()){
+														BWTestConfig.INSTANCE.getLogger().debug("Provided Start Input File path is relative -> "+file.getPath());
+														inputFilePath = baseDirectoryPath.concat("/"+inputFilePath);
+													}
+													String inputValue = FileUtils.readFileToString( new File(inputFilePath) );
+													testcase.setXmlInput(inputValue);
+												} else {
+													BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : Start "+ ", Error : Invalid Start Input File Path - "+input.getAttribute("InputFile"));
+													throw new Exception("Process : "+ processName + ", Activity : Start"+ ", Error : Invalid Start Input File Path - "+input.getAttribute("InputFile"));
+												}
+											}
+										}
+									}
+									if(!isInputFile)
+									{
+										NodeList gChildNodes = cEl.getChildNodes();
+										for (int k = 0; k < gChildNodes.getLength(); k++) {
+											Node gcNode = gChildNodes.item(k);
+											if (gcNode instanceof Element) {
+												Element e1 = (Element) gcNode;
+												if ("resolvedInput".equals(e1.getNodeName()))
+												{
+													String inputValue = e1.getAttribute("inputValue");
+													testcase.setXmlInput(inputValue);
+													break;
+												}
 											}
 										}
 									}

@@ -25,6 +25,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.glassfish.jersey.client.ClientConfig;
@@ -101,7 +102,7 @@ public class BWTestRunner
 		
 		for( MavenProject project : projects )
 		{
-			if( project.getPackaging().equals("bwmodule") )
+			if( project.getPackaging().equals("bwmodule") && !isCXF(project))	//skip tests if CXF
 			{
 				failures = failures + runTestsPerModule( project , result );	
 			}
@@ -116,6 +117,15 @@ public class BWTestRunner
         }
 
 		
+	}
+	
+	private boolean isCXF(MavenProject project){
+		for(Dependency dep : project.getDependencies()){
+			if(dep.getArtifactId().equalsIgnoreCase("com.tibco.xml.cxf.common")){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@SuppressWarnings("unchecked")

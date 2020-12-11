@@ -12,12 +12,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Properties;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.project.MavenProject;
 
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 
 public class ConfigFileGenerator 
@@ -41,6 +44,8 @@ public class ConfigFileGenerator
 				addPluginsFromDir(target, builder);
 			}
 			
+			List<MavenProject> cxfProjects = new ArrayList<MavenProject>();
+			
 			List<MavenProject> projects =  BWTestConfig.INSTANCE.getSession().getProjects();
 
 			for( MavenProject project : projects ) {
@@ -49,12 +54,19 @@ public class ConfigFileGenerator
 					Set<Artifact> artifacts = project.getDependencyArtifacts();
 					if(artifacts != null)
 					{
-					for(Artifact artifact:artifacts) {
-						if(!"provided".equals(artifact.getScope()) || !(artifact.getFile().getName().indexOf("com.tibco.bw.palette.shared") != -1)) {
-							builder.append( "," );
-							addReference(builder, artifact.getFile(), artifact.getArtifactId());
+						boolean isCXF = false;
+						for(Artifact artifact:artifacts) {
+							if(!"provided".equals(artifact.getScope()) && !(artifact.getFile().getName().contains("com.tibco.bw.palette.shared")) && !(artifact.getFile().getName().contains("com.tibco.xml.cxf.common")) && !artifact.getGroupId().equalsIgnoreCase("tempbw")) {
+								builder.append( "," );
+								addReference(builder, artifact.getFile(), artifact.getArtifactId());
+							}
+							if(artifact.getFile().getName().contains("com.tibco.xml.cxf.common")){
+								isCXF = true;
+							}
 						}
-					}
+						if(isCXF){
+							cxfProjects.add(project);
+						}
 					}
 				}
 			}
@@ -81,6 +93,8 @@ public class ConfigFileGenerator
 			properties.store(stream, "Configuration File"); 
 			stream.flush();
 			stream.close();
+		
+			generateDevPropertiesFile(cxfProjects);
 		}
 		
 		catch(Exception e )
@@ -89,6 +103,39 @@ public class ConfigFileGenerator
 		}
 
 	} 
+	
+	private void generateDevPropertiesFile(List<MavenProject> cxfProjects) throws IOException, DependencyResolutionRequiredException{
+		File devProps = new File( BWTestConfig.INSTANCE.getConfigDir() , "dev.properties");
+		devProps.createNewFile();
+		
+		Properties properties = new Properties();
+		properties.put("@ignoredot@","true");
+		for(MavenProject cxfProject : cxfProjects)
+		{
+			//find classpath
+			Manifest projectManifest = ManifestParser.parseManifest( cxfProject.getBasedir() );
+			String bundleClassPath = projectManifest.getMainAttributes().getValue("Bundle-ClassPath");
+			BWTestConfig.INSTANCE.getLogger().debug("Bundle-Classpath for project "+ cxfProject.getName() +" -> "+bundleClassPath);
+			String pathString = "";
+			if(bundleClassPath != null)
+			{
+				String pathEntries[] = bundleClassPath.split(",");
+				for(String path : pathEntries){
+					if(!path.equals("."))
+						pathString += "," + path;
+				}
+			}
+			pathString = "bin,target/classes" + pathString;
+			properties.put(cxfProject.getName(), pathString);
+			BWTestConfig.INSTANCE.getLogger().debug("Adding CXF project entry to dev.properties -> "+ cxfProject.getName()+ "="+ pathString);
+		}
+		
+		FileOutputStream stream = new FileOutputStream(devProps);
+		properties.store(stream, "dev properties"); 
+		stream.flush();
+		stream.close();
+
+	}
 	
 	
 	private void addPluginsFromDir( File target , StringBuilder builder )
