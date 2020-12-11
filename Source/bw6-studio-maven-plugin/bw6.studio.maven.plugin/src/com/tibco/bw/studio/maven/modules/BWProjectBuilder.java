@@ -184,6 +184,8 @@ BWTestInfo testInfo = application.getTestInfo();
 		info.setHttpPort(getStringValuefromDom("httpPort", dom, model));
 		info.setOsgiPort(getStringValuefromDom("osgiPort", dom, model));
 		info.setProfile(getStringValuefromDom("profile", dom, model));
+		info.setexternalProfile(getBooleanValuefromDom("externalProfile", dom, model));
+		info.setexternalProfileLoc(getStringValuefromDom("externalProfileLoc", dom, model));
 		info.setRedeploy(getBooleanValuefromDom("redeploy", dom, model));
 		info.setBackup(getBooleanValuefromDom("backup", dom, model));
 		info.setBackupLocation(getStringValuefromDom("backupLocation", dom, model));

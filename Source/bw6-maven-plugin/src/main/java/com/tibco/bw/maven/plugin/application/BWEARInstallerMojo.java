@@ -410,7 +410,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		}
 
 		boolean isValidBackupLoc = true;
-		if(backup && backupLocation.isEmpty()) {
+		if(backup && (backupLocation == null || backupLocation.isEmpty())) {
 			isValidBackupLoc = false;
 			errorMessage.append("[Backup Location value is required]");
 		}

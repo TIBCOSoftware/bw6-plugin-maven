@@ -667,6 +667,11 @@ public class WizardPageEnterprise extends WizardPage {
 			profile.select(index);	
 		}
 
+		if(info.isexternalProfile())
+			profile.setText("other");
+		else
+			profile.setText(info.getProfile());
+		
 		GridData profileData = new GridData(135, textHeight);
 		profileData.horizontalSpan = 1;
 		profile.setLayoutData(profileData);
@@ -681,6 +686,7 @@ public class WizardPageEnterprise extends WizardPage {
 				}
 				else{
 					externalProfileLoc.setEnabled(false);
+					externalProfileLoc.setText("");
 				}
 				
 			}
@@ -702,10 +708,13 @@ public class WizardPageEnterprise extends WizardPage {
 		Label externalProfileLocLabel = new Label(container, SWT.NONE);
 		externalProfileLocLabel.setText("External Profile Location");
 		externalProfileLoc = new Text(container, SWT.BORDER | SWT.SINGLE);
-		externalProfileLoc.setText(info.getexternalProfileLoc());
 		GridData externalProfileLocData = new GridData(300, textHeight);
 		externalProfileLoc.setLayoutData(externalProfileLocData);
-		externalProfileLoc.setEnabled(false);
+		if(info.isexternalProfile() || info.getProfile().equalsIgnoreCase("other"))
+			externalProfileLoc.setEnabled(true);
+		else
+			externalProfileLoc.setEnabled(false);
+		externalProfileLoc.setText(info.getexternalProfileLoc());
 
 	}
 
@@ -764,7 +773,10 @@ public class WizardPageEnterprise extends WizardPage {
 		//backupLocationData.horizontalAlignment = GridData.FILL;
 
 		backupLocation.setLayoutData(backupLocationData);
-		backupLocation.setEnabled(false);
+		if(info.isBackup())
+			backupLocation.setEnabled(true);
+		else
+			backupLocation.setEnabled(false);
 		backup.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
