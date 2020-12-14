@@ -303,7 +303,7 @@ public class RemoteDeployer {
 					if(replace) {
 						// Backup ear and profile
 						if(backupEar) {
-							String earPath = (path.isEmpty() ? "" : path+":") + application.getArchiveName().toString();
+							String earPath = (path == null || path.isEmpty() ? "" : path+":") + application.getArchiveName().toString();
 							log.info("Generating backup ear file for application -> " + appName);
 							downloadArchive(domainName, backupLocation, earPath);
 							if(externalProfile) {

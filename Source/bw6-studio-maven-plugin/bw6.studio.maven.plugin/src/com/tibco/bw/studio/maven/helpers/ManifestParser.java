@@ -18,14 +18,19 @@ import org.osgi.framework.BundleException;
 public class ManifestParser 
 {
 	
-	public static Map<String,String> parseManifest( IProject project ) throws FileNotFoundException, IOException, BundleException
+	public static Map<String,String> parseManifest( IProject project ) throws Exception
 	{
-		IFile manifest = PDEProject.getManifest(project);
-
-		Map<String,String> headers = new HashMap<String,String>();		
-		ManifestElement.parseBundleManifest(new FileInputStream( manifest.getLocation().toFile()), headers);
-		
-		return headers;
+		if(project.exists())
+		{
+			IFile manifest = PDEProject.getManifest(project);
+	
+			Map<String,String> headers = new HashMap<String,String>();		
+			ManifestElement.parseBundleManifest(new FileInputStream( manifest.getLocation().toFile()), headers);
+			
+			return headers;
+		} else {
+			throw new Exception("The project - "+ project.getName() + " does not exists in the workspace. Please import the project.");
+		}
 	}
 
 	
