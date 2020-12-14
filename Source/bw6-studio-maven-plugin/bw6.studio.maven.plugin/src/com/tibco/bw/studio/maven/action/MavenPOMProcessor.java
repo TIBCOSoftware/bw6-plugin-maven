@@ -1,6 +1,8 @@
 package com.tibco.bw.studio.maven.action;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +18,9 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -90,10 +94,15 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 				return;
 			}
 		} catch(Exception e) {
-			 Activator.logException("Failed to generate the POM file ", IStatus.ERROR, e);		
+			 Activator.logException("Failed to generate the POM file ", IStatus.ERROR, e);	
+			 StringWriter stringWriter = new StringWriter();
+			 PrintWriter printWriter = new PrintWriter(stringWriter);
+			 e.printStackTrace(printWriter);
+			 ErrorDialog.openError(shell, "Error", "Error while generating pom file - "+e.getMessage(), new Status(IStatus.ERROR, "Bw6-Maven-Plugin", stringWriter.toString(), e));
 		}
 	}
 
+	
 	/**
 	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
 	 */
