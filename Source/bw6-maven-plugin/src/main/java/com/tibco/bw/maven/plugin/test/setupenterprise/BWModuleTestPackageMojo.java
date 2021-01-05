@@ -1,19 +1,15 @@
 package com.tibco.bw.maven.plugin.test.setupenterprise;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.jar.Manifest;
-
+import com.tibco.bw.maven.plugin.build.BuildProperties;
+import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
+import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
+import com.tibco.bw.maven.plugin.utils.Constants;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.artifact.resolver.filter.TypeArtifactFilter;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -21,15 +17,8 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.DefaultDependencyResolutionRequest;
-import org.apache.maven.project.DependencyResolutionException;
-import org.apache.maven.project.DependencyResolutionResult;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectDependenciesResolver;
+import org.apache.maven.project.*;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
-import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
-import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.FileSet;
@@ -38,14 +27,13 @@ import org.codehaus.plexus.archiver.jar.ManifestException;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.eclipse.aether.graph.Dependency;
 
-import com.tibco.bw.maven.plugin.build.BuildProperties;
-import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.jar.Manifest;
+
 //import com.tibco.bw.maven.plugin.classpath.ClassPathFile;
 //import com.tibco.bw.maven.plugin.classpath.ClassPathFileParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
-import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwtestmodule", defaultPhase = LifecyclePhase.GENERATE_TEST_RESOURCES)
 public class BWModuleTestPackageMojo extends AbstractMojo {
@@ -186,17 +174,11 @@ public class BWModuleTestPackageMojo extends AbstractMojo {
 				continue;
 			}
 			
-			
 			Manifest mf = ManifestParser.parseManifestFromJAR( file);
-			for( Object str : mf.getMainAttributes().keySet())
-			{
-				getLog().debug( str.toString() );
-				if( "TIBCO-BW-SharedModule".equals(str.toString() ))
-				{
-					continue;
-					
-				}
+			if(ManifestParser.isSharedModule(mf)) {
+				continue;
 			}
+
 			getLog().debug("Dependency added with name " + file.toString());
 			jarArchiver.addFile(file, "lib/" + file.getName());
 			buffer.append(",lib/" + file.getName());

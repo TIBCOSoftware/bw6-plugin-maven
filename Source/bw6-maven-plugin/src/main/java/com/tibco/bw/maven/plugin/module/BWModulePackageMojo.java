@@ -1,14 +1,11 @@
 package com.tibco.bw.maven.plugin.module;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.jar.Manifest;
-
+import com.tibco.bw.maven.plugin.build.BuildProperties;
+import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
+import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
+import com.tibco.bw.maven.plugin.utils.Constants;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
@@ -21,11 +18,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.DefaultDependencyResolutionRequest;
-import org.apache.maven.project.DependencyResolutionException;
-import org.apache.maven.project.DependencyResolutionResult;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectDependenciesResolver;
+import org.apache.maven.project.*;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
@@ -38,14 +31,13 @@ import org.codehaus.plexus.archiver.jar.ManifestException;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.eclipse.aether.graph.Dependency;
 
-import com.tibco.bw.maven.plugin.build.BuildProperties;
-import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.jar.Manifest;
+
 //import com.tibco.bw.maven.plugin.classpath.ClassPathFile;
 //import com.tibco.bw.maven.plugin.classpath.ClassPathFileParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
-import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwmodule", defaultPhase = LifecyclePhase.PACKAGE)
 public class BWModulePackageMojo extends AbstractMojo {
@@ -195,15 +187,8 @@ public class BWModulePackageMojo extends AbstractMojo {
 			if(mf == null){
 				throw new Exception("Failed to get Manifest for - "+ file.getName() +". Please verify if jar file is valid, the MANIFEST.MF should be first or second entry in the jar file. Use Command - jar tf <Jar_File_Path> to verify.");
 			}
-			for( Object str : mf.getMainAttributes().keySet())
-			{
-				getLog().debug( str.toString() );
-				if( Constants.TIBCO_SHARED_MODULE.equals(str.toString() ))
-				{
-					isSharedModule = true;
-					break;
-				}
-			}
+			isSharedModule = ManifestParser.isSharedModule(mf);
+
 			if(!isSharedModule) {
 				getLog().debug("Dependency added with name " + file.toString());
 				jarArchiver.addFile(file, "lib/" + file.getName());
