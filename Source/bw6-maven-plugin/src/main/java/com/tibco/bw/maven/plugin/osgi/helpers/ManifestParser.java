@@ -1,14 +1,10 @@
 package com.tibco.bw.maven.plugin.osgi.helpers;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import com.tibco.bw.maven.plugin.utils.Constants;
+
+import java.io.*;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
-
-import com.tibco.bw.maven.plugin.utils.Constants;
 
 public class ManifestParser {
 
@@ -95,5 +91,11 @@ public class ManifestParser {
 		}
 		
 		return updatedProvidesCapabilities;
+	}
+
+	public static boolean isSharedModule(Manifest mf) {
+
+		//mf.getMainAttributes().containsKey() require an Object not a String and don't return right value
+		return (mf.getMainAttributes().getValue(Constants.TIBCO_SHARED_MODULE) != null);
 	}
 }

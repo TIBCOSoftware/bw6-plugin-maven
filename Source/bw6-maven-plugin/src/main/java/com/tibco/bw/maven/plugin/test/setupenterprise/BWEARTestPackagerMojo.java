@@ -1,27 +1,12 @@
 package com.tibco.bw.maven.plugin.test.setupenterprise;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.apache.commons.io.FileUtils;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
+import com.tibco.bw.maven.plugin.osgi.helpers.Version;
+import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
+import com.tibco.bw.maven.plugin.utils.BWModulesParser;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import com.tibco.bw.maven.plugin.utils.Constants;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
@@ -32,11 +17,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.DefaultDependencyResolutionRequest;
-import org.apache.maven.project.DependencyResolutionException;
-import org.apache.maven.project.DependencyResolutionResult;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectDependenciesResolver;
+import org.apache.maven.project.*;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.eclipse.aether.graph.Dependency;
@@ -45,13 +26,19 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
-import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
-import com.tibco.bw.maven.plugin.osgi.helpers.Version;
-import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.utils.BWModulesParser;
-import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
-import com.tibco.bw.maven.plugin.utils.Constants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileOutputStream;
+import java.util.*;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 @Mojo(name = "bwtestear", defaultPhase = LifecyclePhase.GENERATE_TEST_RESOURCES)
 public class BWEARTestPackagerMojo extends AbstractMojo {
@@ -182,10 +169,9 @@ public class BWEARTestPackagerMojo extends AbstractMojo {
                 File moduleJar = artifact.getFile();
                 
 				Manifest mf = ManifestParser.parseManifestFromJAR( moduleJar );
-				if( mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+				if( ManifestParser.isSharedModule(mf) )
 				{
 	                jarchiver.addFile(moduleJar, artifact.getArtifactId()+ "_" + artifact.getBaseVersion()+ ".jar");
-
 				}
 				else
 				{
@@ -231,18 +217,10 @@ public class BWEARTestPackagerMojo extends AbstractMojo {
     				String dependencyVersion = BWProjectUtils.getModuleVersion(artifact.getFile());
     				
     				Manifest mf = ManifestParser.parseManifestFromJAR( f);
-    				for( Object str : mf.getMainAttributes().keySet())
-    				{
-    					getLog().debug( str.toString() );
-    					if( "TIBCO-BW-SharedModule".equals(str.toString() ))
-    					{
-    	    				moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
-    						artifactFiles.add(artifact.getFile());
-    						break;
-    						
-    					}
-    				}
-    				
+    				if(ManifestParser.isSharedModule(mf)) {
+						moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
+						artifactFiles.add(artifact.getFile());
+					}
     			}
     		}
     		
@@ -260,17 +238,10 @@ public class BWEARTestPackagerMojo extends AbstractMojo {
 	    			
 	    			Manifest mf = ManifestParser.parseManifestFromJAR( dependency.getArtifact().getFile() );
 	    			
-    				for( Object str : mf.getMainAttributes().keySet())
-    				{
-    					getLog().debug( str.toString() );
-    					if( "TIBCO-BW-SharedModule".equals(str.toString() ))
-    					{
-    		    			String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
-    		                moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
-    						artifactFiles.add(dependency.getArtifact().getFile());
-    						break;
-    						
-    					}
+    				if(ManifestParser.isSharedModule(mf)) {
+						String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
+						moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
+						artifactFiles.add(dependency.getArtifact().getFile());
     				}
 
 	        	}
