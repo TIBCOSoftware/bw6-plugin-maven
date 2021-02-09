@@ -32,6 +32,7 @@ import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWProjectType;
 import com.tibco.bw.studio.maven.modules.model.BWSharedModule;
 import com.tibco.bw.studio.maven.modules.model.BWTestInfo;
+import com.tibco.bw.studio.maven.modules.model.TCIDeploymentInfo;
 import com.tibco.bw.studio.maven.preferences.MavenDefaultsPreferencePage;
 import com.tibco.bw.studio.maven.preferences.MavenProjectPreferenceHelper;
 import com.tibco.bw.studio.maven.preferences.MavenPropertiesFileDefaults;
@@ -131,7 +132,7 @@ public class BWProjectBuilder {
 		
 		Model model = application.getMavenModel();
 		
-BWTestInfo testInfo = application.getTestInfo();
+		BWTestInfo testInfo = application.getTestInfo();
 		
 		if( model != null && model.getProperties() != null )
 		{
@@ -145,6 +146,8 @@ BWTestInfo testInfo = application.getTestInfo();
 		}
 		
 		BWDeploymentInfo info = application.getDeploymentInfo();
+		
+		TCIDeploymentInfo tciInfo = application.getTCIDeploymentInfo();
 		
 		if(model == null) {
 			return;
@@ -192,6 +195,12 @@ BWTestInfo testInfo = application.getTestInfo();
 		info.setAppNodeConfig(getMapValuesFromDom("appNodeConfig", dom, model));
 		info.setRestartAppNode(getBooleanValuefromDom("restartAppNode", dom, model));
 		info.setEarUploadPath(getStringValuefromDom("earUploadPath", dom, model));
+		
+		//TCI
+        tciInfo.setInstanceCount(getIntValuefromDom("instanceCount", dom, model));
+        tciInfo.setAppVariablesFile(getStringValuefromDom("appVariablesFile", dom, model));
+        tciInfo.setForceOverwrite(getBooleanValuefromDom("forceOverwrite", dom, model));
+        tciInfo.setRetainAppProps(getBooleanValuefromDom("retainAppProps", dom, model));
 	}
 
 	private Map<String,String> getMapValuesFromDom(String name, Xpp3Dom dom, Model model) {
@@ -239,6 +248,16 @@ BWTestInfo testInfo = application.getTestInfo();
 			return false;
 		}
 	}
+	
+	private int getIntValuefromDom(String name, Xpp3Dom dom, Model model) {
+		String value = getStringValuefromDom(name, dom, model);
+		try {
+			return Integer.parseInt(value);
+		} catch(Exception e) {
+			return 0;
+		}
+	}
+
 
 	private void buildModules(BWApplication application) throws Exception {
 		for(BWModuleParser.BWModuleData data : moduleData) {

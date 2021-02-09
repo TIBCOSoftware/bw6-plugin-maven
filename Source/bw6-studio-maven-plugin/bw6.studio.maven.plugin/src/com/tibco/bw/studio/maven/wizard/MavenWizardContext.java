@@ -15,8 +15,15 @@ public class MavenWizardContext {
 	private WizardPagePCF wizardPagePCF;
 	private WizardPageDocker wizardPageDocker;
 	private WizardPageK8S wizardPageK8S;
+	private WizardPageTCI wizardPageTCI;
 	
-	
+	public WizardPageTCI getTCIPage() {
+		return wizardPageTCI;
+	}
+
+	public void setTCIPage(WizardPageTCI wizardPageTCI) {
+		this.wizardPageTCI = wizardPageTCI;
+	}
 	private List<BWProjectTypes> projectTypes = new ArrayList<BWProjectTypes>();
 	
 	private BWProjectTypes selectedType = BWProjectTypes.None;

@@ -1,6 +1,7 @@
 package com.tibco.bw.studio.maven.action;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
@@ -39,6 +41,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.PlatformUI;
 
+import com.tibco.bw.studio.maven.helpers.AppVarJSONWriter;
 import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.BWProjectBuilder;
@@ -47,8 +50,12 @@ import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWParent;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.plugin.Activator;
+import com.tibco.bw.studio.maven.util.ProcessDiagramGenerator;
+import com.tibco.bw.studio.maven.wizard.BWProjectTypes;
 import com.tibco.bw.studio.maven.wizard.MavenWizard;
+import com.tibco.bw.studio.maven.wizard.MavenWizardContext;
 import com.tibco.bw.studio.maven.wizard.MavenWizardDialog;
+import com.tibco.zion.dc.cloud.manifest.ManifestJSONWriter;
 
 public class MavenPOMProcessor implements IObjectActionDelegate {
 	private Shell shell;
@@ -83,6 +90,14 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 				addMavenNature();
 				refreshProjects();
 				addParentProjectToWS();
+				if( MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.TCI )
+				{
+					generateManifestJSON(selectedProject);
+					generateDiagrams(selectedProject);
+					generateAppVarJSON(selectedProject);
+					//refresh project
+					selectedProject.refreshLocal(IResource.DEPTH_INFINITE, null);
+				}
 			} else {  
 				//Added for Issue ID-AMBW-27792
 				IFile pomFile = selectedProject.getFile("/pom.xml");
@@ -102,7 +117,25 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 		}
 	}
 
-	
+	private void generateAppVarJSON(IProject project) throws IOException {
+		String projDir = project.getLocation().toString();
+		String manifestJsonLocation = projDir + File.separator + "manifest.json";
+		String appVarJsonLocation = projDir + File.separator + "default_appvar.json";
+		AppVarJSONWriter.write(manifestJsonLocation, appVarJsonLocation);
+		
+	}
+
+	private void generateDiagrams(IProject selectedProject) throws Exception {
+		ProcessDiagramGenerator.generateDiagrams(selectedProject);		
+	}
+
+	//Generate Manifest.json file for TCI deployments 
+	private void generateManifestJSON(IProject project) throws CoreException 
+	{
+		String directory = project.getLocation().toString();
+		ManifestJSONWriter.INSTANCE.writeCloudManifestFile(project, directory);
+	}
+
 	/**
 	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
 	 */
