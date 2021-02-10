@@ -4,6 +4,7 @@ public class TCIDeploymentInfo {
 	
 	private int instanceCount;
 	private String appVariablesFile;
+	private String engineVariablesFile;
 	private boolean forceOverwrite;
 	private boolean retainAppProps;
 	
@@ -30,6 +31,12 @@ public class TCIDeploymentInfo {
 	}
 	public void setForceOverwrite(boolean forceOverwrite) {
 		this.forceOverwrite = forceOverwrite;
+	}
+	public String getEngineVariablesFile() {
+		return engineVariablesFile;
+	}
+	public void setEngineVariablesFile(String engineVariablesFile) {
+		this.engineVariablesFile = engineVariablesFile;
 	}
 	
 	

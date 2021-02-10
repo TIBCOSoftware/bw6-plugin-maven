@@ -199,6 +199,7 @@ public class BWProjectBuilder {
 		//TCI
         tciInfo.setInstanceCount(getIntValuefromDom("instanceCount", dom, model));
         tciInfo.setAppVariablesFile(getStringValuefromDom("appVariablesFile", dom, model));
+        tciInfo.setEngineVariablesFile(getStringValuefromDom("engineVariablesFile", dom, model));
         tciInfo.setForceOverwrite(getBooleanValuefromDom("forceOverwrite", dom, model));
         tciInfo.setRetainAppProps(getBooleanValuefromDom("retainAppProps", dom, model));
 	}

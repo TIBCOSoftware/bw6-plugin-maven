@@ -42,6 +42,7 @@ import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.PlatformUI;
 
 import com.tibco.bw.studio.maven.helpers.AppVarJSONWriter;
+import com.tibco.bw.studio.maven.helpers.EngineVarJSONWriter;
 import com.tibco.bw.studio.maven.helpers.FileHelper;
 import com.tibco.bw.studio.maven.helpers.ModuleHelper;
 import com.tibco.bw.studio.maven.modules.BWProjectBuilder;
@@ -95,6 +96,7 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 					generateManifestJSON(selectedProject);
 					generateDiagrams(selectedProject);
 					generateAppVarJSON(selectedProject);
+					generateEngineVarJSON(selectedProject);
 					//refresh project
 					selectedProject.refreshLocal(IResource.DEPTH_INFINITE, null);
 				}
@@ -115,6 +117,13 @@ public class MavenPOMProcessor implements IObjectActionDelegate {
 			 e.printStackTrace(printWriter);
 			 ErrorDialog.openError(shell, "Error", "Error while generating pom file - "+e.getMessage(), new Status(IStatus.ERROR, "Bw6-Maven-Plugin", stringWriter.toString(), e));
 		}
+	}
+
+	private void generateEngineVarJSON(IProject project) throws IOException {
+		String projDir = project.getLocation().toString();
+		String manifestJsonLocation = projDir + File.separator + "manifest.json";
+		String engineVarJsonLocation = projDir + File.separator + "default_enginevar.json";
+		EngineVarJSONWriter.write(manifestJsonLocation, engineVarJsonLocation);
 	}
 
 	private void generateAppVarJSON(IProject project) throws IOException {

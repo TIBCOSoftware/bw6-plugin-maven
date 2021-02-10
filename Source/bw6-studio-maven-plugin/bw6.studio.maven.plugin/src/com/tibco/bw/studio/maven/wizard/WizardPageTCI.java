@@ -85,7 +85,7 @@ public class WizardPageTCI extends WizardPage {
 		label.setText("- The EAR file will be deployed to the TIBCO Cloud Integration Platform\r\n"
 				+ "- Please set the OAuth access token via TCI_PLATFORM_API_ACCESS_TOKEN environment variable.\r\n"
 				+ "- Please set the TCI subscription ID via TCI_PLATFORM_SUBSCRIPTION_ID environment variable. Default is 0.\r\n"
-				+ "- The wizard will generate Process Diagrams, default_appvar.json and manifest.json file under application project.");
+				+ "- The wizard will generate Process Diagrams, default_appvar.json, default_enginevar.json and manifest.json file under application project.");
 		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 	}
 
@@ -166,6 +166,7 @@ public class WizardPageTCI extends WizardPage {
 						.getTCIDeploymentInfo();
 				info.setInstanceCount(instanceCount.getSelection());
 				info.setAppVariablesFile(module.getProject().getLocation().toString() + "/default_appvar.json");
+				info.setEngineVariablesFile(module.getProject().getLocation().toString() + "/default_enginevar.json");
 				info.setForceOverwrite(forceOverwrite.getSelection());
 				info.setRetainAppProps(retainAppProps.getSelection());
 			}

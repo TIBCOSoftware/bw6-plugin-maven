@@ -85,6 +85,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 				plugin.setConfiguration(config);
 				model.getProperties().remove("instanceCount");
 				model.getProperties().remove("appVariablesFile");
+				model.getProperties().remove("engineVariablesFile");
 				model.getProperties().remove("forceOverwrite");
 				model.getProperties().remove("retainAppProps");
 				return;
@@ -102,6 +103,11 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.addProperty("appVariablesFile", tciInfo.getAppVariablesFile());
 			properties.put("appVariablesFile", tciInfo.getAppVariablesFile());
 			
+			Xpp3Dom engineVariablesFile = new Xpp3Dom("engineVariablesFile");
+			engineVariablesFile.setValue("${engineVariablesFile}");
+			model.addProperty("engineVariablesFile", tciInfo.getEngineVariablesFile());
+			properties.put("engineVariablesFile", tciInfo.getEngineVariablesFile());
+			
 			Xpp3Dom forceOverwrite = new Xpp3Dom("forceOverwrite");
 			forceOverwrite.setValue("${forceOverwrite}");
 			model.addProperty("forceOverwrite", Boolean.toString(tciInfo.isForceOverwrite()));
@@ -114,6 +120,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			
 			config.addChild(instanceCount);
 			config.addChild(appVariablesFile);
+			config.addChild(engineVariablesFile);
 			config.addChild(forceOverwrite);
 			config.addChild(retainAppProps);
 			
