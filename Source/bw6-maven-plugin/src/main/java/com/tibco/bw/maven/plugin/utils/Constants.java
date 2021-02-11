@@ -18,4 +18,15 @@ public interface Constants {
 	public static final String TEMP_SUBSTVAR= "external.substvar";
 	public static final String TIMESTAMP= "timestamp";
 	public static final String COMPONENT_PROCESS = "ComponentProcess";
+	
+	//TCI
+	public static final String TCI_SERVER_ENDPOINT_ENV = "TCI_PLATFORM_API_ENDPOINT";
+	public static final String TCI_ACCESS_TOKEN_ENV = "TCI_PLATFORM_API_ACCESS_TOKEN";
+	public static final String BWCLOUD = "bwcloud";
+	public static final String TCI = "TCI";
+	public static final String TCI_SUBSCRIPTION_ID_ENV = "TCI_PLATFORM_SUBSCRIPTION_ID";
+	public static final String TCI_SERVER = "api.cloud.tibco.com";
+	public static final String TCI_APP_STATUS_UPDATING = "updating";
+	public static final String TCI_APP_STATUS_BUILDING = "building";
+	public static final String TCI_CONTEXT_ROOT = "/tci/v1/subscriptions/";
 }

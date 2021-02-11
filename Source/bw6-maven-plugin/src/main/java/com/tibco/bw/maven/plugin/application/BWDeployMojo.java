@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -343,10 +344,26 @@ public class BWDeployMojo extends AbstractMojo {
 					.getProperty("externalProfile"));
 			externalProfileLoc = deployment.getProperty("externalProfileLoc");
 			earUploadPath = deployment.getProperty("earUploadPath");
+			getAppNodeConfigProps(deployment);
 		} catch (Exception e) {
 			getLog().error(e);
 			getLog().info(
 					"Error in Loading Deployment Properties. Skipping EAR Deployment.");
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void getAppNodeConfigProps(Properties deployment){
+		for(Object propKey : deployment.keySet()){
+			if(((String)propKey).startsWith("appNodeConfig_")){
+				String key = ((String)propKey).split("_")[1];
+				if(appNodeConfig == null)
+					appNodeConfig = new HashMap<String, String>();
+				if(key != null){
+					appNodeConfig.put(key, deployment.getProperty((String)propKey));
+					getLog().info("AppNodeConfig -> "+ key + " : "+ deployment.getProperty((String)propKey));
+				}
+			}
 		}
 	}
 
