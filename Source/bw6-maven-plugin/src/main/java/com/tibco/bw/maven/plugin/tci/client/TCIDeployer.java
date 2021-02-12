@@ -44,7 +44,10 @@ import com.tibco.bw.maven.plugin.admin.client.ClientException;
 import com.tibco.bw.maven.plugin.tci.dto.TCIAppId;
 import com.tibco.bw.maven.plugin.tci.dto.TCIAppStatus;
 import com.tibco.bw.maven.plugin.tci.dto.TCIError;
+import com.tibco.bw.maven.plugin.tci.dto.TCIOrganization;
 import com.tibco.bw.maven.plugin.tci.dto.TCIProperty;
+import com.tibco.bw.maven.plugin.tci.dto.TCIUserInfo;
+import com.tibco.bw.maven.plugin.tci.dto.TCIVariables;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
 public class TCIDeployer {
@@ -59,18 +62,13 @@ public class TCIDeployer {
 	private final int retryCount;
 	private Log log;
 	private int SLEEP_INTERVAL = 1000;
-	private Set<String> defaultEngineProps = new HashSet<String>(Arrays.asList(
-			"BW_LOGGER_OVERRIDES", "BW_ENGINE_THREADCOUNT",
-			"BW_ENGINE_STEPCOUNT", "BW_INSTRUMENTATION_ENABLED",
-			"CUSTOM_ENGINE_PROPERTY", "BW_APP_CPU_ALERT_THRESHOLD",
-			"BW_APP_MEM_ALERT_THRESHOLD"));
 
 	/*
 	 * Initialize TCI deployer, prepare config using ENV variables.
 	 * TCI_PLATFORM_API_ENDPOINT = The Endpoint to the TCI Server Platform
 	 * API's. TCI_PLATFORM_API_ACCESS_TOKEN = The OAuth Access token for
-	 * accessing TCI Pltform API. TCI_PLATFORM_SUBSCRIPTION_ID = The TCI
-	 * Subscription ID, default to 0 if not specified.
+	 * accessing TCI Pltform API. TCI_PLATFORM_SUBSCRIPTION_LOCATOR = The TCI
+	 * Subscription Locator, defaults to current org if not specified.
 	 */
 
 	public TCIDeployer(int connectTimeout, int readTimeout, int retryCount,
@@ -96,18 +94,23 @@ public class TCIDeployer {
 					"TCI Access token is missing. Please set environment variable TCI_PLATFORM_API_ACCESS_TOKEN");
 		}
 
-		if (System.getenv(Constants.TCI_SUBSCRIPTION_ID_ENV) != null
-				&& System.getenv(Constants.TCI_SUBSCRIPTION_ID_ENV).trim()
+		//init();
+		
+		if (System.getenv(Constants.TCI_SUBSCRIPTION_LOCATOR_ENV) != null
+				&& System.getenv(Constants.TCI_SUBSCRIPTION_LOCATOR_ENV).trim()
 						.length() > 0) {
-			this.contextRoot = this.contextRoot
-					+ System.getenv(Constants.TCI_SUBSCRIPTION_ID_ENV)
+			this.contextRoot = this.contextRoot + "subscriptions/"
+					+ System.getenv(Constants.TCI_SUBSCRIPTION_LOCATOR_ENV)
 					+ "/apps";
-			this.log.info("Using Subscription ID -> "
-					+ System.getenv(Constants.TCI_SUBSCRIPTION_ID_ENV));
+			this.log.info("Using Subscription Locator -> "
+					+ System.getenv(Constants.TCI_SUBSCRIPTION_LOCATOR_ENV));
 		} else {
-			this.contextRoot = this.contextRoot + "0/apps";
-			this.log.info("The environment variable TCI_PLATFORM_SUBSCRIPTION_ID is not set. Using Subscription ID -> 0");
+			//String subscriptionLocator = getCurrentOrgSubscriptionLocator();
+			String subscriptionLocator = "0";
+			this.contextRoot = this.contextRoot + "subscriptions/" + subscriptionLocator + "/apps";
+			this.log.info("The environment variable TCI_PLATFORM_SUBSCRIPTION_LOCATOR is not set. Using Subscription Locator -> "+ subscriptionLocator);
 		}
+		
 		init();
 	}
 
@@ -153,6 +156,32 @@ public class TCIDeployer {
 			this.jerseyClient.close();
 			this.jerseyClient = null;
 		}
+	}
+	
+	/*
+	 * Get User info to find current org subscription locator
+	 */
+	
+	private String getCurrentOrgSubscriptionLocator() throws ClientException 
+	{
+		String subscriptionLocator = null;
+		
+		//get user info
+		Response response = r
+				.path("userinfo")
+				.request(MediaType.APPLICATION_JSON_TYPE)
+				.get();
+		processErrorResponse(response);
+		TCIUserInfo tciUserInfo = response.readEntity(TCIUserInfo.class);
+		for (TCIOrganization org : tciUserInfo.getOrganizations()) {
+			if(org.isCurrentOrg()){
+				subscriptionLocator = org.getSubscriptionLocator();
+				break;
+			}
+		}
+		log.info("Current User org subscription locator : "+ subscriptionLocator);
+		
+		return subscriptionLocator;
 	}
 
 	/*
@@ -214,7 +243,8 @@ public class TCIDeployer {
 		String appStatus = Constants.TCI_APP_STATUS_UPDATING;
 		int count = 0;
 		while ((Constants.TCI_APP_STATUS_UPDATING.equalsIgnoreCase(appStatus) || Constants.TCI_APP_STATUS_BUILDING
-				.equalsIgnoreCase(appStatus)) && count < this.retryCount) {
+				.equalsIgnoreCase(appStatus) || Constants.TCI_APP_STATUS_SCALING.equalsIgnoreCase(appStatus)) 
+				&& count < this.retryCount) {
 			Thread.sleep(SLEEP_INTERVAL);
 			count++;
 			Response response = r.path(appId).path("status")
@@ -278,7 +308,8 @@ public class TCIDeployer {
 	 */
 
 	private void setEngineVariables(String appId, String variablesFile)
-			throws IOException, ClientException {
+			throws IOException, ClientException 
+	{
 		// /v1/apps/{id}/env/variables
 		if (variablesFile.contains("http") && isValidURL(variablesFile)) {
 			String localFileName = variablesFile.substring(variablesFile
@@ -295,28 +326,54 @@ public class TCIDeployer {
 		String variablesFileContent = new String(Files.readAllBytes(Paths
 				.get(variablesFile)));
 
-		// extract new user variables.
+		// extract user variables.
 		ObjectMapper objectMapper = new ObjectMapper();
 		List<TCIProperty> engineProps = objectMapper.readValue(
 				variablesFileContent, new TypeReference<List<TCIProperty>>() {
 				});
+		
+		
+		//fetch existing user engine vars
+		Response resp = r
+				.queryParam("variableType", "user")
+				.path(appId)
+				.path("env")
+				.path("variables")
+				.request(MediaType.APPLICATION_JSON_TYPE)
+				.get();
+		processErrorResponse(resp);
+		TCIVariables existingUserEngineProps = resp.readEntity(TCIVariables.class);
+		log.info("Fetched existing user engine variables for app : " + appId);
+		
 
-		List<TCIProperty> defaultEnginePropsList = new ArrayList<TCIProperty>();
-		List<TCIProperty> userEnginePropsList = new ArrayList<TCIProperty>();
+		List<TCIProperty> updateEnginePropsList = new ArrayList<TCIProperty>();
+		List<TCIProperty> newUserEnginePropsList = new ArrayList<TCIProperty>();
+		List<TCIProperty> updateUserEnginePropsList = new ArrayList<TCIProperty>();
 		
 		for (TCIProperty tciProperty : engineProps) {
-			if(defaultEngineProps.contains(tciProperty.getName())){
-				defaultEnginePropsList.add(tciProperty);
+			if(Constants.TCI_DEFAULT_ENGINE_PROPS.contains(tciProperty.getName())){
+				updateEnginePropsList.add(tciProperty);
 			} else {
-				userEnginePropsList.add(tciProperty);
+				boolean found = false;
+				for (TCIProperty tciProp : existingUserEngineProps.getUserVariables()) {
+					if(tciProp.getName().equalsIgnoreCase(tciProperty.getName())){
+						found = true;
+						break;
+					}
+				}
+				if(found){
+					updateUserEnginePropsList.add(tciProperty);
+				} else {
+					newUserEnginePropsList.add(tciProperty);
+				}
 			}
 		}
 		
-		if(!defaultEnginePropsList.isEmpty())
+		if(!updateEnginePropsList.isEmpty())
 		{
-			String defaultEnginePropsStr = objectMapper.writeValueAsString(defaultEnginePropsList);
+			String updateEnginePropsListStr = objectMapper.writeValueAsString(updateEnginePropsList);
 			
-			log.debug("Updating engine variables -> "+ defaultEnginePropsStr);
+			log.debug("Updating engine variables -> "+ updateEnginePropsListStr);
 			// update values for existing engine variables.
 	
 			Response response = r
@@ -325,17 +382,17 @@ public class TCIDeployer {
 					.path("env")
 					.path("variables")
 					.request(MediaType.APPLICATION_JSON_TYPE)
-					.put(Entity.entity(defaultEnginePropsStr,
+					.put(Entity.entity(updateEnginePropsListStr,
 							MediaType.APPLICATION_JSON));
 			processErrorResponse(response);
 			log.info("Successfully updated engine variables for app : " + appId);
 		}
 		
-		if(!userEnginePropsList.isEmpty())
+		if(!newUserEnginePropsList.isEmpty())
 		{
-			String userEnginePropsListsStr = objectMapper.writeValueAsString(userEnginePropsList);
+			String newEnginePropsListsStr = objectMapper.writeValueAsString(newUserEnginePropsList);
 			
-			log.debug("Adding user engine variables -> "+ userEnginePropsListsStr);
+			log.debug("Adding user engine variables -> "+ newEnginePropsListsStr);
 			// add user engine variables.
 	
 			Response response = r
@@ -343,10 +400,29 @@ public class TCIDeployer {
 					.path("env")
 					.path("variables")
 					.request(MediaType.APPLICATION_JSON_TYPE)
-					.post(Entity.entity(userEnginePropsListsStr,
+					.post(Entity.entity(newEnginePropsListsStr,
 							MediaType.APPLICATION_JSON));
 			processErrorResponse(response);
 			log.info("Successfully added user engine variables for app : " + appId);
+		}
+		
+		if(!updateUserEnginePropsList.isEmpty())
+		{
+			String updateUserEnginePropsListStr = objectMapper.writeValueAsString(updateUserEnginePropsList);
+			
+			log.debug("Updating user engine variables -> "+ updateUserEnginePropsListStr);
+			// update values for existing engine variables.
+	
+			Response response = r
+					.queryParam("variableType", "user")
+					.path(appId)
+					.path("env")
+					.path("variables")
+					.request(MediaType.APPLICATION_JSON_TYPE)
+					.put(Entity.entity(updateUserEnginePropsListStr,
+							MediaType.APPLICATION_JSON));
+			processErrorResponse(response);
+			log.info("Successfully updated user engine variables for app : " + appId);
 		}
 	}
 
