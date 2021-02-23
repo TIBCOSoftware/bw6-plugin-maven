@@ -109,6 +109,10 @@ public class EngineLaunchConfigurator
 				{
 					currentLine = currentLine.replace("%%ENGINE_DEBUG_PORT%%", String.valueOf(BWTestExecutor.INSTANCE.getEngineDebugPort()) );
 				}
+				if( currentLine.contains("%REST_DOCAPI_PORT%%"))
+				{
+					currentLine = currentLine.replace("%%REST_DOCAPI_PORT%%", String.valueOf(BWTestExecutor.INSTANCE.getRestApiDocPort()) );
+				}
 				if( currentLine.equals("-dev"))
 				{
 					if( isDev)

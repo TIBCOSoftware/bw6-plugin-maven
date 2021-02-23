@@ -121,6 +121,7 @@ public class EngineRunner
 						if( line.contains( "TIBCO-THOR-FRWK-300019") && line.contains("impaired"))
 						{
 							isImpaired.set(true);
+							latch.countDown();
 						}
 			        }
 			        if(latch.getCount()>0){

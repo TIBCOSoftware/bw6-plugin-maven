@@ -28,6 +28,7 @@ public class BWTestExecutor
 	public static BWTestExecutor INSTANCE = new BWTestExecutor();
 	
 	int engineDebugPort;
+	int restApiDocPort;
 	int engineStartupWaitTime;
 	List<String> osgiCommands;
 	boolean skipInitMainProcessActivities;
@@ -186,7 +187,15 @@ public class BWTestExecutor
 	public int getEngineDebugPort(){
 		return engineDebugPort;
 	}
-	
+
+	public void setRestApiDocPort(int restApiDocPort){
+		this.restApiDocPort = restApiDocPort;
+	}
+
+	public int getRestApiDocPort(){
+		return restApiDocPort;
+	}
+
 	public List<String> getMockActivityList() {
 		return mockActivity;
 	}

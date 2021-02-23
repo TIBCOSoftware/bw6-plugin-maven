@@ -32,14 +32,14 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 	public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
 		logger.info("Starting Maven Build for BW6 Project.................................");
 		logger.info("Checking for In-Project JAR dependencies if any and Pushing them to Local Maven Repository");
-		logger.debug("Cleaning existing JARs from Mavne Repository");
+		logger.debug("Cleaning existing JARs from Maven Repository");
 		File file = new File(session.getLocalRepository().getBasedir() + "/tempbw");
 		try {
 			if(file.exists()) {
 				FileUtils.deleteDirectory(file) ;	
 			}
 		} catch(Exception e) {
-			logger.error("Failed to clean the existing bwtemp group in Maven Repository.");
+			logger.error(String.format("Failed to clean the existing {} group in Maven Repository.", file.getAbsolutePath()), e);
 		}
 
 		List<MavenProject> projects = session.getProjects();
