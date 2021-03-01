@@ -113,6 +113,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
     		cleanup();
     		getLog().info("BWEARPackager Mojo finished execution");
+    		
 		} catch (Exception e1) {
 			throw new MojoExecutionException("Failed to create BW EAR Archive ", e1);
 		}
@@ -135,7 +136,10 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		File earFile = getArchiveFileName();
 		archiver.setArchiver(jarchiver);
 
+		getLog().debug("Adding Application Process Diagrams...");
 		addDiagrams();
+		getLog().debug("Adding Application manifest.json file...");
+		addManifestJSON();
 
 		archiver.setOutputFile(earFile);
 
@@ -304,9 +308,29 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
     }
     
+    
     private boolean containsDiagrams()
     {
     	return new File( projectBasedir , "resources").exists();
+    }
+    
+    private boolean containsManifestJSON()
+    {
+    	return new File( projectBasedir , "manifest.json").exists();
+    }
+    
+    private void addManifestJSON()
+    {
+        DefaultFileSet fileSet = new DefaultFileSet();
+        fileSet.setDirectory(projectBasedir);
+        if( containsManifestJSON())
+        {
+        	String [] includes = new String [] { "manifest.json"};
+        	fileSet.setIncludes(includes);
+        	archiver.getArchiver().addFileSet(fileSet);
+        }
+        
+
     }
 
 	private DependencyResolutionResult getDependenciesResolutionResult() {

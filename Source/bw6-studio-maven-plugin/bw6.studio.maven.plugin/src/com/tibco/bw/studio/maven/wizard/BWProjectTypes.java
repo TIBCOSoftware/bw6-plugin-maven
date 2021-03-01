@@ -7,6 +7,7 @@ public enum BWProjectTypes
 	AppSpace,
 	PCF,
 	Docker,
+	TCI,
 	
 	
 }

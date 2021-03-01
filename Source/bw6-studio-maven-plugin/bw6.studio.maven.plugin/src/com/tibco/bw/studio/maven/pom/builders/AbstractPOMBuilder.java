@@ -852,6 +852,10 @@ public abstract class AbstractPOMBuilder {
 				case "bwe":
 					bwEdition = "bw6";
 					break;
+					
+				case "bwcloud":
+					bwEdition = "bwcloud";
+					break;
 
 				case "bwcf":
 

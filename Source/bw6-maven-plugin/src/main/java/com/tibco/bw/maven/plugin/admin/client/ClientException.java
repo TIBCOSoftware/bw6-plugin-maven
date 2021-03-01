@@ -4,11 +4,11 @@ public class ClientException extends Exception {
 	private static final long serialVersionUID = -4148210972308062778L;
 	private final int code;
 
-    ClientException(int code, String message, Throwable cause) {
+    public ClientException(int code, String message, Throwable cause) {
         super(message, cause);
         this.code = code;
     }
-    ClientException(String message) {
+    public ClientException(String message) {
         super(message);
         this.code = 100;
     }
