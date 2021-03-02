@@ -32,8 +32,10 @@ public class BWTestExecutor
 	List<String> osgiCommands;
 	boolean skipInitMainProcessActivities;
 	boolean skipInitAllNonTestProcessActivities;
+	String customArgEngine;
 	
 
+	
 	List<String> mockActivity = new ArrayList<String>();
 	
 	
@@ -228,6 +230,15 @@ public class BWTestExecutor
 			boolean skipInitAllNonTestProcessActivities) {
 		this.skipInitAllNonTestProcessActivities = skipInitAllNonTestProcessActivities;
 	}
+	
+	public String getCustomArgEngine() {
+		return customArgEngine;
+	}
+
+	public void setCustomArgEngine(String customArgEngine) {
+		this.customArgEngine = customArgEngine;
+	}
+
 	
 	
 	
