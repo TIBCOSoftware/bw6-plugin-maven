@@ -2,11 +2,18 @@ package com.tibco.bw.maven.plugin.test.setuplocal;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.ws.rs.ProcessingException;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 
@@ -16,8 +23,40 @@ public class EngineLaunchConfigurator
 	public void loadConfiguration() throws Exception
 	{
 		
-		
+		List<String> customPropertyList = null;
 		BufferedReader reader = readEnvFile();
+		List<String> result = null; 
+		
+		String customEnginePropertyFile = BWTestExecutor.INSTANCE.getCustomArgEngine();
+		
+		if(null != customEnginePropertyFile && !customEnginePropertyFile.isEmpty()){
+			BufferedReader proertyReader = null;
+			try {
+				URL url = new URL(customEnginePropertyFile);
+				proertyReader = new BufferedReader(
+					        new InputStreamReader(url.openStream()));
+			}
+			catch (MalformedURLException ex){
+				File file = new File(customEnginePropertyFile);
+				if(!file.isAbsolute()){
+					customEnginePropertyFile =	BWTestConfig.INSTANCE.getProject().getBasedir().getAbsolutePath().concat(file.getPath());
+				}
+				if (new File(customEnginePropertyFile).exists()) {
+					proertyReader = new BufferedReader(new FileReader(customEnginePropertyFile));
+				}
+				else {
+					throw new Exception("File Not Found " +customEnginePropertyFile);
+				}
+
+			}catch(ProcessingException e){
+				throw e;
+			}
+			catch(Exception e){
+				throw e;
+			}
+			
+			customPropertyList =  readArguments( proertyReader );
+		}
 		
 		if( reader == null )
 		{
@@ -26,7 +65,16 @@ public class EngineLaunchConfigurator
 		
 		List<String> list =  readArguments( reader );
 		
-		BWTestConfig.INSTANCE.setLaunchConfig(list);	
+		if(customPropertyList!= null && !customPropertyList.isEmpty()){
+			result = Stream.concat(list.stream(), customPropertyList.stream())
+					.collect(Collectors.toList()); 
+		}
+		else{
+			result = list;
+		}
+
+		
+		BWTestConfig.INSTANCE.setLaunchConfig(result);	
 		
 		
 	}

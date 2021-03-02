@@ -62,6 +62,9 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "skipInitAllNonTestProcessActivities" , defaultValue = "false" )
     private boolean skipInitAllNonTestProcessActivities;
     
+    @Parameter( property = "customArgEngine"  )
+    private String customArgEngine;
+    
     public void execute() throws MojoExecutionException , MojoFailureException
     {
     	
@@ -213,7 +216,9 @@ public class BWTestMojo extends AbstractMojo {
 		
 		BWTestExecutor.INSTANCE.setSkipInitAllNonTestProcessActivities(skipInitAllNonTestProcessActivities);
 		
-    	BWTestConfig.INSTANCE.reset();
+		BWTestExecutor.INSTANCE.setCustomArgEngine(customArgEngine);
+    	
+		BWTestConfig.INSTANCE.reset();
     	
     	BWTestConfig.INSTANCE.setTestSuiteName(testSuiteName);
     	
