@@ -118,7 +118,8 @@ public class EngineRunner
 							latch.countDown();
 						}
 						//TIBCO-THOR-FRWK-300019: BW Application is impaired
-						if( line.contains( "TIBCO-THOR-FRWK-300019") && line.contains("impaired"))
+						if( ( line.contains( "TIBCO-THOR-FRWK-300019") && line.contains("impaired") ) ||
+								( line.contains( "TIBCO-THOR-FRWK-300008") && line.contains("Stopped BW Application") ) )
 						{
 							isImpaired.set(true);
 						}
