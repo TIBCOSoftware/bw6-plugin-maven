@@ -452,10 +452,10 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 					break;
 				}
 			}
-			if(remove){
+		/*	if(remove){  //It was unnecessarily removing the external dependencies for non-mavenised project as well
 				toRemove.add(record);
 			}
-
+*/
 		}
 
 		//Remove referenced projects from hostProject
