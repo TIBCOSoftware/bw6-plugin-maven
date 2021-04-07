@@ -185,6 +185,10 @@ public class BWEARInstallerMojo extends AbstractMojo {
             }
             //TCI deployment
             if(projectType != null && projectType.equalsIgnoreCase(Constants.TCI)){
+            	if(!deployToAdmin) {
+	    			getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
+	    			return;
+	    		}
             	File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
  	    		if(files.length == 0) {
  	    			throw new Exception("EAR file not found for the Application");
@@ -206,7 +210,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	    			return;
 	    		}
 	    		if(!deployToAdmin) {
-	    			getLog().info("Deploy To Admin is set to False. Skipping EAR Deployment.");
+	    			getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
 	    			return;
 	    		}
 	    		
