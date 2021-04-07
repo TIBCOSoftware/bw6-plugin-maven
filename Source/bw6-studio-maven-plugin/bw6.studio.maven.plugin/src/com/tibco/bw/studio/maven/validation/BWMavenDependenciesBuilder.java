@@ -452,7 +452,7 @@ public class BWMavenDependenciesBuilder extends BWAbstractBuilder{
 					break;
 				}
 			}
-			if(remove){
+			if(remove){  
 				toRemove.add(record);
 			}
 
