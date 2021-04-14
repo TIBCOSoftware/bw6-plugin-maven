@@ -7,6 +7,7 @@ public class TCIDeploymentInfo {
 	private String engineVariablesFile;
 	private boolean forceOverwrite;
 	private boolean retainAppProps;
+	private boolean deployToAdmin = true;
 	
 	public int getInstanceCount() {
 		return instanceCount;
@@ -38,7 +39,14 @@ public class TCIDeploymentInfo {
 	public void setEngineVariablesFile(String engineVariablesFile) {
 		this.engineVariablesFile = engineVariablesFile;
 	}
-	
+	public boolean isDeployToAdmin() {
+		return deployToAdmin;
+	}
+
+	public void setDeployToAdmin(boolean deployToAdmin) {
+		this.deployToAdmin = deployToAdmin;
+	}
+
 	
 
 }

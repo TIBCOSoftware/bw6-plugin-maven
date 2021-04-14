@@ -88,10 +88,16 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 				model.getProperties().remove("engineVariablesFile");
 				model.getProperties().remove("forceOverwrite");
 				model.getProperties().remove("retainAppProps");
+				model.getProperties().remove("deployToAdmin");
 				return;
 			}
 			
 			Xpp3Dom config = new Xpp3Dom("configuration");
+			
+			Xpp3Dom deployToAdmin  = new Xpp3Dom("deployToAdmin");
+			deployToAdmin.setValue("${deployToAdmin}");
+			model.addProperty("deployToAdmin", Boolean.toString(tciInfo.isDeployToAdmin()));
+			properties.put("deployToAdmin", Boolean.toString(tciInfo.isDeployToAdmin()));
 			
 			Xpp3Dom instanceCount = new Xpp3Dom("instanceCount");
 			instanceCount.setValue("${instanceCount}");
