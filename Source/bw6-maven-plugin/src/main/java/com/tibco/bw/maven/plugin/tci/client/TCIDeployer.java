@@ -355,10 +355,12 @@ public class TCIDeployer {
 				updateEnginePropsList.add(tciProperty);
 			} else {
 				boolean found = false;
-				for (TCIProperty tciProp : existingUserEngineProps.getUserVariables()) {
-					if(tciProp.getName().equalsIgnoreCase(tciProperty.getName())){
-						found = true;
-						break;
+				if(existingUserEngineProps.getUserVariables() != null){
+					for (TCIProperty tciProp : existingUserEngineProps.getUserVariables()) {
+						if(tciProp.getName().equalsIgnoreCase(tciProperty.getName())){
+							found = true;
+							break;
+						}
 					}
 				}
 				if(found){

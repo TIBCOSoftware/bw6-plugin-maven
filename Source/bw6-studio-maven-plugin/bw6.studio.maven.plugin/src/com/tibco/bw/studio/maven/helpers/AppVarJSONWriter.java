@@ -33,14 +33,17 @@ public class AppVarJSONWriter {
 		
 		JsonArrayBuilder props = Json.createArrayBuilder();
 		//transform to appvar format
-		for (JsonValue prop : appProps) {
-			JsonObject obj = (JsonObject)prop;
-			JsonObjectBuilder propObj = Json.createObjectBuilder();
-			propObj.add("name", obj.getString("name"));
-			propObj.add("description", "");
-			propObj.add("type", obj.getString("datatype"));
-			propObj.add("value", obj.getString("default"));
-			props.add(propObj);
+		if(appProps != null) 
+		{
+			for (JsonValue prop : appProps) {
+				JsonObject obj = (JsonObject)prop;
+				JsonObjectBuilder propObj = Json.createObjectBuilder();
+				propObj.add("name", obj.getString("name"));
+				propObj.add("description", "");
+				propObj.add("type", obj.getString("datatype"));
+				propObj.add("value", obj.getString("default"));
+				props.add(propObj);
+			}
 		}
 		
 		//write appvar.json file
