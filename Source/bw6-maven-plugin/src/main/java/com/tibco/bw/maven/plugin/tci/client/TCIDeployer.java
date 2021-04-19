@@ -193,9 +193,9 @@ public class TCIDeployer {
 			throws ClientException, IOException, InterruptedException {
 
 		// if set variables
-		if ((appVariablesFile != null && appVariablesFile.trim().length() > 0)
+		if (((appVariablesFile != null && appVariablesFile.trim().length() > 0)
 				|| (engineVariablesFile != null && engineVariablesFile.trim()
-						.length() > 0)) {
+						.length() > 0)) && !retainAppProps) {
 			// push app
 			this.log.info("Pushing app to TCI, AppName -> " + appName);
 			String appId = pushApp(appName, earPath, 0, forceOverwrite,
@@ -482,7 +482,7 @@ public class TCIDeployer {
 					.path(appId).path("scale")
 					.request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
-			log.info("Successfully scaled the app : " + appId + " to "
+			log.info("Successfully submitted scale app request : " + appId + " to "
 					+ instances + " instances.");
 		}
 	}
