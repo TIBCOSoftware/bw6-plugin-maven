@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: TIBCO BusinessWorks™ Studio Plugin for Maven
 Bundle-SymbolicName: bw6.studio.maven.plugin;singleton:=true
-Bundle-Version: 2.8.1.qualifier
+Bundle-Version: 2.9.0.qualifier
 Bundle-Activator: com.tibco.bw.studio.maven.plugin.Activator
 Bundle-Vendor: Tibco Sotfware Inc
 Require-Bundle: org.eclipse.ui,
@@ -24,7 +24,7 @@ Require-Bundle: org.eclipse.ui,
  com.tibco.zion.dc,
  com.tibco.bw.core.design.resource,
  org.eclipse.swt
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/commons-io-2.4.jar,
  lib/maven-model-3.0.5.jar,
