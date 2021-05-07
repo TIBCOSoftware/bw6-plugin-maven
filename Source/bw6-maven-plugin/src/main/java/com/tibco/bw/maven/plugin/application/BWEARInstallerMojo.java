@@ -169,6 +169,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	
 	@Parameter(property = "retainAppProps", defaultValue = "false")
 	private boolean retainAppProps;
+	
+	@Parameter(property = "startOnDeploy", defaultValue = "true")
+	private boolean startOnDeploy;
 
 	private String earLoc;
 	private String earName;
@@ -231,7 +234,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	    			
 	    		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 	
-	    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo, connectTimeout, readTimeout, retryCount);
+	    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo, connectTimeout, readTimeout, retryCount,startOnDeploy);
 	    		deployer.setLog(getLog());
 	
 	    		List<Agent> agents = deployer.getAgentInfo();
