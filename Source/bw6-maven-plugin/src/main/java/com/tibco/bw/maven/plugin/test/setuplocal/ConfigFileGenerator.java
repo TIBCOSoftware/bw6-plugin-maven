@@ -86,7 +86,7 @@ public class ConfigFileGenerator
 			properties.put( "osgi.bundles", builder.toString() );
 			properties.put( "osgi.bundles.defaultStartLevel", "5" );
 			properties.put( "osgi.install.area", "file:" + BWTestConfig.INSTANCE.getTibcoHome() + BWTestConfig.INSTANCE.getBwHome() + "/system/hotfix/lib/common");
-			properties.put("osgi.framework", "file:" + BWTestConfig.INSTANCE.getTibcoHome() + BWTestConfig.INSTANCE.getBwHome() + "/system/lib/common/org.eclipse.osgi_3.10.1.v20140909-1633.jar");
+			properties.put("osgi.framework", "file:" + BWTestConfig.INSTANCE.getTibcoHome() + BWTestConfig.INSTANCE.getBwHome() + "/system/lib/common/org.eclipse.osgi_3.15.300.v20200520-1959.jar");
 			properties.put("osgi.configuration.cascaded", "false");
 			
 			FileOutputStream stream = new FileOutputStream(configIni);
