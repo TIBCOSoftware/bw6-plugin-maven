@@ -128,7 +128,9 @@ public class BWDeployMojo extends AbstractMojo {
 	
 	@Parameter(property="readTimeout", defaultValue = "120000")
 	private int readTimeout;
-	
+
+	@Parameter(property="startOnDeploy", defaultValue ="true")
+	private boolean startOnDeploy;
 	
 	private String earName;
 	private String earLoc;
@@ -188,7 +190,7 @@ public class BWDeployMojo extends AbstractMojo {
 			RemoteDeployer deployer = new RemoteDeployer(agentHost,
 					Integer.parseInt(agentPort), agentAuth, agentUsername,
 					agentPassword, agentSSL, trustPath, trustPassword, keyPath,
-					keyPassword,createAdminCompo, connectTimeout, readTimeout, retryCount);
+					keyPassword,createAdminCompo, connectTimeout, readTimeout, retryCount, startOnDeploy);
 			deployer.setLog(getLog());
 
 			List<Agent> agents = deployer.getAgentInfo();
