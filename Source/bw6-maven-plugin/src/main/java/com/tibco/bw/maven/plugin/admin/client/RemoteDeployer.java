@@ -342,7 +342,7 @@ public class RemoteDeployer {
 				checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
 			}
 			else{
-				log.info("AppName -> "+ appName + " will not start since startOnDeploy flag is -> "+ startOndeploy);
+				log.info("AppName -> "+ appName + " will not auto start since startOnDeploy flag is -> "+ startOndeploy);
 			}
 	}
 
