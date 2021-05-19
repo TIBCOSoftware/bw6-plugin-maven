@@ -338,7 +338,12 @@ public class RemoteDeployer {
 				}
 			}
 			Thread.sleep(SLEEP_INTERVAL);
-			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+			if(startOndeploy){
+				checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+			}
+			else{
+				log.info("AppName -> "+ appName + " will not auto start since startOnDeploy flag is -> "+ startOndeploy);
+			}
 	}
 
 	private List<AppSpace> getAppSpaces(final String domainName, final String filter, final boolean full, final boolean status) throws ClientException {
