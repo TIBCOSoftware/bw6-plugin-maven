@@ -18,7 +18,6 @@ import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.ProjectDependenciesResolver;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 
@@ -34,14 +33,11 @@ public class BWTestsReport extends AbstractMavenReport
 	@Parameter(defaultValue="${session}", readonly=true)
 	  private MavenSession session;
 
-	  @Parameter( property = "showFailureDetails" , defaultValue = "true" )
+	  @Parameter( property = "showFailureDetails" , defaultValue = "false" )
 	    private boolean showFailureDetails;
 	  
 	  @Parameter( property = "testSuiteName" , defaultValue = "" )
 	    private String testSuiteName;
-	  
-	  @Component
-	    ProjectDependenciesResolver resolver;
 
 
 	@Override
@@ -118,7 +114,6 @@ public class BWTestsReport extends AbstractMavenReport
 			BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, getProject() , logger );
 			TestFileParser.INSTANCE.setshowFailureDetails(showFailureDetails);
 			BWTestConfig.INSTANCE.setTestSuiteName(testSuiteName);
-			BWTestConfig.INSTANCE.setResolver(resolver);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

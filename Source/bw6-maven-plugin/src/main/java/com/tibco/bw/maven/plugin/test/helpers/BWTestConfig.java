@@ -9,9 +9,7 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectDependenciesResolver;
 
 public class BWTestConfig 
 {
@@ -37,8 +35,6 @@ public class BWTestConfig
 	private MavenSession session;
 	
 	private MavenProject project;
-	
-	ProjectDependenciesResolver resolver;
 	
 	private Log logger;
 	
@@ -208,14 +204,6 @@ public class BWTestConfig
 
 	public void setUserTestSuiteNames(Map<String, Boolean> userTestSuiteNames) {
 		this.userTestSuiteNames = userTestSuiteNames;
-	}
-
-	public ProjectDependenciesResolver getResolver() {
-		return resolver;
-	}
-
-	public void setResolver(ProjectDependenciesResolver resolver) {
-		this.resolver = resolver;
 	}
 	
 }
