@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -127,7 +128,9 @@ public class BWDeployMojo extends AbstractMojo {
 	
 	@Parameter(property="readTimeout", defaultValue = "120000")
 	private int readTimeout;
-	
+
+	@Parameter(property="startOnDeploy", defaultValue ="true")
+	private boolean startOnDeploy;
 	
 	private String earName;
 	private String earLoc;
@@ -187,7 +190,7 @@ public class BWDeployMojo extends AbstractMojo {
 			RemoteDeployer deployer = new RemoteDeployer(agentHost,
 					Integer.parseInt(agentPort), agentAuth, agentUsername,
 					agentPassword, agentSSL, trustPath, trustPassword, keyPath,
-					keyPassword,createAdminCompo, connectTimeout, readTimeout, retryCount);
+					keyPassword,createAdminCompo, connectTimeout, readTimeout, retryCount, startOnDeploy);
 			deployer.setLog(getLog());
 
 			List<Agent> agents = deployer.getAgentInfo();
@@ -343,10 +346,26 @@ public class BWDeployMojo extends AbstractMojo {
 					.getProperty("externalProfile"));
 			externalProfileLoc = deployment.getProperty("externalProfileLoc");
 			earUploadPath = deployment.getProperty("earUploadPath");
+			getAppNodeConfigProps(deployment);
 		} catch (Exception e) {
 			getLog().error(e);
 			getLog().info(
 					"Error in Loading Deployment Properties. Skipping EAR Deployment.");
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void getAppNodeConfigProps(Properties deployment){
+		for(Object propKey : deployment.keySet()){
+			if(((String)propKey).startsWith("appNodeConfig_")){
+				String key = ((String)propKey).split("_")[1];
+				if(appNodeConfig == null)
+					appNodeConfig = new HashMap<String, String>();
+				if(key != null){
+					appNodeConfig.put(key, deployment.getProperty((String)propKey));
+					getLog().info("AppNodeConfig -> "+ key + " : "+ deployment.getProperty((String)propKey));
+				}
+			}
 		}
 	}
 

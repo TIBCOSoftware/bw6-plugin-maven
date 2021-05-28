@@ -1,6 +1,8 @@
 package com.tibco.bw.maven.plugin.process;
 
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import com.tibco.bw.maven.plugin.utils.Constants;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -46,6 +48,10 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	
 	String binDir = null;
 	
+	@Parameter(property="project.type")
+	private String projectType;
+	
+	
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 	try{	
@@ -77,14 +83,21 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 				{
 					importWorkspace();
 					generateProcessDiagram();
-				} else if(null != commandName && commandName.trim().length() > 0) {
+				} else if(null != commandName && commandName.equals("generate_manifest_json")) {
+					importWorkspace();
+					generateManifestJSON();
+					
+				}else if(null != commandName && commandName.trim().length() > 0) {
 					importWorkspace();
 					executeCommand();
-				}
+				} 
 				else {
 					importWorkspace();
 					validateBWProject();
 					generateProcessDiagram();
+					if(projectType != null && projectType.equalsIgnoreCase(Constants.TCI)){
+						generateManifestJSON();
+					}
 				}
 			}
 	}catch(MojoFailureException e){
@@ -151,7 +164,35 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 		}
 	}
 
-	
+	private void generateManifestJSON() throws MojoExecutionException {
+		List<String> params = new ArrayList<>();
+		params = createUtilityArgument(params);
+		params.add("generate_manifest_json");
+		params.add("-project");
+		params.add(project.getName());
+		params.add(project.getBasedir().getParent().concat(File.separator).concat(project.getName()));
+		
+
+		try {
+			ProcessBuilder builder = new ProcessBuilder( params);
+	        builder.directory( new File( executorHome ) );
+			// redirect error stream to /dev/null
+			if(BWProjectUtils.OS.WINDOWS.equals(BWProjectUtils.getOS())) {
+				builder.redirectError(new File("NUL"));
+			} else {
+				builder.redirectError(new File("/dev/null"));
+			}
+			final Process process = builder.start();
+	        logger.info("---------------------Generating Manifest JSON-----------------------");
+			logger.debug("Launching bwdesign utility with params: " + params);
+
+			printProcessOutput(process);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new MojoExecutionException( e.getMessage(), e);
+		}
+	}
 
 	private List<String> createUtilityArgument(List<String> params) {
 

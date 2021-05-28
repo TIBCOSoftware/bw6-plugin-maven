@@ -52,6 +52,10 @@ public class MavenWizard extends Wizard {
 							MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.PCF );
 							MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.Docker );							
 						break;
+						
+						case "bwcloud":
+							MavenWizardContext.INSTANCE.getProjectTypes().add( BWProjectTypes.TCI );
+						break;
 
 						default:
 							break;
@@ -71,10 +75,12 @@ public class MavenWizard extends Wizard {
 				MavenWizardContext.INSTANCE.setPCFPage(new WizardPagePCF("PCF Deployment Configuration",project));
 				MavenWizardContext.INSTANCE.setDockerPage(new WizardPageDocker("Docker Deployment Configuration", project));
 				MavenWizardContext.INSTANCE.setKubernetesPage(new WizardPageK8S("Kubernetes Deployment Configuration", project));
+				MavenWizardContext.INSTANCE.setTCIPage(new WizardPageTCI("TCI Deployment Configuration", project));
 				addPage(MavenWizardContext.INSTANCE.getEnterprisePage());
 				addPage(MavenWizardContext.INSTANCE.getPCFPage());
 				addPage(MavenWizardContext.INSTANCE.getDockerPage());
 				addPage(MavenWizardContext.INSTANCE.getKubernetesPage());
+				addPage(MavenWizardContext.INSTANCE.getTCIPage());
 			}
 		}
 		catch(Exception e )
@@ -114,6 +120,9 @@ public class MavenWizard extends Wizard {
 					
 				case Docker:
 					MavenWizardContext.INSTANCE.getDockerPage().getUpdatedProject();
+					
+				case TCI:
+					MavenWizardContext.INSTANCE.getTCIPage().getUpdatedProject();
 					
 			default:
 				break;

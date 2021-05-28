@@ -7,6 +7,7 @@ public class BWApplication extends BWModule
 {
 
 	private BWDeploymentInfo deploymentInfo = new BWDeploymentInfo();
+	private TCIDeploymentInfo tciDeploymentInfo = new TCIDeploymentInfo();
 	private BWTestInfo testInfo = new BWTestInfo();
 	
 	public BWModuleType getType() 
@@ -28,6 +29,17 @@ public class BWApplication extends BWModule
 	{
 		this.deploymentInfo = deploymentInfo;
 	}
+	
+	public TCIDeploymentInfo getTCIDeploymentInfo()
+	{
+		return tciDeploymentInfo;
+	}
+
+	public void setTCIDeploymentInfo(TCIDeploymentInfo tciDeploymentInfo)
+	{
+		this.tciDeploymentInfo = tciDeploymentInfo;
+	}
+	
 	public BWTestInfo getTestInfo() 
 	{
 		return testInfo;

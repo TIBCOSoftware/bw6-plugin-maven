@@ -71,8 +71,9 @@ public class RemoteDeployer {
 	private final int retryCount;
 	private Log log;
 	private int SLEEP_INTERVAL = 10000;
+	private final boolean startOndeploy;
 
-	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo, final int connectTimeout, final int readTimeout, final int retryCount) {
+	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo, final int connectTimeout, final int readTimeout, final int retryCount, final boolean startOndeploy) {
 		this.host = host;
 		this.port = port;
 		this.agentAuth = agentAuthType;
@@ -87,6 +88,7 @@ public class RemoteDeployer {
 		this.connectTimeout = connectTimeout;
 		this.readTimeout = readTimeout;
 		this.retryCount = retryCount;
+		this.startOndeploy = startOndeploy;
 	}
 
 	private void init() {
@@ -297,8 +299,11 @@ public class RemoteDeployer {
 
 	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc, final String appNodeName, final String path) throws Exception {
 		List<Application> applications = getApplications(domainName, appSpaceName, null, true);
+		String appDescription=null;
 		
 		for(Application application : applications) {
+			//= application.getDescription();
+			//log.info("*********"+appDescription+"**********");
 				if(application.getName().equals(appName)) {
 					if(replace) {
 						// Backup ear and profile
@@ -324,14 +329,21 @@ public class RemoteDeployer {
 			log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
 			uploadArchive(domainName, path, file, true);
 			log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
-			deployApplication(domainName, appSpaceName, earName, path, true, replace, profile,externalProfile);
+			deployApplication(domainName, appSpaceName, earName, path, startOndeploy, replace, profile,externalProfile,appDescription);
 			if(externalProfile){
 				setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
 				log.info("Starting Application -> "+ appName);
-				startApplication(domainName,appSpaceName,appName,version,appNodeName, true);
+				if(startOndeploy){
+					startApplication(domainName,appSpaceName,appName,version,appNodeName, true);
+				}
 			}
 			Thread.sleep(SLEEP_INTERVAL);
-			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+			if(startOndeploy){
+				checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+			}
+			else{
+				log.info("AppName -> "+ appName + " will not auto start since startOnDeploy flag is -> "+ startOndeploy);
+			}
 	}
 
 	private List<AppSpace> getAppSpaces(final String domainName, final String filter, final boolean full, final boolean status) throws ClientException {
@@ -492,11 +504,13 @@ public class RemoteDeployer {
 		}
 	}
 
-	private void deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile, boolean externalProfile) throws ClientException {
+	private void deployApplication(final String domainName, final String appSpaceName, final String archiveName, final String path, final boolean startOnDeploy, final boolean replace, final String profile, boolean externalProfile,final String appDescription) throws ClientException {
 		init();
 		try {
 			r = r.queryParam("archivename", archiveName);
 			addQueryParam("path", path);
+			
+			
 			
 			if(externalProfile){
 				r = r.queryParam("startondeploy", "false").queryParam("replace", String.valueOf(replace));
@@ -506,6 +520,8 @@ public class RemoteDeployer {
 				r = r.queryParam("startondeploy", String.valueOf(startOnDeploy)).queryParam("replace", String.valueOf(replace));
 				addQueryParam("profile", profile);
 			}
+			//addQueryParam("description",appDescription);
+			//log.info("*********"+appDescription+"**********");
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").request(MediaType.APPLICATION_JSON_TYPE).post(null);
 			processErrorResponse(response);
 		//	Application application = response.readEntity(Application.class);

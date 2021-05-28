@@ -20,6 +20,7 @@ import com.tibco.bw.studio.maven.modules.model.BWDeploymentInfo;
 import com.tibco.bw.studio.maven.modules.model.BWModule;
 import com.tibco.bw.studio.maven.modules.model.BWProject;
 import com.tibco.bw.studio.maven.modules.model.BWTestInfo;
+import com.tibco.bw.studio.maven.modules.model.TCIDeploymentInfo;
 import com.tibco.bw.studio.maven.plugin.Activator;
 import com.tibco.bw.studio.maven.wizard.BWProjectTypes;
 import com.tibco.bw.studio.maven.wizard.MavenWizardContext;
@@ -73,12 +74,67 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			model.getProperties().put("bw.Home", testInfo.getBwHome() );
 		}
 		
-		
-		
-		if( MavenWizardContext.INSTANCE.getSelectedType() != BWProjectTypes.AppSpace )
+		//TCI
+		if( MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.TCI )
 		{
-			return;
-		}
+			Properties properties = new Properties();
+			plugin.setConfiguration(null);
+			TCIDeploymentInfo tciInfo = ((BWApplication)module).getTCIDeploymentInfo();
+			if(tciInfo == null){
+				Xpp3Dom config = new Xpp3Dom("configuration");
+				plugin.setConfiguration(config);
+				model.getProperties().remove("instanceCount");
+				model.getProperties().remove("appVariablesFile");
+				model.getProperties().remove("engineVariablesFile");
+				model.getProperties().remove("forceOverwrite");
+				model.getProperties().remove("retainAppProps");
+				model.getProperties().remove("deployToAdmin");
+				return;
+			}
+			
+			Xpp3Dom config = new Xpp3Dom("configuration");
+			
+			Xpp3Dom deployToAdmin  = new Xpp3Dom("deployToAdmin");
+			deployToAdmin.setValue("${deployToAdmin}");
+			model.addProperty("deployToAdmin", Boolean.toString(tciInfo.isDeployToAdmin()));
+			properties.put("deployToAdmin", Boolean.toString(tciInfo.isDeployToAdmin()));
+			
+			Xpp3Dom instanceCount = new Xpp3Dom("instanceCount");
+			instanceCount.setValue("${instanceCount}");
+			model.addProperty("instanceCount", Integer.toString(tciInfo.getInstanceCount()));
+			properties.put("instanceCount", tciInfo.getInstanceCount());
+
+			Xpp3Dom appVariablesFile = new Xpp3Dom("appVariablesFile");
+			appVariablesFile.setValue("${appVariablesFile}");
+			model.addProperty("appVariablesFile", tciInfo.getAppVariablesFile());
+			properties.put("appVariablesFile", tciInfo.getAppVariablesFile());
+			
+			Xpp3Dom engineVariablesFile = new Xpp3Dom("engineVariablesFile");
+			engineVariablesFile.setValue("${engineVariablesFile}");
+			model.addProperty("engineVariablesFile", tciInfo.getEngineVariablesFile());
+			properties.put("engineVariablesFile", tciInfo.getEngineVariablesFile());
+			
+			Xpp3Dom forceOverwrite = new Xpp3Dom("forceOverwrite");
+			forceOverwrite.setValue("${forceOverwrite}");
+			model.addProperty("forceOverwrite", Boolean.toString(tciInfo.isForceOverwrite()));
+			properties.put("forceOverwrite", tciInfo.isForceOverwrite());
+			
+			Xpp3Dom retainAppProps = new Xpp3Dom("retainAppProps");
+			retainAppProps.setValue("${retainAppProps}");
+			model.addProperty("retainAppProps", Boolean.toString(tciInfo.isRetainAppProps()));
+			properties.put("retainAppProps", tciInfo.isRetainAppProps());
+			
+			config.addChild(instanceCount);
+			config.addChild(appVariablesFile);
+			config.addChild(engineVariablesFile);
+			config.addChild(forceOverwrite);
+			config.addChild(retainAppProps);
+			
+			plugin.setConfiguration(config);
+			
+		} //Enterprise
+		else if( MavenWizardContext.INSTANCE.getSelectedType() == BWProjectTypes.AppSpace )
+		{
 		Properties properties = new Properties();
 		plugin.setConfiguration(null);
 		BWDeploymentInfo info = ((BWApplication)module).getDeploymentInfo();
@@ -314,6 +370,7 @@ public class ApplicationPOMBuilder extends AbstractPOMBuilder implements IPOMBui
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
 		}
 	}
 	

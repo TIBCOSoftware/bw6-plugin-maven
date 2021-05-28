@@ -118,6 +118,9 @@ public class WizardPageConfiguration extends WizardPage {
 			case Docker:
 				return MavenWizardContext.INSTANCE.getDockerPage();
 				
+			case TCI:
+				return MavenWizardContext.INSTANCE.getTCIPage();
+				
 			default:
 				break;		
 		}
@@ -280,6 +283,11 @@ public class WizardPageConfiguration extends WizardPage {
 				
 				case "Docker":
 					MavenWizardContext.INSTANCE.setSelectedType(BWProjectTypes.Docker);
+					MavenWizardContext.INSTANCE.getNextButton().setEnabled(true);
+				break;
+				
+				case "TCI":
+					MavenWizardContext.INSTANCE.setSelectedType(BWProjectTypes.TCI);
 					MavenWizardContext.INSTANCE.getNextButton().setEnabled(true);
 				break;
 				
