@@ -557,7 +557,7 @@ public class BWEARTestPackagerMojo extends AbstractMojo {
     private void updateManifestVersion() {
     	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
     	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version, Constants.TIMESTAMP);
-    	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
+    	getLog().info("The OSGi version is " + qualifierVersion + " for Maven version of " + version);
     	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
     }
 }
