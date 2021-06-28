@@ -119,13 +119,13 @@ public class ProcessCoverageParser
 						break;
 					}
 				}
-				if(isSharedModule){
+			//	if(isSharedModule){
 					try {
 						parseESM(file, artifactFiles.get(file));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-				}
+			//	}
 			}
 		
 	}
@@ -173,11 +173,8 @@ public class ProcessCoverageParser
 		
 		ProcessCoverage coverage = parser.getCoverage();
 		
-		if( coverage.isSubProcess()) 
-		{
-			coverage.setModuleName(module);
+		    coverage.setModuleName(module);
 			processMap.put( coverage.getProcessName(),  coverage);	
-		}
 	}
 	
 	private void parseESM( File processFile , String module ) throws Exception
