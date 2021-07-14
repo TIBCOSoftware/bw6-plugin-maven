@@ -407,8 +407,10 @@ public class BWTestRunner
 					if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
 						inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
 					}
+					if(null != assertion.getStartElementNameTag() && null != assertion.getEndElementNameTag()) {
 					inputValue = assertion.getStartElementNameTag().concat(inputValue!= null ? inputValue : "").concat(assertion.getEndElementNameTag());
 					assertion.setActivityOutput(inputValue);
+					}
 				}
 				else{
 					inputValue = assertion.getActivityOutput();
