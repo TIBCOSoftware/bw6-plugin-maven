@@ -374,6 +374,15 @@ public class TestFileParser {
 				if(goldValue.contains("'")){
 					goldValue = StringUtils.substringBetween(goldValue, "'");
 				}
+				if(goldValue.equals("xsd:boolean(1)") || goldValue.equals("xsd:boolean(0)")){
+					String temp = StringUtils.substringBetween(goldValue, "(", ")");
+					if(temp.equals("1")){
+						goldValue = "true";
+					}
+					else{
+						goldValue = "false";
+					}
+				}
 				String elementNameString = StringUtils.substringBefore(goldValueWithElement, "=");
 				String[] elementNameArray = StringUtils.split(elementNameString, "/");
 				String elementName = elementNameArray[elementNameArray.length-1];
