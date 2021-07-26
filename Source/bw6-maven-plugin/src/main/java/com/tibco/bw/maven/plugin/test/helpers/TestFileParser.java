@@ -377,6 +377,9 @@ public class TestFileParser {
 				String elementNameString = StringUtils.substringBefore(goldValueWithElement, "=");
 				String[] elementNameArray = StringUtils.split(elementNameString, "/");
 				String elementName = elementNameArray[elementNameArray.length-1];
+				if(elementName.contains(")")){
+					elementName = StringUtils.removeEnd(elementName, ")");
+				}
 				String startElementTag = "<".concat(elementName).concat(">");
 				String endElementTag = "</".concat(elementName).concat(">");
 	
