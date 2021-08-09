@@ -419,7 +419,7 @@ public class BWTestRunner
 				StringBuilder assertionFileBuilder = new StringBuilder();
 				assertionFileBuilder.append("-----------------------------------------------------Fault Data---------------------------------------------------------------------\n");
 				assertionFileBuilder.append(" Assertion Failed For Activity with name "+"["+assertion.getActivityName()+"]");
-				assertionFileBuilder.append(" in Sub-Process ["+subProcessName+"]");
+				assertionFileBuilder.append(" in Process/Sub-Process ["+subProcessName+"]");
 				if(null != testSuiteName && !testSuiteName.isEmpty()){
 					assertionFileBuilder.append(" in TestSuite ["
 							+ testSuiteName + "]");	
