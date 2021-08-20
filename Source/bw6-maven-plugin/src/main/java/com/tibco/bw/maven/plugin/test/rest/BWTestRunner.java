@@ -98,7 +98,15 @@ public class BWTestRunner
 		
 		CompleteReportDTO result = new CompleteReportDTO();
 		
+		TestSuiteDTO suite = null;
+		
 		int failures = 0;
+		
+		if(BWTestConfig.INSTANCE.getRunESMTest()==true){
+			for(File baseDirectory : BWTestConfig.INSTANCE.getESMDirectories()){
+				failures = failures + runTestsPerESM( baseDirectory , result ,suite);	
+			}
+		}
 		
 		for( MavenProject project : projects )
 		{
@@ -162,6 +170,33 @@ public class BWTestRunner
 	}
 	
 	
+	@SuppressWarnings("unchecked")
+	public int runTestsPerESM( File project , CompleteReportDTO result, TestSuiteDTO suite ) throws MojoFailureException, Exception
+	{
+			AssertionsLoader loader = new AssertionsLoader(project);
+			 suite = loader.loadAssertionsFromESM();
+
+			//BWTestConfig.INSTANCE.getLogger().info( "Starting Tests in Module : " + project.getArtifactId() );			
+			
+			ModuleInfoDTO minfo = getModuleInfoFromESM( project );
+			
+			suite.setModuleInfo(minfo);
+			
+			printTestStats(suite);
+			
+			TestSuiteResultDTO resultDTO = r.path("tests").path("runtest").request(MediaType.APPLICATION_XML).post(Entity.entity(suite, MediaType.APPLICATION_XML) , TestSuiteResultDTO.class);
+			if( null != resultDTO ){
+				int failures = printTestResults(resultDTO, suite, null);
+				result.getModuleResult().add(resultDTO);
+				
+				return failures;
+			}
+			else{
+				throw new MojoFailureException("An Exception occurred while running test. Please enable BW debug logs to know more.");
+			}
+			
+		
+	}
 	
 	private ModuleInfoDTO getModuleInfo( MavenProject module )
 	{
@@ -190,7 +225,32 @@ public class BWTestRunner
 		return minfo;
 	}
 	
-	
+	private ModuleInfoDTO getModuleInfoFromESM( File module )
+	{
+		
+		
+		MavenProject application = BWProjectUtils.getApplicationProject(BWTestConfig.INSTANCE.getSession()); 
+		
+		Manifest projectManifest = ManifestParser.parseManifest( module );
+		String moduleVersion = projectManifest.getMainAttributes().getValue("Bundle-Version");
+		String moduleName = projectManifest.getMainAttributes().getValue("Bundle-SymbolicName");
+
+		
+		Manifest appManifest = ManifestParser.parseManifest( application.getBasedir() );
+		Version version = VersionParser.parseVersion(appManifest.getMainAttributes().getValue("Bundle-Version"));
+		String appVersion = version.getMajor() + "." + version.getMinor();
+		
+		String appName = appManifest.getMainAttributes().getValue("Bundle-SymbolicName");
+		
+		
+		ModuleInfoDTO minfo = new ModuleInfoDTO();
+		minfo.setAppName(appName);
+		minfo.setAppVersion(appVersion);
+		minfo.setModuleName(moduleName);
+		minfo.setModuleVersion(moduleVersion);
+
+		return minfo;
+	}
 	
 	private void saveReport( CompleteReportDTO resultDTO) 
 	{
@@ -264,8 +324,8 @@ public class BWTestRunner
 				
 				if( testcase.getAssertionFailure() > 0 )
 				{
-					failure++;
-					totalfailure++;
+					failure= failure + testcase.getAssertionFailure();
+					totalfailure = totalfailure + failure;
 					if(suite.isShowFailureDetails()){
 						printFailureDetails(testcase,testcase.getTestCaseFile(),testset.getProcessName(),"");
 					}
@@ -359,8 +419,8 @@ public class BWTestRunner
 			for (TestCaseResultDTO testCase : testCaseList) {
 
 				if (testCase.getAssertionFailure() > 0) {
-					failure++;
-					totalfailure++;
+					failure= failure+testCase.getAssertionFailure();
+					totalfailure = totalfailure + failure;
 					if (TestFileParser.INSTANCE.getshowFailureDetails()) {
 						printFailureDetails(testCase,
 								testCase.getTestCaseFile(),
@@ -402,8 +462,9 @@ public class BWTestRunner
 			AssertionResultDTO assertion =  (AssertionResultDTO) testcase.getAssertionResult().get(k);
 			if(!"passed".equals(assertion.getAssertionStatus())){
 			String inputValue = assertion.getActivityOutput();
-				if(assertion.getAssertionMode().equals("Primitive")){
+				if(assertion.getAssertionMode().equals("Primitive") ){
 					inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
+					inputValue = inputValue!=null? inputValue:assertion.getActivityOutput();
 					if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
 						inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
 					}

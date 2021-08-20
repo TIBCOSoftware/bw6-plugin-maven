@@ -68,6 +68,13 @@ public class BWTestExecutor
 			{
 				BWTestConfig.INSTANCE.getConfigDir().delete();
 			}
+			if( BWTestConfig.INSTANCE.getESMDirectories() != null )
+			{
+				for(File ESMDirectory :BWTestConfig.INSTANCE.getESMDirectories() ){
+				FileUtils.cleanDirectory(ESMDirectory);
+				ESMDirectory.delete();
+				}
+			}
 			
 		}
 		
@@ -82,6 +89,12 @@ public class BWTestExecutor
 	public void collectSkipInitActivityName() throws Exception,FileNotFoundException
 	{
 		List<MavenProject> projects = BWTestConfig.INSTANCE.getSession().getProjects();
+		
+		//extract the ESM 
+		if(BWTestConfig.INSTANCE.getRunESMTest() == true){
+			ESMTestFile esmTestFile = new ESMTestFile();
+			esmTestFile.extractESM();
+		}
 		
 		//user provided testsuite names in mvn goal
 		if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty())
@@ -146,6 +159,70 @@ public class BWTestExecutor
 			}
 		}
 		
+		//user provided ESM testsuite names in mvn goal
+		
+				if(BWTestConfig.INSTANCE.getRunESMTest() == true && null != BWTestConfig.INSTANCE.getEsmTestSuiteName() && !BWTestConfig.INSTANCE.getEsmTestSuiteName().isEmpty())
+				{
+					String[] esmTestSuiteNames;
+					
+					if(BWTestConfig.INSTANCE.getEsmTestSuiteName().contains("/")){
+						esmTestSuiteNames = StringUtils.splitByWholeSeparator(BWTestConfig.INSTANCE.getEsmTestSuiteName(), "/");
+					}
+					else{
+						esmTestSuiteNames = new String []{BWTestConfig.INSTANCE.getEsmTestSuiteName()};
+					}
+					Map<String,Boolean> userTestSuiteNames = new HashMap<String, Boolean>();
+					for(String testSuite : esmTestSuiteNames)
+						userTestSuiteNames.put(testSuite, false);
+					
+					BWTestConfig.INSTANCE.setUserESMTestSuiteNames(userTestSuiteNames);
+				}
+				
+				//Collect The Test Cases for External Shared Module
+				
+				if(BWTestConfig.INSTANCE.getRunESMTest() == true){
+					List<File> ESMbwtFiles = null;
+
+					
+						for(File esmFile : BWTestConfig.INSTANCE.getESMDirectories() ){
+
+							
+							String esmProjectPath = esmFile.getAbsolutePath();
+							if(!BWTestConfig.INSTANCE.getUserESMTestSuiteNames().isEmpty()){
+								BWTestSuiteLoader testSuiteLoader = new BWTestSuiteLoader();
+								ESMbwtFiles = 	testSuiteLoader.collectTestCasesListFromESM(esmProjectPath);
+							}else{
+								ESMbwtFiles = BWFileUtils.getEntitiesfromLocation( esmProjectPath , "bwt");
+								BWTestConfig.INSTANCE.setEsmTestCasesList(esmProjectPath,ESMbwtFiles);
+							
+							}
+							if(null !=ESMbwtFiles && ESMbwtFiles.isEmpty()){
+								Map<String, Map<String, List<File>>> testSuiteMap = BWTestConfig.INSTANCE.getEsmTestSuites();
+								
+								if(null == testSuiteMap.get(esmFile)){
+									ESMbwtFiles = BWFileUtils.getEntitiesfromLocation( esmProjectPath , "bwt");
+									BWTestConfig.INSTANCE.setEsmTestCasesList(esmProjectPath,ESMbwtFiles);
+								}
+								
+							}
+						
+							for( File file : ESMbwtFiles )
+							{
+								HashSet<String> tempSkipSet = new HashSet<String>();
+								String assertionxml = FileUtils.readFileToString( file );
+								tempSkipSet = TestFileParser.INSTANCE.collectSkipInitActivities(assertionxml);
+								if(!tempSkipSet.isEmpty()){
+									mockActivity.addAll(tempSkipSet);
+									BWTestExecutor.INSTANCE.setMockActivityList(mockActivity);;
+
+								}
+
+							
+							}
+
+						}
+					}
+		
 		//throw error if test suite not found in any module
 		if(BWTestConfig.INSTANCE.getUserTestSuiteNames().containsValue(false))
 		{
@@ -194,7 +271,7 @@ public class BWTestExecutor
 	}
 
 	public void setMockActivityList(List<String> mockActivity) {
-		this.mockActivity = mockActivity;
+		this.mockActivity.addAll(mockActivity);
 	}
 	
 	public int getEngineStartupWaitTime() {
