@@ -119,13 +119,13 @@ public class ProcessCoverageParser
 						break;
 					}
 				}
-			//	if(isSharedModule){
+				if(isSharedModule){
 					try {
 						parseESM(file, artifactFiles.get(file));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-			//	}
+				}
 			}
 		
 	}
@@ -200,11 +200,11 @@ public class ProcessCoverageParser
 						reader.setContentHandler(parser );
 						reader.parse(new InputSource(new StringReader( xml )));
 						ProcessCoverage coverage = parser.getCoverage();
-						if( coverage.isSubProcess()) 
-						{
+						//if( coverage.isSubProcess()) 
+					//	{
 							coverage.setModuleName(module);
 							processMap.put( coverage.getProcessName(),  coverage);	
-						}
+						//}
 					}
 				}
 			}

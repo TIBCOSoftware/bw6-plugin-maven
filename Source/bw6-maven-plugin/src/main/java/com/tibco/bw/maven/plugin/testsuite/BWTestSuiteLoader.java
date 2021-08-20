@@ -47,4 +47,35 @@ public class BWTestSuiteLoader {
 
 	}
 	
+	public List<File> collectTestCasesListFromESM(String baseDir) throws IOException{
+		List<File> testSuitefile = new ArrayList<File>();
+		List<String> testSuiteNamePathList = new ArrayList<String>();
+		List<String> testSuiteNameList = new ArrayList<String>();
+		
+		String testFolderPath = "";
+		for(String testSuiteName : BWTestConfig.INSTANCE.getUserESMTestSuiteNames().keySet())
+		{
+			String folderPath = BWFileUtils.getTestFolderName(baseDir,testSuiteName);
+			if(null != folderPath){
+					testFolderPath = folderPath;
+					testSuiteNamePathList.add(folderPath.concat("//"+testSuiteName));
+					testSuiteNameList.add(testSuiteName);
+					BWTestConfig.INSTANCE.getUserTestSuiteNames().replace(testSuiteName, true);
+			}
+			else{
+				//throw new FileNotFoundException("Test Suite file " +testSuiteName+ " is not found");
+				BWTestConfig.INSTANCE.getLogger().debug("Test Suite file " +testSuiteName+ " is not found at "+ baseDir);
+			}
+		}
+		
+		BWTestConfig.INSTANCE.setEsmTestSuiteNameList(baseDir, testSuiteNameList);
+
+		BWTSFileReaderWrapper fileReader = new BWTSFileReaderWrapper();
+		testSuitefile = fileReader.readBWTSFileFromESM(testSuiteNamePathList,testFolderPath, baseDir);
+		return testSuitefile;
+
+
+
+	}
+	
 }
