@@ -288,6 +288,7 @@ public class TCIDeployer {
 
 		String variablesFileContent = new String(Files.readAllBytes(Paths
 				.get(variablesFile)));
+		if(null != variablesFileContent && !variablesFileContent.isEmpty() && !variablesFileContent.equals("\n[\n]")  ) { 
 		// addQueryParam("type", type);
 		Response response = r
 				.queryParam("variableType", "app")
@@ -300,8 +301,14 @@ public class TCIDeployer {
 		processErrorResponse(response);
 		log.info("Successfully updated application variables for app : "
 				+ appId);
+		}
+		else {
+			log.info("Application Variable not found in" + variablesFile +  "for app : "
+					+ appId);
+			}
+		}
 
-	}
+	
 
 	/*
 	 * Set engine variables from engine var json.
