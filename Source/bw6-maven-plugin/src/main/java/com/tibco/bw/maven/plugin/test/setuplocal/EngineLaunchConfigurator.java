@@ -88,13 +88,17 @@ public class EngineLaunchConfigurator
 	
 		InputStream stream = null;
 		
-		if( isUnixOS() )
+		if( isWindowsOS() )
 		{
-			stream = classLoader.getResourceAsStream(  "com/tibco/resources/unix_environment.properties" );
+			
+			stream = classLoader.getResourceAsStream(  "com/tibco/resources/win_environment.properties" );
+		}
+		else if(isMacOS()){
+			stream = classLoader.getResourceAsStream(  "com/tibco/resources/mac_environment.properties" );
 		}
 		else
 		{
-			stream = classLoader.getResourceAsStream(  "com/tibco/resources/win_environment.properties" );	
+			stream = classLoader.getResourceAsStream(  "com/tibco/resources/unix_environment.properties" );	
 		}
 		
 		
@@ -102,10 +106,17 @@ public class EngineLaunchConfigurator
 		return reader;
 	}
 	
-	private boolean isUnixOS()
+	private boolean isWindowsOS()
 	{
-		String os = System.getProperty("os.name");
-		return !(os.startsWith("Windows"));
+		
+		String os = System.getProperty("os.name").toLowerCase();
+		return (os.startsWith("windows"));
+	}
+	
+	private boolean isMacOS()
+	{
+		String os = System.getProperty("os.name").toLowerCase();
+		return (os.startsWith("mac"));
 	}
 	
 	private List<String> readArguments( BufferedReader reader )
