@@ -38,6 +38,9 @@ public class ProcessParser extends DefaultHandler
 			case "tibex:activityExtension":
 			case "tibex:receiveEvent":
 			case "tibex:extActivity":	
+			case "bpws:empty":
+			case "bpws:pick":
+			case "bpws:reply":
 			case "bpws:invoke":
 				String activity = attr.getValue("name");
 				coverage.getActivities().add( activity );

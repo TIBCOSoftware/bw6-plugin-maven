@@ -88,13 +88,20 @@ public class EngineLaunchConfigurator
 	
 		InputStream stream = null;
 		
-		if( isUnixOS() )
+		if( isWindowsOS() )
 		{
-			stream = classLoader.getResourceAsStream(  "com/tibco/resources/unix_environment.properties" );
+			
+			stream = classLoader.getResourceAsStream(  "com/tibco/resources/win_environment.properties" );
+			BWTestConfig.INSTANCE.getLogger().info("***Windows***");
+		}
+		else if(isMacOS()){
+			stream = classLoader.getResourceAsStream(  "com/tibco/resources/mac_environment.properties" );
+			BWTestConfig.INSTANCE.getLogger().info("***Mac***");
 		}
 		else
 		{
-			stream = classLoader.getResourceAsStream(  "com/tibco/resources/win_environment.properties" );	
+			stream = classLoader.getResourceAsStream(  "com/tibco/resources/unix_environment.properties" );	
+			BWTestConfig.INSTANCE.getLogger().info("***Linux***");
 		}
 		
 		
@@ -102,10 +109,19 @@ public class EngineLaunchConfigurator
 		return reader;
 	}
 	
-	private boolean isUnixOS()
+	private boolean isWindowsOS()
 	{
-		String os = System.getProperty("os.name");
-		return !(os.startsWith("Windows"));
+		
+		String os = System.getProperty("os.name").toLowerCase();
+		BWTestConfig.INSTANCE.getLogger().info("***OS Name***"+os);
+		return (os.startsWith("windows"));
+	}
+	
+	private boolean isMacOS()
+	{
+		String os = System.getProperty("os.name").toLowerCase();
+		BWTestConfig.INSTANCE.getLogger().info("***OS Name***"+os);
+		return (os.startsWith("mac"));
 	}
 	
 	private List<String> readArguments( BufferedReader reader )
