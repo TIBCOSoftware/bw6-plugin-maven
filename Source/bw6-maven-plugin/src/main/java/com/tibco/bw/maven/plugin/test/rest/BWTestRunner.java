@@ -300,7 +300,7 @@ public class BWTestRunner
 		int finalResult = 0;
 		TestCaseResultDTO testcase = null;
 		
-		if (null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()) {
+		if (null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty() && null != project) {
 			Map<String, List<File>> testSuiteMap = BWTestConfig.INSTANCE.getTestSuiteMap(project);
 			finalResult = printTestSuiteWiseResult(result, testSuiteMap);
 			return finalResult;
