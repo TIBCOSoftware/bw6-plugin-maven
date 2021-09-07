@@ -92,16 +92,13 @@ public class EngineLaunchConfigurator
 		{
 			
 			stream = classLoader.getResourceAsStream(  "com/tibco/resources/win_environment.properties" );
-			BWTestConfig.INSTANCE.getLogger().info("***Windows***");
 		}
 		else if(isMacOS()){
 			stream = classLoader.getResourceAsStream(  "com/tibco/resources/mac_environment.properties" );
-			BWTestConfig.INSTANCE.getLogger().info("***Mac***");
 		}
 		else
 		{
 			stream = classLoader.getResourceAsStream(  "com/tibco/resources/unix_environment.properties" );	
-			BWTestConfig.INSTANCE.getLogger().info("***Linux***");
 		}
 		
 		
@@ -113,14 +110,12 @@ public class EngineLaunchConfigurator
 	{
 		
 		String os = System.getProperty("os.name").toLowerCase();
-		BWTestConfig.INSTANCE.getLogger().info("***OS Name***"+os);
 		return (os.startsWith("windows"));
 	}
 	
 	private boolean isMacOS()
 	{
 		String os = System.getProperty("os.name").toLowerCase();
-		BWTestConfig.INSTANCE.getLogger().info("***OS Name***"+os);
 		return (os.startsWith("mac"));
 	}
 	
