@@ -453,11 +453,19 @@ public class TestFileParser {
 										}
 									}
 								}
+								else if( "Operation".equals(cEl.getNodeName()))
+								{
+								String serviceName = cEl.getAttribute("restOperationName");
+								if(null != serviceName && serviceName.equals("SOAP")) {
+									skipInitActivitiesSet.add("-DskipSOAPReferenceBinding"+"=true");
+								}
 						    }
+							
 					    }
 				     }
 			       }
 			   }
+			}
 				
 		} catch (ParserConfigurationException |SAXException | IOException e) {
 			e.printStackTrace();
