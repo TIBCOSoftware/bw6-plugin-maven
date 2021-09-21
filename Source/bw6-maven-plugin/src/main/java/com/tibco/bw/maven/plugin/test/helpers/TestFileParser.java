@@ -34,6 +34,7 @@ import com.tibco.bw.maven.plugin.test.dto.TestCaseDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
+import com.tibco.bw.maven.plugin.utils.Constants;
 
 
 public class TestFileParser {
@@ -366,7 +367,7 @@ public class TestFileParser {
 	}
 	
 	
-		private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) {
+	private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) {
 		switch(assertionMode){
 		case "Primitive":
 				String goldValueWithElement = StringUtils.substringBetween(expression, "test=\"", "\">");
@@ -413,75 +414,90 @@ public class TestFileParser {
 	}
 
 
-		public HashSet<String> collectSkipInitActivities(String contents){
-		InputStream is = null;
-		HashSet<String> skipInitActivitiesSet = new HashSet<String>();
-		
-		try {
-			
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			is = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
-			Document document = builder.parse(is);
-			NodeList nodeList = document.getDocumentElement().getChildNodes();
+	public HashSet<String> collectSkipInitActivities(String contents){
+			InputStream is = null;
+			HashSet<String> skipInitActivitiesSet = new HashSet<String>();
 
-			for (int i = 0; i < nodeList.getLength(); i++) 
-			{
-				Node node = nodeList.item(i);
-				if (node instanceof Element) 
+			try {
+
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				is = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
+				Document document = builder.parse(is);
+				NodeList nodeList = document.getDocumentElement().getChildNodes();
+
+				for (int i = 0; i < nodeList.getLength(); i++) 
 				{
-					Element el = (Element) node;
-					if ("ProcessNode".equals(el.getNodeName())) 
+					Node node = nodeList.item(i);
+					if (node instanceof Element) 
 					{
-						String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
-						String key = "-D"+processId+"=true";
-						skipInitActivitiesSet.add(key);
-						NodeList childNodes = el.getChildNodes();
-						for (int j = 0; j < childNodes.getLength(); j++) 
+						String	componentName = null;
+						Element el = (Element) node;
+						if ("ProcessNode".equals(el.getNodeName())) 
 						{
-							Node cNode = childNodes.item(j);
-							if (cNode instanceof Element) {
-								Element cEl = (Element) cNode;
-								if("MockActivity".equals(cEl.getNodeName())){
-									MockActivityDTO mockActivity = new MockActivityDTO();
-									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
-									mockActivity.setLocation(location);
-									if(!disableMocking){
-										String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
-										if(null!=activityName){
-											skipInitActivitiesSet.add("-D"+processId+activityName+"=true");
+							String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
+							String key = "-D"+"Test"+processId+"=true";
+							skipInitActivitiesSet.add(key);
+							if(null != el.getAttributes().getNamedItem("componentProcessName")) {
+									componentName =el.getAttributes().getNamedItem("componentProcessName").getNodeValue();
+							
+							}
+							NodeList childNodes = el.getChildNodes();
+							for (int j = 0; j < childNodes.getLength(); j++) 
+							{
+								Node cNode = childNodes.item(j);
+								if (cNode instanceof Element) {
+									Element cEl = (Element) cNode;
+									if("MockActivity".equals(cEl.getNodeName())){
+										MockActivityDTO mockActivity = new MockActivityDTO();
+										String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
+										mockActivity.setLocation(location);
+										if(!disableMocking){
+											String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
+											if(null!=activityName){
+												skipInitActivitiesSet.add("-D"+processId+activityName+"=true");
+											}
 										}
 									}
-								}
-								else if( "Operation".equals(cEl.getNodeName()))
-								{
-								String serviceName = cEl.getAttribute("restOperationName");
-								if(null != serviceName && serviceName.equals("SOAP")) {
-									skipInitActivitiesSet.add("-DskipSOAPReferenceBinding"+"=true");
-								}
-						    }
-							
-					    }
-				     }
-			       }
-			   }
-			}
-				
-		} catch (ParserConfigurationException |SAXException | IOException e) {
-			e.printStackTrace();
-		}   
-		finally {
-			try {
-				if (is != null) {
-					is.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return skipInitActivitiesSet;
+									else if( "Operation".equals(cEl.getNodeName()))
+									{
+										if(null != componentName && !componentName.isEmpty()) {
+											NodeList inputNodes = cEl.getElementsByTagName("Inputs");
+											if(inputNodes != null && inputNodes.getLength() > 0){
+												Element input = (Element) inputNodes.item(0);
+												String activityName =  input.getAttribute("Name");;
+												if(null!=activityName){
+													skipInitActivitiesSet.add("-D"+processId+activityName+"=true");
+												}
+											}
+										}
+										String serviceName = cEl.getAttribute("restOperationName");
+										if(null != serviceName && serviceName.equals("SOAP")) {
+											skipInitActivitiesSet.add("-DskipSOAPReferenceBinding"+"=true");
+										}
+									}
 
-	}
+								}
+							}
+						}
+					}
+				}
+
+			} catch (ParserConfigurationException |SAXException | IOException e) {
+				e.printStackTrace();
+			}   
+			finally {
+				try {
+					if (is != null) {
+						is.close();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			return skipInitActivitiesSet;
+
+		}
 	
 	private boolean validateMockXMLFile(String mockOutputFilePath, String activityName, String processName) throws Exception {
 		File mockOutputFile = new File(mockOutputFilePath);

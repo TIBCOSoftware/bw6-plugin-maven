@@ -325,7 +325,7 @@ public class BWTestRunner
 				if( testcase.getAssertionFailure() > 0 )
 				{
 					failure= failure + testcase.getAssertionFailure();
-					totalfailure = totalfailure + failure;
+					
 					if(suite.isShowFailureDetails()){
 						printFailureDetails(testcase,testcase.getTestCaseFile(),testset.getProcessName(),"");
 					}
@@ -343,7 +343,7 @@ public class BWTestRunner
 				}
 				totaltests++;
 			}
-			
+			totalfailure = totalfailure + failure;
 			processFileBuilder.append( "    Success : " + success + " 	Failure : " + failure + "	Errors : " + processFilure);
 			builder.append( processFileBuilder.toString() );
 			writeProcessResult( result.getModuleInfo().getModuleName() , testset , processFileBuilder.toString() );
@@ -420,7 +420,7 @@ public class BWTestRunner
 
 				if (testCase.getAssertionFailure() > 0) {
 					failure= failure+testCase.getAssertionFailure();
-					totalfailure = totalfailure + failure;
+					
 					if (TestFileParser.INSTANCE.getshowFailureDetails()) {
 						printFailureDetails(testCase,
 								testCase.getTestCaseFile(),
@@ -436,12 +436,13 @@ public class BWTestRunner
 				}
 				totaltests++;
 			}
+			totalfailure = totalfailure + failure;
 			processFileBuilder.append("    Success : " + success
 					+ " 	Failure : " + failure + "	Errors : " + processFilure);
 			builder.append(processFileBuilder.toString());
 
 		}
-
+		
 		builder.append("\n\nResults \n");
 		builder.append("Success : " + totalsuccess + "    Failure : "
 				+ totalfailure + "    Errors : " + totalProcessFailure);
