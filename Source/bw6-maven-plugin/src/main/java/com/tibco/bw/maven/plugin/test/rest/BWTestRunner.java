@@ -427,11 +427,14 @@ public class BWTestRunner
 								testCase.getTestCaseFile(),
 								BWTestConfig.INSTANCE.getTestCaseWithProcessNameMap().get(testCase.getTestCaseFile()),bwTestSuiteData.getTestSuiteName());
 					}
-				} else if (testCase.getProcessFailures() > 0) {
+				} 
+				
+				if (testCase.getProcessFailures() > 0) {
 					processFilure++;
 					totalProcessFailure++;
 
-				} else if (testCase.getAssertionsRun() > 0) {
+				} 
+				if (testCase.getAssertionsRun() > 0) {
 					success = success + testCase.getAssertionsRun();
 					
 				}
