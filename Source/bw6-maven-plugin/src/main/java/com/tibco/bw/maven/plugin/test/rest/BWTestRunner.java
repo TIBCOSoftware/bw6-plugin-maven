@@ -330,19 +330,20 @@ public class BWTestRunner
 						printFailureDetails(testcase,testcase.getTestCaseFile(),testset.getProcessName(),"");
 					}
 				}
-				else if( testcase.getProcessFailures() > 0 )
+				if( testcase.getProcessFailures() > 0 )
 				{
 					processFilure++;
 					totalProcessFailure++;
 					
 				}
-				else if( testcase.getAssertions()>0)
+				if( testcase.getAssertionsRun()>0)
 				{
-					success++;
-					totalsuccess++;
+					success = success + testcase.getAssertionsRun();
+					
 				}
 				totaltests++;
 			}
+			totalsuccess = totalsuccess + success;
 			totalfailure = totalfailure + failure;
 			processFileBuilder.append( "    Success : " + success + " 	Failure : " + failure + "	Errors : " + processFilure);
 			builder.append( processFileBuilder.toString() );
@@ -430,12 +431,13 @@ public class BWTestRunner
 					processFilure++;
 					totalProcessFailure++;
 
-				} else if (testCase.getAssertions() > 0) {
-					success++;
-					totalsuccess++;
+				} else if (testCase.getAssertionsRun() > 0) {
+					success = success + testCase.getAssertionsRun();
+					
 				}
 				totaltests++;
 			}
+			totalsuccess = totalsuccess+success;
 			totalfailure = totalfailure + failure;
 			processFileBuilder.append("    Success : " + success
 					+ " 	Failure : " + failure + "	Errors : " + processFilure);
