@@ -61,7 +61,7 @@ public class TCIDeployer {
 	private final int readTimeout;
 	private final int retryCount;
 	private Log log;
-	private int SLEEP_INTERVAL = 1000;
+	private int SLEEP_INTERVAL = 2000;
 
 	/*
 	 * Initialize TCI deployer, prepare config using ENV variables.
