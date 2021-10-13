@@ -211,7 +211,8 @@ public class TCIDeployer {
 						+ appVariablesFile);
 				setAppVariables(appId, appVariablesFile);
 			}
-
+			checkAppStatus(appId);
+			
 			if (engineVariablesFile != null
 					&& engineVariablesFile.trim().length() > 0) {
 				// set engine variables
@@ -219,7 +220,7 @@ public class TCIDeployer {
 						+ engineVariablesFile);
 				setEngineVariables(appId, engineVariablesFile);
 			}
-
+			checkAppStatus(appId);
 			// scale app
 			this.log.info("Scaling app, instance count -> " + instances);
 			scaleApp(appId, instances);
