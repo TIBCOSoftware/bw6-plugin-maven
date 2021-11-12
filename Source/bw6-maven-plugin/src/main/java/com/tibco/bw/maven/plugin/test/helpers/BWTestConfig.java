@@ -233,6 +233,7 @@ public class BWTestConfig
 	public void setResolver(ProjectDependenciesResolver resolver) {
 		this.resolver = resolver;
 	}
+
 	
 	public String getEsmTestSuiteName() {
 		return esmTestSuiteName;
@@ -293,6 +294,7 @@ public class BWTestConfig
 	public void setEsmTestSuiteMap(String esmDir, Map<String, List<File>> esmTestSuite) {
 		this.esmTestSuiteMap.put(esmDir, esmTestSuite);
 	}
+
 
 	
 }
