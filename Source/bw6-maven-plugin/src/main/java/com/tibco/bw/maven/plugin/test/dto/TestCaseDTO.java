@@ -21,6 +21,23 @@ public class TestCaseDTO implements Serializable{
 	private String mockOutputFilePath;
 	
 	private String testCaseFile;
+	
+	private String serviceName;
+	
+	private String operationName;
+	
+	private String serviceType;
+	
+	private String processStarterID;
+	
+
+	public String getServiceType() {
+		return serviceType;
+	}
+
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
 
 	@SuppressWarnings("rawtypes")
 	private List assertionList = new ArrayList();
@@ -83,5 +100,29 @@ public class TestCaseDTO implements Serializable{
 	@SuppressWarnings("rawtypes")
 	public void setMockActivityList(List mockActivityList) {
 		this.mockActivityList = mockActivityList;
+	}
+
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	public String getOperationName() {
+		return operationName;
+	}
+
+	public void setOperationName(String operationName) {
+		this.operationName = operationName;
+	}
+
+	public String getProcessStarterID() {
+		return processStarterID;
+	}
+
+	public void setProcessStarterID(String processStarterID) {
+		this.processStarterID = processStarterID;
 	}
 }

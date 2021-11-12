@@ -3,8 +3,10 @@ package com.tibco.bw.maven.plugin.test.helpers;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
@@ -42,11 +44,25 @@ public class BWTestConfig
 	
 	private Log logger;
 	
+	private Set<File> ESMDirectories = new HashSet<>();
+	
+	private boolean runESMTest;
+	
+	private String esmTestSuiteName;
+	
 	public HashMap<String,String> testCaseWithProcessNameMap = new HashMap<>(); 
 	
 	public Map<MavenProject,List<String>> testSuiteNameList = new HashMap<>();
 	
 	Map<String,Boolean> userTestSuiteNames = new HashMap<String,Boolean>();
+	
+	private Map<String,List<File>> esmTestCasesList = new HashMap<>();
+	
+	public HashMap<String,Map<String,List<File>>> esmTestSuiteMap = new HashMap<>(); 
+	
+	public Map<String,List<String>> esmTestSuiteNameList = new HashMap<>();
+	
+	Map<String,Boolean> userESMTestSuiteNames = new HashMap<String,Boolean>();
 	
 	private BWTestConfig()
 	{
@@ -217,5 +233,68 @@ public class BWTestConfig
 	public void setResolver(ProjectDependenciesResolver resolver) {
 		this.resolver = resolver;
 	}
+
+	
+	public String getEsmTestSuiteName() {
+		return esmTestSuiteName;
+	}
+
+	public void setEsmTestSuiteName(String esmTestSuiteName) {
+		this.esmTestSuiteName = esmTestSuiteName;
+	}
+	public Set<File> getESMDirectories() {
+		return ESMDirectories;
+	}
+
+	public void setESMDirectories(File ESMDir) {
+		this.ESMDirectories.add(ESMDir);
+	}
+
+	public List<File> getEsmTestCasesList(String fileName) {
+		return esmTestCasesList.get(fileName);
+	}
+
+	public void setEsmTestCasesList(String dirName , List<File> file) {
+		esmTestCasesList.put(dirName, file);
+	}
+	
+	public boolean getRunESMTest() {
+		return runESMTest;
+	}
+
+	public void setRunESMTest(boolean runESMTest) {
+		this.runESMTest = runESMTest;
+	}
+	
+	public Map<String, Boolean> getUserESMTestSuiteNames() {
+		return userESMTestSuiteNames;
+	}
+
+	public void setUserESMTestSuiteNames(Map<String, Boolean> userESMTestSuiteNames) {
+		this.userESMTestSuiteNames = userESMTestSuiteNames;
+	}
+
+	public  List<String> getEsmTestSuiteNameList(String esmDir) {
+		return esmTestSuiteNameList.get(esmDir);
+	}
+
+	public void setEsmTestSuiteNameList(String esmDir, List<String> esmTestSuiteList) {
+		esmTestSuiteNameList.put(esmDir, esmTestSuiteList);
+	}
+	
+	public Map <String, List<File>> getEsmTestSuiteMap(String esmDir) {
+		return esmTestSuiteMap.get(esmDir);
+	}
+	
+	public HashMap<String, Map<String, List<File>>> getEsmTestSuites() {
+		return esmTestSuiteMap;
+	}
+
+
+	public void setEsmTestSuiteMap(String esmDir, Map<String, List<File>> esmTestSuite) {
+		this.esmTestSuiteMap.put(esmDir, esmTestSuite);
+	}
+
+
 	
 }

@@ -12,6 +12,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
@@ -64,6 +65,17 @@ public class BWTestMojo extends AbstractMojo {
     
     @Parameter( property = "customArgEngine"  )
     private String customArgEngine;
+    
+    @Parameter( property = "runESMTest" , defaultValue = "false" )
+    private boolean runESMTest;
+    
+    @Parameter( property = "ESMtestSuiteName" , defaultValue = "" )
+    private String ESMtestSuiteName;
+    
+    @Component
+    ProjectDependenciesResolver resolver;
+    
+    
     
     public void execute() throws MojoExecutionException , MojoFailureException
     {
@@ -221,6 +233,14 @@ public class BWTestMojo extends AbstractMojo {
 		BWTestConfig.INSTANCE.reset();
     	
     	BWTestConfig.INSTANCE.setTestSuiteName(testSuiteName);
+    	
+        BWTestConfig.INSTANCE.setEsmTestSuiteName(ESMtestSuiteName);
+    	
+    	BWTestConfig.INSTANCE.setRunESMTest(runESMTest);
+    	
+    	BWTestConfig.INSTANCE.setResolver(resolver);
+    	
+    	
     	
 		BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, project , getLog() );
 		

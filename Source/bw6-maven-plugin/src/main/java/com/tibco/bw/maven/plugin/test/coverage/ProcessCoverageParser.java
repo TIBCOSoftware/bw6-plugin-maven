@@ -173,11 +173,8 @@ public class ProcessCoverageParser
 		
 		ProcessCoverage coverage = parser.getCoverage();
 		
-		if( coverage.isSubProcess()) 
-		{
-			coverage.setModuleName(module);
+		    coverage.setModuleName(module);
 			processMap.put( coverage.getProcessName(),  coverage);	
-		}
 	}
 	
 	private void parseESM( File processFile , String module ) throws Exception
@@ -203,11 +200,12 @@ public class ProcessCoverageParser
 						reader.setContentHandler(parser );
 						reader.parse(new InputSource(new StringReader( xml )));
 						ProcessCoverage coverage = parser.getCoverage();
-						if( coverage.isSubProcess()) 
-						{
+
+						//if( coverage.isSubProcess()) 
+					//	{
 							coverage.setModuleName(module);
 							processMap.put( coverage.getProcessName(),  coverage);	
-						}
+						//}
 					}
 				}
 			}

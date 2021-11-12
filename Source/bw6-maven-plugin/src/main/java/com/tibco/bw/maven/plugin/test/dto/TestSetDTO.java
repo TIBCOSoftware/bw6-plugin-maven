@@ -17,6 +17,8 @@ public class TestSetDTO implements Serializable
 	private String packageName;
 	
 	private String processName;
+	
+	private String componentName;
 
 	@SuppressWarnings("rawtypes")
 	private List testCaseList = new ArrayList();
@@ -54,6 +56,14 @@ public class TestSetDTO implements Serializable
 	public void setTestCaseList(List testCaseList)
 	{
 		this.testCaseList = testCaseList;
+	}
+
+	public String getComponentName() {
+		return componentName;
+	}
+
+	public void setComponentName(String componentName) {
+		this.componentName = componentName;
 	} 
 	
 }

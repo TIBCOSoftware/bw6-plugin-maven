@@ -61,7 +61,7 @@ public class TCIDeployer {
 	private final int readTimeout;
 	private final int retryCount;
 	private Log log;
-	private int SLEEP_INTERVAL = 1000;
+	private int SLEEP_INTERVAL = 2000;
 
 	/*
 	 * Initialize TCI deployer, prepare config using ENV variables.
@@ -211,7 +211,8 @@ public class TCIDeployer {
 						+ appVariablesFile);
 				setAppVariables(appId, appVariablesFile);
 			}
-
+			checkAppStatus(appId);
+			
 			if (engineVariablesFile != null
 					&& engineVariablesFile.trim().length() > 0) {
 				// set engine variables
@@ -219,7 +220,7 @@ public class TCIDeployer {
 						+ engineVariablesFile);
 				setEngineVariables(appId, engineVariablesFile);
 			}
-
+			checkAppStatus(appId);
 			// scale app
 			this.log.info("Scaling app, instance count -> " + instances);
 			scaleApp(appId, instances);
@@ -288,6 +289,7 @@ public class TCIDeployer {
 
 		String variablesFileContent = new String(Files.readAllBytes(Paths
 				.get(variablesFile)));
+		if(null != variablesFileContent && !variablesFileContent.isEmpty() && !variablesFileContent.equals("\n[\n]")  ) { 
 		// addQueryParam("type", type);
 		Response response = r
 				.queryParam("variableType", "app")
@@ -300,8 +302,14 @@ public class TCIDeployer {
 		processErrorResponse(response);
 		log.info("Successfully updated application variables for app : "
 				+ appId);
+		}
+		else {
+			log.info("Application Variable not found in" + variablesFile +  "for app : "
+					+ appId);
+			}
+		}
 
-	}
+	
 
 	/*
 	 * Set engine variables from engine var json.

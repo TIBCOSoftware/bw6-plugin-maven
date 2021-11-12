@@ -34,6 +34,7 @@ import com.tibco.bw.maven.plugin.test.dto.TestCaseDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
+import com.tibco.bw.maven.plugin.utils.Constants;
 
 
 public class TestFileParser {
@@ -56,6 +57,7 @@ public class TestFileParser {
 	public void collectAssertions(String contents , TestSuiteDTO suite , String baseDirectoryPath ) throws Exception,FileNotFoundException
 	{
 		String assertionMode = "Primitive";
+		String moduleName;
 		
 		InputStream is = null;
 		try {
@@ -75,10 +77,14 @@ public class TestFileParser {
 					Element el = (Element) node;
 					if ("ProcessNode".equals(el.getNodeName())) 
 					{
-						
+						String componentName = null;
 						suite.setShowFailureDetails(showFailureDetails);
 						String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
 						String processName = el.getAttributes().getNamedItem("Name").getNodeValue();
+						moduleName = el.getAttributes().getNamedItem("moduleName").getNodeValue();
+						if(null != el.getAttributes().getNamedItem("componentProcessName")) {
+							componentName =el.getAttributes().getNamedItem("componentProcessName").getNodeValue();
+						}
 						if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
 							BWTestConfig.INSTANCE.getTestCaseWithProcessNameMap().put(testCaseFile, processId);
 						}
@@ -87,6 +93,7 @@ public class TestFileParser {
 						
 						TestSetDTO testset = getProcessTestSet(processId, suite);
 						testset.setPackageName(packageName);
+						testset.setComponentName(componentName);
 						TestCaseDTO testcase = new TestCaseDTO();
 						testcase.setTestCaseFile(testCaseFile);
 						
@@ -175,9 +182,19 @@ public class TestFileParser {
 								{
 									//support input from file
 									boolean isInputFile = false;
+									if(null != cEl.getAttribute("Name")) {
+										testcase.setOperationName(cEl.getAttribute("Name"));
+									}
+									if(null != cEl.getAttribute("serviceName")) {
+										testcase.setServiceName(cEl.getAttribute("serviceName"));
+									}
+									testcase.setServiceType(cEl.getAttribute("restOperationName"));
 									NodeList inputNodes = cEl.getElementsByTagName("Inputs");
 									if(inputNodes != null && inputNodes.getLength() > 0){
 										Element input = (Element) inputNodes.item(0);
+										String location = input.getAttribute("Id");
+										String ID = StringUtils.substringBefore(location, moduleName);
+										testcase.setProcessStarterID(ID);
 										if(input.hasAttribute("isInputFile")){
 											if("true".equals(input.getAttribute("isInputFile"))){
 												isInputFile = true;
@@ -255,7 +272,52 @@ public class TestFileParser {
 											}
 								      }
 						       	}
-						     }
+						     }else if( "restNode".equals(cEl.getNodeName())) {
+
+									//support input from file
+						    	 NodeList operationNodes = cEl.getElementsByTagName("Operation");
+						    	 if(operationNodes != null && operationNodes.getLength() > 0){
+						    		 Element operation = (Element) operationNodes.item(0);
+									boolean isInputFile = false;
+									if(null != operation.getAttribute("Name")) {
+										testcase.setOperationName(operation.getAttribute("Name"));
+									}
+									if(null != operation.getAttribute("serviceName")) {
+										testcase.setServiceName(operation.getAttribute("serviceName"));
+									}
+									testcase.setServiceType(operation.getAttribute("restOperationName"));
+									NodeList inputNodes = operation.getElementsByTagName("Inputs");
+									if(inputNodes != null && inputNodes.getLength() > 0){
+										Element input = (Element) inputNodes.item(0);
+										if(input.hasAttribute("isInputFile")){
+											if("true".equals(input.getAttribute("isInputFile"))){
+												isInputFile = true;
+												if(input.hasAttribute("inputFile")){
+													BWTestConfig.INSTANCE.getLogger().debug("Reading start activity input from file -> "+ input.getAttribute("inputFile"));
+													String inputFilePath = input.getAttribute("inputFile");
+													if(inputFilePath == null || inputFilePath.isEmpty()){
+														BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : Start "+ ", Error : Invalid Start Input File Path - "+inputFilePath);
+														throw new Exception("Process : "+ processName + ", Activity : Start"+ ", Error : Invalid Start Input File Path - "+inputFilePath);
+													}
+													File file = new File(inputFilePath);
+													if(!file.isAbsolute()){
+														BWTestConfig.INSTANCE.getLogger().debug("Provided Start Input File path is relative -> "+file.getPath());
+														inputFilePath = baseDirectoryPath.concat("/"+inputFilePath);
+													}
+													String inputValue = FileUtils.readFileToString( new File(inputFilePath) );
+													testcase.setXmlInput(inputValue);
+												} else {
+													BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : Start "+ ", Error : Invalid Start Input File Path - "+input.getAttribute("InputFile"));
+													throw new Exception("Process : "+ processName + ", Activity : Start"+ ", Error : Invalid Start Input File Path - "+input.getAttribute("InputFile"));
+												}
+											}
+										}
+									}
+						    	
+								
+						    	 }
+								
+						       	}
 						   }
 						}
 						if(disableMocking){
@@ -305,7 +367,7 @@ public class TestFileParser {
 	}
 	
 	
-		private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) {
+	private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) {
 		switch(assertionMode){
 		case "Primitive":
 				String goldValueWithElement = StringUtils.substringBetween(expression, "test=\"", "\">");
@@ -313,9 +375,21 @@ public class TestFileParser {
 				if(goldValue.contains("'")){
 					goldValue = StringUtils.substringBetween(goldValue, "'");
 				}
+				if(goldValue.equals("xsd:boolean(1)") || goldValue.equals("xsd:boolean(0)")){
+					String temp = StringUtils.substringBetween(goldValue, "(", ")");
+					if(temp.equals("1")){
+						goldValue = "true";
+					}
+					else{
+						goldValue = "false";
+					}
+				}
 				String elementNameString = StringUtils.substringBefore(goldValueWithElement, "=");
 				String[] elementNameArray = StringUtils.split(elementNameString, "/");
 				String elementName = elementNameArray[elementNameArray.length-1];
+				if(elementName.contains(")")){
+					elementName = StringUtils.removeEnd(elementName, ")");
+				}
 				String startElementTag = "<".concat(elementName).concat(">");
 				String endElementTag = "</".concat(elementName).concat(">");
 	
@@ -340,67 +414,90 @@ public class TestFileParser {
 	}
 
 
-		public HashSet<String> collectSkipInitActivities(String contents){
-		InputStream is = null;
-		HashSet<String> skipInitActivitiesSet = new HashSet<String>();
-		
-		try {
-			
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			is = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
-			Document document = builder.parse(is);
-			NodeList nodeList = document.getDocumentElement().getChildNodes();
+	public HashSet<String> collectSkipInitActivities(String contents){
+			InputStream is = null;
+			HashSet<String> skipInitActivitiesSet = new HashSet<String>();
 
-			for (int i = 0; i < nodeList.getLength(); i++) 
-			{
-				Node node = nodeList.item(i);
-				if (node instanceof Element) 
+			try {
+
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				is = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
+				Document document = builder.parse(is);
+				NodeList nodeList = document.getDocumentElement().getChildNodes();
+
+				for (int i = 0; i < nodeList.getLength(); i++) 
 				{
-					Element el = (Element) node;
-					if ("ProcessNode".equals(el.getNodeName())) 
+					Node node = nodeList.item(i);
+					if (node instanceof Element) 
 					{
-						String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
-						String key = "-D"+processId+"=true";
-						skipInitActivitiesSet.add(key);
-						NodeList childNodes = el.getChildNodes();
-						for (int j = 0; j < childNodes.getLength(); j++) 
+						String	componentName = null;
+						Element el = (Element) node;
+						if ("ProcessNode".equals(el.getNodeName())) 
 						{
-							Node cNode = childNodes.item(j);
-							if (cNode instanceof Element) {
-								Element cEl = (Element) cNode;
-								if("MockActivity".equals(cEl.getNodeName())){
-									MockActivityDTO mockActivity = new MockActivityDTO();
-									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
-									mockActivity.setLocation(location);
-									if(!disableMocking){
-										String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
-										if(null!=activityName){
-											skipInitActivitiesSet.add("-D"+processId+activityName+"=true");
+							String processId = el.getAttributes().getNamedItem("Id").getNodeValue();
+							String key = "-D"+"Test"+processId+"=true";
+							skipInitActivitiesSet.add(key);
+							if(null != el.getAttributes().getNamedItem("componentProcessName")) {
+									componentName =el.getAttributes().getNamedItem("componentProcessName").getNodeValue();
+							
+							}
+							NodeList childNodes = el.getChildNodes();
+							for (int j = 0; j < childNodes.getLength(); j++) 
+							{
+								Node cNode = childNodes.item(j);
+								if (cNode instanceof Element) {
+									Element cEl = (Element) cNode;
+									if("MockActivity".equals(cEl.getNodeName())){
+										MockActivityDTO mockActivity = new MockActivityDTO();
+										String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
+										mockActivity.setLocation(location);
+										if(!disableMocking){
+											String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
+											if(null!=activityName){
+												skipInitActivitiesSet.add("-D"+processId+activityName+"=true");
+											}
 										}
 									}
-								}
-						    }
-					    }
-				     }
-			       }
-			   }
-				
-		} catch (ParserConfigurationException |SAXException | IOException e) {
-			e.printStackTrace();
-		}   
-		finally {
-			try {
-				if (is != null) {
-					is.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return skipInitActivitiesSet;
+									else if( "Operation".equals(cEl.getNodeName()))
+									{
+										if(null != componentName && !componentName.isEmpty()) {
+											NodeList inputNodes = cEl.getElementsByTagName("Inputs");
+											if(inputNodes != null && inputNodes.getLength() > 0){
+												Element input = (Element) inputNodes.item(0);
+												String activityName =  input.getAttribute("Name");;
+												if(null!=activityName){
+													skipInitActivitiesSet.add("-D"+processId+activityName+"=true");
+												}
+											}
+										}
+										String serviceName = cEl.getAttribute("restOperationName");
+										if(null != serviceName && serviceName.equals("SOAP")) {
+											skipInitActivitiesSet.add("-DskipSOAPReferenceBinding"+"=true");
+										}
+									}
 
-	}
+								}
+							}
+						}
+					}
+				}
+
+			} catch (ParserConfigurationException |SAXException | IOException e) {
+				e.printStackTrace();
+			}   
+			finally {
+				try {
+					if (is != null) {
+						is.close();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			return skipInitActivitiesSet;
+
+		}
 	
 	private boolean validateMockXMLFile(String mockOutputFilePath, String activityName, String processName) throws Exception {
 		File mockOutputFile = new File(mockOutputFilePath);

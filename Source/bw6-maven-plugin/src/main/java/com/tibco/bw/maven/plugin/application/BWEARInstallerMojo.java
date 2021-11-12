@@ -146,7 +146,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property = "earUploadPath")
 	private String earUploadPath;
 	
-	@Parameter(property="retryCount", defaultValue = "20")
+	@Parameter(property="retryCount", defaultValue = "50")
 	private int retryCount;
 	
 	@Parameter(property="connectTimeout", defaultValue = "120000")

@@ -19,11 +19,18 @@ public class AssertionsLoader
 
 	MavenProject project;
 	
+	  File esmFile;
+	
 	public AssertionsLoader( MavenProject project)
 	{
 		
 		this.project = project;
 	}
+	
+	public AssertionsLoader(File file)
+		{
+			this.esmFile = file;
+	 	}
 	 
 	
 	@SuppressWarnings({ "unused", "rawtypes" })
@@ -34,7 +41,7 @@ public class AssertionsLoader
 		TestSuiteDTO suite = new TestSuiteDTO();
 		List testCaseList = new ArrayList();
 		BWTestConfig.INSTANCE.getLogger().info("");
-		BWTestConfig.INSTANCE.getLogger().info("-----------------BW Engine Logs End--------------------");
+		//BWTestConfig.INSTANCE.getLogger().info("-----------------BW Engine Logs End--------------------");
 
 		if(null != BWTestConfig.INSTANCE.getTestSuiteName() && !BWTestConfig.INSTANCE.getTestSuiteName().isEmpty()){
 			for (String suiteName : BWTestConfig.INSTANCE.getTestSuiteNameList(this.project)){
@@ -66,9 +73,56 @@ public class AssertionsLoader
 		}
 	}
 	
+	public TestSuiteDTO loadAssertionsFromESM() throws Exception
+	{
+		TestSuiteDTO suite = new TestSuiteDTO();
+		String filePath = esmFile.getAbsolutePath();
+		Map<String, List<File>> testSuiteMap = BWTestConfig.INSTANCE.getEsmTestSuiteMap(filePath);
+		
+		if(null !=testSuiteMap && !testSuiteMap.isEmpty()){
+			for (String suiteName : BWTestConfig.INSTANCE.getEsmTestSuiteNameList(filePath)){
+				BWTestConfig.INSTANCE.getLogger().info("");
+				BWTestConfig.INSTANCE.getLogger().info(" ## Running Test Suite ["+ suiteName+"]" +" From ESM ["+ esmFile.getName()  + "] ##");
+				for( File file : testSuiteMap.get(suiteName) ){
+					
+					BWTestConfig.INSTANCE.getLogger().info("      Running Test for "+ file.getName());
+
+					String assertionxml = FileUtils.readFileToString( file );
+
+					TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,filePath);
+				}
+			}
+			return suite;
+		}else{
+			List<File> files = getAssertionsFromESM();
+			for( File file : files )
+			{
+				BWTestConfig.INSTANCE.getLogger().info("");
+
+				
+				BWTestConfig.INSTANCE.getLogger().info("## Running Test for "+file.getName()+" ##");
+
+				String assertionxml = FileUtils.readFileToString( file );
+
+				TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,filePath);
+
+			}
+
+			return suite;
+		}
+		
+	}
+
+	
 	private List<File> getAssertionsFromProject()
 	{
 			return BWTestConfig.INSTANCE.getTestCasesList(this.project);
+	
+	}
+	
+	private List<File> getAssertionsFromESM()
+	{
+			return BWTestConfig.INSTANCE.getEsmTestCasesList(esmFile.getAbsolutePath());
 	
 	}
 	
