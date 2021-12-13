@@ -37,6 +37,7 @@ public class ProcessParser extends DefaultHandler
 			
 			case "tibex:activityExtension":
 			case "tibex:receiveEvent":
+			case "bpws:receive":
 			case "tibex:extActivity":	
 			case "bpws:empty":
 			case "bpws:pick":

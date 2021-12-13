@@ -292,7 +292,7 @@ public class BWModulePackageMojo extends AbstractMojo {
         	includes.remove("target/");
         }
         
-        if(isSharedModule()){
+        if(isSharedModule() ){
         	//Ensure .project and .config are added
         	if(!includes.contains(".config")){
         		includes.add(".config");
@@ -311,7 +311,16 @@ public class BWModulePackageMojo extends AbstractMojo {
 //        		}
 //        	}
         }
-        
+        if(isCXFProject()) {
+    		if(!includes.contains(".project")){
+        		includes.add(".project");
+        	}
+			
+			if(!includes.contains("pom.xml"))
+			{ includes.add("pom.xml"); }
+			 
+    	}
+    	
         if (includes.isEmpty()) {
             fileSet.setIncludes(new String[] { "" });
         } else {
@@ -330,6 +339,14 @@ public class BWModulePackageMojo extends AbstractMojo {
     	return manifest.getMainAttributes().getValue(Constants.TIBCO_SHARED_MODULE) == null ? false : true;
     }
 
+    protected boolean isCXFProject(){
+    	if(null != manifest.getMainAttributes().getValue("Import-Package")) {
+    		return manifest.getMainAttributes().getValue("Import-Package").equals("com.tibco.xml.cxf.common.annotations") ;
+    	}
+    	else {
+    		return false;
+    	}
+    }
     private void updateManifestVersion() {
     	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
     	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version, qualifierReplacement);
