@@ -316,8 +316,15 @@ public class BWModulePackageMojo extends AbstractMojo {
         		includes.add(".project");
         	}
 			
-			if(!includes.contains("pom.xml"))
-			{ includes.add("pom.xml"); }
+    		if(!includes.contains("pom.xml"))
+    		{ 
+    			includes.add("pom.xml"); 
+    		}
+
+    		if(!includes.contains("build.properties"))
+    		{
+    			includes.add("build.properties");
+    		}
 			 
     	}
     	
