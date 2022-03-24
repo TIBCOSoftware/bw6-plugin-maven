@@ -124,6 +124,7 @@ public class TestFileParser {
 
 									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
 									String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
+									ast.setActivityId(activityName);
 									ast.setLocation(location);
 
 									NodeList gChildNodes = cEl.getChildNodes();
