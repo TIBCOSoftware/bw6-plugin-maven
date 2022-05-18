@@ -211,9 +211,9 @@ public class BWEARPackagerMojo extends AbstractMojo {
 			//This is necessary for the ear file to run properly
     		List<MavenProject> projects = parser.getModulesProjectSet();
 			Set<File> artifactFiles = new HashSet<File>(); 
-    		for(MavenProject project : projects){
+    		for(MavenProject moduleProject : projects){
     			
-    			Set<Artifact> dependencyArtifacts = project.getDependencyArtifacts();
+    			Set<Artifact> dependencyArtifacts = moduleProject.getDependencyArtifacts();
 
     			for(Artifact artifact : dependencyArtifacts) {
     				
@@ -248,10 +248,43 @@ public class BWEARPackagerMojo extends AbstractMojo {
     				}
     				
     			}
+    			
+    			//add transitive dependencies of app module into EAR.
+    			DependencyResolutionResult resolutionResult = getDependenciesResolutionResult(moduleProject);
+    			if (resolutionResult != null) {
+    		        	for(Dependency dependency : resolutionResult.getDependencies()) {
+    		    			if(dependency.getArtifact().getVersion().equals("0.0.0")) { //$NON-NLS-1$
+    		    				continue;
+    		    			}
+    		    			
+    		    			if(moduleVersionMap.containsKey(dependency.getArtifact().getArtifactId())){
+    		    				continue;
+    		    			}
+    		    			
+    		    			Manifest mf = ManifestParser.parseManifestFromJAR( dependency.getArtifact().getFile() );
+    		    			
+    	    				if(mf !=null){
+    							for( Object str : mf.getMainAttributes().keySet())
+    							{
+    								getLog().debug( str.toString() );
+    								if( "TIBCO-BW-SharedModule".equals(str.toString() ))
+    								{
+    									String dependencyVersion = BWProjectUtils.getModuleVersion(dependency.getArtifact().getFile());
+    									moduleVersionMap.put(dependency.getArtifact().getArtifactId(), dependencyVersion);
+    									artifactFiles.add(dependency.getArtifact().getFile());
+    									break;
+    									
+    								}
+    							}
+    	    				}
+
+    		        	}
+    		        }  
+    			
     		}
     		
 			//This code takes dependencies in the application project and adds them to the EAR file root level
-	        DependencyResolutionResult resolutionResult = getDependenciesResolutionResult();
+	        DependencyResolutionResult resolutionResult = getDependenciesResolutionResult(project);
 	        if (resolutionResult != null) {
 	        	for(Dependency dependency : resolutionResult.getDependencies()) {
 	    			if(dependency.getArtifact().getVersion().equals("0.0.0")) { //$NON-NLS-1$
@@ -333,7 +366,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
     }
 
-	private DependencyResolutionResult getDependenciesResolutionResult() {
+	private DependencyResolutionResult getDependenciesResolutionResult(MavenProject project) {
 		DependencyResolutionResult resolutionResult = null;
         try {
         	getLog().debug("Looking up dependency tree for the current project => " +  project + " and the current session => " + session);
