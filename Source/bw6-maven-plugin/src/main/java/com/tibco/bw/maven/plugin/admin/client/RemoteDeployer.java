@@ -297,7 +297,10 @@ public class RemoteDeployer {
 		return createAppNode(domainName, appSpaceName, appNodeName, agentName, httpPort, osgiPort, description);
 	}
 
-	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, final String file, final boolean replace, final String profile, final boolean backupEar, final String backupLocation,final String version,final boolean externalProfile, final String externalProfileLoc, final String appNodeName, final String path) throws Exception {
+	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, 
+										final String file, final boolean replace, final String profile, final boolean backupEar, 
+										final String backupLocation,final String version,final boolean externalProfile, 
+										final String externalProfileLoc, final String appNodeName, final String path, boolean skipUploadArchive) throws Exception {
 		List<Application> applications = getApplications(domainName, appSpaceName, null, true);
 		String appDescription=null;
 		
@@ -326,8 +329,14 @@ public class RemoteDeployer {
 					}
 				}
 			}
-			log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
-			uploadArchive(domainName, path, file, true);
+		
+		 	if (!skipUploadArchive) {
+				log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
+				uploadArchive(domainName, path, file, true);
+		 	}
+		 	else {
+				log.info("Skipping - Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);		 		
+		 	}
 			log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
 			deployApplication(domainName, appSpaceName, earName, path, startOndeploy, replace, profile,externalProfile,appDescription);
 			if(externalProfile){
