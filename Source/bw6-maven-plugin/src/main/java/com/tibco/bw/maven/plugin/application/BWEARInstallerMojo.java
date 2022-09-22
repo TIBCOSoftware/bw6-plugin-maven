@@ -479,7 +479,10 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		}
 		
 		boolean isValidexternalProfileLoc = true;
-		if(externalProfile && externalProfileLoc.isEmpty()) {
+		// fix from runtime side only
+		// UI doesn't seem to fix the externalProfile flag when profile is set to an application Profile 
+		// We should give error only if profile is set to "other" and not an interal application profile
+		if(externalProfile && externalProfileLoc.isEmpty() && (profile != null && profile.equals("other")) ) {
 			isValidexternalProfileLoc = false;
 			errorMessage.append("[external Profile Location value is required]");
 		}

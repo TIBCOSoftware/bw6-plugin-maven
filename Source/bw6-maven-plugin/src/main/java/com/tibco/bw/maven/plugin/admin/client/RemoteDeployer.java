@@ -339,7 +339,10 @@ public class RemoteDeployer {
 		 	}
 			log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
 			deployApplication(domainName, appSpaceName, earName, path, startOndeploy, replace, profile,externalProfile,appDescription);
-			if(externalProfile){
+			// fix from runtime side only
+			// UI doesn't seem to fix the externalProfile flag when profile is set to an application Profile 
+			// We should use the external profile here if this is really the case
+			if(externalProfile && !externalProfileLoc.isEmpty() && (profile != null && profile.equals("other")) ) {
 				setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
 				log.info("Starting Application -> "+ appName);
 				if(startOndeploy){
