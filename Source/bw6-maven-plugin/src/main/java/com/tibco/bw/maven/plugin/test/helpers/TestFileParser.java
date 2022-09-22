@@ -256,6 +256,9 @@ public class TestFileParser {
 													BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Mock Output File Path - "+mockOutputFilePath);
 													throw new Exception("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Mock Output File Path - "+mockOutputFilePath);
 												}
+												// on Mac and Unix - will replace backslash with forward slash
+												// on Windows - noop
+												mockOutputFilePath = mockOutputFilePath.replace("\\", File.separator);
 												File file = new File(mockOutputFilePath);
 												if(!file.isAbsolute()){
 													BWTestConfig.INSTANCE.getLogger().debug("Provided Mock File path is relative "+file.getPath());
