@@ -120,6 +120,9 @@ public class BWDeployMojo extends AbstractMojo {
 	@Parameter(property = "earUploadPath")
 	private String earUploadPath;
 	
+	@Parameter(property = "skipUploadArchive")
+	private boolean skipUploadArchive;
+	
 	@Parameter(property="retryCount", defaultValue = "10")
 	private int retryCount;
 	
@@ -243,7 +246,7 @@ public class BWDeployMojo extends AbstractMojo {
 			deployer.addAndDeployApplication(domain, appSpace, applicationName,
 					earName, earFile.getAbsolutePath(), redeploy, profile,
 					backup, backupLocation, version, externalProfile,
-					externalProfileLoc, appNode, earUploadPath);
+					externalProfileLoc, appNode, earUploadPath, skipUploadArchive);
 			deployer.close();
 			deployer.close();
 			BWEarUtils.deleteEARFileEntries(earLocation);
@@ -346,6 +349,7 @@ public class BWDeployMojo extends AbstractMojo {
 					.getProperty("externalProfile"));
 			externalProfileLoc = deployment.getProperty("externalProfileLoc");
 			earUploadPath = deployment.getProperty("earUploadPath");
+			skipUploadArchive = Boolean.parseBoolean(deployment.getProperty("skipUploadArchive"));
 			getAppNodeConfigProps(deployment);
 		} catch (Exception e) {
 			getLog().error(e);

@@ -134,6 +134,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property = "externalEarLoc")
 	private String externalEarLoc;
 	
+	@Parameter(property="skipUploadArchive")
+	private boolean skipUploadArchive;
+	
 	@Parameter(property = "createAdminCompo" , defaultValue = "true" )
 	private boolean createAdminCompo;
 	
@@ -271,7 +274,8 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	    			getLog().info("AppSpace is Running.");
 	    		}
 	    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-	    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath);
+	    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, 
+	    				backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath, skipUploadArchive);
 	    		deployer.close();
             }
     	} catch(Exception e) {
@@ -380,6 +384,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			externalProfileLoc=deployment.getProperty("externalProfileLoc");
 			externalEarLoc=deployment.getProperty("externalEarLoc");
 			earUploadPath = deployment.getProperty("earUploadPath");
+			skipUploadArchive = Boolean.parseBoolean(deployment.getProperty("skipUploadArchive"));
 			getAppNodeConfigProps(deployment);
 		} catch(Exception e) {
 			deployToAdmin = false;
@@ -474,7 +479,10 @@ public class BWEARInstallerMojo extends AbstractMojo {
 		}
 		
 		boolean isValidexternalProfileLoc = true;
-		if(externalProfile && externalProfileLoc.isEmpty()) {
+		// fix from runtime side only
+		// UI doesn't seem to fix the externalProfile flag when profile is set to an application Profile 
+		// We should give error only if profile is set to "other" and not an interal application profile
+		if(externalProfile && externalProfileLoc.isEmpty() && (profile != null && profile.equals("other")) ) {
 			isValidexternalProfileLoc = false;
 			errorMessage.append("[external Profile Location value is required]");
 		}

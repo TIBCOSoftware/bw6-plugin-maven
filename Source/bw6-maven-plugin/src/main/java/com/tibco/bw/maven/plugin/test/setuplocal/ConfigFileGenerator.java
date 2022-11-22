@@ -16,12 +16,21 @@ import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.project.MavenProject;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+import org.w3c.dom.Element;
 
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+import com.tibco.bw.maven.plugin.utils.Constants;
 
 public class ConfigFileGenerator 
 {
@@ -44,13 +53,16 @@ public class ConfigFileGenerator
 				addPluginsFromDir(target, builder);
 			}
 			
-			List<MavenProject> cxfProjects = new ArrayList<MavenProject>();
+			List<MavenProject> requiredDevPropertiesProjects = new ArrayList<MavenProject>();
 			
 			List<MavenProject> projects =  BWTestConfig.INSTANCE.getSession().getProjects();
 
 			for( MavenProject project : projects ) {
 				if (project.getPackaging().equals("bwmodule") || project.getPackaging().equals("bwear")) {
 
+					if (isJavaProject(project)) {
+						requiredDevPropertiesProjects.add(project);
+					}
 					Set<Artifact> artifacts = project.getDependencyArtifacts();
 					if(artifacts != null)
 					{
@@ -65,7 +77,7 @@ public class ConfigFileGenerator
 							}
 						}
 						if(isCXF){
-							cxfProjects.add(project);
+							requiredDevPropertiesProjects.add(project);
 						}
 					}
 				}
@@ -86,7 +98,7 @@ public class ConfigFileGenerator
 			properties.put( "osgi.bundles", builder.toString() );
 			properties.put( "osgi.bundles.defaultStartLevel", "5" );
 			properties.put( "osgi.install.area", "file:" + BWTestConfig.INSTANCE.getTibcoHome() + BWTestConfig.INSTANCE.getBwHome() + "/system/hotfix/lib/common");
-			properties.put("osgi.framework", "file:" + BWTestConfig.INSTANCE.getTibcoHome() + BWTestConfig.INSTANCE.getBwHome() + "/system/lib/common/org.eclipse.osgi_3.15.300.v20200520-1959.jar");
+			properties.put("osgi.framework", "file:" + BWTestConfig.INSTANCE.getTibcoHome() + BWTestConfig.INSTANCE.getBwHome() + "/system/lib/common/org.eclipse.osgi_3.16.200.v20210226-1447.jar");
 			properties.put("osgi.configuration.cascaded", "false");
 			
 			FileOutputStream stream = new FileOutputStream(configIni);
@@ -94,7 +106,7 @@ public class ConfigFileGenerator
 			stream.flush();
 			stream.close();
 		
-			generateDevPropertiesFile(cxfProjects);
+			generateDevPropertiesFile(requiredDevPropertiesProjects);
 		}
 		
 		catch(Exception e )
@@ -104,18 +116,52 @@ public class ConfigFileGenerator
 
 	} 
 	
-	private void generateDevPropertiesFile(List<MavenProject> cxfProjects) throws IOException, DependencyResolutionRequiredException{
+	private boolean isJavaProject(MavenProject project) {
+		File projectFile = new File(project.getBasedir(), Constants.DOT_PROJECT_FILE);
+		NodeList nList = getNatureList(projectFile);  
+		if (nList != null) {
+			for(int i = 0; i < nList.getLength(); i++) {
+				if (nList.item(i) != null) {
+					Element node = (Element)nList.item(i);
+					String nature = node.getTextContent();
+					if (nature != null && nature.equals(Constants.NATURE_JAVE_PROJECT_PROPERTY))
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private NodeList getNatureList(File dotProject) {
+		NodeList nList = null;
+		try {
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			dbFactory.setNamespaceAware(true);
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+			Document doc = dBuilder.parse(dotProject);
+			nList = doc.getElementsByTagName(Constants.NATURE_PROPERTY);
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return nList;
+	}	
+	
+	private void generateDevPropertiesFile(List<MavenProject> requiredDevPropertiesProjects) throws IOException, DependencyResolutionRequiredException{
 		File devProps = new File( BWTestConfig.INSTANCE.getConfigDir() , "dev.properties");
 		devProps.createNewFile();
 		
 		Properties properties = new Properties();
 		properties.put("@ignoredot@","true");
-		for(MavenProject cxfProject : cxfProjects)
+		for(MavenProject reqProject : requiredDevPropertiesProjects)
 		{
 			//find classpath
-			Manifest projectManifest = ManifestParser.parseManifest( cxfProject.getBasedir() );
+			Manifest projectManifest = ManifestParser.parseManifest( reqProject.getBasedir() );
 			String bundleClassPath = projectManifest.getMainAttributes().getValue("Bundle-ClassPath");
-			BWTestConfig.INSTANCE.getLogger().debug("Bundle-Classpath for project "+ cxfProject.getName() +" -> "+bundleClassPath);
+			BWTestConfig.INSTANCE.getLogger().debug("Bundle-Classpath for project "+ reqProject.getName() +" -> "+bundleClassPath);
 			String pathString = "";
 			if(bundleClassPath != null)
 			{
@@ -126,8 +172,8 @@ public class ConfigFileGenerator
 				}
 			}
 			pathString = "bin,target/classes" + pathString;
-			properties.put(cxfProject.getName(), pathString);
-			BWTestConfig.INSTANCE.getLogger().debug("Adding CXF project entry to dev.properties -> "+ cxfProject.getName()+ "="+ pathString);
+			properties.put(reqProject.getName(), pathString);
+			BWTestConfig.INSTANCE.getLogger().debug("Adding project entry to dev.properties -> "+ reqProject.getName()+ "="+ pathString);
 		}
 		
 		FileOutputStream stream = new FileOutputStream(devProps);

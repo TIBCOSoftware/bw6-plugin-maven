@@ -22,6 +22,9 @@ public interface Constants {
 	public static final String TEMP_SUBSTVAR = "external.substvar";
 	public static final String TIMESTAMP = "timestamp";
 	public static final String COMPONENT_PROCESS = "ComponentProcess";
+	public static final String DOT_PROJECT_FILE = ".project";
+	public static final String NATURE_PROPERTY = "nature";
+	public static final String NATURE_JAVE_PROJECT_PROPERTY = "org.eclipse.jdt.core.javanature";
 
 	// TCI
 	public static final String TCI_SERVER_ENDPOINT_ENV = "TCI_PLATFORM_API_ENDPOINT";
