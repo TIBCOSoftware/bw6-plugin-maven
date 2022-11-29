@@ -26,6 +26,7 @@ public class BWModulesParser {
 	private MavenSession session;
 	private MavenProject project;
 	public String bwEdition;
+	private MavenProject moduleProject;
 
 	public BWModulesParser(MavenSession session, MavenProject project) {
 		this.session = session;
@@ -93,9 +94,27 @@ public class BWModulesParser {
 		}
 		
 		for(MavenProject project : projects) {
+			if(project.getArtifactId().contains(".module")){
+				moduleProject = project;
+			}
 			if(project.getArtifactId().equals(module)) {
 				Artifact artifact = project.getArtifact();
 				return artifact;
+			}
+		}
+		
+		/*
+		 * check dependency on .module project
+		 * if parent does not have cxf dependency then 
+		 * we have to check cxf dep. in .module project to 
+		 * ensure it's entry in ear without adding redundant dependency in parent pom.xml 
+		 * 
+		 */
+		if(depArtifacts.isEmpty()) {
+			for(Artifact depArtifact : moduleProject.getDependencyArtifacts()) {
+				if(depArtifact.getArtifactId().equals(module)) {
+					return depArtifact;
+				}
 			}
 		}
 		return null;
