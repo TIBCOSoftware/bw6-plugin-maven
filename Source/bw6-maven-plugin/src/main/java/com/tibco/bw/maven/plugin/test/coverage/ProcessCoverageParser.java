@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -30,10 +33,17 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.test.dto.AssertionResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.CompleteReportDTO;
 import com.tibco.bw.maven.plugin.test.dto.ProcessCoverageDTO;
+import com.tibco.bw.maven.plugin.test.dto.TestCaseResultDTO;
+import com.tibco.bw.maven.plugin.test.dto.TestSetResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
+import com.tibco.bw.maven.plugin.test.report.BWTestSuiteReportParser.PackageTestDetails;
+import com.tibco.bw.maven.plugin.test.report.BWTestSuiteReportParser.ProcessFileTestDetails;
+import com.tibco.bw.maven.plugin.test.report.BWTestSuiteReportParser.ProcessTestDetails;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
@@ -73,22 +83,86 @@ public class ProcessCoverageParser
 		{
 			TestSuiteResultDTO result = (TestSuiteResultDTO) complete.getModuleResult().get( count );
 			List coverage = result.getCodeCoverage();
-			
-			for( int i = 0; i < coverage.size() ; i++ )
-			{
-				ProcessCoverageDTO dto = (ProcessCoverageDTO) coverage.get( i );
-				if(processMap.get( dto.getProcessName())!=null){
-					ProcessCoverage pc = processMap.get( dto.getProcessName());
-					pc.setProcessExecuted(true);
-					pc.getActivitiesExec().addAll( dto.getActivityCoverage() );
-					pc.getTransitionExec().addAll( dto.getTransitionCoverage()  );
+			if (coverage != null && coverage.size() > 0) {
+				for( int i = 0; i < coverage.size() ; i++ )
+				{
+					ProcessCoverageDTO dto = (ProcessCoverageDTO) coverage.get( i );
+					if(processMap.get( dto.getProcessName())!=null){
+						ProcessCoverage pc = processMap.get( dto.getProcessName());
+						pc.setProcessExecuted(true);
+						pc.getActivitiesExec().addAll( dto.getActivityCoverage() );
+						pc.getTransitionExec().addAll( dto.getTransitionCoverage()  );
+					}
 				}
+			}
+			else {
+				// code coverage not there from TestSuiteResultDTO
+				// As far as I can tell, it was never set.
+				collectCoverageFromTestResults(result);
 			}
 		}	
 		
 		return processMap;
 	}
 	
+	private void collectCoverageFromTestResults(TestSuiteResultDTO result) {
+
+
+		for( int i =0 ; i < result.getTestSetResult().size() ; i++ )
+		{
+			TestSetResultDTO testset = (TestSetResultDTO) result.getTestSetResult().get( i );
+
+			String testPackage = testset.getPackageName();
+
+			ProcessCoverage pc = processMap.get(testset.getProcessName());
+			pc.setProcessExecuted(true);
+			// always put starter activity as executed
+			pc.getActivitiesExec().add(pc.getActivities().get(0));
+
+			Set<String> transitionsExecuted =  new HashSet<String>();
+			for( int j = 0 ; j < testset.getTestCaseResult().size() ; j++ )
+			{
+				TestCaseResultDTO testcase = (TestCaseResultDTO) testset.getTestCaseResult().get( j );
+
+				for( int assercount = 0 ; assercount < testcase.getAssertionResult().size()  ; assercount++ )
+				{
+					AssertionResultDTO aresult = (AssertionResultDTO) testcase.getAssertionResult().get(  assercount );
+					pc.getActivitiesExec().add(aresult.getActivityName());
+					for (String transition: pc.getTransitions()) {
+						if (transition.indexOf(aresult.getActivityName()) >= 0) {
+							if (!transitionsExecuted.contains(transition)) {
+								pc.getTransitionExec().add(transition);
+								transitionsExecuted.add(transition);
+							}
+						}
+					}
+
+				}
+			}
+			
+			for (String transition: pc.getTransitionExec() ) {
+
+				String[] activities = convertTransition(transition);
+				for (String activity: activities) {
+					if (!pc.getActivitiesExec().contains(activity)) {
+						pc.getActivitiesExec().add(activity);
+					}
+				}
+			}
+		}
+
+
+	}
+
+
+	private String[] convertTransition(String transition) {
+		String[] activities = new String[2];
+		int index = transition.indexOf("To");
+		activities[0] = transition.substring(0, index);
+		activities[1] = transition.substring(index+2);
+		return activities;
+	}
+
 	private void loadProcessesFromESM(MavenProject project) {
 		 DependencyResolutionResult resolutionResult = getDependencies(project,BWTestConfig.INSTANCE.getSession());
 		 if (resolutionResult != null) {
