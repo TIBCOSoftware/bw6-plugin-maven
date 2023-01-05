@@ -26,11 +26,13 @@ public class BWTSFileReaderWrapper {
 				BWTSModel bwtsModel = YMLBWTSFileReader.getModelFrom(path);
 				Object testCaseList = bwtsModel.getOthers().get("testCases");
 				tempReturnList = new ArrayList<>();
+				String[] locationArray = TestFolderPath.split("Tests");
 				if(null != testCaseList){
 					for (Object obj : (ArrayList<?>)testCaseList) {
 						if(obj instanceof String){
-							returnList.add(new File(TestFolderPath.concat("//"+(String)obj)));
-							tempReturnList.add(new File(TestFolderPath.concat("//"+(String)obj)));
+							String location = locationArray[0]+"Tests"+File.separator+(String)obj;
+							returnList.add(new File(location));
+							tempReturnList.add(new File(location));
 						}
 					}
 				}
