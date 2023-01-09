@@ -22,7 +22,13 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
+import org.eclipse.aether.graph.Dependency;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -30,12 +36,21 @@ import org.w3c.dom.Element;
 
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
 public class ConfigFileGenerator 
 {
 	ArrayList<String> bundleNamesList = new ArrayList<>();
     Boolean isBundleToStart = false;
+    MavenSession session;
+    ProjectDependenciesResolver resolver;
+    
+	public ConfigFileGenerator(MavenSession session, ProjectDependenciesResolver resolver) {
+		this.session = session;
+		this.resolver = resolver;
+	}
+
 	public void generateConfig()
 	{
 		
@@ -56,33 +71,45 @@ public class ConfigFileGenerator
 			List<MavenProject> requiredDevPropertiesProjects = new ArrayList<MavenProject>();
 			
 			List<MavenProject> projects =  BWTestConfig.INSTANCE.getSession().getProjects();
-
+	
 			for( MavenProject project : projects ) {
 				if (project.getPackaging().equals("bwmodule") || project.getPackaging().equals("bwear")) {
 
 					if (isJavaProject(project)) {
 						requiredDevPropertiesProjects.add(project);
 					}
-					Set<Artifact> artifacts = project.getDependencyArtifacts();
-					if(artifacts != null)
-					{
-						boolean isCXF = false;
-						for(Artifact artifact:artifacts) {
-							if(!"provided".equals(artifact.getScope()) && !(artifact.getFile().getName().contains("com.tibco.bw.palette.shared")) && !(artifact.getFile().getName().contains("com.tibco.xml.cxf.common")) && !artifact.getGroupId().equalsIgnoreCase("tempbw")) {
-								builder.append( "," );
-								addReference(builder, artifact.getFile(), artifact.getArtifactId());
+					
+		  			// include all dependencies including transitive in module project
+	    			DependencyResolutionResult resolutionResult = getDependenciesResolutionResult(project);
+	    			if (resolutionResult != null) {
+						    boolean isCXF = false;
+	    		        	for(Dependency dependency : resolutionResult.getDependencies()) {
+	    		    			if(dependency.getArtifact().getVersion().equals("0.0.0")) { //$NON-NLS-1$
+	    		    				continue;
+	    		    			}	    		    			
+	    		    			
+	    		    			org.eclipse.aether.artifact.Artifact aetherArtifact = dependency.getArtifact();
+								if(!"provided".equals(dependency.getScope()) && 
+										!(aetherArtifact.getFile().getName().contains("com.tibco.bw.palette.shared")) && 
+										!(aetherArtifact.getFile().getName().contains("com.tibco.xml.cxf.common")) && 
+										 !aetherArtifact.getGroupId().equalsIgnoreCase("tempbw")) {
+									builder.append( "," );
+									addReference(builder, aetherArtifact.getFile(), aetherArtifact.getArtifactId());
+								}
+								if(aetherArtifact.getFile().getName().contains("com.tibco.xml.cxf.common")){
+									isCXF = true;
+								}
+
+	    		        	}
+							if(isCXF){
+								requiredDevPropertiesProjects.add(project);
 							}
-							if(artifact.getFile().getName().contains("com.tibco.xml.cxf.common")){
-								isCXF = true;
-							}
-						}
-						if(isCXF){
-							requiredDevPropertiesProjects.add(project);
-						}
-					}
+	    		      }  
+	    			
+	    		
 				}
 			}
-			
+			 
 
 			for( MavenProject project : projects )
 			{
@@ -115,6 +142,19 @@ public class ConfigFileGenerator
 		}
 
 	} 
+
+	private DependencyResolutionResult getDependenciesResolutionResult(MavenProject project) {
+		DependencyResolutionResult resolutionResult = null;
+	    try {
+	        DefaultDependencyResolutionRequest resolution = new DefaultDependencyResolutionRequest(project, session.getRepositorySession());
+	        resolutionResult = resolver.resolve(resolution);
+	    	System.out.println();
+        } catch (DependencyResolutionException e) {
+        	e.printStackTrace();
+            resolutionResult = e.getResult();
+        }
+		return resolutionResult;
+	}
 	
 	private boolean isJavaProject(MavenProject project) {
 		File projectFile = new File(project.getBasedir(), Constants.DOT_PROJECT_FILE);
@@ -237,6 +277,7 @@ public class ConfigFileGenerator
 	
 	private void addReference(  StringBuilder builder , File file ,String key)
 	{
+
 		builder.append("reference:");
 		builder.append( "file:");
 		builder.append( new com.tibco.bw.maven.plugin.utils.Path(file.getAbsolutePath()).removeTrailingSeparator().toString() );

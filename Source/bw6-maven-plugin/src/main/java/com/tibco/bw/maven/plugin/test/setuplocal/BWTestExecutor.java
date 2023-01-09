@@ -11,8 +11,10 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWMFileParser;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
@@ -33,12 +35,22 @@ public class BWTestExecutor
 	boolean skipInitMainProcessActivities;
 	boolean skipInitAllNonTestProcessActivities;
 	String customArgEngine;
+	MavenSession session;
+	ProjectDependenciesResolver resolver;
 	
 
 	
 	List<String> mockActivity = new ArrayList<String>();
 	
+	public BWTestExecutor() {
+		
+	}
 	
+	public BWTestExecutor(MavenSession session, ProjectDependenciesResolver resolver) {
+		this.session = session;
+		this.resolver = resolver;
+	}
+
 	public void execute() throws MojoFailureException , Exception
 	{
 		try
@@ -239,7 +251,7 @@ public class BWTestExecutor
 		EngineLaunchConfigurator config = new EngineLaunchConfigurator();
 		config.loadConfiguration();
 		
-		ConfigFileGenerator gen = new ConfigFileGenerator();
+		ConfigFileGenerator gen = new ConfigFileGenerator(session, resolver);
 		gen.generateConfig();
 		
 		
