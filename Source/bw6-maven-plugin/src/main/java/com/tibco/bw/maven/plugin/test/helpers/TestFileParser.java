@@ -156,8 +156,7 @@ public class TestFileParser {
 														BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
 														throw new Exception("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
 													}
-													File goldInputFile = new File(inputFile);
-													if(!goldInputFile.isAbsolute()){
+													
 														BWTestConfig.INSTANCE.getLogger().debug("Provided Gold File path is relative "+inputFile);
 														baseDirectoryPath =	baseDirectoryPath.replace("\\" , "/");
 														replaceInputFile = baseDirectoryPath.concat("/"+inputFile);
@@ -167,7 +166,7 @@ public class TestFileParser {
 													if(null != replaceInputFile){
 														inputFile = replaceInputFile;
 													}
-												}
+												
 												if(showFailureDetails){
 													setGoldData(assertionMode,expression,ast,inputFile);
 												}
