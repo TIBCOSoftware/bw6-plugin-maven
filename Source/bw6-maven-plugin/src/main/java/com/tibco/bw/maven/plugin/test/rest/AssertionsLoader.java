@@ -1,6 +1,7 @@
 package com.tibco.bw.maven.plugin.test.rest;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,13 @@ public class AssertionsLoader
 
 					String assertionxml = FileUtils.readFileToString( file );
 
-					TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
+					try {
+						TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
+					} catch (Exception e) {
+						BWTestConfig.INSTANCE.getLogger().info("## ERRORS in collecting assertions  - Will skip running Test for "+file.getName()+" ##");
+						BWTestConfig.INSTANCE.getLogger().info("## Check the error indicated by following exception stack ##");
+						e.printStackTrace();
+					}
 				}
 			}
 			return suite;
@@ -65,7 +72,13 @@ public class AssertionsLoader
 
 				String assertionxml = FileUtils.readFileToString( file );
 
-				TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
+				try {
+					TestFileParser.INSTANCE.collectAssertions(assertionxml , suite ,project.getBasedir().getAbsolutePath());
+				} catch (Exception e) {
+					BWTestConfig.INSTANCE.getLogger().info("## ERRORS in collecting assertions  - Will skip running Test for "+file.getName()+" ##");
+					BWTestConfig.INSTANCE.getLogger().info("## Check the error indicated by following exception stack ##");
+					e.printStackTrace();
+				}
 
 			}
 

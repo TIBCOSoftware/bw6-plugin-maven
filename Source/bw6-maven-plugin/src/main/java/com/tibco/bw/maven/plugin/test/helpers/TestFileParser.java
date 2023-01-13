@@ -350,14 +350,13 @@ public class TestFileParser {
 			}
 			
 		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+			throw e;
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			throw e;
 		} catch (SAXException e) {
-			e.printStackTrace();
 			throw e;
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw e;
 		} finally {
 			try {
 				if (is != null) {
@@ -371,7 +370,7 @@ public class TestFileParser {
 	}
 	
 	
-	private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) {
+	private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) throws Exception {
 		switch(assertionMode){
 		case "Primitive":
 				String goldValueWithElement = StringUtils.substringBetween(expression, "test=\"", "\">");
@@ -525,7 +524,7 @@ public class TestFileParser {
 	}
 
 
-	private String readXMLFile(String mockOutputFilePath) {
+	private String readXMLFile(String mockOutputFilePath) throws IOException {
 		String sCurrentLine;
 		StringBuilder sb = new StringBuilder();
 		try (BufferedReader br = new BufferedReader(new FileReader(mockOutputFilePath))) {
@@ -533,7 +532,7 @@ public class TestFileParser {
 				sb.append(sCurrentLine);
 			}
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			throw e1;
 		}
 		return sb.toString();
 	}
