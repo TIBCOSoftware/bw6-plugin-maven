@@ -94,10 +94,12 @@ public class BWModulesParser {
 		}
 		
 		for(MavenProject project : projects) {
-			if(project.getArtifactId().contains(".module")){
+			if(project.getArtifactId().contains(".module") ||  // from create a new business application path
+			   project.getArtifactId().contains("Module")	   // from create a new Business works application module path
+					){
 				moduleProject = project;
 			}
-			if(project.getArtifactId().equals(module)) {
+			if(project.getArtifactId().equals(module)) { 
 				Artifact artifact = project.getArtifact();
 				return artifact;
 			}
