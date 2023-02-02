@@ -16,7 +16,7 @@ import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 public class BWTSFileReaderWrapper {
 	
 	
-	public List<File>	readBWTSFile(List<String> testSuiteList , String TestFolderPath, MavenProject project) throws IOException{
+	public List<File>	readBWTSFile(List<String> testSuiteList , String TestFolderPath, MavenProject project, String testFoldername) throws IOException{
 		List<File> returnList = new ArrayList<>();
 		List<File> tempReturnList ;
 		HashMap<String,List<File>> testSuiteMap = new HashMap<String,List<File>>();
@@ -26,14 +26,19 @@ public class BWTSFileReaderWrapper {
 				BWTSModel bwtsModel = YMLBWTSFileReader.getModelFrom(path);
 				Object testCaseList = bwtsModel.getOthers().get("testCases");
 				tempReturnList = new ArrayList<>();
+				//to get the path till the the project module
+				String[] locationArray = TestFolderPath.split(testFoldername);
+				
 				if(null != testCaseList){
 					for (Object obj : (ArrayList<?>)testCaseList) {
 						if(obj instanceof String){
-							returnList.add(new File(TestFolderPath.concat("//"+(String)obj)));
-							tempReturnList.add(new File(TestFolderPath.concat("//"+(String)obj)));
+							String location = locationArray[0]+testFoldername+File.separator+(String)obj;
+							returnList.add(new File(location));
+							tempReturnList.add(new File(location));
 						}
 					}
 				}
+				
 				String testSuite =  StringUtils.substringAfter(testSuiteName, TestFolderPath.concat("//"));
 				testSuiteMap.put(testSuite, tempReturnList);
 			}

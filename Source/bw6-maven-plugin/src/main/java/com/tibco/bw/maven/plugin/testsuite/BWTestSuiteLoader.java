@@ -1,15 +1,33 @@
 package com.tibco.bw.maven.plugin.testsuite;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputFilter;
+import java.io.ObjectInputFilter.Config;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.project.MavenProject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
@@ -39,13 +57,82 @@ public class BWTestSuiteLoader {
 		
 		BWTestConfig.INSTANCE.setTestSuiteNameList(project, testSuiteNameList);
 
+		File[] fileList = getFileList(baseDir);
+		String contents = FileUtils.readFileToString(fileList[0]);
+		String testFolderName = null;
+
+		if(contents != null) {
+			testFolderName = readProperties(contents,fileList[0]);
+		}
+
 		BWTSFileReaderWrapper fileReader = new BWTSFileReaderWrapper();
-		testSuitefile = fileReader.readBWTSFile(testSuiteNamePathList,testFolderPath, project);
+		testSuitefile = fileReader.readBWTSFile(testSuiteNamePathList,testFolderPath, project,testFolderName);
 		return testSuitefile;
 
 
 
 	}
+	
+	private File[] getFileList(String baseDir) {
+		File dir = new File(baseDir);   
+
+		File[] fileList = dir.listFiles(new FilenameFilter() {
+			
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".config");
+			}
+			
+		});
+		return fileList;
+	}
+	
+	protected static String readProperties(String contents,File propsFile) {
+		InputStream is = null;
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		try {
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			is = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
+			Document document = builder.parse(is);
+			NodeList nodeList = document.getDocumentElement().getChildNodes();
+
+			for (int i = 0; i < nodeList.getLength(); i++) 
+			{
+				Node node = nodeList.item(i);
+				if (node instanceof Element) 
+				{
+					Element el = (Element) node;
+					if ("config:specialFolders".equals(el.getNodeName())) {
+
+						NodeList childNodes = el.getChildNodes();
+
+						for (int j = 0; j < childNodes.getLength(); j++) {
+
+							Node cNode = childNodes.item(j);
+
+							if (cNode instanceof Element) {
+								Element cEl = (Element) cNode;
+
+								if ("config:folder".equals(cEl.getNodeName()))
+								{
+
+									if(cNode.getAttributes().getNamedItem("kind").getNodeValue().equals("bwtf")) {
+										return cNode.getAttributes().getNamedItem("location").getNodeValue();
+									}
+
+								}
+							}
+
+						}
+					}
+				}
+			}
+
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 	
 	public List<File> collectTestCasesListFromESM(String baseDir) throws IOException{
 		List<File> testSuitefile = new ArrayList<File>();
