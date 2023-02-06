@@ -12,6 +12,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.w3c.dom.Document;
@@ -113,7 +114,18 @@ public class BWModulesParser {
 		 * 
 		 */
 		if(depArtifacts.isEmpty()) {
-			for(Artifact depArtifact : moduleProject.getDependencyArtifacts()) {
+			moduleProject.setArtifacts(null);
+			moduleProject.setArtifactFilter(new ArtifactFilter() {
+				
+				@Override
+				public boolean include(Artifact artifact) {
+					
+					return true;
+				}
+				
+			});
+			
+			for(Artifact depArtifact : moduleProject.getArtifacts()) {
 				if(depArtifact.getArtifactId().equals(module)) {
 					return depArtifact;
 				}
