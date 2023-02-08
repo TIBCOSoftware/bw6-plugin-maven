@@ -113,14 +113,10 @@ public class ESMTestFile {
 				continue;
 			}
 			boolean isSharedModule = false;
+                        System.out.println("#### " + file.getAbsolutePath());
 			Manifest mf = ManifestParser.parseManifestFromJAR( file);
-			if(mf == null){
-				try {
-					throw new Exception("Failed to get Manifest for - "+ file.getName() +". Please verify if jar file is valid, the MANIFEST.MF should be first or second entry in the jar file. Use Command - jar tf <Jar_File_Path> to verify.");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+			if(mf != null){
+			
 			for( Object str : mf.getMainAttributes().keySet())
 			{
 				if( Constants.TIBCO_SHARED_MODULE.equals(str.toString() ))
@@ -136,6 +132,7 @@ public class ESMTestFile {
 					e.printStackTrace();
 				}
 			}
+                }
 		}
 
 	}
