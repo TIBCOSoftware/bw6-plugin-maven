@@ -113,8 +113,8 @@ public class BWTestExecutor
 		{
 			String[] testSuiteNames;
 			
-			if(BWTestConfig.INSTANCE.getTestSuiteName().contains("/")){
-				testSuiteNames = StringUtils.splitByWholeSeparator(BWTestConfig.INSTANCE.getTestSuiteName(), "/");
+			if(BWTestConfig.INSTANCE.getTestSuiteName().contains(";")){
+				testSuiteNames = StringUtils.splitByWholeSeparator(BWTestConfig.INSTANCE.getTestSuiteName(), ";");
 			}
 			else{
 				testSuiteNames = new String []{BWTestConfig.INSTANCE.getTestSuiteName()};
