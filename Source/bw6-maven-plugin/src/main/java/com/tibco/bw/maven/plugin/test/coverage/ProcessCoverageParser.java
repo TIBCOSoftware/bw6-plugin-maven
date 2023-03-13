@@ -117,7 +117,8 @@ public class ProcessCoverageParser
 			ProcessCoverage pc = processMap.get(testset.getProcessName());
 			pc.setProcessExecuted(true);
 			// always put starter activity as executed
-			pc.getActivitiesExec().add(pc.getActivities().get(0));
+		 	String startActivityName = pc.getActivities().get(0);
+ 	 	 	pc.getActivitiesExec().add(startActivityName);
 
 			Set<String> transitionsExecuted =  new HashSet<String>();
 			for( int j = 0 ; j < testset.getTestCaseResult().size() ; j++ )
@@ -129,7 +130,9 @@ public class ProcessCoverageParser
 					AssertionResultDTO aresult = (AssertionResultDTO) testcase.getAssertionResult().get(  assercount );
 					pc.getActivitiesExec().add(aresult.getActivityName());
 					for (String transition: pc.getTransitions()) {
-						if (transition.indexOf(aresult.getActivityName()) >= 0) {
+					 	if (transition.indexOf(aresult.getActivityName()) >= 0 || 
+					 	 	 	transition.indexOf(startActivityName) >= 0
+					 	 	) {
 							if (!transitionsExecuted.contains(transition)) {
 								pc.getTransitionExec().add(transition);
 								transitionsExecuted.add(transition);
