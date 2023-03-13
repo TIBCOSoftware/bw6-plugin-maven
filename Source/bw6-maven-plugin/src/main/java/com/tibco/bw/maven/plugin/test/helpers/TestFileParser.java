@@ -156,8 +156,7 @@ public class TestFileParser {
 														BWTestConfig.INSTANCE.getLogger().debug("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
 														throw new Exception("Process : "+ processName + ", Activity : "+ activityName+ ", Id : "+ location +", Error : Invalid Gold File Path. Valid example is - doc('file:///<path-to-file>')");
 													}
-													File goldInputFile = new File(inputFile);
-													if(!goldInputFile.isAbsolute()){
+													
 														BWTestConfig.INSTANCE.getLogger().debug("Provided Gold File path is relative "+inputFile);
 														baseDirectoryPath =	baseDirectoryPath.replace("\\" , "/");
 														replaceInputFile = baseDirectoryPath.concat("/"+inputFile);
@@ -167,7 +166,7 @@ public class TestFileParser {
 													if(null != replaceInputFile){
 														inputFile = replaceInputFile;
 													}
-												}
+												
 												if(showFailureDetails){
 													setGoldData(assertionMode,expression,ast,inputFile);
 												}
@@ -350,14 +349,13 @@ public class TestFileParser {
 			}
 			
 		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+			throw e;
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			throw e;
 		} catch (SAXException e) {
-			e.printStackTrace();
 			throw e;
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw e;
 		} finally {
 			try {
 				if (is != null) {
@@ -371,7 +369,7 @@ public class TestFileParser {
 	}
 	
 	
-	private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) {
+	private void setGoldData(String assertionMode, String expression, AssertionDTO ast, String inputFile) throws Exception {
 		switch(assertionMode){
 		case "Primitive":
 				String goldValueWithElement = StringUtils.substringBetween(expression, "test=\"", "\">");
@@ -525,7 +523,7 @@ public class TestFileParser {
 	}
 
 
-	private String readXMLFile(String mockOutputFilePath) {
+	private String readXMLFile(String mockOutputFilePath) throws IOException {
 		String sCurrentLine;
 		StringBuilder sb = new StringBuilder();
 		try (BufferedReader br = new BufferedReader(new FileReader(mockOutputFilePath))) {
@@ -533,7 +531,7 @@ public class TestFileParser {
 				sb.append(sCurrentLine);
 			}
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			throw e1;
 		}
 		return sb.toString();
 	}

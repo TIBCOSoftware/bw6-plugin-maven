@@ -12,6 +12,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.w3c.dom.Document;
@@ -26,6 +27,7 @@ public class BWModulesParser {
 	private MavenSession session;
 	private MavenProject project;
 	public String bwEdition;
+	private MavenProject moduleProject;
 
 	public BWModulesParser(MavenSession session, MavenProject project) {
 		this.session = session;
@@ -93,9 +95,40 @@ public class BWModulesParser {
 		}
 		
 		for(MavenProject project : projects) {
-			if(project.getArtifactId().equals(module)) {
+			if(project.getArtifactId().contains(".module") ||  // from create a new business application path
+			   project.getArtifactId().contains("Module")	   // from create a new Business works application module path
+					){
+				moduleProject = project;
+			}
+			if(project.getArtifactId().equals(module)) { 
 				Artifact artifact = project.getArtifact();
 				return artifact;
+			}
+		}
+		
+		/*
+		 * check dependency on .module project
+		 * if parent does not have cxf dependency then 
+		 * we have to check cxf dep. in .module project to 
+		 * ensure it's entry in ear without adding redundant dependency in parent pom.xml 
+		 * 
+		 */
+		if(depArtifacts.isEmpty()) {
+			moduleProject.setArtifacts(null);
+			moduleProject.setArtifactFilter(new ArtifactFilter() {
+				
+				@Override
+				public boolean include(Artifact artifact) {
+					
+					return true;
+				}
+				
+			});
+			
+			for(Artifact depArtifact : moduleProject.getArtifacts()) {
+				if(depArtifact.getArtifactId().equals(module)) {
+					return depArtifact;
+				}
 			}
 		}
 		return null;

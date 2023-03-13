@@ -80,7 +80,7 @@ public class BWTestMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException , MojoFailureException
     {
     	
-    	BWTestExecutor executor = new BWTestExecutor();
+    	BWTestExecutor executor = new BWTestExecutor(session, resolver);
     	try 
     	{
     	

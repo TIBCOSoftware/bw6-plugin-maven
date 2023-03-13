@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 public class BWFileUtils {
 	
@@ -190,7 +191,7 @@ public class BWFileUtils {
         return Math.max(lastUnixPos, lastWindowsPos);
     }
     
-    public static String getTestFolderName( final String location,  final String testSuiteName){
+    public static String getTestFolderName( final String location,  final String testSuiteName, final String utTestFolderName){
     	try
 		{
     		testFolderName = null;
@@ -205,11 +206,28 @@ public class BWFileUtils {
 				@Override
 				public FileVisitResult visitFile(Path file , BasicFileAttributes attrs) throws IOException 
 				{
-					if( testSuiteName.equalsIgnoreCase(file.toFile().getName()) )
+					String fileName = file.toFile().getName();
+					String parent = null;
+					if(testSuiteName.contains(File.separator) && file.toString().contains(File.separator+utTestFolderName+File.separator)) {
+						fileName = StringUtils.substringAfter(file.toString(),utTestFolderName+File.separator);
+					}
+					if(!testSuiteName.contains(File.separator)) {
+						parent = new File(file.toFile().getParent()).getName();
+					}
+					
+					if(parent == null && testSuiteName.equalsIgnoreCase(fileName))
 					{
 						testFolderName = file.toFile().getParent();
 						return FileVisitResult.TERMINATE;
 					}
+					
+					else if (parent != null && parent.equals(utTestFolderName)) {
+						if(testSuiteName.equalsIgnoreCase(fileName)) {
+							testFolderName = file.toFile().getParent();
+							return FileVisitResult.TERMINATE;
+						}
+					}
+					
 					return FileVisitResult.CONTINUE;
 				}
 
