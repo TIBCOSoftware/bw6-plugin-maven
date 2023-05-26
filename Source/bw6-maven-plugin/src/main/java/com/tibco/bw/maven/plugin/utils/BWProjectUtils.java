@@ -27,6 +27,9 @@ public class BWProjectUtils {
 		JarInputStream jarStream = new JarInputStream( new FileInputStream( jarFile ));
 		Manifest moduleManifest = jarStream.getManifest();
 		jarStream.close();
+		if (moduleManifest == null) {
+			return "1.0.0";  // default to 1?
+		}
 		return moduleManifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
 	}
 	

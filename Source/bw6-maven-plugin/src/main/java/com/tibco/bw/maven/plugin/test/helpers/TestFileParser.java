@@ -263,7 +263,8 @@ public class TestFileParser {
 													BWTestConfig.INSTANCE.getLogger().debug("Provided Mock File path is relative "+file.getPath());
 													mockOutputFilePath = baseDirectoryPath.concat("/"+mockOutputFilePath);
 												}
-												if(!disableMocking){
+												//do not execute if activity is Confirm activity
+												if(!disableMocking && !activityName.equalsIgnoreCase("Confirm")){
 													boolean isValidFile = validateMockXMLFile(mockOutputFilePath, activityName, processName);
 													if(isValidFile){
 														mockActivity.setmockOutputFilePath(mockOutputFilePath);

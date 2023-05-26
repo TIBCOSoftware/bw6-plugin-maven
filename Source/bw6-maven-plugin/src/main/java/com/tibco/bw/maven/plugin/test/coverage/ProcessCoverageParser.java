@@ -52,6 +52,12 @@ import org.eclipse.aether.graph.Dependency;
 public class ProcessCoverageParser
 {
 	
+    private static final Map<String, String> ALWAYS_EXECUTED_ACTIVITIES = new HashMap<>();
+    static {
+    	ALWAYS_EXECUTED_ACTIVITIES.put("OnMessageStart", "");
+    	ALWAYS_EXECUTED_ACTIVITIES.put("OnMessageEnd", "");
+    }
+	
 	Map<String,ProcessCoverage> processMap = new HashMap<>();
 	
 	 @Component
@@ -117,7 +123,8 @@ public class ProcessCoverageParser
 			ProcessCoverage pc = processMap.get(testset.getProcessName());
 			pc.setProcessExecuted(true);
 			// always put starter activity as executed
-			pc.getActivitiesExec().add(pc.getActivities().get(0));
+		 	String startActivityName = pc.getActivities().get(0);
+ 	 	 	pc.getActivitiesExec().add(startActivityName);
 
 			Set<String> transitionsExecuted =  new HashSet<String>();
 			for( int j = 0 ; j < testset.getTestCaseResult().size() ; j++ )
@@ -127,9 +134,15 @@ public class ProcessCoverageParser
 				for( int assercount = 0 ; assercount < testcase.getAssertionResult().size()  ; assercount++ )
 				{
 					AssertionResultDTO aresult = (AssertionResultDTO) testcase.getAssertionResult().get(  assercount );
-					pc.getActivitiesExec().add(aresult.getActivityName());
+					String activityName = aresult.getActivityName();
+					// keep it simple
+					if (!activityName.equals("N/A")) {
+						pc.getActivitiesExec().add(aresult.getActivityName());
+					}
 					for (String transition: pc.getTransitions()) {
-						if (transition.indexOf(aresult.getActivityName()) >= 0) {
+					 	if (transition.indexOf(aresult.getActivityName()) >= 0 || 
+					 	 	 	transition.indexOf(startActivityName) >= 0
+					 	 	) {
 							if (!transitionsExecuted.contains(transition)) {
 								pc.getTransitionExec().add(transition);
 								transitionsExecuted.add(transition);
@@ -148,6 +161,14 @@ public class ProcessCoverageParser
 						pc.getActivitiesExec().add(activity);
 					}
 				}
+			}
+			
+			for (String activity: pc.getActivities() ) {
+
+				if (ALWAYS_EXECUTED_ACTIVITIES.containsKey(activity)) {
+					pc.getActivitiesExec().add(activity);
+				}
+
 			}
 		}
 
