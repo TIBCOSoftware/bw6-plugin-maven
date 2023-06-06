@@ -192,17 +192,18 @@ public class BWModulePackageMojo extends AbstractMojo {
 			
 			boolean isSharedModule = false;
 			Manifest mf = ManifestParser.parseManifestFromJAR( file);
-			if(mf != null){
-                for( Object str : mf.getMainAttributes().keySet())
-                {
-                        getLog().debug( str.toString() );
-                        if( Constants.TIBCO_SHARED_MODULE.equals(str.toString() ))
-                        {
-                                isSharedModule = true;
-                                break;
-                        }
-                }
-            }
+			if(mf == null){
+				throw new Exception("Failed to get Manifest for - "+ file.getName() +". To run in a BW environment, the dependency must be an OSGI plugin. Please verify if jar file is valid, the MANIFEST.MF should be first or second entry in the jar file. Use Command - jar tf <Jar_File_Path> to verify.");
+			}
+			for( Object str : mf.getMainAttributes().keySet())
+			{
+				getLog().debug( str.toString() );
+				if( Constants.TIBCO_SHARED_MODULE.equals(str.toString() ))
+				{
+					isSharedModule = true;
+					break;
+				}
+			}
 			if(!isSharedModule) {
 				getLog().debug("Dependency added with name " + file.toString());
 				jarArchiver.addFile(file, "lib/" + file.getName());
