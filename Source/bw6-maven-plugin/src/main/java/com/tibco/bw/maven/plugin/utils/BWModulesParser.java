@@ -28,6 +28,7 @@ public class BWModulesParser {
 	private MavenProject project;
 	public String bwEdition;
 	private MavenProject moduleProject;
+	private MavenProject moduleProjectForCXFDpepe;
 
 	public BWModulesParser(MavenSession session, MavenProject project) {
 		this.session = session;
@@ -100,6 +101,11 @@ public class BWModulesParser {
 					){
 				moduleProject = project;
 			}
+			
+			if(project.getArtifact().getType().equals("bwmodule")) {
+				moduleProjectForCXFDpepe = project;
+			}
+			
 			if(project.getArtifactId().equals(module)) { 
 				Artifact artifact = project.getArtifact();
 				return artifact;
@@ -114,18 +120,20 @@ public class BWModulesParser {
 		 * 
 		 */
 		if(depArtifacts.isEmpty()) {
-			moduleProject.setArtifacts(null);
-			moduleProject.setArtifactFilter(new ArtifactFilter() {
-				
-				@Override
-				public boolean include(Artifact artifact) {
-					
-					return true;
-				}
-				
-			});
+			if(moduleProject != null) {
+				moduleProject.setArtifacts(null);
+				moduleProject.setArtifactFilter(new ArtifactFilter() {
+
+					@Override
+					public boolean include(Artifact artifact) {
+
+						return true;
+					}
+
+				});
+			}
 			
-			for(Artifact depArtifact : moduleProject.getArtifacts()) {
+			for(Artifact depArtifact : moduleProjectForCXFDpepe.getDependencyArtifacts()) {
 				if(depArtifact.getArtifactId().equals(module)) {
 					return depArtifact;
 				}
