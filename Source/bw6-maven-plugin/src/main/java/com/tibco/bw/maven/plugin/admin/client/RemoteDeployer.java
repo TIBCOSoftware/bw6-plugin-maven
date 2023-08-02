@@ -298,64 +298,86 @@ public class RemoteDeployer {
 	}
 
 	public void addAndDeployApplication(final String domainName, final String appSpaceName, final String appName, final String earName, 
-										final String file, final boolean replace, final String profile, final boolean backupEar, 
-										final String backupLocation,final String version,final boolean externalProfile, 
-										final String externalProfileLoc, final String appNodeName, final String path, boolean skipUploadArchive) throws Exception {
+			final String file, final boolean replace, final String profile, final boolean backupEar, 
+			final String backupLocation,final String version,final boolean externalProfile, 
+			final String externalProfileLoc, final String appNodeName, final String path, boolean skipUploadArchive, boolean startOnly, boolean stopOnly) throws Exception {
 		List<Application> applications = getApplications(domainName, appSpaceName, null, true);
 		String appDescription=null;
-		
+
 		for(Application application : applications) {
 			//= application.getDescription();
 			//log.info("*********"+appDescription+"**********");
-				if(application.getName().equals(appName)) {
-					if(replace) {
-						// Backup ear and profile
-						if(backupEar) {
-							String earPath = (path == null || path.isEmpty() ? "" : path+":") + application.getArchiveName().toString();
-							log.info("Generating backup ear file for application -> " + appName);
-							downloadArchive(domainName, backupLocation, earPath);
-							if(externalProfile) {
-								log.info("Skipping backup for external profile");
-							} else {
-								log.info("Generating backup substvar file for profile -> " + application.getProfileName());
-								downloadProfileAplication(domainName, backupLocation, earPath, application.getProfileName());
-							}
+			if(application.getName().equals(appName) && 
+					application.getVersion().equals(version)) {
+				if(replace) {
+					// Backup ear and profile
+					if(backupEar) {
+						String earPath = (path == null || path.isEmpty() ? "" : path+":") + application.getArchiveName().toString();
+						log.info("Generating backup ear file for application -> " + appName);
+						downloadArchive(domainName, backupLocation, earPath);
+						if(externalProfile) {
+							log.info("Skipping backup for external profile");
+						} else {
+							log.info("Generating backup substvar file for profile -> " + application.getProfileName());
+							downloadProfileAplication(domainName, backupLocation, earPath, application.getProfileName());
 						}
-						log.info("Application exists with name -> " + appName + ". Undeploying the Application as Redeploy flag is true.");
-						undeployApplication(domainName, appSpaceName, appName, application.getVersion());	
-					} else {
-						log.info("Application exists with name -> " + appName + ". Not Re-deploying the Application as Redeploy flag is false.");
-						return;
 					}
+					log.info("Application exists with name -> " + appName + ". Undeploying the Application as Redeploy flag is true.");
+					undeployApplication(domainName, appSpaceName, appName, application.getVersion());	
+				} else {
+					if (!startOnly && !stopOnly) {
+						log.info("Application exists with name -> " + appName + ". Not Re-deploying the Application as Redeploy flag is false.");
+						return;	
+					}
+					break;
 				}
 			}
+		}
+
+		// Main execution from this point on
 		
-		 	if (!skipUploadArchive) {
-				log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
-				uploadArchive(domainName, path, file, true);
-		 	}
-		 	else {
-				log.info("Skipping - Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);		 		
-		 	}
-			log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
-			deployApplication(domainName, appSpaceName, earName, path, startOndeploy, replace, profile,externalProfile,appDescription);
-			// fix from runtime side only
-			// UI doesn't seem to fix the externalProfile flag when profile is set to an application Profile 
-			// We should use the external profile here if this is really the case
-			if(externalProfile && !externalProfileLoc.isEmpty() && (profile != null && profile.equals("other")) ) {
-				setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
-				log.info("Starting Application -> "+ appName);
-				if(startOndeploy){
-					startApplication(domainName,appSpaceName,appName,version,appNodeName, true);
-				}
-			}
+		if (startOnly) {
+			log.info("Starting Application -> " + appName + " version "+ version);
+			startApplication(domainName,appSpaceName,appName,version,appNodeName, true);
 			Thread.sleep(SLEEP_INTERVAL);
+			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+			return;
+		}
+		
+		if (stopOnly) {
+			log.info("Stopping Application -> " + appName + " version "+ version);
+			stopApplication(domainName, appSpaceName, appName, version, appNodeName, true);
+			Thread.sleep(SLEEP_INTERVAL);
+			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Stopped);
+			return;
+		}
+
+		if (!skipUploadArchive) {
+			log.info("Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);
+			uploadArchive(domainName, path, file, true);
+		}
+		else {
+			log.info("Skipping - Uploading the Archive file -> " + earName + ", EAR Upload Path -> "+ path);		 		
+		}
+		log.info("Deploying the Application with name -> " + appName + " with Profile -> " + profile);
+		deployApplication(domainName, appSpaceName, earName, path, startOndeploy, replace, profile,externalProfile,appDescription);
+		// fix from runtime side only
+		// UI doesn't seem to fix the externalProfile flag when profile is set to an application Profile 
+		// We should use the external profile here if this is really the case
+		if(externalProfile && !externalProfileLoc.isEmpty() && (profile != null && profile.equals("other")) ) {
+			setProfile(domainName,appSpaceName,version,appName,externalProfileLoc);
+			log.info("Starting Application -> "+ appName);
 			if(startOndeploy){
-				checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+				startApplication(domainName,appSpaceName,appName,version,appNodeName, true);
 			}
-			else{
-				log.info("AppName -> "+ appName + " will not auto start since startOnDeploy flag is -> "+ startOndeploy);
-			}
+		}
+		Thread.sleep(SLEEP_INTERVAL);
+		if(startOndeploy){
+			checkApplicationState(domainName, appSpaceName, appName, version, Application.ApplicationRuntimeStates.Running);
+		}
+		else{
+			log.info("AppName -> "+ appName + " will not auto start since startOnDeploy flag is -> "+ startOndeploy);
+		}
 	}
 
 	private List<AppSpace> getAppSpaces(final String domainName, final String filter, final boolean full, final boolean status) throws ClientException {

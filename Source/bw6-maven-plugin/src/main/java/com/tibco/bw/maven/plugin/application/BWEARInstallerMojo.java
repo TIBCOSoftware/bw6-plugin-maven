@@ -176,6 +176,13 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property = "startOnDeploy", defaultValue = "true")
 	private boolean startOnDeploy;
 
+	@Parameter(property="startOnly", defaultValue ="false")
+	private boolean startOnly;
+	
+	@Parameter(property="stopOnly", defaultValue ="false")
+	private boolean stopOnly;	
+	
+
 	private String earLoc;
 	private String earName;
 	private String applicationName;
@@ -225,15 +232,6 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	    			throw new Exception("EAR file not found for the Application");
 	    		}
 	    		
-	    		if(externalEarLocExists()){
-	    			File f = new File(externalEarLoc);
-	    			Path p = Paths.get(externalEarLoc + "/" +files[0].getName());
-	    			
-	    			Files.deleteIfExists(p);
-	    			FileUtils.copyFileToDirectory(files[0], f);
-	    			 deriveEARInformation(p.toFile());
-	    		} else
-	    			deriveEARInformation(files[0]);
 	    			
 	    		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 	
@@ -258,6 +256,20 @@ public class BWEARInstallerMojo extends AbstractMojo {
 				else 
 					throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue("Bundle-Version"));
 				
+    			File selectedFile = files[0];
+    			if (files.length > 1)
+    				selectedFile = selectEARversion(files, version);
+	    		if(externalEarLocExists()){
+	    			File f = new File(externalEarLoc);
+	    			Path p = Paths.get(externalEarLoc + "/" +selectedFile.getName());
+	    			
+	    			Files.deleteIfExists(p);
+	    			FileUtils.copyFileToDirectory(files[0], f);
+	    			deriveEARInformation(p.toFile());
+	    		} else {
+	    			deriveEARInformation(selectedFile);
+	    		}
+				
 	    		deployer.getOrCreateDomain(domain, domainDesc);
 	    		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
 	    		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
@@ -273,9 +285,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	    		} else {
 	    			getLog().info("AppSpace is Running.");
 	    		}
-	    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-	    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, 
-	    				backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath, skipUploadArchive);
+	    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + selectedFile.getAbsolutePath());
+	    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, selectedFile.getAbsolutePath(), redeploy, profile, 
+	    				backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath, skipUploadArchive, startOnly, stopOnly);
 	    		deployer.close();
             }
     	} catch(Exception e) {
@@ -284,6 +296,18 @@ public class BWEARInstallerMojo extends AbstractMojo {
     	}
     }
     
+	private File selectEARversion(File[] files, String version) {
+		for (File f: files) {
+			String name = f.getName();
+			if (name.indexOf(version) >= 0)
+				return f;
+		}
+		
+		// can't find it, use first one like before
+		return files[0];
+		
+	}
+
 	private void deriveEARInformation(File file) {
 		earLoc = file.getAbsolutePath();
 		earLoc = earLoc.replace("\\", "/");
@@ -385,6 +409,8 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			externalEarLoc=deployment.getProperty("externalEarLoc");
 			earUploadPath = deployment.getProperty("earUploadPath");
 			skipUploadArchive = Boolean.parseBoolean(deployment.getProperty("skipUploadArchive"));
+			startOnly = Boolean.parseBoolean(deployment.getProperty("startOnly"));
+			stopOnly = Boolean.parseBoolean(deployment.getProperty("stopOnly"));
 			getAppNodeConfigProps(deployment);
 		} catch(Exception e) {
 			deployToAdmin = false;
