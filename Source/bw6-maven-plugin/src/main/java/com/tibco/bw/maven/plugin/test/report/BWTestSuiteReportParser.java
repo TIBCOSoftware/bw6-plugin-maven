@@ -138,11 +138,18 @@ public class BWTestSuiteReportParser
 						if( aresult.getAssertionStatus().equals("failed"))
 						{
 							StringBuilder assertionFailureDataBuilder = new StringBuilder();
-							fileDetails.addAssertionFailure(aresult.getActivityName() );
-							assertionFailureDataBuilder.append(" Assertion Failed For Activity with name "+"["+aresult.getActivityName()+"]");
-							assertionFailureDataBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
-							assertionFailureDataBuilder.append(" [Activity Output:  "+aresult.getActivityOutput()+"]");
-							assertionFailureDataBuilder.append(" [Gold Output:  "+aresult.getGoldInput()+"]");
+							String activityName = aresult.getActivityName();
+							fileDetails.addAssertionFailure(activityName);
+							if (!activityName.equals("N/A")) {
+								assertionFailureDataBuilder.append(" Assertion Failed For Activity with name "+"["+activityName+"]");
+								assertionFailureDataBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
+								assertionFailureDataBuilder.append(" [Activity Output:  "+aresult.getActivityOutput()+"]");
+								assertionFailureDataBuilder.append(" [Gold Output:  "+aresult.getGoldInput()+"]");
+							}
+							else {
+								assertionFailureDataBuilder.append(" Assertion Failed For Process ");
+								assertionFailureDataBuilder.append(" [Reason] - Could be a read input or write output error.  Please check error message on console");							
+							}
 							fileDetails.addFailureData(assertionFailureDataBuilder.toString());
 							
 						}
