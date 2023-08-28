@@ -85,6 +85,9 @@ public class BWTestMojo extends AbstractMojo {
     	{
     	
     		session.getProjects();
+    		String property = System.getProperty("java.version");
+    		String javapath = System.getProperty("java.home");
+    		getLog().info("Executing test Using java lib from " + javapath +" Java Version " + property);
     		
     		if( !verifyParameters() )
     		{
