@@ -217,6 +217,9 @@ public class EngineLaunchConfigurator
 				e.printStackTrace();
 			}
 		}
+		String string = list.get(0);
+		list.add(string);
+		list.add("-version");
 		return list;
 	}
 	
