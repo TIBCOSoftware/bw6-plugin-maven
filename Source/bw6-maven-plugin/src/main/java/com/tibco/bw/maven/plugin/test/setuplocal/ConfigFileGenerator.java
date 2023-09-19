@@ -233,9 +233,12 @@ public class ConfigFileGenerator
 			//If database drivers are not installed then don't load the lib folder
 			File libFolder = new File(file.getAbsolutePath().concat("/lib"));
 			if(libFolder.exists()){
-				if(libFolder.isDirectory() && libFolder.list().length==0){
-					continue;
+				if(!libFolder.getName().contains("com.tibco.bw.jdbc.datasourcefactory.datadirect")){
+					if(libFolder.isDirectory() && libFolder.list().length==0){
+						continue;
+					}
 				}
+			
 			}
 			
 			if( file.getName().contains( "DS_Store"))
