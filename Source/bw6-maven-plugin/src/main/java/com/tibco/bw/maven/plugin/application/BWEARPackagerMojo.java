@@ -354,10 +354,16 @@ public class BWEARPackagerMojo extends AbstractMojo {
     	return new File( projectBasedir , "manifest.json").exists();
     }
     
+    private boolean containsManifestBWCEJSON()
+    {
+    	return new File( projectBasedir , "manifest-bwce.json").exists();
+    }
+    
     private void addManifestJSON()
     {
         DefaultFileSet fileSet = new DefaultFileSet();
         fileSet.setDirectory(projectBasedir);
+        
         if( containsManifestJSON())
         {
         	String [] includes = new String [] { "manifest.json"};
@@ -365,6 +371,11 @@ public class BWEARPackagerMojo extends AbstractMojo {
         	archiver.getArchiver().addFileSet(fileSet);
         }
         
+        if(containsManifestBWCEJSON()) {
+        	String [] includes = new String [] { "manifest-bwce.json" };
+        	fileSet.setIncludes(includes);
+        	archiver.getArchiver().addFileSet(fileSet);
+        }
 
     }
 
