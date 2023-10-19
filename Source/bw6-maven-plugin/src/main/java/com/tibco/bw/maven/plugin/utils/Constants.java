@@ -37,6 +37,7 @@ public interface Constants {
 	public static final String TCI_APP_STATUS_BUILDING = "building";
 	public static final String TCI_APP_STATUS_SCALING = "scaling";
 	public static final String TCI_CONTEXT_ROOT = "/tci/v1/";
+	public static final String Platform = "Platform";
 
 	public static final Set<String> TCI_DEFAULT_ENGINE_PROPS = new HashSet<String>(
 			Arrays.asList("BW_LOGGER_OVERRIDES", "BW_ENGINE_THREADCOUNT",
