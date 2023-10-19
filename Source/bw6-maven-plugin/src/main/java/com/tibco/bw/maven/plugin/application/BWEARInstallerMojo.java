@@ -18,7 +18,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -29,6 +28,7 @@ import com.tibco.bw.maven.plugin.admin.dto.Agent;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.platform.client.PlatformDeployer;
 import com.tibco.bw.maven.plugin.tci.client.TCIDeployer;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
@@ -180,8 +180,40 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	private boolean startOnly;
 	
 	@Parameter(property="stopOnly", defaultValue ="false")
-	private boolean stopOnly;	
+	private boolean stopOnly;
 	
+	@Parameter(property = "buildName")
+	private String buildName;
+	
+	@Parameter(property = "appName")
+	private String appName;
+	
+	@Parameter(property="replicas", defaultValue = "0")
+	private int replicas;
+	
+	@Parameter(property="enableAutoScaling", defaultValue ="false")
+	private boolean enableAutoScaling;
+	
+	@Parameter(property="eula", defaultValue ="false")
+	private boolean eula;
+	
+	@Parameter(property = "platformConfigFile")
+	private String platformConfigFile;
+	
+	@Parameter(property = "dpUrl")
+	private String dpUrl;
+	
+	@Parameter(property = "authToken")
+	private String authToken;
+	
+	@Parameter(property = "baseVersion")
+	private String baseVersion;
+	
+	@Parameter(property = "baseImageTag")
+	private String baseImageTag;
+	
+	@Parameter(property = "namespace")
+	private String namespace;
 
 	private String earLoc;
 	private String earName;
@@ -192,10 +224,6 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		getLog().info("BWEAR Installer Mojo started ...");
     		Manifest manifest = ManifestParser.parseManifest(projectBasedir);
     		String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-            if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
-            	getLog().debug("BWCF edition. Returning..");
-            	return;
-            }
             //TCI deployment
             if(projectType != null && projectType.equalsIgnoreCase(Constants.TCI)){
             	if(!deployToAdmin) {
@@ -213,7 +241,17 @@ public class BWEARInstallerMojo extends AbstractMojo {
  	    		deployer.deployApp(appName, files[0].getPath(), instanceCount, appVariablesFile, engineVariablesFile, forceOverwrite, retainAppProps);
  	    		
  	    		deployer.close();
-            } else {	//enterprise deployment
+            }else if(projectType != null && projectType.equalsIgnoreCase(Constants.Platform)) {
+            	//Platform deployment
+            	File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+ 	    		if(files.length == 0) {
+ 	    			throw new Exception("EAR file not found for the Application");
+ 	    		}
+ 	    		String application = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
+ 	    		PlatformDeployer deployer = new PlatformDeployer(connectTimeout, readTimeout, retryCount, getLog());
+ 	    		deployer.buildApp(application, files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace);
+            }else {
+            	//enterprise deployment
 	    		boolean configFileExists = deploymentConfigExists();
 	    		if(configFileExists) {
 	    			loadFromDeploymentProperties();
