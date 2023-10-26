@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,8 @@ public class EngineLaunchConfigurator
 		if(null != customEnginePropertyFile && !customEnginePropertyFile.isEmpty()){
 			BufferedReader proertyReader = null;
 			try {
-				URL url = new URL(customEnginePropertyFile);
+				
+				URL url = new File(customEnginePropertyFile).toURI().toURL();
 				proertyReader = new BufferedReader(
 					        new InputStreamReader(url.openStream()));
 			}
@@ -57,7 +59,7 @@ public class EngineLaunchConfigurator
 				throw e;
 			}
 			
-			customPropertyList =  readArguments( proertyReader );
+			customPropertyList =  readArguments( proertyReader, null);
 		}
 		
 		if( reader == null )
@@ -65,15 +67,10 @@ public class EngineLaunchConfigurator
 			throw new Exception();
 		}
 		
-		List<String> list =  readArguments( reader );
+		List<String> list =  readArguments( reader, customPropertyList );
 		
-		if(customPropertyList!= null && !customPropertyList.isEmpty()){
-			result = Stream.concat(list.stream(), customPropertyList.stream())
-					.collect(Collectors.toList()); 
-		}
-		else{
-			result = list;
-		}
+
+		result = list;
 
 		
 		BWTestConfig.INSTANCE.setLaunchConfig(result);	
@@ -121,7 +118,7 @@ public class EngineLaunchConfigurator
 		return (os.startsWith("mac"));
 	}
 	
-	private List<String> readArguments( BufferedReader reader )
+	private List<String> readArguments( BufferedReader reader, List<String> customPropertyList )
 	{
 		String currentLine;
 		
@@ -194,7 +191,11 @@ public class EngineLaunchConfigurator
 					continue;
 
 				}
-				
+				if (currentLine.equals("-classpath")) {
+					if(customPropertyList!= null && !customPropertyList.isEmpty()){
+						list.addAll(customPropertyList);					
+					}
+				}
 				list.add(currentLine);
 				
 			}
