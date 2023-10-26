@@ -2,9 +2,11 @@ package com.tibco.bw.maven.plugin.platform.client;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.util.Map;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -60,6 +62,10 @@ public class PlatformDeployer {
 				this.log.debug("Unable to build the application. Please provide base image tag.");
 				return;
 			}
+			if(namespace == null){
+				this.log.debug("Unable to build the application. Please provide namespace.");
+				return;
+			}
 
 			File ear = new File(earPath);
 			this.log.debug("EarLocation : " + earPath + ", EarFile : "+ ear.getName());
@@ -90,8 +96,12 @@ public class PlatformDeployer {
 			}else {
 				processErrorResponse(response, statusInfo);
 			}
-		}catch(Exception e) {
-			this.log.error(e);
+		}catch (ProcessingException pe) {
+			pe.printStackTrace();
+			throw getConnectionException(pe);
+		}catch (Exception ex) {
+			ex.printStackTrace();
+			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}
 	
@@ -177,6 +187,16 @@ public class PlatformDeployer {
 		} else {
 			throw new ClientException(response.getStatus(), statusInfo.getReasonPhrase(), null);
 		}
+	}
+	
+	private static ClientException getConnectionException(ProcessingException pe) {
+		if(pe.getCause() instanceof ConnectException) {
+			return new ClientException(503, pe.getCause().getMessage(), pe.getCause());
+		}
+		if(pe.getCause() instanceof IllegalStateException) {
+			return new ClientException(503, pe.getCause().getMessage(), pe.getCause());
+		}
+		return new ClientException(500, pe.getMessage(), pe);
 	}
 
 }
