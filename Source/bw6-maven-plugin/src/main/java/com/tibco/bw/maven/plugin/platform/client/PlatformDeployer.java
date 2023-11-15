@@ -72,9 +72,28 @@ public class PlatformDeployer {
 			Client client = ClientBuilder.newClient();
 			webTarget = client.target(new URI(dpUrl));
 			webTarget.register(MultiPartFeature.class);
+			
+			String platformConfigFileContent = new String(Files.readAllBytes(Paths.get(platformConfigFile)));
+			JSONArray dependenciesArray = null;
+			if(platformConfigFileContent != null && !platformConfigFileContent.isEmpty()) {
+				JSONObject rootObject = new JSONObject(platformConfigFileContent);
+				if(rootObject != null && rootObject.has("platformConfig")) {
+					JSONArray platformConfigObject = (JSONArray) rootObject.get("platformConfig");
+					if(platformConfigObject != null) {
+						if(platformConfigObject.length() > 2) {
+							JSONObject dependencies = (JSONObject) platformConfigObject.get(2);
+							if(dependencies != null) {
+								dependenciesArray = (JSONArray) dependencies.get("dependencies");
+							}
+						}
+					}
+				}
+			}
+			
 			FormDataMultiPart multipart = new FormDataMultiPart();
 			multipart.bodyPart(new FileDataBodyPart("artifact", ear));
-			multipart.bodyPart(new FormDataBodyPart("request", "{\"buildName\": \"" + buildName + "\"}"));
+			multipart.bodyPart(new FormDataBodyPart("request", "{\"buildName\": \"" + buildName + "\", " + "\"dependencies\": " + dependenciesArray.toString() + "}"));
+			
 			Response response = webTarget
 					.queryParam("baseversion", baseVersion)
 					.queryParam("baseimagetag", baseImageTag)
