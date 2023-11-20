@@ -229,13 +229,16 @@ public class ConfigFileGenerator
         
 		File []files = target.listFiles();
 		for( File file : files )
-		{
+		{ 
 			//If database drivers are not installed then don't load the lib folder
 			File libFolder = new File(file.getAbsolutePath().concat("/lib"));
 			if(libFolder.exists()){
-				if(libFolder.isDirectory() && libFolder.list().length==0){
-					continue;
+				if (libFolder.getAbsolutePath() != null && !(libFolder.getAbsolutePath().indexOf("com.tibco.bw.jdbc.datasourcefactory.datadirect") >= 0)) {
+					if(libFolder.isDirectory() && libFolder.list().length==0){
+						continue;
+					}
 				}
+			
 			}
 			
 			if( file.getName().contains( "DS_Store"))

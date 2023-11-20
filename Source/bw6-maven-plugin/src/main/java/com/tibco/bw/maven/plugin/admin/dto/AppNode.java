@@ -34,6 +34,7 @@ public class AppNode {
     private String               appSpaceName;
     private String               description;
     private String               httpPort;
+    private String               httpsPort;
     private String               osgiPort;
     private AppNodeRuntimeStates state;
     private String               domainName;
@@ -143,6 +144,11 @@ public class AppNode {
     public String getHttpPort() {
         return this.httpPort;
     }
+    
+    @XmlElement
+    public String getHttpsPort() {
+        return this.httpsPort;
+    }
 
     @XmlElement
     public String getOsgiPort() {
@@ -217,6 +223,15 @@ public class AppNode {
 
     public void setHttpPort(final String port) {
         this.httpPort = port;
+    }
+    
+    /**
+     * @param port
+     *            , the httpsPort of this AppNode the httpsPort to set
+     */
+
+    public void setHttpsPort(final String port) {
+        this.httpsPort = port;
     }
 
     /**

@@ -2,14 +2,17 @@ package com.tibco.bw.maven.plugin.test.setuplocal;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,7 +35,8 @@ public class EngineLaunchConfigurator
 		if(null != customEnginePropertyFile && !customEnginePropertyFile.isEmpty()){
 			BufferedReader proertyReader = null;
 			try {
-				URL url = new URL(customEnginePropertyFile);
+				
+				URL url = new File(customEnginePropertyFile).toURI().toURL();
 				proertyReader = new BufferedReader(
 					        new InputStreamReader(url.openStream()));
 			}
@@ -55,7 +59,7 @@ public class EngineLaunchConfigurator
 				throw e;
 			}
 			
-			customPropertyList =  readArguments( proertyReader );
+			customPropertyList =  readArguments( proertyReader, null);
 		}
 		
 		if( reader == null )
@@ -63,15 +67,10 @@ public class EngineLaunchConfigurator
 			throw new Exception();
 		}
 		
-		List<String> list =  readArguments( reader );
+		List<String> list =  readArguments( reader, customPropertyList );
 		
-		if(customPropertyList!= null && !customPropertyList.isEmpty()){
-			result = Stream.concat(list.stream(), customPropertyList.stream())
-					.collect(Collectors.toList()); 
-		}
-		else{
-			result = list;
-		}
+
+		result = list;
 
 		
 		BWTestConfig.INSTANCE.setLaunchConfig(result);	
@@ -119,13 +118,16 @@ public class EngineLaunchConfigurator
 		return (os.startsWith("mac"));
 	}
 	
-	private List<String> readArguments( BufferedReader reader )
+	private List<String> readArguments( BufferedReader reader, List<String> customPropertyList )
 	{
 		String currentLine;
 		
 		String currentUsersHomeDir = System.getProperty("user.home");
 		File file = new File(currentUsersHomeDir + "/bwutdev.properties"); 
 		boolean isDev = file.exists();
+		
+		File custom_Java = new File(currentUsersHomeDir + "/customJavaPath.properties"); 
+		boolean isCustomjava = custom_Java.exists();
 		
 		List<String> list = new ArrayList<String>();		
 		try
@@ -140,7 +142,15 @@ public class EngineLaunchConfigurator
 
 				if( currentLine.contains("%%TIBCO_HOME%%"))
 				{
-					currentLine = currentLine.replace("%%TIBCO_HOME%%", BWTestConfig.INSTANCE.getTibcoHome() );
+					if(isCustomjava && currentLine.contains("tibcojre")) {
+						Properties prop = new Properties();
+						prop.load(new FileInputStream(custom_Java));
+						Object customJavaPath = prop.get("customJavaPath");
+						currentLine = customJavaPath.toString();
+
+					} else {
+						currentLine = currentLine.replace("%%TIBCO_HOME%%", BWTestConfig.INSTANCE.getTibcoHome() );
+					}
 				}
 				if( currentLine.contains("%%BW_HOME%%"))
 				{
@@ -181,7 +191,11 @@ public class EngineLaunchConfigurator
 					continue;
 
 				}
-				
+				if (currentLine.equals("-classpath")) {
+					if(customPropertyList!= null && !customPropertyList.isEmpty()){
+						list.addAll(customPropertyList);					
+					}
+				}
 				list.add(currentLine);
 				
 			}

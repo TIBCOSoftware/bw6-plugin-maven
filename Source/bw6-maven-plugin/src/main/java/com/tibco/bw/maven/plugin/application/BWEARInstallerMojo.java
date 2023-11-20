@@ -18,7 +18,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -29,6 +28,7 @@ import com.tibco.bw.maven.plugin.admin.dto.Agent;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.platform.client.PlatformDeployer;
 import com.tibco.bw.maven.plugin.tci.client.TCIDeployer;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
@@ -176,6 +176,45 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property = "startOnDeploy", defaultValue = "true")
 	private boolean startOnDeploy;
 
+	@Parameter(property="startOnly", defaultValue ="false")
+	private boolean startOnly;
+	
+	@Parameter(property="stopOnly", defaultValue ="false")
+	private boolean stopOnly;
+	
+	@Parameter(property = "buildName")
+	private String buildName;
+	
+	@Parameter(property = "appName")
+	private String appName;
+	
+	@Parameter(property="replicas", defaultValue = "0")
+	private int replicas;
+	
+	@Parameter(property="enableAutoScaling", defaultValue ="false")
+	private boolean enableAutoScaling;
+	
+	@Parameter(property="eula", defaultValue ="false")
+	private boolean eula;
+	
+	@Parameter(property = "platformConfigFile")
+	private String platformConfigFile;
+	
+	@Parameter(property = "dpUrl")
+	private String dpUrl;
+	
+	@Parameter(property = "authToken")
+	private String authToken;
+	
+	@Parameter(property = "baseVersion")
+	private String baseVersion;
+	
+	@Parameter(property = "baseImageTag")
+	private String baseImageTag;
+	
+	@Parameter(property = "namespace")
+	private String namespace;
+
 	private String earLoc;
 	private String earName;
 	private String applicationName;
@@ -185,10 +224,6 @@ public class BWEARInstallerMojo extends AbstractMojo {
     		getLog().info("BWEAR Installer Mojo started ...");
     		Manifest manifest = ManifestParser.parseManifest(projectBasedir);
     		String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-            if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
-            	getLog().debug("BWCF edition. Returning..");
-            	return;
-            }
             //TCI deployment
             if(projectType != null && projectType.equalsIgnoreCase(Constants.TCI)){
             	if(!deployToAdmin) {
@@ -206,7 +241,17 @@ public class BWEARInstallerMojo extends AbstractMojo {
  	    		deployer.deployApp(appName, files[0].getPath(), instanceCount, appVariablesFile, engineVariablesFile, forceOverwrite, retainAppProps);
  	    		
  	    		deployer.close();
-            } else {	//enterprise deployment
+            }else if(projectType != null && projectType.equalsIgnoreCase(Constants.Platform)) {
+            	//Platform deployment
+            	File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+ 	    		if(files.length == 0) {
+ 	    			throw new Exception("EAR file not found for the Application");
+ 	    		}
+ 	    		String application = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
+ 	    		PlatformDeployer deployer = new PlatformDeployer(connectTimeout, readTimeout, retryCount, getLog());
+ 	    		deployer.buildApp(application, files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace);
+            }else {
+            	//enterprise deployment
 	    		boolean configFileExists = deploymentConfigExists();
 	    		if(configFileExists) {
 	    			loadFromDeploymentProperties();
@@ -225,15 +270,6 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	    			throw new Exception("EAR file not found for the Application");
 	    		}
 	    		
-	    		if(externalEarLocExists()){
-	    			File f = new File(externalEarLoc);
-	    			Path p = Paths.get(externalEarLoc + "/" +files[0].getName());
-	    			
-	    			Files.deleteIfExists(p);
-	    			FileUtils.copyFileToDirectory(files[0], f);
-	    			 deriveEARInformation(p.toFile());
-	    		} else
-	    			deriveEARInformation(files[0]);
 	    			
 	    		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
 	
@@ -258,6 +294,20 @@ public class BWEARInstallerMojo extends AbstractMojo {
 				else 
 					throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue("Bundle-Version"));
 				
+    			File selectedFile = files[0];
+    			if (files.length > 1)
+    				selectedFile = selectEARversion(files, version);
+	    		if(externalEarLocExists()){
+	    			File f = new File(externalEarLoc);
+	    			Path p = Paths.get(externalEarLoc + "/" +selectedFile.getName());
+	    			
+	    			Files.deleteIfExists(p);
+	    			FileUtils.copyFileToDirectory(files[0], f);
+	    			deriveEARInformation(p.toFile());
+	    		} else {
+	    			deriveEARInformation(selectedFile);
+	    		}
+				
 	    		deployer.getOrCreateDomain(domain, domainDesc);
 	    		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
 	    		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
@@ -273,9 +323,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	    		} else {
 	    			getLog().info("AppSpace is Running.");
 	    		}
-	    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + files[0].getAbsolutePath());
-	    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, files[0].getAbsolutePath(), redeploy, profile, 
-	    				backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath, skipUploadArchive);
+	    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + selectedFile.getAbsolutePath());
+	    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, selectedFile.getAbsolutePath(), redeploy, profile, 
+	    				backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath, skipUploadArchive, startOnly, stopOnly);
 	    		deployer.close();
             }
     	} catch(Exception e) {
@@ -284,6 +334,18 @@ public class BWEARInstallerMojo extends AbstractMojo {
     	}
     }
     
+	private File selectEARversion(File[] files, String version) {
+		for (File f: files) {
+			String name = f.getName();
+			if (name.indexOf(version) >= 0)
+				return f;
+		}
+		
+		// can't find it, use first one like before
+		return files[0];
+		
+	}
+
 	private void deriveEARInformation(File file) {
 		earLoc = file.getAbsolutePath();
 		earLoc = earLoc.replace("\\", "/");
@@ -385,6 +447,8 @@ public class BWEARInstallerMojo extends AbstractMojo {
 			externalEarLoc=deployment.getProperty("externalEarLoc");
 			earUploadPath = deployment.getProperty("earUploadPath");
 			skipUploadArchive = Boolean.parseBoolean(deployment.getProperty("skipUploadArchive"));
+			startOnly = Boolean.parseBoolean(deployment.getProperty("startOnly"));
+			stopOnly = Boolean.parseBoolean(deployment.getProperty("stopOnly"));
 			getAppNodeConfigProps(deployment);
 		} catch(Exception e) {
 			deployToAdmin = false;

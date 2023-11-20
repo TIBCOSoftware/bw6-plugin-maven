@@ -135,6 +135,12 @@ public class BWDeployMojo extends AbstractMojo {
 	@Parameter(property="startOnDeploy", defaultValue ="true")
 	private boolean startOnDeploy;
 	
+	@Parameter(property="startOnly", defaultValue ="false")
+	private boolean startOnly;
+	
+	@Parameter(property="stopOnly", defaultValue ="false")
+	private boolean stopOnly;	
+	
 	private String earName;
 	private String earLoc;
 
@@ -243,10 +249,23 @@ public class BWDeployMojo extends AbstractMojo {
 					"domain -> " + domain + " earName -> " + earName
 							+ " Ear file to be uploaded -> "
 							+ earFile.getAbsolutePath());
-			deployer.addAndDeployApplication(domain, appSpace, applicationName,
-					earName, earFile.getAbsolutePath(), redeploy, profile,
-					backup, backupLocation, version, externalProfile,
-					externalProfileLoc, appNode, earUploadPath, skipUploadArchive);
+			deployer.addAndDeployApplication(domain, 
+												appSpace, 
+												applicationName,
+												earName, 
+												earFile.getAbsolutePath(), 
+												redeploy, 
+												profile,
+												backup, 
+												backupLocation, 
+												version, 
+												externalProfile,							
+												externalProfileLoc, 
+												appNode, 
+												earUploadPath, 
+												skipUploadArchive, 
+												startOnly, 
+												stopOnly);
 			deployer.close();
 			deployer.close();
 			BWEarUtils.deleteEARFileEntries(earLocation);
@@ -350,6 +369,8 @@ public class BWDeployMojo extends AbstractMojo {
 			externalProfileLoc = deployment.getProperty("externalProfileLoc");
 			earUploadPath = deployment.getProperty("earUploadPath");
 			skipUploadArchive = Boolean.parseBoolean(deployment.getProperty("skipUploadArchive"));
+			startOnly = Boolean.parseBoolean(deployment.getProperty("startOnly"));
+			stopOnly = Boolean.parseBoolean(deployment.getProperty("stopOnly"));
 			getAppNodeConfigProps(deployment);
 		} catch (Exception e) {
 			getLog().error(e);
