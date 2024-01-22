@@ -730,7 +730,7 @@ public class BWTestReportGenerator
     
     private static String toHtmlId( String id )
     {
-        return DoxiaUtils.isValidId( id ) ? id : DoxiaUtils.encodeId( id, true );
+        return DoxiaUtils.isValidId( id ) ? id : DoxiaUtils.encodeId( id );
     }
 
 
