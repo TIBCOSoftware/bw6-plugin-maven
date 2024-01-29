@@ -6,6 +6,7 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.ProcessingException;
@@ -72,6 +73,34 @@ public class PlatformDeployer {
 			Client client = ClientBuilder.newClient();
 			webTarget = client.target(new URI(dpUrl));
 			webTarget.register(MultiPartFeature.class);
+			
+			Response bwceVersionsResponse = webTarget
+					.path("public/v1/dp/bwceversions")
+					.request(MediaType.TEXT_PLAIN)
+					.header("Authorization", "Bearer " + authToken)
+					.get();
+			
+			if(bwceVersionsResponse != null && bwceVersionsResponse.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+				boolean isBaseImageValid = false;
+				String readEntity = bwceVersionsResponse.readEntity(String.class);
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+				BuildTypeCatalog buildTypeCatalog = mapper.readValue(readEntity, BuildTypeCatalog.class);
+				for(BuildType buildType: buildTypeCatalog.getBuildtypeCatalog()) {
+					if(buildType.getBuildtypeTag().equals(baseVersion)) {
+						List<BaseImage> baseImages = buildType.getBaseImages();
+						for(BaseImage image: baseImages) {
+							if(image.getImageTag().equals(baseImageTag)) {
+								isBaseImageValid = true;
+								break;
+							}
+						}
+					}
+				}
+				if(!isBaseImageValid) {
+					throw new ClientException("Unable to build the application. Please provide a valid base image tag.");
+				}
+			}
 			
 			String platformConfigFileContent = new String(Files.readAllBytes(Paths.get(platformConfigFile)));
 			JSONArray dependenciesArray = null;
