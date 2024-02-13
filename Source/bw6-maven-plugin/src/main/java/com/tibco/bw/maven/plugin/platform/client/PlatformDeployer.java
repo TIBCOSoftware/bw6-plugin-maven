@@ -81,6 +81,7 @@ public class PlatformDeployer {
 					.get();
 			
 			if(bwceVersionsResponse != null && bwceVersionsResponse.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+				boolean isBaseVersionValid = false;
 				boolean isBaseImageValid = false;
 				String readEntity = bwceVersionsResponse.readEntity(String.class);
 				ObjectMapper mapper = new ObjectMapper();
@@ -88,6 +89,7 @@ public class PlatformDeployer {
 				BuildTypeCatalog buildTypeCatalog = mapper.readValue(readEntity, BuildTypeCatalog.class);
 				for(BuildType buildType: buildTypeCatalog.getBuildtypeCatalog()) {
 					if(buildType.getBuildtypeTag().equals(baseVersion)) {
+						isBaseVersionValid = true;
 						List<BaseImage> baseImages = buildType.getBaseImages();
 						for(BaseImage image: baseImages) {
 							if(image.getImageTag().equals(baseImageTag)) {
@@ -96,8 +98,9 @@ public class PlatformDeployer {
 							}
 						}
 					}
-				}
-				if(!isBaseImageValid) {
+				}if(!isBaseVersionValid) {
+					throw new ClientException("Unable to build the application. Please provide a valid base version.");
+				}else if(!isBaseImageValid) {
 					throw new ClientException("Unable to build the application. Please provide a valid base image tag.");
 				}
 			}
