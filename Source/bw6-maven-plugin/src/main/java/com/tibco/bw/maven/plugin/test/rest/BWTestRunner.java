@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
@@ -32,6 +33,10 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.diff.ComparisonControllers;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.Difference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
@@ -503,8 +508,9 @@ public class BWTestRunner
 				}
 				assertionFileBuilder.append(" for TestCase File ["+testCaseFile+"]");
 				assertionFileBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
-				assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
-				assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
+				assertionFileBuilder.append("\n");
+				assertionFileBuilder.append(" Potential Cause -->  ");
+				assertionFileBuilder.append(doXmlDiff(inputValue, assertion.getGoldInput()));
 				assertionFileBuilder.append("\n");
 
 				BWTestConfig.INSTANCE.getLogger().error(assertionFileBuilder.toString());
@@ -513,6 +519,29 @@ public class BWTestRunner
 	}
 		
 	
+
+
+	private String doXmlDiff(String inputValue, String goldInput) {
+        
+        Diff myDiff = DiffBuilder
+          .compare(inputValue)
+          .withTest(goldInput)
+          .ignoreComments()
+          .ignoreWhitespace()
+          .withComparisonController(ComparisonControllers.StopWhenDifferent)
+           .build();
+        
+        Iterator<Difference> iter = myDiff.getDifferences().iterator();
+        int size = 0;
+        StringBuilder result = new StringBuilder();
+        while (iter.hasNext()) {
+        	result.append(iter.next().toString());
+            result.append(System.lineSeparator() );
+            size++;
+        }
+        
+        return result.toString();
+	}
 
 
 	static File getReportFile(File reportsDirectory , String moduleName , String processName) {
