@@ -68,8 +68,6 @@ public class BWTestsReport extends AbstractMavenReport
 	
 	@Override
 	public void execute() throws MojoExecutionException {
-
-		
 		
 		super.execute();
 	}
@@ -106,7 +104,7 @@ public class BWTestsReport extends AbstractMavenReport
 //    Sink renderSink = factory.createSink(outputDirectory, fileName);
 
 	@Override
-	protected void executeReport(Locale arg0) throws MavenReportException 
+	protected void executeReport(Locale arg0) throws MavenReportException
 	{
 		BWTestConfig.INSTANCE.reset();
 		
@@ -161,7 +159,4 @@ public class BWTestsReport extends AbstractMavenReport
 		return null;
 	
 	}
-	
-
-
 }

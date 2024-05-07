@@ -6,6 +6,7 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.ProcessingException;
@@ -47,7 +48,7 @@ public class PlatformDeployer {
 		this.log = log;
 	}
 	
-	public void buildApp(String application, String earPath, String buildName, String appName, String profile, int replicas, boolean enableAutoScaling, boolean eula, String platformConfigFile, String dpUrl, String authToken, String baseVersion, String baseImageTag, String namespace) throws ClientException, IOException, InterruptedException {
+	public void buildApp(String application, String earPath, String buildName, String appName, String profile, int replicas, boolean enableAutoScaling, boolean enableServiceMesh, boolean eula, String platformConfigFile, String dpUrl, String authToken, String baseVersion, String baseImageTag, String namespace) throws ClientException, IOException, InterruptedException {
 		try {
 			this.log.info("Deployment to Platform started...");
 			if(dpUrl == null) {
@@ -73,8 +74,40 @@ public class PlatformDeployer {
 			webTarget = client.target(new URI(dpUrl));
 			webTarget.register(MultiPartFeature.class);
 			
+			Response bwceVersionsResponse = webTarget
+					.path("public/v1/dp/bwceversions")
+					.request(MediaType.TEXT_PLAIN)
+					.header("Authorization", "Bearer " + authToken)
+					.get();
+			
+			if(bwceVersionsResponse != null && bwceVersionsResponse.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+				boolean isBaseVersionValid = false;
+				boolean isBaseImageValid = false;
+				String readEntity = bwceVersionsResponse.readEntity(String.class);
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+				BuildTypeCatalog buildTypeCatalog = mapper.readValue(readEntity, BuildTypeCatalog.class);
+				for(BuildType buildType: buildTypeCatalog.getBuildtypeCatalog()) {
+					if(buildType.getBuildtypeTag().equals(baseVersion)) {
+						isBaseVersionValid = true;
+						List<BaseImage> baseImages = buildType.getBaseImages();
+						for(BaseImage image: baseImages) {
+							if(image.getImageTag().equals(baseImageTag)) {
+								isBaseImageValid = true;
+								break;
+							}
+						}
+					}
+				}if(!isBaseVersionValid) {
+					throw new ClientException("Unable to build the application. Please provide a valid base version.");
+				}else if(!isBaseImageValid) {
+					throw new ClientException("Unable to build the application. Please provide a valid base image tag.");
+				}
+			}
+			
 			String platformConfigFileContent = new String(Files.readAllBytes(Paths.get(platformConfigFile)));
 			JSONArray dependenciesArray = null;
+			JSONArray tagsArray = null;
 			if(platformConfigFileContent != null && !platformConfigFileContent.isEmpty()) {
 				JSONObject rootObject = new JSONObject(platformConfigFileContent);
 				if(rootObject != null && rootObject.has("platformConfig")) {
@@ -86,13 +119,19 @@ public class PlatformDeployer {
 								dependenciesArray = (JSONArray) dependencies.get("dependencies");
 							}
 						}
+						if(platformConfigObject.length() > 6) {
+							JSONObject tags = (JSONObject) platformConfigObject.get(6);
+							if(tags != null) {
+								tagsArray = (JSONArray) tags.get("tags");
+							}
+						}
 					}
 				}
 			}
 			
 			FormDataMultiPart multipart = new FormDataMultiPart();
 			multipart.bodyPart(new FileDataBodyPart("artifact", ear));
-			multipart.bodyPart(new FormDataBodyPart("request", "{\"buildName\": \"" + buildName + "\", " + "\"dependencies\": " + dependenciesArray.toString() + "}"));
+			multipart.bodyPart(new FormDataBodyPart("request", "{\"buildName\": \"" + buildName + "\", " + "\"dependencies\": " + dependenciesArray.toString() + ", \"tags\": " + tagsArray.toString() + "}"));
 			
 			Response response = webTarget
 					.queryParam("baseversion", baseVersion)
@@ -110,7 +149,7 @@ public class PlatformDeployer {
 				Map<?, ?> responseMap;
 				responseMap = mapper.readValue(readEntity, Map.class);
 				String buildId = (String) responseMap.get("buildId");
-				deployApp(buildId, namespace, authToken, eula, replicas, appName, profile, platformConfigFile);
+				deployApp(buildId, namespace, authToken, eula, replicas, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
 			}else {
 				processErrorResponse(response, statusInfo);
 			}
@@ -123,7 +162,7 @@ public class PlatformDeployer {
 		}
 	}
 	
-	public void deployApp(String buildId, String namespace, String authToken, boolean eula, int replicas, String appName, String profile, String platformConfigFile) throws ClientException, IOException, InterruptedException {
+	public void deployApp(String buildId, String namespace, String authToken, boolean eula, int replicas, String appName, String profile, String platformConfigFile, boolean enableAutoScaling, boolean enableServiceMesh) throws ClientException, IOException, InterruptedException {
 		if(buildId == null || buildId.isEmpty()) {
 			throw new ClientException("Unable to deploy the application. Please provide a valid build ID.");
 		}
@@ -144,6 +183,9 @@ public class PlatformDeployer {
 					JSONArray appPropertiesArray = null;
 					JSONArray systemPropertiesArray = null;
 					JSONObject resourceLimitsArray = null;
+					JSONObject autoscalingConfigObject = null;
+					JSONObject networkPoliciesObject = null;
+					JSONArray tagsArray = null;
 					if(platformConfigObject.length() > 0) {
 						JSONObject appProperties = (JSONObject) platformConfigObject.get(0);
 						if(appProperties != null) {
@@ -162,7 +204,27 @@ public class PlatformDeployer {
 							resourceLimitsArray = (JSONObject) resourceLimits.get("resourceLimits");
 						}
 					}
+					if(enableAutoScaling && platformConfigObject.length() > 4) {
+						JSONObject autoscalingConfig = (JSONObject) platformConfigObject.get(4);
+						if(autoscalingConfig != null) {
+							autoscalingConfigObject = (JSONObject) autoscalingConfig.get("autoscalingConfig");
+						}
+					}
+					if(platformConfigObject.length() > 5) {
+						JSONObject networkPolicies = (JSONObject) platformConfigObject.get(5);
+						if(networkPolicies != null) {
+							networkPoliciesObject = (JSONObject) networkPolicies.get("networkPolicies");
+						}
+					}
+					if(platformConfigObject.length() > 6) {
+						JSONObject tags = (JSONObject) platformConfigObject.get(6);
+						if(tags != null) {
+							tagsArray = (JSONArray) tags.get("tags");
+						}
+					}
 					appJsonObject.put("buildId", buildId);
+					appJsonObject.put("enableAutoScaling", enableAutoScaling);
+					appJsonObject.put("enableServiceMesh", enableServiceMesh);
 					appJsonObject.put("eula", eula);
 					appJsonObject.put("appName", appName);
 					appJsonObject.put("profile", profile);
@@ -174,6 +236,15 @@ public class PlatformDeployer {
 					}
 					if(resourceLimitsArray != null) {
 						appJsonObject.put("resourceLimits", resourceLimitsArray);
+					}
+					if(autoscalingConfigObject != null) {
+						appJsonObject.put("autoscalingConfig", autoscalingConfigObject);
+					}
+					if(networkPoliciesObject != null) {
+						appJsonObject.put("networkPolicies", networkPoliciesObject);
+					}
+					if(tagsArray != null) {
+						appJsonObject.put("tags", tagsArray);
 					}
 				}
 			}

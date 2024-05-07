@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.project.MavenProject;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
@@ -32,7 +33,7 @@ public class BWTSFileReaderWrapper {
 				if(null != testCaseList){
 					for (Object obj : (ArrayList<?>)testCaseList) {
 						if(obj instanceof String){
-							String location = locationArray[0]+testFoldername+File.separator+(String)obj;
+							String location = locationArray[0]+testFoldername+File.separator+FilenameUtils.separatorsToSystem((String)obj);
 							returnList.add(new File(location));
 							tempReturnList.add(new File(location));
 						}

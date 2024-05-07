@@ -194,6 +194,9 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="enableAutoScaling", defaultValue ="false")
 	private boolean enableAutoScaling;
 	
+	@Parameter(property="enableServiceMesh", defaultValue ="false")
+	private boolean enableServiceMesh;
+	
 	@Parameter(property="eula", defaultValue ="false")
 	private boolean eula;
 	
@@ -249,7 +252,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
  	    		}
  	    		String application = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
  	    		PlatformDeployer deployer = new PlatformDeployer(connectTimeout, readTimeout, retryCount, getLog());
- 	    		deployer.buildApp(application, files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace);
+ 	    		deployer.buildApp(application, files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace);
             }else {
             	//enterprise deployment
 	    		boolean configFileExists = deploymentConfigExists();

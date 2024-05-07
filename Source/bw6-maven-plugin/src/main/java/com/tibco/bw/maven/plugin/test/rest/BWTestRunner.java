@@ -25,7 +25,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
