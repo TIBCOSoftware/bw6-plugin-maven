@@ -375,6 +375,10 @@ public class TestFileParser {
 		case "Primitive":
 				String goldValueWithElement = StringUtils.substringBetween(expression, "test=\"", "\">");
 				String goldValue = StringUtils.substringAfter(goldValueWithElement, "=");
+				if (goldValue == null) {
+					showFailureDetails = false;
+					return;
+				}
 				if(goldValue.contains("'")){
 					goldValue = StringUtils.substringBetween(goldValue, "'");
 				}
