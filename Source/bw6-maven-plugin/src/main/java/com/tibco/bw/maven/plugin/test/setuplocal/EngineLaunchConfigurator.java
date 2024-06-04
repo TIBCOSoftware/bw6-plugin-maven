@@ -168,6 +168,10 @@ public class EngineLaunchConfigurator
 					if(BWTestExecutor.INSTANCE.isSkipInitAllNonTestProcessActivities())
 						list.add("-Dbw.unittest.skipinit.allnontestprocessactivities=true");
 					
+					if(BWTestExecutor.INSTANCE.isIndependentComponentStartup()) {
+						list.add("-Dbw.independent.component.startup=true");
+					}
+					
 				}
 
 				if( currentLine.contains("%%CONFIG_DIR%%"))

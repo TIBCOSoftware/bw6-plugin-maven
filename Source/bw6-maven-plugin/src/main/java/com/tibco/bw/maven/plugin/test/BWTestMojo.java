@@ -63,6 +63,9 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "skipInitAllNonTestProcessActivities" , defaultValue = "false" )
     private boolean skipInitAllNonTestProcessActivities;
     
+    @Parameter( property = "independentComponentStartup" , defaultValue = "false" )
+    private boolean independentComponentStartup;
+    
     @Parameter( property = "customArgEngine"  )
     private String customArgEngine;
     
@@ -231,6 +234,8 @@ public class BWTestMojo extends AbstractMojo {
 		
 		BWTestExecutor.INSTANCE.setSkipInitAllNonTestProcessActivities(skipInitAllNonTestProcessActivities);
 		
+		BWTestExecutor.INSTANCE.setIndependentComponentStartup(independentComponentStartup);
+
 		BWTestExecutor.INSTANCE.setCustomArgEngine(customArgEngine);
     	
 		BWTestConfig.INSTANCE.reset();
