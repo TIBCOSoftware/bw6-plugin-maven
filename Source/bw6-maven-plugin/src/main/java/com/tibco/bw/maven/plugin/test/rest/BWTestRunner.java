@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
@@ -32,6 +33,10 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.diff.ComparisonControllers;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.Difference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
@@ -476,18 +481,31 @@ public class BWTestRunner
 	private void printFailureDetails(TestCaseResultDTO testcase,String testCaseFile, String subProcessName, String testSuiteName) {
 		for(int k = 0 ; k < testcase.getAssertionResult().size() ; k++){
 			AssertionResultDTO assertion =  (AssertionResultDTO) testcase.getAssertionResult().get(k);
-			if(!"passed".equals(assertion.getAssertionStatus())){
-			String inputValue = assertion.getActivityOutput();
+			if(!"passed".equals(assertion.getAssertionStatus())) {
+				String inputValue = assertion.getActivityOutput();
 				if(assertion.getAssertionMode().equals("Primitive") ){
-					inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
-					inputValue = inputValue!=null? inputValue:assertion.getActivityOutput();
-					if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
-						inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
+					if (inputValue.startsWith(assertion.getStartElementNameTag())) {
+						inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
+						inputValue = inputValue!=null? inputValue:assertion.getActivityOutput();
+						if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
+							inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
+						}
+					    if(null != assertion.getStartElementNameTag() && null != assertion.getEndElementNameTag()) {
+					    	inputValue = assertion.getStartElementNameTag().concat(inputValue!= null ? inputValue : "").concat(assertion.getEndElementNameTag());
+					    	assertion.setActivityOutput(inputValue);
+					    }
 					}
-					if(null != assertion.getStartElementNameTag() && null != assertion.getEndElementNameTag()) {
-					inputValue = assertion.getStartElementNameTag().concat(inputValue!= null ? inputValue : "").concat(assertion.getEndElementNameTag());
-					assertion.setActivityOutput(inputValue);
-					}
+				    else {
+						String goldinput = assertion.getGoldInput();
+						if (goldinput != null) {
+							if (goldinput.startsWith("<")) {
+								inputValue = StringUtils.substringBetween(goldinput, "<", ">");
+								String goldInput = StringUtils.substringBetween(goldinput, ">", "<");
+								assertion.setGoldInput(goldInput);
+							}
+						}
+						assertion.setActivityOutput(inputValue);
+				    }
 				}
 				else{
 					inputValue = assertion.getActivityOutput();
@@ -503,9 +521,22 @@ public class BWTestRunner
 				}
 				assertionFileBuilder.append(" for TestCase File ["+testCaseFile+"]");
 				assertionFileBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
-				assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
-				assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
 				assertionFileBuilder.append("\n");
+
+				String cause = null;
+				if (isXmlContent(inputValue)) {
+					cause = doXmlDiff(inputValue, assertion.getGoldInput());
+				}
+				if (cause != null) {
+					assertionFileBuilder.append(" Potential Cause -->  ");
+					assertionFileBuilder.append(cause);
+					assertionFileBuilder.append("\n");
+				}
+				else {
+					assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
+					assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
+					assertionFileBuilder.append("\n");					
+				}
 
 				BWTestConfig.INSTANCE.getLogger().error(assertionFileBuilder.toString());
 			}
@@ -513,6 +544,41 @@ public class BWTestRunner
 	}
 		
 	
+
+
+	private boolean isXmlContent(String inputValue) {
+		if (inputValue != null && inputValue.startsWith("<"))
+			return true;
+		return false;
+	}
+
+
+	private String doXmlDiff(String inputValue, String goldInput) {
+        
+        Diff myDiff;
+		try {
+			myDiff = DiffBuilder
+			  .compare(inputValue)
+			  .withTest(goldInput)
+			  .ignoreComments()
+			  .ignoreWhitespace()
+			  .withComparisonController(ComparisonControllers.StopWhenDifferent)
+			   .build();
+		} catch (Exception e) {
+			return null;
+		}
+        
+        Iterator<Difference> iter = myDiff.getDifferences().iterator();
+        int size = 0;
+        StringBuilder result = new StringBuilder();
+        while (iter.hasNext()) {
+        	result.append(iter.next().toString());
+            result.append(System.lineSeparator() );
+            size++;
+        }
+        
+        return result.toString();
+	}
 
 
 	static File getReportFile(File reportsDirectory , String moduleName , String processName) {

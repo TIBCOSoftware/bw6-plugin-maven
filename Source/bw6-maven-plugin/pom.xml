@@ -107,6 +107,11 @@
     <artifactId>javassist</artifactId>
     <version>3.25.0-GA</version>
 </dependency>
+<dependency>
+    <groupId>org.xmlunit</groupId>
+    <artifactId>xmlunit-matchers</artifactId>
+    <version>2.2.1</version>
+</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-jaxb</artifactId>
@@ -181,21 +186,6 @@
     		<groupId>com.fasterxml.jackson.dataformat</groupId>
     		<artifactId>jackson-dataformat-yaml</artifactId>
    	 		<version>2.15.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.velocity</groupId>
-			<artifactId>velocity-engine-core</artifactId>
-			<version>2.3</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-lang3</artifactId>
-		    <version>3.8.1</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.maven.doxia</groupId>
-		    <artifactId>doxia-sink-api</artifactId>
-		    <version>1.2</version>
 		</dependency>
 		
 	</dependencies>
