@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+#foreach ($mr in $root.getRootElement().getChildren())
+    #foreach ($ts in $mr.getChildren())
+        #if($ts.getName() == "testSetResult")
+        	#set($testCount = 0)
+			#set($failureCount = 0)
+			#set($errorCount = 0)
+        	#foreach ($tc in $ts.getChildren())
+                #if($tc.getName() == "testCaseResult")
+                    #set($testCount = $testCount + $Integer.parseInt($tc.getChild("assertions").getText()) + $Integer.parseInt($tc.getChild("processFailures").getText()))
+                    #set($failureCount = $failureCount + $Integer.parseInt($tc.getChild("assertionFailure").getText()))
+                    #set($errorCount = $errorCount + $Integer.parseInt($tc.getChild("processFailures").getText()))
+                #end
+            #end
+	<testsuite name="$ts.getChild("processName").getTextTrim()" tests="$testCount" failure="$failureCount" errors="$errorCount" timestamp="" time="">
+            #foreach ($tc in $ts.getChildren())
+                #if($tc.getName() == "testCaseResult")
+                    #foreach ($ar in $tc.getChildren())
+                        #if($ar.getName() == "assertionResult")
+                            #if($ar.getChild("assertionStatus").getTextTrim() == "passed")
+		<testcase name="$ar.getChild("activityName").getTextTrim()" classname="$ts.getChild("processName").getTextTrim()" time=""/>
+                            #elseif($ar.getChild("assertionStatus").getTextTrim() == "failed")
+                            	 #if($ar.getChild("activityName").getTextTrim() != "N/A")
+		<testcase name="$ar.getChild("activityName").getTextTrim()" classname="$ts.getChild("processName").getTextTrim()" time="">
+			<failure message="$String.valueOf($ar.getChild("message").getTextTrim()).replace("<","").replace(">","")" type="$ar.getChild("assertionMode").getTextTrim()">
+			</failure>
+		</testcase>
+    							 #else
+		<testcase name="$ar.getChild("activityName").getTextTrim()" classname="$ts.getChild("processName").getTextTrim()" time="">
+			<error message="$String.valueOf($ar.getChild("message").getTextTrim()).replace("<","").replace(">","")" type="processFailures">
+			</error>
+		</testcase>
+                            	 #end
+                            #end
+                        #end
+                    #end
+                #end
+            #end
+	</testsuite>
+        #end
+    #end
+#end
+</testsuites>

@@ -273,6 +273,10 @@ public class BWTestRunner
 
 			jaxbMarshaller.marshal(resultDTO, resultFile);
 			//jaxbMarshaller.marshal(resultDTO, System.out);
+			
+			File generatedResultFile = new File( reportDir , "generatedJunitReport.xml");
+			GeneratejunitReport obj = new GeneratejunitReport();
+			obj.genereateReport(resultFile.getPath(), generatedResultFile.getPath());
 
 		      } catch (JAXBException e) {
 			e.printStackTrace();
