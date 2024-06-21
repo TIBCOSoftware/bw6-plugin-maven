@@ -75,6 +75,9 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "ESMtestSuiteName" , defaultValue = "" )
     private String ESMtestSuiteName;
     
+    @Parameter( property = "skippedTestError" , defaultValue = "false" )
+    private boolean skippedTestError;
+    
     @Component
     ProjectDependenciesResolver resolver;
     
@@ -248,6 +251,7 @@ public class BWTestMojo extends AbstractMojo {
     	
     	BWTestConfig.INSTANCE.setResolver(resolver);
     	
+    	BWTestExecutor.INSTANCE.setSkippedTestError(skippedTestError);
     	
     	
 		BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, project , getLog() );

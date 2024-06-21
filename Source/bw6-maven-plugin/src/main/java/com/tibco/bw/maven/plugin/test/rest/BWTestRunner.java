@@ -55,6 +55,7 @@ import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
+import com.tibco.bw.maven.plugin.test.setuplocal.BWTestExecutor;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 
 public class BWTestRunner 
@@ -364,6 +365,7 @@ public class BWTestRunner
 			totalsuccess = totalsuccess + success;
 			totalfailure = totalfailure + failure;
 			totalSkipped = totalSkipped + skipped;
+			
 			processFileBuilder.append( "    Success : " + success + " 	Failure : " + failure + "	Skipped : " + skipped + "	Errors : " + processFilure);
 			builder.append( processFileBuilder.toString() );
 			writeProcessResult( result.getModuleInfo().getModuleName() , testset , processFileBuilder.toString() );
@@ -371,8 +373,14 @@ public class BWTestRunner
 		
 		builder.append( "\n\nResults \n");
 		builder.append( "Success : " + totalsuccess + "    Failure : " + totalfailure  + "    Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
-        BWTestConfig.INSTANCE.getLogger().info( builder.toString() );
-        if(totalfailure>0){
+       
+		BWTestConfig.INSTANCE.getLogger().info( builder.toString() );
+		
+		if(BWTestExecutor.INSTANCE.isSkippedTestError()) {
+			totalfailure = totalfailure + totalSkipped;
+		}
+		
+		if(totalfailure>0){
         	finalResult = totalfailure;
         }
         else{
