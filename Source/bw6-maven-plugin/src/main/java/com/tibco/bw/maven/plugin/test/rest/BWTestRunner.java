@@ -25,6 +25,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoFailureException;
@@ -97,7 +98,7 @@ public class BWTestRunner
 	public void runTests() throws MojoFailureException, Exception
 	{
 		init();
-		
+		removePidFolder();
 		r.path("tests").path("enabledebug").request().get();
 		
 		List<MavenProject> projects = BWTestConfig.INSTANCE.getSession().getProjects();
@@ -131,6 +132,30 @@ public class BWTestRunner
         }
 
 		
+	}
+	
+	private void removePidFolder() throws IOException {
+		String parentFolder = getWorkspacepath() + ".parent";
+		File file = new File(parentFolder);
+		if (file.exists()) {
+			File[] files = file.listFiles();
+			if (files != null) {
+				for (File tempFile : files) {
+					if (tempFile!= null && tempFile.getName().startsWith("pid_")) {
+						FileUtils.deleteDirectory(tempFile);
+					}
+				}
+			}
+		}
+	}
+	
+	private String getWorkspacepath() {
+		String workspacePath= System.getProperty("user.dir");
+		String wsPath= workspacePath;
+		if(wsPath.indexOf(".parent")!=-1){
+			wsPath= workspacePath.substring(0, workspacePath.lastIndexOf(".parent"));
+		}
+		return wsPath;
 	}
 	
 	private boolean isCXF(MavenProject project){
