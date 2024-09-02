@@ -22,6 +22,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
@@ -582,7 +583,10 @@ public class BWEARPackagerMojo extends AbstractMojo {
 			NodeList technologyVersionList = node.getElementsByTagNameNS(Constants.PACKAGING_MODEL_NAMESPACE_URI, Constants.TECHNOLOGY_VERSION);
 			Node technologyVersion = technologyVersionList.item(0);
 			//Get the version from the Module from the Map and set it in the Document. 
-			technologyVersion.setTextContent(moduleVersionMap.get(module));
+			String textContent = moduleVersionMap.get(module);
+			if(!StringUtils.isEmpty(textContent)) {
+				technologyVersion.setTextContent(textContent);
+			}
 		}
 		getLog().debug("Updated Module versions in the Tibcoxml file");
 		return doc;

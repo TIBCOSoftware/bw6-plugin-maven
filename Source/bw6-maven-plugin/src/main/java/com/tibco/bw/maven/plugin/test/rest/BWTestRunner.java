@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
@@ -24,6 +25,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoFailureException;
@@ -32,6 +34,10 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.diff.ComparisonControllers;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.Difference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
@@ -50,6 +56,7 @@ import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
+import com.tibco.bw.maven.plugin.test.setuplocal.BWTestExecutor;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 
 public class BWTestRunner 
@@ -91,7 +98,7 @@ public class BWTestRunner
 	public void runTests() throws MojoFailureException, Exception
 	{
 		init();
-		
+		removePidFolder();
 		r.path("tests").path("enabledebug").request().get();
 		
 		List<MavenProject> projects = BWTestConfig.INSTANCE.getSession().getProjects();
@@ -125,6 +132,30 @@ public class BWTestRunner
         }
 
 		
+	}
+	
+	private void removePidFolder() throws IOException {
+		String parentFolder = getWorkspacepath() + ".parent";
+		File file = new File(parentFolder);
+		if (file.exists()) {
+			File[] files = file.listFiles();
+			if (files != null) {
+				for (File tempFile : files) {
+					if (tempFile!= null && tempFile.getName().startsWith("pid_")) {
+						FileUtils.deleteDirectory(tempFile);
+					}
+				}
+			}
+		}
+	}
+	
+	private String getWorkspacepath() {
+		String workspacePath= System.getProperty("user.dir");
+		String wsPath= workspacePath;
+		if(wsPath.indexOf(".parent")!=-1){
+			wsPath= workspacePath.substring(0, workspacePath.lastIndexOf(".parent"));
+		}
+		return wsPath;
 	}
 	
 	private boolean isCXF(MavenProject project){
@@ -268,6 +299,10 @@ public class BWTestRunner
 
 			jaxbMarshaller.marshal(resultDTO, resultFile);
 			//jaxbMarshaller.marshal(resultDTO, System.out);
+			
+			File generatedResultFile = new File( reportDir , "generatedJunitReport.xml");
+			GeneratejunitReport obj = new GeneratejunitReport();
+			obj.genereateReport(resultFile.getPath(), generatedResultFile.getPath());
 
 		      } catch (JAXBException e) {
 			e.printStackTrace();
@@ -355,6 +390,7 @@ public class BWTestRunner
 			totalsuccess = totalsuccess + success;
 			totalfailure = totalfailure + failure;
 			totalSkipped = totalSkipped + skipped;
+			
 			processFileBuilder.append( "    Success : " + success + " 	Failure : " + failure + "	Skipped : " + skipped + "	Errors : " + processFilure);
 			builder.append( processFileBuilder.toString() );
 			writeProcessResult( result.getModuleInfo().getModuleName() , testset , processFileBuilder.toString() );
@@ -362,8 +398,14 @@ public class BWTestRunner
 		
 		builder.append( "\n\nResults \n");
 		builder.append( "Success : " + totalsuccess + "    Failure : " + totalfailure  + "    Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
-        BWTestConfig.INSTANCE.getLogger().info( builder.toString() );
-        if(totalfailure>0){
+       
+		BWTestConfig.INSTANCE.getLogger().info( builder.toString() );
+		
+		if(BWTestExecutor.INSTANCE.isSkippedTestError()) {
+			totalfailure = totalfailure + totalSkipped;
+		}
+		
+		if(totalfailure>0){
         	finalResult = totalfailure;
         }
         else{
@@ -476,18 +518,31 @@ public class BWTestRunner
 	private void printFailureDetails(TestCaseResultDTO testcase,String testCaseFile, String subProcessName, String testSuiteName) {
 		for(int k = 0 ; k < testcase.getAssertionResult().size() ; k++){
 			AssertionResultDTO assertion =  (AssertionResultDTO) testcase.getAssertionResult().get(k);
-			if(!"passed".equals(assertion.getAssertionStatus())){
-			String inputValue = assertion.getActivityOutput();
+			if(!"passed".equals(assertion.getAssertionStatus())) {
+				String inputValue = assertion.getActivityOutput();
 				if(assertion.getAssertionMode().equals("Primitive") ){
-					inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
-					inputValue = inputValue!=null? inputValue:assertion.getActivityOutput();
-					if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
-						inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
+					if (inputValue.startsWith(assertion.getStartElementNameTag())) {
+						inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
+						inputValue = inputValue!=null? inputValue:assertion.getActivityOutput();
+						if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
+							inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
+						}
+					    if(null != assertion.getStartElementNameTag() && null != assertion.getEndElementNameTag()) {
+					    	inputValue = assertion.getStartElementNameTag().concat(inputValue!= null ? inputValue : "").concat(assertion.getEndElementNameTag());
+					    	assertion.setActivityOutput(inputValue);
+					    }
 					}
-					if(null != assertion.getStartElementNameTag() && null != assertion.getEndElementNameTag()) {
-					inputValue = assertion.getStartElementNameTag().concat(inputValue!= null ? inputValue : "").concat(assertion.getEndElementNameTag());
-					assertion.setActivityOutput(inputValue);
-					}
+				    else {
+						String goldinput = assertion.getGoldInput();
+						if (goldinput != null) {
+							if (goldinput.startsWith("<")) {
+								inputValue = StringUtils.substringBetween(goldinput, "<", ">");
+								String goldInput = StringUtils.substringBetween(goldinput, ">", "<");
+								assertion.setGoldInput(goldInput);
+							}
+						}
+						assertion.setActivityOutput(inputValue);
+				    }
 				}
 				else{
 					inputValue = assertion.getActivityOutput();
@@ -503,9 +558,22 @@ public class BWTestRunner
 				}
 				assertionFileBuilder.append(" for TestCase File ["+testCaseFile+"]");
 				assertionFileBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
-				assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
-				assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
 				assertionFileBuilder.append("\n");
+
+				String cause = null;
+				if (isXmlContent(inputValue)) {
+					cause = doXmlDiff(inputValue, assertion.getGoldInput());
+				}
+				if (cause != null) {
+					assertionFileBuilder.append(" Potential Cause -->  ");
+					assertionFileBuilder.append(cause);
+					assertionFileBuilder.append("\n");
+				}
+				else {
+					assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
+					assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
+					assertionFileBuilder.append("\n");					
+				}
 
 				BWTestConfig.INSTANCE.getLogger().error(assertionFileBuilder.toString());
 			}
@@ -513,6 +581,41 @@ public class BWTestRunner
 	}
 		
 	
+
+
+	private boolean isXmlContent(String inputValue) {
+		if (inputValue != null && inputValue.startsWith("<"))
+			return true;
+		return false;
+	}
+
+
+	private String doXmlDiff(String inputValue, String goldInput) {
+        
+        Diff myDiff;
+		try {
+			myDiff = DiffBuilder
+			  .compare(inputValue)
+			  .withTest(goldInput)
+			  .ignoreComments()
+			  .ignoreWhitespace()
+			  .withComparisonController(ComparisonControllers.StopWhenDifferent)
+			   .build();
+		} catch (Exception e) {
+			return null;
+		}
+        
+        Iterator<Difference> iter = myDiff.getDifferences().iterator();
+        int size = 0;
+        StringBuilder result = new StringBuilder();
+        while (iter.hasNext()) {
+        	result.append(iter.next().toString());
+            result.append(System.lineSeparator() );
+            size++;
+        }
+        
+        return result.toString();
+	}
 
 
 	static File getReportFile(File reportsDirectory , String moduleName , String processName) {

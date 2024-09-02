@@ -34,6 +34,8 @@ public class BWTestExecutor
 	List<String> osgiCommands;
 	boolean skipInitMainProcessActivities;
 	boolean skipInitAllNonTestProcessActivities;
+	boolean independentComponentStartup;
+	boolean skippedTestError;
 	String customArgEngine;
 	MavenSession session;
 	ProjectDependenciesResolver resolver;
@@ -320,6 +322,14 @@ public class BWTestExecutor
 		this.skipInitAllNonTestProcessActivities = skipInitAllNonTestProcessActivities;
 	}
 	
+	public boolean isIndependentComponentStartup() {
+		return independentComponentStartup;
+	}
+	
+	public void setIndependentComponentStartup(boolean independentComponentStartup) {
+		this.independentComponentStartup = independentComponentStartup;
+	}
+	
 	public String getCustomArgEngine() {
 		return customArgEngine;
 	}
@@ -329,6 +339,13 @@ public class BWTestExecutor
 	}
 
 	
+	public boolean isSkippedTestError() {
+		return skippedTestError;
+	}
+	
+	public void setSkippedTestError(boolean skippedTestError) {
+		this.skippedTestError = skippedTestError;
+	}
 	
 	
 }
