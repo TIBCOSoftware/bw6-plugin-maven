@@ -51,7 +51,7 @@ public class BWTestMojo extends AbstractMojo {
     @Parameter( property = "testSuiteName" , defaultValue = "" )
     private String testSuiteName;
     
-    @Parameter( property = "engineStartupWaitTime" , defaultValue = "2" )
+    @Parameter( property = "engineStartupWaitTime" , defaultValue = "4" )
     private int engineStartupWaitTime;
     
     @Parameter( property = "osgiCommands" )
