@@ -193,6 +193,41 @@
    	 		<version>2.15.0</version>
 		</dependency>
 		
+		<dependency>
+		    <groupId>org.apache.maven.plugins</groupId>
+		    <artifactId>maven-project-info-reports-plugin</artifactId>
+		    <version>3.6.0</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.maven.doxia</groupId>
+		    <artifactId>doxia-sink-api</artifactId>
+		    <version>2.0.0-M12</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.maven.doxia</groupId>
+		    <artifactId>doxia-site-model</artifactId>
+		    <version>2.0.0-M19</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.maven.doxia</groupId>
+		    <artifactId>doxia-core</artifactId>
+		    <version>2.0.0-M12</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.codehaus.plexus</groupId>
+		    <artifactId>plexus-utils</artifactId>
+		    <version>4.0.1</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.maven.doxia</groupId>
+		    <artifactId>doxia-integration-tools</artifactId>
+		    <version>2.0.0-M19</version>
+		</dependency>	  
 	</dependencies>
 	<distributionManagement>
 		<snapshotRepository>
@@ -236,7 +271,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
+			<!--<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
 				<version>1.5</version>
@@ -263,9 +298,8 @@
 					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
 					<autoReleaseAfterClose>true</autoReleaseAfterClose>
 				</configuration>
-			</plugin>
+			</plugin>  -->
     
-
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.0</version>
