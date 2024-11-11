@@ -234,7 +234,7 @@ public class ConfigFileGenerator
 			File libFolder = new File(file.getAbsolutePath().concat("/lib"));
 			if(libFolder.exists()){
 				if (libFolder.getAbsolutePath() != null && !(libFolder.getAbsolutePath().indexOf("com.tibco.bw.jdbc.datasourcefactory.datadirect") >= 0)) {
-					if(libFolder.isDirectory() && libFolder.list().length==0){
+					if(libFolder.isDirectory() && libFolder.list().length==0 && !hasDBJar(libFolder)){
 						continue;
 					}
 				}
@@ -278,6 +278,18 @@ public class ConfigFileGenerator
 	}
 	
 	
+	private boolean hasDBJar(File libFolder) {
+		File[] files = libFolder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(".jar")) {
+                    return true; 
+                }
+            }
+        }
+		return false;
+	}
+
 	private void addReference(  StringBuilder builder , File file ,String key)
 	{
 
