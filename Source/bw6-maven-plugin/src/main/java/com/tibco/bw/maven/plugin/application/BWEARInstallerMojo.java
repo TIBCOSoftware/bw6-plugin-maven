@@ -277,7 +277,7 @@ public class BWEARInstallerMojo extends AbstractMojo {
             		}else if(platformScale) {
             			deployer.scaleApp(dpUrl, appId, replicas, authToken);
             		}else if(platformUpgrade) {
-            			deployer.upgradeApp(dpUrl, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
+            			deployer.upgradeApp(dpUrl, appId, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
             		}
             	}else {
             		File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
