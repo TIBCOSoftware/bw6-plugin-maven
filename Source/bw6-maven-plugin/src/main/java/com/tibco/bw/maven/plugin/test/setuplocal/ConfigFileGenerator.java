@@ -234,7 +234,7 @@ public class ConfigFileGenerator
 			File libFolder = new File(file.getAbsolutePath().concat("/lib"));
 			if(libFolder.exists()){
 				if (libFolder.getAbsolutePath() != null && !(libFolder.getAbsolutePath().indexOf("com.tibco.bw.jdbc.datasourcefactory.datadirect") >= 0)) {
-					if(libFolder.isDirectory() && libFolder.list().length==0 && !hasDBJar(libFolder)){
+					if(libFolder.isDirectory() && !hasDBJar(libFolder)){
 						continue;
 					}
 				}
