@@ -227,6 +227,11 @@
 		    <groupId>org.apache.maven.doxia</groupId>
 		    <artifactId>doxia-integration-tools</artifactId>
 		    <version>2.0.0-M19</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-deploy-plugin</artifactId>
+			<version>3.1.3</version>
 		</dependency>	  
 	</dependencies>
 	<distributionManagement>
