@@ -48,9 +48,9 @@ public class PlatformDeployer {
 		this.log = log;
 	}
 	
-	public void buildApp(String application, String earPath, String buildName, String appName, String profile, int replicas, boolean enableAutoScaling, boolean enableServiceMesh, boolean eula, String platformConfigFile, String dpUrl, String authToken, String baseVersion, String baseImageTag, String namespace) throws ClientException, IOException, InterruptedException {
+	public void buildApp(String earPath, String buildName, String appName, String profile, int replicas, boolean enableAutoScaling, boolean enableServiceMesh, boolean eula, String platformConfigFile, String dpUrl, String authToken, String baseVersion, String baseImageTag, String namespace, boolean deploy) throws ClientException, IOException, InterruptedException {
 		try {
-			this.log.info("Deployment to Platform started...");
+			this.log.info("Application build creation in Platform started...");
 			if(dpUrl == null) {
 				throw new ClientException("Unable to build the application. Please provide the data plane URL.");
 			}
@@ -143,13 +143,15 @@ public class PlatformDeployer {
 					.post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
 			StatusType statusInfo = response.getStatusInfo();
 			if(statusInfo.getFamily().equals(Family.SUCCESSFUL)) {
-				String readEntity = response.readEntity(String.class);
-				ObjectMapper mapper = new ObjectMapper();
-				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-				Map<?, ?> responseMap;
-				responseMap = mapper.readValue(readEntity, Map.class);
-				String buildId = (String) responseMap.get("buildId");
-				deployApp(buildId, namespace, authToken, eula, replicas, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
+				if(deploy) {
+					String readEntity = response.readEntity(String.class);
+					ObjectMapper mapper = new ObjectMapper();
+					mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+					Map<?, ?> responseMap;
+					responseMap = mapper.readValue(readEntity, Map.class);
+					String buildId = (String) responseMap.get("buildId");
+					deployApp(null, buildId, namespace, authToken, eula, replicas, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh, true);
+				}
 			}else {
 				processErrorResponse(response, statusInfo);
 			}
@@ -162,7 +164,7 @@ public class PlatformDeployer {
 		}
 	}
 	
-	public void deployApp(String buildId, String namespace, String authToken, boolean eula, int replicas, String appName, String profile, String platformConfigFile, boolean enableAutoScaling, boolean enableServiceMesh) throws ClientException, IOException, InterruptedException {
+	public void deployApp(String appId, String buildId, String namespace, String authToken, boolean eula, int replicas, String appName, String profile, String platformConfigFile, boolean enableAutoScaling, boolean enableServiceMesh, boolean scale) throws ClientException, IOException, InterruptedException {
 		if(buildId == null || buildId.isEmpty()) {
 			throw new ClientException("Unable to deploy the application. Please provide a valid build ID.");
 		}
@@ -222,6 +224,9 @@ public class PlatformDeployer {
 							tagsArray = (JSONArray) tags.get("tags");
 						}
 					}
+					if(appId != null && !appId.isEmpty()) {
+						appJsonObject.put("appId", appId);
+					}
 					appJsonObject.put("buildId", buildId);
 					appJsonObject.put("enableAutoScaling", enableAutoScaling);
 					appJsonObject.put("enableServiceMesh", enableServiceMesh);
@@ -259,15 +264,32 @@ public class PlatformDeployer {
 				.post(Entity.entity(appJsonObject.toString(), MediaType.APPLICATION_JSON));
 		StatusType statusInfo = response.getStatusInfo();
 		if(statusInfo.getFamily().equals(Family.SUCCESSFUL)) {
-			String readEntity = response.readEntity(String.class);
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-			Map<?, ?> responseMap;
-			responseMap = mapper.readValue(readEntity, Map.class);
-			String appId = (String) responseMap.get("appId");
-			scaleApp(appId, replicas, authToken);
+			if(scale) {
+				String readEntity = response.readEntity(String.class);
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+				Map<?, ?> responseMap;
+				responseMap = mapper.readValue(readEntity, Map.class);
+				scaleApp((String) responseMap.get("appId"), replicas, authToken);
+			}
 		}else {
 			processErrorResponse(response, statusInfo);
+		}
+	}
+	
+	public void deployApp(String dpUrl, String buildId, String namespace, String authToken, boolean eula, String appName, String profile, String platformConfigFile, boolean enableAutoScaling, boolean enableServiceMesh) throws ClientException, IOException, InterruptedException {
+		try {
+			this.log.info("Build deployment in Platform started...");
+			Client client = ClientBuilder.newClient();
+			webTarget = client.target(new URI(dpUrl));
+			webTarget.register(MultiPartFeature.class);
+			deployApp(null, buildId, namespace, authToken, eula, 0, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh, false);
+		}catch (ProcessingException pe) {
+			pe.printStackTrace();
+			throw getConnectionException(pe);
+		}catch (Exception ex) {
+			ex.printStackTrace();
+			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}
 	
@@ -289,6 +311,38 @@ public class PlatformDeployer {
 		StatusType statusInfo = response.getStatusInfo();
 		if(!statusInfo.getFamily().equals(Family.SUCCESSFUL)) {
 			processErrorResponse(response, statusInfo);
+		}
+	}
+	
+	public void scaleApp(String dpUrl, String appId, int replicas, String authToken) throws ClientException, IOException, InterruptedException {
+		try {
+			this.log.info("Applicatoin scaling in Platform started...");
+			Client client = ClientBuilder.newClient();
+			webTarget = client.target(new URI(dpUrl));
+			webTarget.register(MultiPartFeature.class);
+			scaleApp(appId, replicas, authToken);
+		}catch (ProcessingException pe) {
+			pe.printStackTrace();
+			throw getConnectionException(pe);
+		}catch (Exception ex) {
+			ex.printStackTrace();
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+	
+	public void upgradeApp(String dpUrl, String appId, String buildId, String namespace, String authToken, boolean eula, String appName, String profile, String platformConfigFile, boolean enableAutoScaling, boolean enableServiceMesh) throws ClientException, IOException, InterruptedException {
+		try {
+			this.log.info("Application upgrade in Platform started...");
+			Client client = ClientBuilder.newClient();
+			webTarget = client.target(new URI(dpUrl));
+			webTarget.register(MultiPartFeature.class);
+			deployApp(appId, buildId, namespace, authToken, eula, 0, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh, false);
+		}catch (ProcessingException pe) {
+			pe.printStackTrace();
+			throw getConnectionException(pe);
+		}catch (Exception ex) {
+			ex.printStackTrace();
+			throw new ClientException(500, ex.getMessage(), ex);
 		}
 	}
 	

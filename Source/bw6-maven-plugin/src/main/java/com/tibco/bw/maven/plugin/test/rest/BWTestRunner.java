@@ -521,7 +521,7 @@ public class BWTestRunner
 			if(!"passed".equals(assertion.getAssertionStatus())) {
 				String inputValue = assertion.getActivityOutput();
 				if(assertion.getAssertionMode().equals("Primitive") ){
-					if (inputValue.startsWith(assertion.getStartElementNameTag())) {
+					if (assertion.getStartElementNameTag() != null && inputValue.startsWith(assertion.getStartElementNameTag())) {
 						inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
 						inputValue = inputValue!=null? inputValue:assertion.getActivityOutput();
 						if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
@@ -570,9 +570,19 @@ public class BWTestRunner
 					assertionFileBuilder.append("\n");
 				}
 				else {
-					assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
-					assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
-					assertionFileBuilder.append("\n");					
+					if (inputValue.equals(assertion.getGoldInput())) {
+						assertionFileBuilder.append(" [Activity Output does not match ");
+						if (assertion.getGoldInput() != null)
+							assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
+						else
+							assertionFileBuilder.append(" [Gold Output");
+						assertionFileBuilder.append("\n");						
+					}
+					else {
+						assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
+						assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
+						assertionFileBuilder.append("\n");		
+					}
 				}
 
 				BWTestConfig.INSTANCE.getLogger().error(assertionFileBuilder.toString());

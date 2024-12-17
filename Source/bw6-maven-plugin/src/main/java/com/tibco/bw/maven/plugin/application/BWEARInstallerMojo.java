@@ -217,6 +217,24 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	
 	@Parameter(property = "namespace")
 	private String namespace;
+	
+	@Parameter(property="platformBuild", defaultValue ="false")
+	private boolean platformBuild;
+	
+	@Parameter(property="platformDeploy", defaultValue ="false")
+	private boolean platformDeploy;
+	
+	@Parameter(property="platformScale", defaultValue ="false")
+	private boolean platformScale;
+	
+	@Parameter(property="platformUpgrade", defaultValue ="false")
+	private boolean platformUpgrade;
+	
+	@Parameter(property = "appId")
+	private String appId;
+	
+	@Parameter(property = "buildId")
+	private String buildId;
 
 	private String earLoc;
 	private String earName;
@@ -246,13 +264,28 @@ public class BWEARInstallerMojo extends AbstractMojo {
  	    		deployer.close();
             }else if(projectType != null && projectType.equalsIgnoreCase(Constants.Platform)) {
             	//Platform deployment
-            	File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
- 	    		if(files.length == 0) {
- 	    			throw new Exception("EAR file not found for the Application");
- 	    		}
- 	    		String application = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
- 	    		PlatformDeployer deployer = new PlatformDeployer(connectTimeout, readTimeout, retryCount, getLog());
- 	    		deployer.buildApp(application, files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace);
+            	PlatformDeployer deployer = new PlatformDeployer(connectTimeout, readTimeout, retryCount, getLog());
+            	if(platformBuild || platformDeploy || platformScale || platformUpgrade) {
+            		if(platformBuild) {
+            			File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+                		if(files.length == 0) {
+                			throw new Exception("EAR file not found for the Application");
+                		}
+                		deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, false);
+            		}else if(platformDeploy) {
+            			deployer.deployApp(dpUrl, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
+            		}else if(platformScale) {
+            			deployer.scaleApp(dpUrl, appId, replicas, authToken);
+            		}else if(platformUpgrade) {
+            			deployer.upgradeApp(dpUrl, appId, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
+            		}
+            	}else {
+            		File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+            		if(files.length == 0) {
+            			throw new Exception("EAR file not found for the Application");
+            		}
+            		deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, true);
+            	}
             }else {
             	//enterprise deployment
 	    		boolean configFileExists = deploymentConfigExists();
