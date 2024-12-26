@@ -226,6 +226,12 @@ public class BWDeploymentMojo extends AbstractMojo {
 
 	@Parameter(property="platformUpgrade", defaultValue ="false")
 	private boolean platformUpgrade;
+	
+	@Parameter(property="platformDeployViaHelm", defaultValue ="false")
+	private boolean platformDeployViaHelm;
+	
+	@Parameter(property = "valuesYamlPath")
+	private String valuesYamlPath;
 
 	@Parameter(property = "appId")
 	private String appId;
@@ -276,6 +282,18 @@ public class BWDeploymentMojo extends AbstractMojo {
 					}else if(platformUpgrade) {
 						deployer.upgradeApp(dpUrl, appId, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
 					}
+				}else if(platformDeployViaHelm) {
+					if(valuesYamlPath != null && !valuesYamlPath.isEmpty()) {
+						File valuesYaml = new File(valuesYamlPath);
+						if(valuesYaml.exists()) {
+							deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml);
+						}else {
+							throw new Exception("values.yaml file does not exist at the specified path.");
+						}
+					}else {
+						throw new Exception("Please specify path for values.yaml file.");
+					}
+					
 				}else {
 					File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
 					if(files.length == 0) {

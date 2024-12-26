@@ -293,6 +293,38 @@ public class PlatformDeployer {
 		}
 	}
 	
+	public void deployAppUsingHelmCharts(String dpUrl, String authToken, String namespace, File valuesYaml) throws ClientException, IOException, InterruptedException {
+		try {
+			Client client = ClientBuilder.newClient();
+			webTarget = client.target(new URI(dpUrl));
+			webTarget.register(MultiPartFeature.class);
+
+			FormDataMultiPart multipart = new FormDataMultiPart();
+			multipart.bodyPart(new FileDataBodyPart("values.yaml", valuesYaml));
+
+			Response response = webTarget
+					.queryParam("namespace", namespace)
+					.queryParam("eula", true)
+					.path("public/v2/dp/deploy/release")
+					.request(MediaType.MULTIPART_FORM_DATA)
+					.accept(MediaType.APPLICATION_JSON)
+					.header("Authorization", "Bearer " + authToken)
+					.post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
+			StatusType statusInfo = response.getStatusInfo();
+			if(statusInfo.getFamily().equals(Family.SUCCESSFUL)) {
+				String readEntity = response.readEntity(String.class);
+			}else {
+				processErrorResponse(response, statusInfo);
+			}
+		}catch (ProcessingException pe) {
+			pe.printStackTrace();
+			throw getConnectionException(pe);
+		}catch (Exception ex) {
+			ex.printStackTrace();
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+	
 	public void scaleApp(String appId, int replicas, String authToken) throws ClientException, IOException, InterruptedException {
 		if(appId == null || appId.isEmpty()) {
 			throw new ClientException("Unable to scale the application. Please provide app ID.");
