@@ -381,7 +381,7 @@ public class BWTestRunner
 				totaltests++;
 
 				// AMBW-46991 BEGINS
-				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure());
+				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure()+testcase.getProcessFailures());
 				if (currSkipped > 0) {
 					skipped = skipped + currSkipped;
 				}
@@ -426,6 +426,7 @@ public class BWTestRunner
 		int totalsuccess = 0;
 		int totaltests = 0;
 		int finalResult = 0;
+		int totalSkipped = 0;
 
 		for (Map.Entry<String, List<File>> entry : testSuiteMap.entrySet()) {
 			List<TestCaseResultDTO> testCaseList = new ArrayList<TestCaseResultDTO>();
@@ -469,6 +470,7 @@ public class BWTestRunner
 			int success = 0;
 			int failure = 0;
 			int processFilure = 0;
+			int skipped = 0;
 			for (TestCaseResultDTO testCase : testCaseList) {
 
 				if (testCase.getAssertionFailure() > 0) {
@@ -496,11 +498,16 @@ public class BWTestRunner
 				processFileBuilder.append("Total No of Process Failures:"+testCase.getProcessFailures()+"\n");
 				processFileBuilder.append("Total No of assertion Failure:"+testCase.getAssertionFailure()+"\n");
 				totaltests++;
+				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure()+testCase.getProcessFailures());
+				if (currSkipped > 0) {
+					skipped = skipped + currSkipped;
+				}
 			}
 			totalsuccess = totalsuccess+success;
+			totalSkipped = totalSkipped + skipped;
 			totalfailure = totalfailure + failure;
 			processFileBuilder.append("\n\nSuccess : " + success
-					+ " 	Failure : " + failure + "	Errors : " + processFilure);
+					+ " 	Failure : " + failure + " Skipped : " + skipped + "	Errors : " + processFilure);
 			
 		
 			
@@ -514,7 +521,7 @@ public class BWTestRunner
 		
 		builder.append("\n\nResults \n");
 		builder.append("Success : " + totalsuccess + "    Failure : "
-				+ totalfailure + "    Errors : " + totalProcessFailure);
+				+ totalfailure +" Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
 		BWTestConfig.INSTANCE.getLogger().info(builder.toString());
 		if (totalfailure > 0) {
 			finalResult = totalfailure;
