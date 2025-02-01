@@ -6,9 +6,13 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.*;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -70,7 +74,35 @@ public class PlatformDeployer {
 			File ear = new File(earPath);
 			this.log.debug("EarLocation : " + earPath + ", EarFile : "+ ear.getName());
 
-			Client client = ClientBuilder.newClient();
+
+			String tlsInsecure = System.getProperty("com.tibco.platform.tls.insecure");
+			ClientBuilder builder = ClientBuilder.newBuilder();
+			if(tlsInsecure != null && "true".equalsIgnoreCase(tlsInsecure)){
+				X509TrustManager tm = new X509TrustManager() {
+					public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+					}
+
+					public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+					}
+
+					public X509Certificate[] getAcceptedIssuers() {
+						return null;
+					}
+				};
+				SSLContext sc = SSLContext.getInstance("SSL");
+
+				HostnameVerifier allHostValid = new HostnameVerifier() {
+					@Override
+					public boolean verify(String hostname, SSLSession session) {
+						return true;
+					}
+				};
+
+				sc.init(null, new X509TrustManager[]{tm}, new SecureRandom());
+				builder.sslContext(sc).hostnameVerifier(allHostValid);
+			}
+
+			Client client = builder.build();
 			webTarget = client.target(new URI(dpUrl));
 			webTarget.register(MultiPartFeature.class);
 			
