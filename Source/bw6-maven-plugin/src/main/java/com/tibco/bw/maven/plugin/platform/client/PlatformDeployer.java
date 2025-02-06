@@ -270,7 +270,7 @@ public class PlatformDeployer {
 				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 				Map<?, ?> responseMap;
 				responseMap = mapper.readValue(readEntity, Map.class);
-				scaleApp((String) responseMap.get("appId"), replicas, authToken);
+				scaleApp((String) responseMap.get("appId"), replicas, authToken, namespace);
 			}
 		}else {
 			processErrorResponse(response, statusInfo);
@@ -325,7 +325,7 @@ public class PlatformDeployer {
 		}
 	}
 	
-	public void scaleApp(String appId, int replicas, String authToken) throws ClientException, IOException, InterruptedException {
+	public void scaleApp(String appId, int replicas, String authToken, String namespace) throws ClientException, IOException, InterruptedException {
 		if(appId == null || appId.isEmpty()) {
 			throw new ClientException("Unable to scale the application. Please provide app ID.");
 		}
@@ -333,6 +333,7 @@ public class PlatformDeployer {
 			throw new ClientException("Unable to scale the application. Please provide a valid number of replicas.");
 		}
 		Response response = webTarget
+				.queryParam("namespace", namespace)
 				.queryParam("count", Integer.toString(replicas))
 				.path("public/v1/dp/apps")
 				.path(appId)
@@ -346,13 +347,13 @@ public class PlatformDeployer {
 		}
 	}
 	
-	public void scaleApp(String dpUrl, String appId, int replicas, String authToken) throws ClientException, IOException, InterruptedException {
+	public void scaleApp(String dpUrl, String appId, int replicas, String authToken, String namespace) throws ClientException, IOException, InterruptedException {
 		try {
 			this.log.info("Applicatoin scaling in Platform started...");
 			Client client = ClientBuilder.newClient();
 			webTarget = client.target(new URI(dpUrl));
 			webTarget.register(MultiPartFeature.class);
-			scaleApp(appId, replicas, authToken);
+			scaleApp(appId, replicas, authToken, namespace);
 		}catch (ProcessingException pe) {
 			pe.printStackTrace();
 			throw getConnectionException(pe);

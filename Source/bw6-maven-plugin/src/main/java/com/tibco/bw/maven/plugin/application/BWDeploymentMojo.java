@@ -278,7 +278,7 @@ public class BWDeploymentMojo extends AbstractMojo {
 					}else if(platformDeploy) {
 						deployer.deployApp(dpUrl, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
 					}else if(platformScale) {
-						deployer.scaleApp(dpUrl, appId, replicas, authToken);
+						deployer.scaleApp(dpUrl, appId, replicas, authToken, namespace);
 					}else if(platformUpgrade) {
 						deployer.upgradeApp(dpUrl, appId, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
 					}
