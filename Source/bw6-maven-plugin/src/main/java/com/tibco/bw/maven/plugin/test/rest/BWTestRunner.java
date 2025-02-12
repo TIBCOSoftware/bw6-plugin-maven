@@ -494,14 +494,16 @@ public class BWTestRunner
 				}
 				processFileBuilder.append("\n");
 				processFileBuilder.append("Test case result for :"+testCase.getTestCaseFile()+"\n");
-				processFileBuilder.append("Total No of assertion run: "+testCase.getAssertionsRun()+"\n");
-				processFileBuilder.append("Total No of Process Failures:"+testCase.getProcessFailures()+"\n");
-				processFileBuilder.append("Total No of assertion Failure:"+testCase.getAssertionFailure()+"\n");
+				processFileBuilder.append("Assertion run: "+testCase.getAssertionsRun()+"\n");
+				processFileBuilder.append("Process Failures:"+testCase.getProcessFailures()+"\n");
+				processFileBuilder.append("Assertion Failure:"+testCase.getAssertionFailure()+"\n");
+			
 				totaltests++;
 				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure()+testCase.getProcessFailures());
 				if (currSkipped > 0) {
 					skipped = skipped + currSkipped;
 				}
+				processFileBuilder.append("Skipped:"+currSkipped+"\n");
 			}
 			totalsuccess = totalsuccess+success;
 			totalSkipped = totalSkipped + skipped;
