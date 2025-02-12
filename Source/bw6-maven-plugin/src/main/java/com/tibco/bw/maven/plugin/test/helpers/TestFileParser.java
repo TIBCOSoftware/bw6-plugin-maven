@@ -264,7 +264,7 @@ public class TestFileParser {
 													mockOutputFilePath = baseDirectoryPath.concat("/"+mockOutputFilePath);
 												}
 												//do not execute if activity is Confirm activity
-												if(!disableMocking && !activityName.equalsIgnoreCase("Confirm")){
+												if(!disableMocking && !activityName.equalsIgnoreCase("Confirm") && !activityName.equalsIgnoreCase("SendHTTPResponse")){
 													boolean isValidFile = validateMockXMLFile(mockOutputFilePath, activityName, processName);
 													if(isValidFile){
 														mockActivity.setmockOutputFilePath(mockOutputFilePath);
