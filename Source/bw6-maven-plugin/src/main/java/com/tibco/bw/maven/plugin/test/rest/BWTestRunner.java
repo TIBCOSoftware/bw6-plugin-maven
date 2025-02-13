@@ -386,6 +386,13 @@ public class BWTestRunner
 					skipped = skipped + currSkipped;
 				}
 				// AMBW-46991 ENDS
+				
+				processFileBuilder.append("\n" +"Test case run: "+testcase.getTestCaseFile()+"\t");
+				processFileBuilder.append("Assertion run: "+testcase.getAssertionsRun()+"\t");
+				processFileBuilder.append("Assertion Success: "+success+"\t");
+				processFileBuilder.append("Assertion Failure: "+testcase.getAssertionFailure()+"\t");
+				processFileBuilder.append("Errors: "+testcase.getProcessFailures()+"\t");
+				processFileBuilder.append("Skipped: "+currSkipped+"\t");
 			}
 			totalsuccess = totalsuccess + success;
 			totalfailure = totalfailure + failure;
@@ -492,18 +499,18 @@ public class BWTestRunner
 					success = success + testCase.getAssertionsRun();
 					
 				}
-				processFileBuilder.append("\n");
-				processFileBuilder.append("Test case result for :"+testCase.getTestCaseFile()+"\n");
-				processFileBuilder.append("Assertion run: "+testCase.getAssertionsRun()+"\n");
-				processFileBuilder.append("Process Failures:"+testCase.getProcessFailures()+"\n");
-				processFileBuilder.append("Assertion Failure:"+testCase.getAssertionFailure()+"\n");
-			
+				processFileBuilder.append("\n" +"Test case run: "+testCase.getTestCaseFile()+"\t");
+				processFileBuilder.append("Assertion run: "+testCase.getAssertionsRun()+"\t");
+				processFileBuilder.append("Assertion Success: "+success+"\t");
+				processFileBuilder.append("Assertion Failure: "+testCase.getAssertionFailure()+"\t");
+				processFileBuilder.append("Errors: "+testCase.getProcessFailures()+"\t");
+				
 				totaltests++;
 				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure()+testCase.getProcessFailures());
 				if (currSkipped > 0) {
 					skipped = skipped + currSkipped;
 				}
-				processFileBuilder.append("Skipped:"+currSkipped+"\n");
+				processFileBuilder.append("Skipped: "+currSkipped+"\t");
 			}
 			totalsuccess = totalsuccess+success;
 			totalSkipped = totalSkipped + skipped;
