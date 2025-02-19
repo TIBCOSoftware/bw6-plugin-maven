@@ -284,7 +284,10 @@ public class ConfigFileGenerator
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".jar")) {
                     return true; 
+                } else if(file.isDirectory()) {
+                	return hasDBJar(file);
                 }
+                
             }
         }
 		return false;

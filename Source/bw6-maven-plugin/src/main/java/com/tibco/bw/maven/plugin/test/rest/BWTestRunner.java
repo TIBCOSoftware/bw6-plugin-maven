@@ -8,7 +8,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,16 +38,13 @@ import org.xmlunit.diff.ComparisonControllers;
 import org.xmlunit.diff.Diff;
 import org.xmlunit.diff.Difference;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.Version;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
-import com.tibco.bw.maven.plugin.test.dto.AssertionDTO;
 import com.tibco.bw.maven.plugin.test.dto.AssertionResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.BWTestSuiteDTO;
 import com.tibco.bw.maven.plugin.test.dto.CompleteReportDTO;
 import com.tibco.bw.maven.plugin.test.dto.ModuleInfoDTO;
-import com.tibco.bw.maven.plugin.test.dto.TestCaseDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestCaseResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetResultDTO;
@@ -328,7 +324,6 @@ public class BWTestRunner
 	private int printTestResults( TestSuiteResultDTO result, TestSuiteDTO suite, MavenProject project ) throws MojoFailureException
 	{
 		StringBuilder builder = new StringBuilder();
-		int totaltests = 0;
 		int totalsuccess = 0;
 		int totalfailure = 0;
 		int totalSkipped = 0;
@@ -348,7 +343,6 @@ public class BWTestRunner
 			TestSetResultDTO testset = (TestSetResultDTO) result.getTestSetResult().get( i );
 			builder.append("\n");
 			processFileBuilder.append( "Tests for " + testset.getProcessName() + "\n");
-			processFileBuilder.append( "Tests run : " + testset.getTestCaseResult().size() );
 
 			int success = 0;
 			int failure = 0;
@@ -378,7 +372,6 @@ public class BWTestRunner
 					success = success + testcase.getAssertionsRun();
 					
 				}
-				totaltests++;
 
 				// AMBW-46991 BEGINS
 				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure()+testcase.getProcessFailures());
@@ -388,24 +381,24 @@ public class BWTestRunner
 				// AMBW-46991 ENDS
 				
 				processFileBuilder.append("\n" +"Test case run: "+testcase.getTestCaseFile()+"\t");
-				processFileBuilder.append("Assertion run: "+testcase.getAssertionsRun()+"\t");
-				processFileBuilder.append("Assertion Success: "+success+"\t");
+//				processFileBuilder.append("\nAssertion run: "+testcase.getAssertionsRun()+"\t");
+				processFileBuilder.append("\nAssertion Success: "+testcase.getAssertionsRun()+"\t");
 				processFileBuilder.append("Assertion Failure: "+testcase.getAssertionFailure()+"\t");
-				processFileBuilder.append("Errors: "+testcase.getProcessFailures()+"\t");
-				processFileBuilder.append("Skipped: "+currSkipped+"\t");
+				processFileBuilder.append("Test Errors: "+testcase.getProcessFailures()+"\t");
+				processFileBuilder.append("Skipped: "+currSkipped+"\t\n");
 			}
 			totalsuccess = totalsuccess + success;
 			totalfailure = totalfailure + failure;
 			totalSkipped = totalSkipped + skipped;
 			
-			processFileBuilder.append( "    Success : " + success + " 	Failure : " + failure + "	Skipped : " + skipped + "	Errors : " + processFilure);
+			
 			builder.append( processFileBuilder.toString() );
 			writeProcessResult( result.getModuleInfo().getModuleName() , testset , processFileBuilder.toString() );
 		}
 		
 		builder.append( "\n\nResults \n");
 		builder.append( "Success : " + totalsuccess + "    Failure : " + totalfailure  + "    Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
-       
+		builder.append("\n");
 		BWTestConfig.INSTANCE.getLogger().info( builder.toString() );
 		
 		if(BWTestExecutor.INSTANCE.isSkippedTestError()) {
@@ -431,7 +424,7 @@ public class BWTestRunner
 		int totalfailure = 0;
 		int totalProcessFailure = 0;
 		int totalsuccess = 0;
-		int totaltests = 0;
+
 		int finalResult = 0;
 		int totalSkipped = 0;
 
@@ -467,9 +460,7 @@ public class BWTestRunner
 			StringBuilder processFileBuilder = new StringBuilder();
 			builder.append("\n");
 			processFileBuilder.append("Tests for TestSuite "
-					+ bwTestSuiteData.getTestSuiteName() + "\n");
-			processFileBuilder.append("Tests run : "
-					+ bwTestSuiteData.getTestCaseList().size());
+					+ bwTestSuiteData.getTestSuiteName());
 
 			@SuppressWarnings("unchecked")
 			List<TestCaseResultDTO> testCaseList = bwTestSuiteData
@@ -499,38 +490,32 @@ public class BWTestRunner
 					success = success + testCase.getAssertionsRun();
 					
 				}
-				processFileBuilder.append("\n" +"Test case run: "+testCase.getTestCaseFile()+"\t");
-				processFileBuilder.append("Assertion run: "+testCase.getAssertionsRun()+"\t");
-				processFileBuilder.append("Assertion Success: "+success+"\t");
-				processFileBuilder.append("Assertion Failure: "+testCase.getAssertionFailure()+"\t");
-				processFileBuilder.append("Errors: "+testCase.getProcessFailures()+"\t");
 				
-				totaltests++;
 				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure()+testCase.getProcessFailures());
 				if (currSkipped > 0) {
 					skipped = skipped + currSkipped;
 				}
-				processFileBuilder.append("Skipped: "+currSkipped+"\t");
+				
+				processFileBuilder.append("\n" +"Test case run: "+testCase.getTestCaseFile()+"\t");
+//				processFileBuilder.append("\n Assertion run: "+testCase.getAssertionsRun()+"\t");
+				processFileBuilder.append("\nAssertion Success: "+testCase.getAssertionsRun()+"\t");
+				processFileBuilder.append("Assertion Failure: "+testCase.getAssertionFailure()+"\t");
+				processFileBuilder.append("Test Errors: "+testCase.getProcessFailures()+"\t");
+				processFileBuilder.append("Skipped: "+currSkipped+"\t\n");
+				
 			}
 			totalsuccess = totalsuccess+success;
 			totalSkipped = totalSkipped + skipped;
-			totalfailure = totalfailure + failure;
-			processFileBuilder.append("\n\nSuccess : " + success
-					+ " 	Failure : " + failure + " Skipped : " + skipped + "	Errors : " + processFilure);
-			
-		
-			
+			totalfailure = totalfailure + failure;			
 			builder.append(processFileBuilder.toString());
-			
-			
-
 		}
 		
 		
 		
 		builder.append("\n\nResults \n");
 		builder.append("Success : " + totalsuccess + "    Failure : "
-				+ totalfailure +" Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
+				+ totalfailure +"    Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
+		builder.append("\n");
 		BWTestConfig.INSTANCE.getLogger().info(builder.toString());
 		if (totalfailure > 0) {
 			finalResult = totalfailure;
