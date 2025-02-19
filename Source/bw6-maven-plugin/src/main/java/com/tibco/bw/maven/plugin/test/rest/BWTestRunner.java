@@ -398,7 +398,7 @@ public class BWTestRunner
 		
 		builder.append( "\n\nResults \n");
 		builder.append( "Success : " + totalsuccess + "    Failure : " + totalfailure  + "    Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
-       
+		builder.append("\n");
 		BWTestConfig.INSTANCE.getLogger().info( builder.toString() );
 		
 		if(BWTestExecutor.INSTANCE.isSkippedTestError()) {
@@ -514,7 +514,8 @@ public class BWTestRunner
 		
 		builder.append("\n\nResults \n");
 		builder.append("Success : " + totalsuccess + "    Failure : "
-				+ totalfailure +" Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
+				+ totalfailure +"    Skipped : " + totalSkipped + "    Errors : " + totalProcessFailure);
+		builder.append("\n");
 		BWTestConfig.INSTANCE.getLogger().info(builder.toString());
 		if (totalfailure > 0) {
 			finalResult = totalfailure;
