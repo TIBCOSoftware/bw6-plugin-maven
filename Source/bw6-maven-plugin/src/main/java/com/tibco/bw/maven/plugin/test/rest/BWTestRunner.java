@@ -385,7 +385,7 @@ public class BWTestRunner
 				processFileBuilder.append("\nAssertion Success: "+testcase.getAssertionsRun()+"\t");
 				processFileBuilder.append("Assertion Failure: "+testcase.getAssertionFailure()+"\t");
 				processFileBuilder.append("Test Errors: "+testcase.getProcessFailures()+"\t");
-				processFileBuilder.append("Skipped: "+currSkipped+"\t\n");
+				processFileBuilder.append("Skipped: "+skipped+"\t\n");
 			}
 			totalsuccess = totalsuccess + success;
 			totalfailure = totalfailure + failure;
@@ -501,7 +501,7 @@ public class BWTestRunner
 				processFileBuilder.append("\nAssertion Success: "+testCase.getAssertionsRun()+"\t");
 				processFileBuilder.append("Assertion Failure: "+testCase.getAssertionFailure()+"\t");
 				processFileBuilder.append("Test Errors: "+testCase.getProcessFailures()+"\t");
-				processFileBuilder.append("Skipped: "+currSkipped+"\t\n");
+				processFileBuilder.append("Skipped: "+skipped+"\t\n");
 				
 			}
 			totalsuccess = totalsuccess+success;
@@ -583,13 +583,13 @@ public class BWTestRunner
 					assertionFileBuilder.append("\n");
 				}
 				else {
-					if (inputValue.equals(assertion.getGoldInput())) {
+					if (!inputValue.equals(assertion.getGoldInput())) {
 						assertionFileBuilder.append(" [Activity Output does not match ");
 						if (assertion.getGoldInput() != null)
 							assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
 						else
-							assertionFileBuilder.append(" [Gold Output");
-						assertionFileBuilder.append("\n");						
+							assertionFileBuilder.append(" Gold Output ]");
+							assertionFileBuilder.append("\n");						
 					}
 					else {
 						assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
