@@ -392,6 +392,9 @@ public class BWTestRunner
 
 				// AMBW-46991 BEGINS
 				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure()+testcase.getProcessFailures());
+				if (testcase.getAssertions() < testcase.getProcessFailures()) {
+					currSkipped = 0;
+				}
 				if (currSkipped > 0) {
 					skipped = skipped + currSkipped;
 				}
@@ -525,21 +528,24 @@ public class BWTestRunner
 				}
 				
 				
-				if (testCase.getAssertionFailure() > 0) {
-					totalAssertionFailure = totalAssertionFailure+testcase.getAssertionFailure();
+				if ( testCase.getAssertionFailure() > 0) {
+					totalAssertionFailure = totalAssertionFailure+ testCase.getAssertionFailure();
 				}
 				
 				totalNoOfAssertions = totalNoOfAssertions+testCase.getAssertions();
 				totaltests++;
 				
 				int currSkipped = testCase.getAssertions() - (testCase.getAssertionsRun() + testCase.getAssertionFailure()+ testCase.getProcessFailures());
+				if(testCase.getAssertions() <  testCase.getProcessFailures()) {
+					currSkipped = 0;
+				}
 				if (currSkipped > 0) {
 					skipped = skipped + currSkipped;
 				}
 				
 				processFileBuilder.append("\n" +"Test case run: "+testCase.getTestCaseFile()+"\t");
-				processFileBuilder.append("\nTest Case: "+(isFailed ? "Failed":"Passed.="));
-				processFileBuilder.append("\nTotal Assertion: "+testcase.getAssertions());
+				processFileBuilder.append("\nTest Case: "+(isFailed ? "Failed":"Passed"));
+				processFileBuilder.append("\nTotal Assertion: "+testCase.getAssertions());
 				processFileBuilder.append("\tAssertion Success: "+testCase.getAssertionsRun()+"\t");
 				processFileBuilder.append("Assertion Failure: "+testCase.getAssertionFailure()+"\t");
 				processFileBuilder.append("Test Errors: "+testCase.getProcessFailures()+"\t");
