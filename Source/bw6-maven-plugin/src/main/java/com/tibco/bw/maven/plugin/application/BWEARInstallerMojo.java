@@ -288,20 +288,18 @@ public class BWEARInstallerMojo extends AbstractMojo {
             	}
             }else {
             	//enterprise deployment
-            	boolean configFileExists = deploymentConfigExists();
-            	if (configFileExists) {
-            		loadFromDeploymentProperties();
-            		
-            		if (!validateFields()) {
-            			getLog().error("Validation failed. Skipping EAR Deployment.");
-            			return;
-            		}
-            	}
-            	
-            	if (!deployToAdmin) {
-            		getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
-            		return;
-            	}
+	    		boolean configFileExists = deploymentConfigExists();
+	    		if(configFileExists) {
+	    			loadFromDeploymentProperties();
+	    		}
+	    		if(!validateFields()) {
+	    			getLog().error("Validation failed. Skipping EAR Deployment.");
+	    			return;
+	    		}
+	    		if(!deployToAdmin) {
+	    			getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
+	    			return;
+	    		}
 	    		
 	    		File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
 	    		if(files.length == 0) {
