@@ -241,6 +241,7 @@ public class TestFileParser {
 									
 									String location = cEl.getAttributes().getNamedItem("Id").getNodeValue();
 									String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
+									Node outputItem = cEl.getAttributes().getNamedItem("outputPresent");
 									mockActivity.setLocation(location);
 									
 									NodeList gChildNodes = cEl.getChildNodes();
@@ -263,16 +264,27 @@ public class TestFileParser {
 													BWTestConfig.INSTANCE.getLogger().debug("Provided Mock File path is relative "+file.getPath());
 													mockOutputFilePath = baseDirectoryPath.concat("/"+mockOutputFilePath);
 												}
-												//do not execute if activity is Confirm activity
-												if(!disableMocking && !activityName.equalsIgnoreCase("Confirm")){
-													boolean isValidFile = validateMockXMLFile(mockOutputFilePath, activityName, processName);
-													if(isValidFile){
+												boolean isActivityHasOutput = false;
+												if (outputItem != null) {
+													// do not execute if activity does have output
+													String outputPresent = outputItem.getNodeValue();
+													if (outputPresent == null || outputPresent.isEmpty()
+															|| outputPresent.equals("true")) {
+														isActivityHasOutput = true;
+													}
+												}
+												
+												if (!disableMocking && isActivityHasOutput){
+													boolean isValidFile = validateMockXMLFile(mockOutputFilePath,
+															activityName, processName);
+													if (isValidFile) {
 														mockActivity.setmockOutputFilePath(mockOutputFilePath);
 														testcase.setmockOutputFilePath(mockOutputFilePath);
 														testcase.getMockActivityList().add(mockActivity);
 														break;
 													}
 												}
+												
 											}
 								      }
 						       	}

@@ -51,19 +51,19 @@ public class PlatformDeployer {
 	public void buildApp(String earPath, String buildName, String appName, String profile, int replicas, boolean enableAutoScaling, boolean enableServiceMesh, boolean eula, String platformConfigFile, String dpUrl, String authToken, String baseVersion, String baseImageTag, String namespace, boolean deploy) throws ClientException, IOException, InterruptedException {
 		try {
 			this.log.info("Application build creation in Platform started...");
-			if(dpUrl == null) {
+			if(dpUrl == null || dpUrl.isEmpty()) {
 				throw new ClientException("Unable to build the application. Please provide the data plane URL.");
 			}
-			if(authToken == null) {
+			if(authToken == null || authToken.isEmpty()) {
 				throw new ClientException("Unable to build the application. Please provide authorization token.");
 			}
-			if(baseVersion == null) {
+			if(baseVersion == null || baseVersion.isEmpty()) {
 				throw new ClientException("Unable to build the application. Please provide base version.");
 			}
-			if(baseImageTag == null) {
+			if(baseImageTag == null || baseImageTag.isEmpty()) {
 				throw new ClientException("Unable to build the application. Please provide base image tag.");
 			}
-			if(namespace == null) {
+			if(namespace == null || namespace.isEmpty()) {
 				throw new ClientException("Unable to build the application. Please provide namespace.");
 			}
 
@@ -270,7 +270,7 @@ public class PlatformDeployer {
 				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 				Map<?, ?> responseMap;
 				responseMap = mapper.readValue(readEntity, Map.class);
-				scaleApp((String) responseMap.get("appId"), replicas, authToken);
+				scaleApp((String) responseMap.get("appId"), replicas, authToken, namespace);
 			}
 		}else {
 			processErrorResponse(response, statusInfo);
@@ -280,6 +280,13 @@ public class PlatformDeployer {
 	public void deployApp(String dpUrl, String buildId, String namespace, String authToken, boolean eula, String appName, String profile, String platformConfigFile, boolean enableAutoScaling, boolean enableServiceMesh) throws ClientException, IOException, InterruptedException {
 		try {
 			this.log.info("Build deployment in Platform started...");
+			if(dpUrl == null || dpUrl.isEmpty()) {
+				throw new ClientException("Unable to deploy the application. Please provide the data plane URL.");
+			}
+			if(authToken == null || authToken.isEmpty()) {
+				throw new ClientException("Unable to deploy the application. Please provide authorization token.");
+			}
+			
 			Client client = ClientBuilder.newClient();
 			webTarget = client.target(new URI(dpUrl));
 			webTarget.register(MultiPartFeature.class);
@@ -293,7 +300,49 @@ public class PlatformDeployer {
 		}
 	}
 	
-	public void scaleApp(String appId, int replicas, String authToken) throws ClientException, IOException, InterruptedException {
+	public void deployAppUsingHelmCharts(String dpUrl, String authToken, String namespace, File valuesYaml) throws ClientException, IOException, InterruptedException {		
+		try {
+			if(dpUrl == null || dpUrl.isEmpty()) {
+				throw new ClientException("Unable to deploy the application. Please provide the data plane URL.");
+			}
+			if(authToken == null || authToken.isEmpty()) {
+				throw new ClientException("Unable to deploy the application. Please provide authorization token.");
+			}
+			if(namespace == null || namespace.isEmpty()) {
+				throw new ClientException("Unable to deploy the application. Please provide namespace.");
+			}
+			
+			Client client = ClientBuilder.newClient();
+			webTarget = client.target(new URI(dpUrl));
+			webTarget.register(MultiPartFeature.class);
+
+			FormDataMultiPart multipart = new FormDataMultiPart();
+			multipart.bodyPart(new FileDataBodyPart("values.yaml", valuesYaml));
+
+			Response response = webTarget
+					.queryParam("namespace", namespace)
+					.queryParam("eula", true)
+					.path("public/v2/dp/deploy/release")
+					.request(MediaType.MULTIPART_FORM_DATA)
+					.accept(MediaType.APPLICATION_JSON)
+					.header("Authorization", "Bearer " + authToken)
+					.post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
+			StatusType statusInfo = response.getStatusInfo();
+			if(statusInfo.getFamily().equals(Family.SUCCESSFUL)) {
+				String readEntity = response.readEntity(String.class);
+			}else {
+				processErrorResponse(response, statusInfo);
+			}
+		}catch (ProcessingException pe) {
+			pe.printStackTrace();
+			throw getConnectionException(pe);
+		}catch (Exception ex) {
+			ex.printStackTrace();
+			throw new ClientException(500, ex.getMessage(), ex);
+		}
+	}
+	
+	public void scaleApp(String appId, int replicas, String authToken, String namespace) throws ClientException, IOException, InterruptedException {
 		if(appId == null || appId.isEmpty()) {
 			throw new ClientException("Unable to scale the application. Please provide app ID.");
 		}
@@ -301,6 +350,7 @@ public class PlatformDeployer {
 			throw new ClientException("Unable to scale the application. Please provide a valid number of replicas.");
 		}
 		Response response = webTarget
+				.queryParam("namespace", namespace)
 				.queryParam("count", Integer.toString(replicas))
 				.path("public/v1/dp/apps")
 				.path(appId)
@@ -314,13 +364,20 @@ public class PlatformDeployer {
 		}
 	}
 	
-	public void scaleApp(String dpUrl, String appId, int replicas, String authToken) throws ClientException, IOException, InterruptedException {
+	public void scaleApp(String dpUrl, String appId, int replicas, String authToken, String namespace) throws ClientException, IOException, InterruptedException {
 		try {
 			this.log.info("Applicatoin scaling in Platform started...");
+			if(dpUrl == null || dpUrl.isEmpty()) {
+				throw new ClientException("Unable to scale the application. Please provide the data plane URL.");
+			}
+			if(authToken == null || authToken.isEmpty()) {
+				throw new ClientException("Unable to scale the application. Please provide authorization token.");
+			}
+			
 			Client client = ClientBuilder.newClient();
 			webTarget = client.target(new URI(dpUrl));
 			webTarget.register(MultiPartFeature.class);
-			scaleApp(appId, replicas, authToken);
+			scaleApp(appId, replicas, authToken, namespace);
 		}catch (ProcessingException pe) {
 			pe.printStackTrace();
 			throw getConnectionException(pe);
@@ -332,6 +389,16 @@ public class PlatformDeployer {
 	
 	public void upgradeApp(String dpUrl, String appId, String buildId, String namespace, String authToken, boolean eula, String appName, String profile, String platformConfigFile, boolean enableAutoScaling, boolean enableServiceMesh) throws ClientException, IOException, InterruptedException {
 		try {
+			if(dpUrl == null || dpUrl.isEmpty()) {
+				throw new ClientException("Unable to upgrade the application. Please provide the data plane URL.");
+			}
+			if(authToken == null || authToken.isEmpty()) {
+				throw new ClientException("Unable to upgrade the application. Please provide authorization token.");
+			}
+			if(appId == null || appId.isEmpty()) {
+				throw new ClientException("Unable to upgrade the application. Please provide base version.");
+			}
+			
 			this.log.info("Application upgrade in Platform started...");
 			Client client = ClientBuilder.newClient();
 			webTarget = client.target(new URI(dpUrl));
