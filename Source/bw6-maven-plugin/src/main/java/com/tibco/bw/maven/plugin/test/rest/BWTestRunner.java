@@ -115,7 +115,9 @@ public class BWTestRunner
 		{
 			if( project.getPackaging().equals("bwmodule") && !isCXF(project))	//skip tests if CXF
 			{
+				
 				failures = failures + runTestsPerModule( project , result );	
+				
 			}
 			
 		}
@@ -391,7 +393,7 @@ public class BWTestRunner
 				totaltests++;
 
 				// AMBW-46991 BEGINS
-				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure()+testcase.getProcessFailures());
+				int currSkipped = testcase.getAssertions() - (testcase.getAssertionsRun() + testcase.getAssertionFailure());
 				if (testcase.getAssertions() < testcase.getProcessFailures()) {
 					currSkipped = 0;
 				}
@@ -412,7 +414,7 @@ public class BWTestRunner
 				}
 			}
 //			totalsuccess = totalsuccess + success;
-//			totalfailure = totalfailure + failure;
+			//totalfailure = totalfailure + failure;
 			totalSkipped = totalSkipped + skipped;
 			builder.append( processFileBuilder.toString() );
 			writeProcessResult( result.getModuleInfo().getModuleName() , testset , processFileBuilder.toString() );
@@ -432,13 +434,11 @@ public class BWTestRunner
 //			totalfailure = totalfailure + totalSkipped;
 //		}
 //		
-//		if(totalfailure>0){
-//        	finalResult = totalfailure;
-//        }
-//        else{
-//        	finalResult = totalProcessFailure;
-//        }
-//        
+		if(totalfailure>0){
+        	finalResult = totalfailure;
+        }
+        
+     
         return finalResult ;
         
 	}
@@ -535,7 +535,7 @@ public class BWTestRunner
 				totalNoOfAssertions = totalNoOfAssertions+testCase.getAssertions();
 				totaltests++;
 				
-				int currSkipped = testCase.getAssertions() - (testCase.getAssertionsRun() + testCase.getAssertionFailure()+ testCase.getProcessFailures());
+				int currSkipped = testCase.getAssertions() - (testCase.getAssertionsRun() + testCase.getAssertionFailure());
 				if(testCase.getAssertions() <  testCase.getProcessFailures()) {
 					currSkipped = 0;
 				}
