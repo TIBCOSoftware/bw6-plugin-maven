@@ -231,6 +231,9 @@ public class TestFileParser {
 													String inputValue = e1.getAttribute("inputValue");
 													testcase.setXmlInput(inputValue);
 													break;
+												}else if("Inputs".equals(e1.getNodeName())){
+													
+													
 												}
 											}
 										}

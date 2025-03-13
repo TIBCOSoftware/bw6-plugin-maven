@@ -30,6 +30,7 @@ public class TestCaseDTO implements Serializable{
 	
 	private String processStarterID;
 	
+	private String input;
 
 	public String getServiceType() {
 		return serviceType;
