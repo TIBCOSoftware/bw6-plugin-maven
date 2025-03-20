@@ -230,8 +230,7 @@ public class TestFileParser {
 												{
 													String inputValue = e1.getAttribute("inputValue");
 													testcase.setXmlInput(inputValue);
-													break;
-												}else if("Properties".equals(e1.getNodeName())){
+												}else if("properties".equals(e1.getNodeName())){
 													Element propetiesElement = (Element) e1;
 														NodeList list = propetiesElement.getChildNodes();
 														testcase.getPropertiesList().clear();
