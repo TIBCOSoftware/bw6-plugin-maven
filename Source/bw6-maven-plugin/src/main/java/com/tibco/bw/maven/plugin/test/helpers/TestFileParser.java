@@ -230,7 +230,27 @@ public class TestFileParser {
 												{
 													String inputValue = e1.getAttribute("inputValue");
 													testcase.setXmlInput(inputValue);
-													break;
+												}else if("properties".equals(e1.getNodeName())){
+													Element propetiesElement = (Element) e1;
+														NodeList list = propetiesElement.getChildNodes();
+														testcase.getPropertiesList().clear();
+														for (int index = 0; index < list.getLength(); index++) {
+															Node currNode = list.item(index);
+															if (currNode instanceof Element) {
+																Element currentProperty = (Element) currNode;
+																TestCaseDTO.Property property = new TestCaseDTO.Property();
+																String value = currentProperty.getAttribute("value");
+																property.setValue(value);
+																String propertyType = currentProperty.getAttribute("propertyType");
+																property.setPropertyType(propertyType);
+																String name = currentProperty.getAttribute("Name");
+																property.setName(name);
+																String type = currentProperty.getAttribute("type");
+																property.setType(type);
+																
+																testcase.getPropertiesList().add(property);
+															}
+														}
 												}
 											}
 										}
@@ -431,7 +451,6 @@ public class TestFileParser {
 		}
 		
 	}
-
 
 	public HashSet<String> collectSkipInitActivities(String contents){
 			InputStream is = null;
