@@ -18,7 +18,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -29,12 +28,11 @@ import com.tibco.bw.maven.plugin.admin.dto.AppSpace;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.platform.client.PlatformDeployer;
-import com.tibco.bw.maven.plugin.tci.client.TCIDeployer;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
-@Mojo(name = "bwdeployold", defaultPhase = LifecyclePhase.DEPLOY)
-public class BWDeploymentMojo extends AbstractMojo {
+@Mojo(name = "bwdeploy")
+public class BWCustomDeploymentMojo extends AbstractMojo {
 	@Parameter(defaultValue="${session}", readonly=true)
 	private MavenSession session;
 
@@ -226,10 +224,10 @@ public class BWDeploymentMojo extends AbstractMojo {
 
 	@Parameter(property="platformUpgrade", defaultValue ="false")
 	private boolean platformUpgrade;
-	
+
 	@Parameter(property="platformDeployViaHelm", defaultValue ="false")
 	private boolean platformDeployViaHelm;
-	
+
 	@Parameter(property = "valuesYamlPath")
 	private String valuesYamlPath;
 
@@ -245,28 +243,11 @@ public class BWDeploymentMojo extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException {
 		try {    		
-			getLog().info("BW Deployment Mojo started ...");
+			getLog().info("BW Custom Deployment Mojo started ...");
 			Manifest manifest = ManifestParser.parseManifest(projectBasedir);
 			String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-			//TCI deployment
-			if(projectType != null && projectType.equalsIgnoreCase(Constants.TCI)){
-				if(!deployToAdmin) {
-					getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
-					return;
-				}
-				File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
-				if(files.length == 0) {
-					throw new Exception("EAR file not found for the Application");
-				}
-				String appName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
-
-				TCIDeployer deployer = new TCIDeployer(connectTimeout, readTimeout, retryCount, getLog());
-
-				deployer.deployApp(appName, files[0].getPath(), instanceCount, appVariablesFile, engineVariablesFile, forceOverwrite, retainAppProps);
-
-				deployer.close();
-			}else if(projectType != null && projectType.equalsIgnoreCase(Constants.Platform)) {
-				//Platform deployment
+			//Platform deployment
+			if(projectType != null && projectType.equalsIgnoreCase(Constants.Platform)) {
 				PlatformDeployer deployer = new PlatformDeployer(connectTimeout, readTimeout, retryCount, getLog());
 				if(platformBuild || platformDeploy || platformScale || platformUpgrade) {
 					if(platformBuild) {
@@ -293,15 +274,15 @@ public class BWDeploymentMojo extends AbstractMojo {
 					}else {
 						throw new Exception("Please specify path for values.yaml file.");
 					}
-					
+
 				}else {
 					File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
 					if(files.length == 0) {
 						throw new Exception("EAR file not found for the Application");
 					}
 					deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, true);
-			}
-			}else {
+				}
+			}else if(projectType != null && projectType.equalsIgnoreCase(Constants.AppSpace)) {
 				//enterprise deployment
 				boolean configFileExists = deploymentConfigExists();
 				if(configFileExists) {

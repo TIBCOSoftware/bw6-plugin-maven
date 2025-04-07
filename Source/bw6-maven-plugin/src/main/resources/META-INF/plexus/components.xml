@@ -59,7 +59,7 @@
           <test>com.tibco.plugins:bw6-maven-plugin:bwtest</test>          
           <package>com.tibco.plugins:bw6-maven-plugin:bwear</package>                    
           <install>org.apache.maven.plugins:maven-install-plugin:install</install>
-          <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy,com.tibco.plugins:bw6-maven-plugin:bwdeploy</deploy>
+          <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy,com.tibco.plugins:bw6-maven-plugin:bwdeployold</deploy>
         </phases>
       </configuration>
     </component>
