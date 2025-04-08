@@ -29,6 +29,7 @@ import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.platform.client.PlatformDeployer;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwdeploy")
@@ -244,6 +245,9 @@ public class BWCustomDeploymentMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException {
 		try {    		
 			getLog().info("BW Custom Deployment Mojo started ...");
+			if(project == null || !BWProjectUtils.isAplicationProject(project)) {
+				throw new Exception("Please select a BW application project to run this goal.");
+			}
 			Manifest manifest = ManifestParser.parseManifest(projectBasedir);
 			String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
 			//Platform deployment
