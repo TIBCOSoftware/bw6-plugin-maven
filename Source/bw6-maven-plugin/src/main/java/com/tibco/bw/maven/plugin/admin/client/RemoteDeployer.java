@@ -583,7 +583,7 @@ public class RemoteDeployer {
 		}
 	}
 
-	private void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName, final boolean startOnAllAppNodes) throws ClientException {
+	public void startApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName, final boolean startOnAllAppNodes) throws ClientException {
 		init();
 		try {
 			if(!startOnAllAppNodes)
@@ -597,7 +597,7 @@ public class RemoteDeployer {
 		}
 	}
 	
-	private void stopApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName, final boolean stopOnAllAppnodes) throws ClientException {
+	public void stopApplication(final String domainName, final String appSpaceName, final String appName, final String version, final String appNodeName, final boolean stopOnAllAppnodes) throws ClientException {
 		init();
 		try {
 			if(!stopOnAllAppnodes)
