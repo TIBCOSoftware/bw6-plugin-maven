@@ -114,4 +114,31 @@ public class BWProjectUtils {
 		return null;
 	}
 	
+	public static boolean isAplicationProject(MavenProject project) {
+		Manifest mf = ManifestParser.parseManifest(project.getBasedir());
+		MODULE module =  BWProjectUtils.getModuleType(mf);
+		if(module == MODULE.APPLICATION) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isAplicationModule(MavenProject project) {
+		Manifest mf = ManifestParser.parseManifest(project.getBasedir());
+		MODULE module =  BWProjectUtils.getModuleType(mf);
+		if(module == MODULE.APPMODULE) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isSharedModule(MavenProject project) {
+		Manifest mf = ManifestParser.parseManifest(project.getBasedir());
+		MODULE module =  BWProjectUtils.getModuleType(mf);
+		if(module == MODULE.SHAREDMODULE) {
+			return true;
+		}
+		return false;
+	}
+	
 }
