@@ -7,6 +7,7 @@ public class BaseImage {
 	
 	private String baseImageName;
     private String imageTag;
+    private String baseImagePath;
 	
 	public String getBaseImageName() {
 		return baseImageName;
@@ -24,9 +25,17 @@ public class BaseImage {
 		this.imageTag = imageTag;
 	}
 
+	public String getBaseImagePath() {
+		return baseImagePath;
+	}
+
+	public void setBaseImagePath(String baseImagePath) {
+		this.baseImagePath = baseImagePath;
+	}
+
 	@Override
 	public String toString() {
-		return "BaseImage{" + "baseImageName='" + baseImageName + '\'' + ", imageTag='" + imageTag + '\'' + '}';
+		return "BaseImage{" + "baseImageName='" + baseImageName + '\'' + ", imageTag='" + imageTag + '\'' + ", baseImagePath='" + baseImagePath + '\'' + '}';
 	}
 	
 }
