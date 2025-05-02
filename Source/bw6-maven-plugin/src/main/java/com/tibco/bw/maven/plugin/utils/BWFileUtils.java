@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.project.MavenProject;
 
 public class BWFileUtils {
 	
@@ -253,5 +254,20 @@ public class BWFileUtils {
 		}
 		
     	return testFolderName;
+    }
+    
+    public static boolean fileExists(MavenProject project, String relativePath) {
+    	File basedir = project.getBasedir();
+    	File file = new File(basedir, relativePath);
+    	return file.exists();
+    }
+    
+    public static File getFile(MavenProject project, String relativePath) {
+    	File basedir = project.getBasedir();
+    	File file = new File(basedir, relativePath);
+    	if(file.exists()) {
+    		return file;
+    	}
+    	return null;
     }
 }
