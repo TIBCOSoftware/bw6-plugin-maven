@@ -300,7 +300,7 @@ public class PlatformDeployer {
 		}
 	}
 	
-	public void deployAppUsingHelmCharts(String dpUrl, String authToken, String namespace, File valuesYaml) throws ClientException, IOException, InterruptedException {		
+	public void deployAppUsingHelmCharts(String dpUrl, String authToken, String namespace, File valuesYaml, String buildId) throws ClientException, IOException, InterruptedException {		
 		try {
 			if(dpUrl == null || dpUrl.isEmpty()) {
 				throw new ClientException("Unable to deploy the application. Please provide the data plane URL.");
@@ -318,6 +318,10 @@ public class PlatformDeployer {
 
 			FormDataMultiPart multipart = new FormDataMultiPart();
 			multipart.bodyPart(new FileDataBodyPart("values.yaml", valuesYaml));
+			
+			if(buildId != null) {
+				webTarget = webTarget.queryParam("buildId", buildId);
+			}
 
 			Response response = webTarget
 					.queryParam("namespace", namespace)

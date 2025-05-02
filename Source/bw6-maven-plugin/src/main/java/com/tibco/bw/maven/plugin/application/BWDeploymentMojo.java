@@ -226,10 +226,10 @@ public class BWDeploymentMojo extends AbstractMojo {
 
 	@Parameter(property="platformUpgrade", defaultValue ="false")
 	private boolean platformUpgrade;
-	
+
 	@Parameter(property="platformDeployViaHelm", defaultValue ="false")
 	private boolean platformDeployViaHelm;
-	
+
 	@Parameter(property = "valuesYamlPath")
 	private String valuesYamlPath;
 
@@ -283,24 +283,26 @@ public class BWDeploymentMojo extends AbstractMojo {
 						deployer.upgradeApp(dpUrl, appId, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
 					}
 				}else if(platformDeployViaHelm) {
-					if(valuesYamlPath != null && !valuesYamlPath.isEmpty()) {
+					if(BWFileUtils.fileExists(project, "values.yaml")) {
+						File valuesYaml = BWFileUtils.getFile(project, "values.yaml");
+						deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml, buildId);
+					}else if(valuesYamlPath != null && !valuesYamlPath.isEmpty()) {
 						File valuesYaml = new File(valuesYamlPath);
 						if(valuesYaml.exists()) {
-							deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml);
+							deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml, buildId);
 						}else {
 							throw new Exception("values.yaml file does not exist at the specified path.");
 						}
 					}else {
-						throw new Exception("Please specify path for values.yaml file.");
+						throw new Exception("Please specify the path for values.yaml file or generate values.yaml for the application project before running this goal.");
 					}
-					
 				}else {
 					File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
 					if(files.length == 0) {
 						throw new Exception("EAR file not found for the Application");
 					}
 					deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, true);
-			}
+				}
 			}else {
 				//enterprise deployment
 				boolean configFileExists = deploymentConfigExists();
