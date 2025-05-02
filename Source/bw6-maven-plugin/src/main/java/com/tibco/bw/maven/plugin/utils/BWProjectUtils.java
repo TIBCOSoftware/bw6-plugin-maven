@@ -114,6 +114,23 @@ public class BWProjectUtils {
 		return null;
 	}
 	
+	public static MavenProject getSharedModule( MavenSession session  )
+	{
+
+		List<MavenProject> projects = session.getAllProjects();
+		for( MavenProject project : projects )
+		{
+			Manifest mf = ManifestParser.parseManifest( project.getBasedir() );
+			MODULE module =  BWProjectUtils.getModuleType(mf);
+
+			if( module == MODULE.SHAREDMODULE )
+			{
+				return project;
+			}
+		}
+		return null;
+	}
+	
 	public static boolean isAplicationProject(MavenProject project) {
 		Manifest mf = ManifestParser.parseManifest(project.getBasedir());
 		MODULE module =  BWProjectUtils.getModuleType(mf);
