@@ -1,7 +1,13 @@
 package com.tibco.bw.maven.plugin.test;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.jar.Manifest;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -14,10 +20,14 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 import com.tibco.bw.maven.plugin.test.setuplocal.BWTestExecutor;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils.MODULE;
+import com.tibco.bw.maven.plugin.utils.BWMetadataUtils;
 
 @Mojo(name = "bwtest", defaultPhase = LifecyclePhase.TEST)
 public class BWTestMojo extends AbstractMojo {
@@ -255,6 +265,13 @@ public class BWTestMojo extends AbstractMojo {
     	
     	
 		BWTestConfig.INSTANCE.init(  tibcoHome , bwHome , session, project , getLog() );
+		
+		// Upadate Manifest for shared module
+		Manifest mf = ManifestParser.parseManifest( project.getBasedir() );
+		MODULE mfModule =  BWProjectUtils.getModuleType(mf);
+		if(mfModule == MODULE.SHAREDMODULE && !project.hasParent()) {
+			BWMetadataUtils.updateManifest(session);
+		}
 		
 		getLog().info( "" );
 		getLog().info( "-------------------------------------------------------" );

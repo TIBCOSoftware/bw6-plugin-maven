@@ -1,7 +1,11 @@
 package com.tibco.bw.maven.plugin.lifecycle;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.jar.Manifest;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
@@ -12,8 +16,12 @@ import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.logging.Logger;
 
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.process.MvnInstallExecutor;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
+import com.tibco.bw.maven.plugin.utils.BWMetadataUtils;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils.MODULE;
 
 @Component(role = AbstractMavenLifecycleParticipant.class)
 public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipant {
@@ -76,11 +84,35 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 		super.afterSessionEnd(session);
 		File file = new File(session.getLocalRepository().getBasedir() + "/tempbw");
 		try {
-			if(file.exists()) {
-				FileUtils.deleteDirectory(file) ;	
+			if (file.exists()) {
+				FileUtils.deleteDirectory(file);
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			logger.error("Failed to clean the existing bwtemp group in Maven Repository.");
+		}
+
+
+		List<MavenProject> projects = session.getAllProjects();
+		for (MavenProject project : projects) {
+			Manifest mf = ManifestParser.parseManifest(project.getBasedir());
+			MODULE module = BWProjectUtils.getModuleType(mf);
+
+			if (module == MODULE.SHAREDMODULE && !project.hasParent()) {
+				{
+					mf.getMainAttributes().remove("TIBCO-BW-SharedModule-METADATA");
+					BWMetadataUtils.updateManifest(project.getBasedir(), mf);
+					
+					// Delete Metadata and update Manifest
+					File metadataFile = new File(project.getBasedir() + "/METADATA.xml");
+					try {
+						if (metadataFile.exists()) {
+							metadataFile.delete();
+						}
+					} catch (Exception e) {
+						logger.error("Failed to clean the existing bwtemp group in Maven Repository.");
+					}
+				}
+			}
 		}
 	}
 }

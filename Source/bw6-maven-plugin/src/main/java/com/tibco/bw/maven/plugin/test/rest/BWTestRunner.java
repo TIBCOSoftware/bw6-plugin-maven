@@ -54,6 +54,7 @@ import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 import com.tibco.bw.maven.plugin.test.setuplocal.BWTestExecutor;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils.MODULE;
 
 public class BWTestRunner 
 {
@@ -231,7 +232,14 @@ public class BWTestRunner
 	{
 		
 		
-		MavenProject application = BWProjectUtils.getApplicationProject(BWTestConfig.INSTANCE.getSession()); 
+		Manifest mf = ManifestParser.parseManifest( module.getBasedir() );
+		MODULE mfModule =  BWProjectUtils.getModuleType(mf);
+		MavenProject application = null;
+		if(mfModule == MODULE.SHAREDMODULE && !module.hasParent()) {
+			application = BWProjectUtils.getSharedModule(BWTestConfig.INSTANCE.getSession()); 
+		}else {
+			application = BWProjectUtils.getApplicationProject(BWTestConfig.INSTANCE.getSession()); 
+		} 
 		
 		Manifest projectManifest = ManifestParser.parseManifest( module.getBasedir() );
 		String moduleVersion = projectManifest.getMainAttributes().getValue("Bundle-Version");
