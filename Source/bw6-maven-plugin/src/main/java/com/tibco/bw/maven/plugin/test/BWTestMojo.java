@@ -96,46 +96,62 @@ public class BWTestMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException , MojoFailureException
     {
     	
-    	BWTestExecutor executor = new BWTestExecutor(session, resolver);
-    	try 
-    	{
-    	
-    		session.getProjects();
-    		String property = System.getProperty("java.version");
-    		String javapath = System.getProperty("java.home");
-    		getLog().info("Executing test Using java lib from " + javapath +" Java Version " + property);
-    		
-    		if( !verifyParameters() )
-    		{
-    			return;
-    		}
-    		   		
-    		initialize();
-    		
-			executor.execute();
+    	String packaging = project.getPackaging();
+    	getLog().debug("Packaging ------"+packaging);
+    	getLog().debug("Project -----"+project.getName());
+    	Manifest mf = ManifestParser.parseManifest( project.getBasedir() );
+		MODULE mfModule =  BWProjectUtils.getModuleType(mf);
+		boolean runtestMojo = false;
+		if(packaging.equals("bwmodule")) {
+			if(mfModule == MODULE.SHAREDMODULE && !project.hasParent()) {
+				runtestMojo = true;
+			}
+		}else {
+			runtestMojo = true;
 		}
-    	catch (Exception e) 
-    	{
-
-    		if( e instanceof MojoFailureException )
-    		{
-    			if( ! testFailureIgnore )
-    			{
-        			throw (MojoFailureException)e;
-
-    			}
-    			else
-    			{
-    				System.out.println( "Ignoring the exception for generating the report");
-    			}
-    		}
-    		else
-    		{
-    			
-    			e.printStackTrace();
-    			throw new MojoExecutionException( e.getMessage(), e);
-    		}
-		}
+		
+    	if(runtestMojo) {
+	    	BWTestExecutor executor = new BWTestExecutor(session, resolver);
+	    	try 
+	    	{
+	    	
+	    		session.getProjects();
+	    		String property = System.getProperty("java.version");
+	    		String javapath = System.getProperty("java.home");
+	    		getLog().info("Executing test Using java lib from " + javapath +" Java Version " + property);
+	    		
+	    		if( !verifyParameters() )
+	    		{
+	    			return;
+	    		}
+	    		   		
+	    		initialize();
+	    		
+				executor.execute();
+			}
+	    	catch (Exception e) 
+	    	{
+	
+	    		if( e instanceof MojoFailureException )
+	    		{
+	    			if( ! testFailureIgnore )
+	    			{
+	        			throw (MojoFailureException)e;
+	
+	    			}
+	    			else
+	    			{
+	    				System.out.println( "Ignoring the exception for generating the report");
+	    			}
+	    		}
+	    		else
+	    		{
+	    			
+	    			e.printStackTrace();
+	    			throw new MojoExecutionException( e.getMessage(), e);
+	    		}
+			}
+    	}
     	
     }
 
@@ -279,6 +295,7 @@ public class BWTestMojo extends AbstractMojo {
 		getLog().info( "-------------------------------------------------------" );
     }
     
+   
     
 	public boolean isSkipTests()
 	{
