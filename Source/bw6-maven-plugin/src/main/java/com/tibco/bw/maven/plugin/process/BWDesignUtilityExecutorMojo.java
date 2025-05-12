@@ -1,7 +1,11 @@
 package com.tibco.bw.maven.plugin.process;
 
-import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
-import com.tibco.bw.maven.plugin.utils.Constants;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -12,12 +16,9 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import com.tibco.bw.maven.plugin.log.filter.SystemStreamLogWithFilter;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
+import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwdesignUtility")
 public class BWDesignUtilityExecutorMojo extends AbstractMojo{
@@ -125,7 +126,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	        logger.info("--------------------- Executing BWDesign Utility Command : "+ commandName +" -----------------------");
 			logger.debug("Launching bwdesign utility with params: " + params);
 
-			printProcessOutput(process);
+			printProcessOutput(process, params);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -156,7 +157,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	        logger.info("---------------------Generating Process diagram-----------------------");
 			logger.debug("Launching bwdesign utility with params: " + params);
 
-			printProcessOutput(process);
+			printProcessOutput(process, params);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -186,7 +187,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	        logger.info("---------------------Generating Manifest JSON-----------------------");
 			logger.debug("Launching bwdesign utility with params: " + params);
 
-			printProcessOutput(process);
+			printProcessOutput(process, params);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -226,8 +227,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 			logger.info("---------------------Validating BW Project-----------------------");
 			logger.debug("Launching bwdesign utility with params: " + params);
 			final Process process = builder.start();
-
-			printProcessOutput(process);
+			printProcessOutput(process, params);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -257,7 +257,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 			logger.info("-----------------Import Projects to Workspaces-------------------");
 			logger.debug("Launching bwdesign utility with params: " + params);
 
-			printProcessOutput(process);
+			printProcessOutput(process, params);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -275,17 +275,25 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 		return String.join(",", projectList);
 	}
 
-	private void printProcessOutput(Process process) throws IOException {
-		BufferedReader reader= null;
+	private void printProcessOutput(Process process, List<String> params) throws IOException {
+		BufferedReader reader = null;
 		String line = null;
-
 		reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		while ((line = reader.readLine()) != null) {
-			//System.err.println(line);
-			logger.info(line);
+			if (!params.contains(line)) {
+				logger.info(line);
+			}
 		}
-
 		reader.close();
+	}
+	
+	
+	@Override
+	public Log getLog() {
+		if (logger == null) {
+			logger = new SystemStreamLogWithFilter();
+		}
+		return logger;
 	}
 }
 
