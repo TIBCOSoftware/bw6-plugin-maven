@@ -32,31 +32,38 @@ public class ManifestWriter {
     }
     
     
-    public static void updateManifestVersion(MavenProject project , Manifest mf, String qualifierReplacement)
+    public static void udpateManifestAttributes(MavenProject project , Manifest mf, String qualifierReplacement)
     {
         Attributes attributes = mf.getMainAttributes();
         
-        String projectVersion = project.getVersion();
-        if( projectVersion.indexOf("-SNAPSHOT") != -1 )
+        String bundleVersion = project.getVersion();
+        String archiveVersion = bundleVersion;
+        if( bundleVersion.indexOf("-SNAPSHOT") != -1 )
         {
-        	projectVersion = projectVersion.replace("-SNAPSHOT", ".qualifier");
-        	projectVersion = getManifestVersion(mf, projectVersion, qualifierReplacement);
+        	archiveVersion = bundleVersion.replace("-SNAPSHOT", ".qualifier");
+        	bundleVersion = archiveVersion;
         }
         
-    	attributes.put(Name.MANIFEST_VERSION, projectVersion);
-        attributes.putValue(Constants.BUNDLE_VERSION, projectVersion );
-
+        archiveVersion = getManifestVersion(mf, archiveVersion, qualifierReplacement);
+    	attributes.putValue(Constants.BUNDLE_VERSION, bundleVersion);
+    	attributes.putValue(Constants.ARCHIVE_FILE_VERSION, archiveVersion);
         //Updating provide capability for Shared Modules
         if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
-        	String updatedProvide = ManifestParser.getUpdatedProvideCapabilities(mf, projectVersion);
+        	String updatedProvide = ManifestParser.getUpdatedProvideCapabilities(mf, bundleVersion);
         	attributes.putValue(Constants.BUNDLE_PROVIDE_CAPABILITY, updatedProvide);
         }
-
+        
+        if(BWProjectUtils.getModuleType(mf) == MODULE.APPLICATION || BWProjectUtils.getModuleType(mf) == MODULE.APPMODULE){
+        	String reqCapbilityValue = attributes.getValue(Constants.BUNDLE_REQUIRE_CAPABILITY);
+        	if (reqCapbilityValue != null) {
+        		String requiredCapability = ManifestParser.getRequiredCapabilities(reqCapbilityValue, bundleVersion);
+        		attributes.putValue(Constants.BUNDLE_REQUIRE_CAPABILITY, requiredCapability);
+        	}
+        }
     }
     
     private static String getManifestVersion( Manifest manifest , String version, String qualifierReplacement) 
     {    	
     	return VersionParser.getcalculatedOSGiVersion(version, qualifierReplacement);
     }
-
 }

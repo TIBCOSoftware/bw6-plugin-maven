@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.Manifest;
+import java.util.jar.Attributes.Name;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
@@ -99,12 +100,12 @@ public class BWModulePackageMojo extends AbstractMojo {
             	throw new Exception("Failed to parse MANIFEST.MF for project -> "+ projectBasedir);
             }
             getLog().info("Updated the Manifest version ");
-            
-            ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement);
-            updateManifestVersion();
+            ManifestWriter.udpateManifestAttributes(project, manifest, qualifierReplacement);
             
             getLog().info("Removing the externals entries if any. ");
             removeExternals();
+            
+            ManifestParser.updateWriteManifest(projectBasedir, manifest);
 
             File pluginFile = getPluginJAR();
             getLog().info("Created Plugin JAR with name " + pluginFile.toString());
@@ -267,7 +268,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 	}
 
 	private File getPluginJAR() {
-		String qualifierVersion = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+		String qualifierVersion = manifest.getMainAttributes().getValue(Constants.ARCHIVE_FILE_VERSION);
 		if(qualifierVersion != null && qualifierVersion.endsWith(".")) {
 			qualifierVersion = qualifierVersion.substring(0, qualifierVersion.lastIndexOf("."));
 		}
@@ -353,12 +354,6 @@ public class BWModulePackageMojo extends AbstractMojo {
     	else {
     		return false;
     	}
-    }
-    private void updateManifestVersion() {
-    	String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-    	String qualifierVersion = VersionParser.getcalculatedOSGiVersion(version, qualifierReplacement);
-    	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
-    	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
     }
 
     private void removeExternals() {
