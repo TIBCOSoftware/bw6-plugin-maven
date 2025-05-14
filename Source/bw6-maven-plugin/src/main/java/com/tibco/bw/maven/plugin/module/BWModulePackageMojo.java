@@ -67,6 +67,9 @@ public class BWModulePackageMojo extends AbstractMojo {
     
     @Parameter(defaultValue = Constants.TIMESTAMP)
     private String qualifierReplacement;
+    
+    @Parameter(property="excludeFiles")
+	private String excludeFiles;
 
     private Manifest manifest;
 
@@ -240,6 +243,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 		List<String> binExcludeList = buildProperties.getBinExcludes();
 		getLog().debug("BinInclude list is " + binIncludesList.toString());
 		getLog().debug("BinExclude list is " + binExcludeList.toString());
+		binExcludeList.add(excludeFiles);
 		FileSet set = getFileSet(projectBasedir, binIncludesList, binExcludeList);
 		return set;
 	}
