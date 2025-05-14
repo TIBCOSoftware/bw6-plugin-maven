@@ -2,7 +2,6 @@ package com.tibco.bw.maven.plugin.application;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +20,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
@@ -637,4 +635,24 @@ public class BWEARPackagerMojo extends AbstractMojo {
     	getLog().info("The OSGi verion is " + qualifierVersion + " for Maven version of " + version);
     	manifest.getMainAttributes().putValue(Constants.BUNDLE_VERSION, qualifierVersion);
     }
+
+	public void setProject(MavenProject project) {
+		this.project = project;
+	}
+
+	public void setSession(MavenSession session) {
+		this.session = session;
+	}
+
+	public void setOutputDirectory(File outputDirectory) {
+		this.outputDirectory = outputDirectory;
+	}
+
+	public void setBaseDirectory(File projectBasedir) {
+		this.projectBasedir = projectBasedir;
+	}
+
+	public void setProjectDependenciesResolver(ProjectDependenciesResolver resolver) {
+		this.resolver = resolver;
+	}
 }

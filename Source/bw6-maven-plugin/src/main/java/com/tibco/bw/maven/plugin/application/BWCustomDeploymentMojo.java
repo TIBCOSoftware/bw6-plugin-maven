@@ -18,9 +18,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
 
 import com.tibco.bw.maven.plugin.admin.client.RemoteDeployer;
 import com.tibco.bw.maven.plugin.admin.dto.Agent;
@@ -237,6 +239,9 @@ public class BWCustomDeploymentMojo extends AbstractMojo {
 
 	@Parameter(property = "buildId")
 	private String buildId;
+	
+	@Component
+    ProjectDependenciesResolver resolver;
 
 	private String earLoc;
 	private String earName;
@@ -248,6 +253,15 @@ public class BWCustomDeploymentMojo extends AbstractMojo {
 			if(project == null || !BWProjectUtils.isAplicationProject(project)) {
 				throw new Exception("Please select a BW application project to run this goal.");
 			}
+			getLog().info("EAR generation started ...");
+			BWEARPackagerMojo bwearPackagerMojo = new BWEARPackagerMojo();
+			bwearPackagerMojo.setLog(getLog());
+			bwearPackagerMojo.setSession(session);
+			bwearPackagerMojo.setOutputDirectory(outputDirectory);
+			bwearPackagerMojo.setProject(project);
+			bwearPackagerMojo.setBaseDirectory(projectBasedir);
+			bwearPackagerMojo.setProjectDependenciesResolver(resolver);
+			bwearPackagerMojo.execute();
 			Manifest manifest = ManifestParser.parseManifest(projectBasedir);
 			String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
 			//Platform deployment
