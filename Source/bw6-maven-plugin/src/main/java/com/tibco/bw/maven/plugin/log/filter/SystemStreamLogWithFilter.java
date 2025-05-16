@@ -13,9 +13,10 @@ import org.apache.maven.plugin.logging.Log;
 public class SystemStreamLogWithFilter  implements Log
 {
 	
-	private String[] exclusions = { "org.apache.maven", "org.eclipse.aether", "org.eclipse.m2e", "org.eclipse.jgit",
-			"excludes []", "includes []", "-application", "-ws", "win32", "com.tibco.bw.core.design.project.BwDesignApplication", "/eclipse", 
-			"\\eclipse", "\\src\\test\\resources", "\\src\\main\\resources", "/src/test/resources", "/src/main/resources"};
+	private static String[] EXCLUSIONS = {"org.apache.maven", "org.eclipse.aether", "org.eclipse.m2e", "org.eclipse.jgit",
+			"jcmd ", "excludes []", "includes []", "-application", "-ws", "win32",
+			"com.tibco.bw.core.design.project.BwDesignApplication", "/eclipse", "\\eclipse", "\\src\\test\\resources",
+			"\\src\\main\\resources", "/src/test/resources", "/src/main/resources" };
 	
 	private String previousLogLine = null;
 	
@@ -122,7 +123,7 @@ public class SystemStreamLogWithFilter  implements Log
 
         error.printStackTrace(pWriter);
 
-        System.err.println("[error] " + sWriter.toString());
+        System.err.println("----[error] " + sWriter.toString());
     }
 
     /**
@@ -162,7 +163,7 @@ public class SystemStreamLogWithFilter  implements Log
     {
     	boolean nonBWLog = false;
     	String contentString = content.toString();
-    	for (String exclude: exclusions) {
+    	for (String exclude: EXCLUSIONS) {
     		nonBWLog = contentString.contains(exclude) ? true : false;
     		if (nonBWLog) {
     			break;
@@ -194,7 +195,7 @@ public class SystemStreamLogWithFilter  implements Log
         PrintWriter pWriter = new PrintWriter(sWriter);
 
         error.printStackTrace(pWriter);
-        printLog(prefix, sWriter.toString());
+        print(prefix, sWriter.toString());
     }
 
     private void print(String prefix, CharSequence content, Throwable error)
