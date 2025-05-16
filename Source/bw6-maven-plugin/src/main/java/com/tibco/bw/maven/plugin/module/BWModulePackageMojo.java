@@ -243,7 +243,9 @@ public class BWModulePackageMojo extends AbstractMojo {
 		List<String> binExcludeList = buildProperties.getBinExcludes();
 		getLog().debug("BinInclude list is " + binIncludesList.toString());
 		getLog().debug("BinExclude list is " + binExcludeList.toString());
-		binExcludeList.add(excludeFiles);
+		if(excludeFiles != null) {
+			binExcludeList.add(excludeFiles);
+		}
 		FileSet set = getFileSet(projectBasedir, binIncludesList, binExcludeList);
 		return set;
 	}
