@@ -288,21 +288,23 @@ public class BWCustomDeploymentMojo extends AbstractMojo {
 				}
 			}
 			
-			for(MavenProject project: moduleProjects) {
-				BWModulePackageMojo bwModulePackageMojo = new BWModulePackageMojo();
-				bwModulePackageMojo.setLog(getLog());
-				bwModulePackageMojo.setSession(session);
-				bwModulePackageMojo.setOutputDirectory(new File(project.getBuild().getDirectory()));
-				bwModulePackageMojo.setProject(project);
-				bwModulePackageMojo.setJarArchiver(jarArchiver);
-				if(allProjects != null && !allProjects.isEmpty()) {
-					bwModulePackageMojo.setAllProj(allProjects);
+			if(moduleProjects != null && !moduleProjects.isEmpty()) {
+				for(MavenProject project: moduleProjects) {
+					BWModulePackageMojo bwModulePackageMojo = new BWModulePackageMojo();
+					bwModulePackageMojo.setLog(getLog());
+					bwModulePackageMojo.setSession(session);
+					bwModulePackageMojo.setOutputDirectory(new File(project.getBuild().getDirectory()));
+					bwModulePackageMojo.setProject(project);
+					bwModulePackageMojo.setJarArchiver(jarArchiver);
+					if(allProjects != null && !allProjects.isEmpty()) {
+						bwModulePackageMojo.setAllProj(allProjects);
+					}
+					bwModulePackageMojo.setBaseDirectory(project.getBasedir());
+					bwModulePackageMojo.setClassesDirectory(new File(project.getBuild().getOutputDirectory()));
+					bwModulePackageMojo.setProjectDependenciesResolver(resolver);
+					bwModulePackageMojo.setQualifierReplacement(Constants.TIMESTAMP);
+					bwModulePackageMojo.execute();
 				}
-				bwModulePackageMojo.setBaseDirectory(project.getBasedir());
-				bwModulePackageMojo.setClassesDirectory(new File(project.getBuild().getOutputDirectory()));
-				bwModulePackageMojo.setProjectDependenciesResolver(resolver);
-				bwModulePackageMojo.setQualifierReplacement(Constants.TIMESTAMP);
-				bwModulePackageMojo.execute();
 			}
 			
 			BWEARPackagerMojo bwearPackagerMojo = new BWEARPackagerMojo();

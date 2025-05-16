@@ -189,30 +189,32 @@ public class BWEARPackagerMojo extends AbstractMojo {
         		artifacts = parser.getModulesSet(allProj);
         	}
         	
-            for(Artifact artifact : artifacts) {
-                //Find the Module JAR file
-                File moduleJar = artifact.getFile();
-                
-				Manifest mf = ManifestParser.parseManifestFromJAR( moduleJar );
-				if( mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
-				{
-	                jarchiver.addFile(moduleJar, artifact.getArtifactId()+ "_" + artifact.getBaseVersion()+ ".jar");
+        	if(artifacts != null && !artifacts.isEmpty()) {
+        		for(Artifact artifact : artifacts) {
+        			//Find the Module JAR file
+        			File moduleJar = artifact.getFile();
 
-				}
-				else
-				{
-					jarchiver.addFile(moduleJar, moduleJar.getName());
-				}
+        			Manifest mf = ManifestParser.parseManifestFromJAR( moduleJar );
+        			if( mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
+        			{
+        				jarchiver.addFile(moduleJar, artifact.getArtifactId()+ "_" + artifact.getBaseVersion()+ ".jar");
 
-                
-                
-                //Add the JAR file to the EAR file
-                String version = BWProjectUtils.getModuleVersion(moduleJar);
-                getLog().info("Adding Module JAR with name " + moduleJar.getName() + " with version " + version);
+        			}
+        			else
+        			{
+        				jarchiver.addFile(moduleJar, moduleJar.getName());
+        			}
 
-                //Save the module version in the Version Map.
-                moduleVersionMap.put(artifact.getArtifactId(), version);
-            }
+
+
+        			//Add the JAR file to the EAR file
+        			String version = BWProjectUtils.getModuleVersion(moduleJar);
+        			getLog().info("Adding Module JAR with name " + moduleJar.getName() + " with version " + version);
+
+        			//Save the module version in the Version Map.
+        			moduleVersionMap.put(artifact.getArtifactId(), version);
+        		}
+        	}
             
             
 			//This code allows dependencies declared in a Module to make it to the root level of the ear file
