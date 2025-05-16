@@ -92,88 +92,89 @@ public class BWModulePackageMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
     	try {
     		getLog().info("Module Packager Mojo started for Module " + project.getName() + " ...");
-            MavenArchiver archiver = new MavenArchiver();
+    		MavenArchiver archiver = new MavenArchiver();
 
-    	    archiveConfiguration = new MavenArchiveConfiguration();
+    		archiveConfiguration = new MavenArchiveConfiguration();
 
-            archiver.setArchiver(jarArchiver);
+    		archiver.setArchiver(jarArchiver);
 
-            manifest = ManifestParser.parseManifest(projectBasedir);
-            if(manifest == null){
-            	throw new Exception("Failed to parse MANIFEST.MF for project -> "+ projectBasedir);
-            }
-            getLog().info("Updated the Manifest version ");
-            
-            ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement);
-            updateManifestVersion();
-            
-            getLog().info("Removing the externals entries if any. ");
-            removeExternals();
+    		manifest = ManifestParser.parseManifest(projectBasedir);
+    		if(manifest == null){
+    			throw new Exception("Failed to parse MANIFEST.MF for project -> "+ projectBasedir);
+    		}
+    		getLog().info("Updated the Manifest version ");
 
-            File pluginFile = getPluginJAR();
-            getLog().info("Created Plugin JAR with name " + pluginFile.toString());
-            FileSet set = getFileSet();
+    		ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement);
+    		updateManifestVersion();
 
-            getLog().info("Adding Maven Dependencies to the Plugin JAR file");
+    		getLog().info("Removing the externals entries if any. ");
+    		removeExternals();
 
-            addDependencies();
+    		File pluginFile = getPluginJAR();
+    		getLog().info("Created Plugin JAR with name " + pluginFile.toString());
+    		FileSet set = getFileSet();
 
-            if(classesDirectory != null && classesDirectory.exists()) {
-            	archiver.getArchiver().addDirectory(classesDirectory);
-            }
+    		getLog().info("Adding Maven Dependencies to the Plugin JAR file");
 
-            archiver.getArchiver().addFileSet(set);
-            archiver.setOutputFile(pluginFile);
+    		addDependencies();
 
-            File manifestFile = ManifestWriter.updateManifest(project, manifest);
-            
-            jarArchiver.setManifest(manifestFile);
+    		if(classesDirectory != null && classesDirectory.exists()) {
+    			archiver.getArchiver().addDirectory(classesDirectory);
+    		}
 
-            getLog().info("Creating the Plugin JAR file");
-            archiver.createArchive(session, project, archiveConfiguration);
+    		archiver.getArchiver().addFileSet(set);
+    		archiver.setOutputFile(pluginFile);
 
-            project.getArtifact().setFile(pluginFile);
+    		File manifestFile = ManifestWriter.updateManifest(project, manifest);
 
-         // Code for BWCE
-            String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-            if(bwEdition != null && bwEdition.equals(Constants.BWCF) && (allProj == null || allProj.isEmpty())) {
-            	List<MavenProject> amendedProjects = new ArrayList<>();
-            	for(MavenProject proj: session.getAllProjects())
-				{
-					if(proj.getArtifactId().equals(project.getArtifactId())) {
-						amendedProjects.add(project);
-					}
-					else {
-						amendedProjects.add(proj);
-					}
-				}
-            	session.setAllProjects(amendedProjects);
-            }else {
-            	List<MavenProject> amendedProjects = new ArrayList<>();
-            	for(MavenProject proj: allProj)
-				{
-					if(proj.getArtifactId().equals(project.getArtifactId())) {
-						amendedProjects.add(project);
-					}
-					else {
-						amendedProjects.add(proj);
-					}
-				}
-            	session.setAllProjects(amendedProjects);
-            }
+    		jarArchiver.setManifest(manifestFile);
 
-            getLog().info("BW Module Packager Mojo finished execution.");
+    		getLog().info("Creating the Plugin JAR file");
+    		archiver.createArchive(session, project, archiveConfiguration);
+
+    		project.getArtifact().setFile(pluginFile);
+
+    		// Code for BWCE
+    		String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
+    		if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
+    			List<MavenProject> amendedProjects = new ArrayList<>();
+    			for(MavenProject proj: session.getAllProjects())
+    			{
+    				if(proj.getArtifactId().equals(project.getArtifactId())) {
+    					amendedProjects.add(project);
+    				}
+    				else {
+    					amendedProjects.add(proj);
+    				}
+    			}
+    			session.setAllProjects(amendedProjects);
+    		}
+    		if(allProj != null && !allProj.isEmpty()) {
+    			List<MavenProject> amendedProjects = new ArrayList<>();
+    			for(MavenProject proj: allProj)
+    			{
+    				if(proj.getArtifactId().equals(project.getArtifactId())) {
+    					amendedProjects.add(project);
+    				}
+    				else {
+    					amendedProjects.add(proj);
+    				}
+    			}
+    			session.setAllProjects(amendedProjects);
+    		}
+
+    		getLog().info("BW Module Packager Mojo finished execution.");
     	} catch (IOException e) {
-            throw new MojoExecutionException("Error assembling JAR", e);
-        } catch (ArchiverException e) {
-            throw new MojoExecutionException("Error assembling JAR", e);
-        } catch (ManifestException e) {
-            throw new MojoExecutionException("Error assembling JAR", e);
-        } catch (DependencyResolutionRequiredException e) {
-            throw new MojoExecutionException("Error assembling JAR", e);
-        } catch (Exception e) {
-        	throw new MojoExecutionException("Error assembling JAR", e);
-		}
+    		throw new MojoExecutionException("Error assembling JAR", e);
+    	} catch (ArchiverException e) {
+    		throw new MojoExecutionException("Error assembling JAR", e);
+    	} catch (ManifestException e) {
+    		throw new MojoExecutionException("Error assembling JAR", e);
+    	} catch (DependencyResolutionRequiredException e) {
+    		throw new MojoExecutionException("Error assembling JAR", e);
+    	} catch (Exception e) {
+    		throw new MojoExecutionException("Error assembling JAR", e);
+    	}
     }
 
 	private void addDependencies() throws Exception {
@@ -183,11 +184,13 @@ public class BWModulePackageMojo extends AbstractMojo {
 
 		if(artifacts == null) {
 			List<org.apache.maven.model.Dependency> dependencies = project.getDependencies();
-			for(org.apache.maven.model.Dependency dep: dependencies) {
-				Path path = Paths.get(System.getProperty("user.home"), ".m2");
-				String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
-				List<Path> result = BWFileUtils.findByFileName(path, fileName);
-				artifactFiles.put(result.get(0).toFile(),dep.getScope());
+			if(dependencies != null && !dependencies.isEmpty()) {
+				for(org.apache.maven.model.Dependency dep: dependencies) {
+					Path path = Paths.get(System.getProperty("user.home"), ".m2");
+					String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
+					List<Path> result = BWFileUtils.findByFileName(path, fileName);
+					artifactFiles.put(result.get(0).toFile(),dep.getScope());
+				}
 			}
 		}else {
 			for(Artifact artifact : artifacts) {
