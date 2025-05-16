@@ -97,7 +97,7 @@ public class SystemStreamLogWithFilter  implements Log
      */
     public void error(CharSequence content)
     {
-        System.err.println("[error] " + content.toString());
+        print("error", content.toString());
     }
 
     /**
@@ -109,8 +109,7 @@ public class SystemStreamLogWithFilter  implements Log
         PrintWriter pWriter = new PrintWriter(sWriter);
 
         error.printStackTrace(pWriter);
-
-        System.err.println("[error] " + content.toString() + "\n\n" + sWriter.toString());
+        print("error", content.toString());
     }
 
     /**
@@ -123,7 +122,7 @@ public class SystemStreamLogWithFilter  implements Log
 
         error.printStackTrace(pWriter);
 
-        System.err.println("----[error] " + sWriter.toString());
+        System.err.println("[error] " + sWriter.toString());
     }
 
     /**
