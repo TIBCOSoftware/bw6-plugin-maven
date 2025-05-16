@@ -3,6 +3,8 @@ package com.tibco.bw.maven.plugin.application;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,6 +50,7 @@ import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.osgi.helpers.Version;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
+import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.BWModulesParser;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
@@ -87,6 +90,8 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
     //The version to be updated in the Application Manifest. 
     String version;
+    
+    private List<MavenProject> allProj;
 
     protected String pluginsToIgnore[] = null;
     /**
@@ -180,6 +185,10 @@ public class BWEARPackagerMojo extends AbstractMojo {
         	parser.bwEdition = bwEdition;
         	List<Artifact> artifacts = parser.getModulesSet();
 
+        	if(artifacts == null || artifacts.isEmpty()) {
+        		artifacts = parser.getModulesSet(allProj);
+        	}
+        	
             for(Artifact artifact : artifacts) {
                 //Find the Module JAR file
                 File moduleJar = artifact.getFile();
@@ -214,40 +223,80 @@ public class BWEARPackagerMojo extends AbstractMojo {
     			
     			Set<Artifact> dependencyArtifacts = moduleProject.getDependencyArtifacts();
 
-    			for(Artifact artifact : dependencyArtifacts) {
-    				
-    				File f = artifact.getFile();
-    				getLog().debug("Dependency file is " + f.getAbsolutePath() );
-    				
-    				if(isPluginToIgnore(f.getName())){
-    					continue;
+    			if(dependencyArtifacts == null) {
+    				List<org.apache.maven.model.Dependency> dependencies = moduleProject.getDependencies();
+    				for(org.apache.maven.model.Dependency dep: dependencies) {
+    					Path path = Paths.get(System.getProperty("user.home"), ".m2");
+    					String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
+    					List<Path> result = BWFileUtils.findByFileName(path, fileName);
+    					File file = result.get(0).toFile();
+    					getLog().debug("Dependency file is " + file.getAbsolutePath() );
+
+    					if(isPluginToIgnore(file.getName())){
+    						continue;
+    					}
+
+    					if(dep.getVersion().equals("0.0.0")) { //$NON-NLS-1$
+    						continue;
+    					}
+
+    					if(moduleVersionMap.containsKey(dep.getArtifactId())){
+    						continue;
+    					}
+
+    					String dependencyVersion = BWProjectUtils.getModuleVersion(file);
+
+    					Manifest mf = ManifestParser.parseManifestFromJAR( file);
+    					if (mf != null) {
+    						for( Object str : mf.getMainAttributes().keySet())
+    						{
+    							getLog().debug( str.toString() );
+    							if( "TIBCO-BW-SharedModule".equals(str.toString() ))
+    							{
+    								moduleVersionMap.put(dep.getArtifactId(), dependencyVersion);
+    								artifactFiles.add(file);
+    								break;
+
+    							}
+    						}
+    					}
     				}
-    				
-    				if(artifact.getVersion().equals("0.0.0")) { //$NON-NLS-1$
-    					continue;
+    			}else {
+    				for(Artifact artifact : dependencyArtifacts) {
+
+    					File f = artifact.getFile();
+    					getLog().debug("Dependency file is " + f.getAbsolutePath() );
+
+    					if(isPluginToIgnore(f.getName())){
+    						continue;
+    					}
+
+    					if(artifact.getVersion().equals("0.0.0")) { //$NON-NLS-1$
+    						continue;
+    					}
+
+    					if(moduleVersionMap.containsKey(artifact.getArtifactId())){
+    						continue;
+    					}
+
+    					String dependencyVersion = BWProjectUtils.getModuleVersion(artifact.getFile());
+
+    					Manifest mf = ManifestParser.parseManifestFromJAR( f);
+    					if (mf != null) {
+    						for( Object str : mf.getMainAttributes().keySet())
+    						{
+    							getLog().debug( str.toString() );
+    							if( "TIBCO-BW-SharedModule".equals(str.toString() ))
+    							{
+    								moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
+    								artifactFiles.add(artifact.getFile());
+    								break;
+
+    							}
+    						}
+    					}
+
     				}
-    				
-    				if(moduleVersionMap.containsKey(artifact.getArtifactId())){
-    					continue;
-    				}
-    				
-    				String dependencyVersion = BWProjectUtils.getModuleVersion(artifact.getFile());
-    				
-    				Manifest mf = ManifestParser.parseManifestFromJAR( f);
-    				if (mf != null) {
-	    				for( Object str : mf.getMainAttributes().keySet())
-	    				{
-	    					getLog().debug( str.toString() );
-	    					if( "TIBCO-BW-SharedModule".equals(str.toString() ))
-	    					{
-	    	    				moduleVersionMap.put(artifact.getArtifactId(), dependencyVersion);
-	    						artifactFiles.add(artifact.getFile());
-	    						break;
-	    						
-	    					}
-	    				}
-	    			}
-    				
     			}
     			
     			//add transitive dependencies of app module into EAR.
@@ -654,5 +703,9 @@ public class BWEARPackagerMojo extends AbstractMojo {
 
 	public void setProjectDependenciesResolver(ProjectDependenciesResolver resolver) {
 		this.resolver = resolver;
+	}
+
+	public void setAllProj(List<MavenProject> allProj) {
+		this.allProj = allProj;
 	}
 }
