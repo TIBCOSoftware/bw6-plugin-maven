@@ -46,10 +46,12 @@ public class BWModulesParser {
 		if(allProj != null && !allProj.isEmpty()) {
 			List<Artifact> list = new ArrayList<Artifact>();
 			List<String> modules = getModulesFromTibcoXML();
-			for(String module : modules) {
-				Artifact file = getArtifactForModule(module, allProj);
-				if(file != null) {
-					list.add(file);	
+			if(modules != null && !modules.isEmpty()) {
+				for(String module : modules) {
+					Artifact file = getArtifactForModule(module, allProj);
+					if(file != null) {
+						list.add(file);	
+					}
 				}
 			}
 			return list;
