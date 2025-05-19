@@ -117,6 +117,8 @@ public class BWExportMojo extends AbstractMojo {
 				File jarFile = new File(jarDir, project.getArtifactId() + "-" + project.getVersion() + ".jar");
 				createJar(destDir, jarFile);
 				installJar(jarFile);
+			}else {
+				throw new Exception("Failed to export the shared module as BSM. Please set the parameter \"binary\" to \"true\".");
 			}
 		}catch(Exception e) {
 			getLog().error(e);
