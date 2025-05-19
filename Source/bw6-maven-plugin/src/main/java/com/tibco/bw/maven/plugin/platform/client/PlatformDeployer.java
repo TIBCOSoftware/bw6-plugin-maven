@@ -370,7 +370,7 @@ public class PlatformDeployer {
 	
 	public void scaleApp(String dpUrl, String appId, int replicas, String authToken, String namespace) throws ClientException, IOException, InterruptedException {
 		try {
-			this.log.info("Applicatoin scaling in Platform started...");
+			this.log.info("Application scaling in Platform started...");
 			if(dpUrl == null || dpUrl.isEmpty()) {
 				throw new ClientException("Unable to scale the application. Please provide the data plane URL.");
 			}
@@ -400,7 +400,7 @@ public class PlatformDeployer {
 				throw new ClientException("Unable to upgrade the application. Please provide authorization token.");
 			}
 			if(appId == null || appId.isEmpty()) {
-				throw new ClientException("Unable to upgrade the application. Please provide base version.");
+				throw new ClientException("Unable to upgrade the application. Please provide app ID.");
 			}
 			
 			this.log.info("Application upgrade in Platform started...");
