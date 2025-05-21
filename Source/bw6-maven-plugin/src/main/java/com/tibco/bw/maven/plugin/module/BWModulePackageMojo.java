@@ -3,6 +3,7 @@ package com.tibco.bw.maven.plugin.module;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -243,9 +244,6 @@ public class BWModulePackageMojo extends AbstractMojo {
 		List<String> binExcludeList = buildProperties.getBinExcludes();
 		getLog().debug("BinInclude list is " + binIncludesList.toString());
 		getLog().debug("BinExclude list is " + binExcludeList.toString());
-		if(excludeFiles != null) {
-			binExcludeList.add(excludeFiles);
-		}
 		FileSet set = getFileSet(projectBasedir, binIncludesList, binExcludeList);
 		return set;
 	}
@@ -343,6 +341,10 @@ public class BWModulePackageMojo extends AbstractMojo {
         Set<String> allExcludes = new LinkedHashSet<String>();
         if (excludes != null) {
             allExcludes.addAll(excludes);
+        }
+        
+        if (excludeFiles != null) {
+            allExcludes.addAll(Arrays.asList(excludeFiles));
         }
         fileSet.setExcludes(allExcludes.toArray(new String[allExcludes.size()]));
         return fileSet;
