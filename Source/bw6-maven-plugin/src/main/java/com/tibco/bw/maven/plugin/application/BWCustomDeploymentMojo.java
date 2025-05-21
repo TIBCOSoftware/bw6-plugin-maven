@@ -369,7 +369,7 @@ public class BWCustomDeploymentMojo extends AbstractMojo {
 					return;
 				}
 				if(!deployToAdmin) {
-					getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
+					getLog().info("Deploy To Admin is set to False. Skipping EAR Deployment.");
 					return;
 				}
 

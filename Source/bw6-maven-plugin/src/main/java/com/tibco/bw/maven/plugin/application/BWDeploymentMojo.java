@@ -302,8 +302,8 @@ public class BWDeploymentMojo extends AbstractMojo {
 						throw new Exception("EAR file not found for the Application");
 					}
 					deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, true);
-			}
-			}else {
+				}
+			}else if(projectType != null && projectType.equalsIgnoreCase(Constants.AppSpace)) {
 				//enterprise deployment
 				boolean configFileExists = deploymentConfigExists();
 				if(configFileExists) {
