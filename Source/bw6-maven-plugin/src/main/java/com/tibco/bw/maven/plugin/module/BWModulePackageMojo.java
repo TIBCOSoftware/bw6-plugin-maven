@@ -375,6 +375,7 @@ public class BWModulePackageMojo extends AbstractMojo {
         
         if (excludeFiles != null) {
             allExcludes.addAll(Arrays.asList(excludeFiles));
+            getLog().info("Excluding files from ear "+excludeFiles);
         }
         fileSet.setExcludes(allExcludes.toArray(new String[allExcludes.size()]));
         return fileSet;
