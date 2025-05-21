@@ -158,4 +158,9 @@ public class BWProjectUtils {
 		return false;
 	}
 	
+	public static String getDefaultMavenRepo() {
+		String userHome = System.getProperty("user.home");
+		return new File(userHome, ".m2/repository").getAbsolutePath();
+	}
+	
 }

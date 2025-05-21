@@ -230,6 +230,12 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	@Parameter(property="platformUpgrade", defaultValue ="false")
 	private boolean platformUpgrade;
 	
+	@Parameter(property="platformDeployViaHelm", defaultValue ="false")
+	private boolean platformDeployViaHelm;
+	
+	@Parameter(property = "valuesYamlPath")
+	private String valuesYamlPath;
+	
 	@Parameter(property = "appId")
 	private String appId;
 	
@@ -240,135 +246,149 @@ public class BWEARInstallerMojo extends AbstractMojo {
 	private String earName;
 	private String applicationName;
 
-    public void execute() throws MojoExecutionException {
-    	try {    		
-    		getLog().info("BWEAR Installer Mojo started ...");
-    		Manifest manifest = ManifestParser.parseManifest(projectBasedir);
-    		String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
-            //TCI deployment
-            if(projectType != null && projectType.equalsIgnoreCase(Constants.TCI)){
-            	if(!deployToAdmin) {
-	    			getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
-	    			return;
-	    		}
-            	File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
- 	    		if(files.length == 0) {
- 	    			throw new Exception("EAR file not found for the Application");
- 	    		}
- 	    		String appName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
- 	    		
- 	    		TCIDeployer deployer = new TCIDeployer(connectTimeout, readTimeout, retryCount, getLog());
- 	    		
- 	    		deployer.deployApp(appName, files[0].getPath(), instanceCount, appVariablesFile, engineVariablesFile, forceOverwrite, retainAppProps);
- 	    		
- 	    		deployer.close();
-            }else if(projectType != null && projectType.equalsIgnoreCase(Constants.Platform)) {
-            	//Platform deployment
-            	PlatformDeployer deployer = new PlatformDeployer(connectTimeout, readTimeout, retryCount, getLog());
-            	if(platformBuild || platformDeploy || platformScale || platformUpgrade) {
-            		if(platformBuild) {
-            			File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
-                		if(files.length == 0) {
-                			throw new Exception("EAR file not found for the Application");
-                		}
-                		deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, false);
-            		}else if(platformDeploy) {
-            			deployer.deployApp(dpUrl, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
-            		}else if(platformScale) {
-            			deployer.scaleApp(dpUrl, appId, replicas, authToken, namespace);
-            		}else if(platformUpgrade) {
-            			deployer.upgradeApp(dpUrl, appId, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
-            		}
-            	}else {
-            		File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
-            		if(files.length == 0) {
-            			throw new Exception("EAR file not found for the Application");
-            		}
-            		deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, true);
-            	}
-            }else {
-            	//enterprise deployment
-	    		boolean configFileExists = deploymentConfigExists();
-	    		if(configFileExists) {
-	    			loadFromDeploymentProperties();
-	    		}
-	    		if(!validateFields()) {
-	    			getLog().error("Validation failed. Skipping EAR Deployment.");
-	    			return;
-	    		}
-	    		if(!deployToAdmin) {
-	    			getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
-	    			return;
-	    		}
-	    		
-	    		File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
-	    		if(files.length == 0) {
-	    			throw new Exception("EAR file not found for the Application");
-	    		}
-	    		
-	    			
-	    		applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
-	
-	    		RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo, connectTimeout, readTimeout, retryCount,startOnDeploy);
-	    		deployer.setLog(getLog());
-	
-	    		List<Agent> agents = deployer.getAgentInfo();
-	    		if(agents.size() > 0) {
-	    			getLog().info("Connected to BWAgent. Agents found.");
-	    		} else {
-	    			return;
-	    		}
-	    		String agentName = null;
-	        	for(Agent agent : agents) {
-	        		agentName = agent.getName();
-	        		getLog().info("Agent Name -> " + agentName);
-	        	}
-	        	String[] versionNum = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION).split("\\.");
+	public void execute() throws MojoExecutionException {
+		try {    		
+			getLog().info("BWEAR Installer Mojo started ...");
+			Manifest manifest = ManifestParser.parseManifest(projectBasedir);
+			String bwEdition = manifest.getMainAttributes().getValue(Constants.TIBCO_BW_EDITION);
+			//TCI deployment
+			if(projectType != null && projectType.equalsIgnoreCase(Constants.TCI)){
+				if(!deployToAdmin) {
+					getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
+					return;
+				}
+				File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+				if(files.length == 0) {
+					throw new Exception("EAR file not found for the Application");
+				}
+				String appName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
+
+				TCIDeployer deployer = new TCIDeployer(connectTimeout, readTimeout, retryCount, getLog());
+
+				deployer.deployApp(appName, files[0].getPath(), instanceCount, appVariablesFile, engineVariablesFile, forceOverwrite, retainAppProps);
+
+				deployer.close();
+			}else if(projectType != null && projectType.equalsIgnoreCase(Constants.Platform)) {
+				//Platform deployment
+				PlatformDeployer deployer = new PlatformDeployer(connectTimeout, readTimeout, retryCount, getLog());
+				if(platformBuild || platformDeploy || platformScale || platformUpgrade) {
+					if(platformBuild) {
+						File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+						if(files.length == 0) {
+							throw new Exception("EAR file not found for the Application");
+						}
+						deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, false);
+					}else if(platformDeploy) {
+						deployer.deployApp(dpUrl, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
+					}else if(platformScale) {
+						deployer.scaleApp(dpUrl, appId, replicas, authToken, namespace);
+					}else if(platformUpgrade) {
+						deployer.upgradeApp(dpUrl, appId, buildId, namespace, authToken, eula, appName, profile, platformConfigFile, enableAutoScaling, enableServiceMesh);
+					}
+				}else if(platformDeployViaHelm) {
+					if(BWFileUtils.fileExists(project, "values.yaml")) {
+						File valuesYaml = BWFileUtils.getFile(project, "values.yaml");
+						deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml, buildId);
+					}else if(valuesYamlPath != null && !valuesYamlPath.isEmpty()) {
+						File valuesYaml = new File(valuesYamlPath);
+						if(valuesYaml.exists()) {
+							deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml, buildId);
+						}else {
+							throw new Exception("values.yaml file does not exist at the specified path.");
+						}
+					}else {
+						throw new Exception("Please specify the path for values.yaml file or generate values.yaml for the application project before running this goal.");
+					}
+				}else {
+					File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+					if(files.length == 0) {
+						throw new Exception("EAR file not found for the Application");
+					}
+					deployer.buildApp(files[0].getPath(), buildName, appName, profile, replicas, enableAutoScaling, enableServiceMesh, eula, platformConfigFile, dpUrl, authToken, baseVersion, baseImageTag, namespace, true);
+				}
+			}else if(projectType != null && projectType.equalsIgnoreCase(Constants.AppSpace)) {
+				//enterprise deployment
+				boolean configFileExists = deploymentConfigExists();
+				if(configFileExists) {
+					loadFromDeploymentProperties();
+				}
+				if(!validateFields()) {
+					getLog().error("Validation failed. Skipping EAR Deployment.");
+					return;
+				}
+				if(!deployToAdmin) {
+					getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
+					return;
+				}
+
+				File [] files = BWFileUtils.getFilesForType(outputDirectory, ".ear");
+				if(files.length == 0) {
+					throw new Exception("EAR file not found for the Application");
+				}
+
+
+				applicationName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
+
+				RemoteDeployer deployer = new RemoteDeployer(agentHost, Integer.parseInt(agentPort), agentAuth, agentUsername, agentPassword, agentSSL, trustPath, trustPassword, keyPath, keyPassword, createAdminCompo, connectTimeout, readTimeout, retryCount,startOnDeploy);
+				deployer.setLog(getLog());
+
+				List<Agent> agents = deployer.getAgentInfo();
+				if(agents.size() > 0) {
+					getLog().info("Connected to BWAgent. Agents found.");
+				} else {
+					return;
+				}
+				String agentName = null;
+				for(Agent agent : agents) {
+					agentName = agent.getName();
+					getLog().info("Agent Name -> " + agentName);
+				}
+				String[] versionNum = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION).split("\\.");
 				String version = null;
 				if(versionNum.length > 2)
-	        		version =  versionNum[0]+"."+versionNum[1];
+					version =  versionNum[0]+"."+versionNum[1];
 				else 
 					throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue("Bundle-Version"));
-				
-    			File selectedFile = files[0];
-    			if (files.length > 1)
-    				selectedFile = selectEARversion(files, version);
-	    		if(externalEarLocExists()){
-	    			File f = new File(externalEarLoc);
-	    			Path p = Paths.get(externalEarLoc + "/" +selectedFile.getName());
-	    			
-	    			Files.deleteIfExists(p);
-	    			FileUtils.copyFileToDirectory(files[0], f);
-	    			deriveEARInformation(p.toFile());
-	    		} else {
-	    			deriveEARInformation(selectedFile);
-	    		}
-				
-	    		deployer.getOrCreateDomain(domain, domainDesc);
-	    		AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
-	    		deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
-	    		if(!appNodeConfig.isEmpty())
+
+				File selectedFile = files[0];
+				if (files.length > 1)
+					selectedFile = selectEARversion(files, version);
+				if(externalEarLocExists()){
+					File f = new File(externalEarLoc);
+					Path p = Paths.get(externalEarLoc + "/" +selectedFile.getName());
+
+					Files.deleteIfExists(p);
+					FileUtils.copyFileToDirectory(files[0], f);
+					deriveEARInformation(p.toFile());
+				} else {
+					deriveEARInformation(selectedFile);
+				}
+
+				deployer.getOrCreateDomain(domain, domainDesc);
+				AppSpace appSpaceDto = deployer.getOrCreateAppSpace(domain, appSpace, appSpaceDesc);
+				deployer.getOrCreateAppNode(domain, appSpace, appNode, Integer.parseInt(httpPort), osgiPort == null || osgiPort.isEmpty() ? -1 : Integer.parseInt(osgiPort), appNodeDesc, agentName);
+				if(!appNodeConfig.isEmpty())
 				{
-		    		//Set AppNode config
+					//Set AppNode config
 					getLog().debug("Input AppNode Config : "+ appNodeConfig);
 					deployer.setAppNodeConfig(domain,appSpace,appNode,appNodeConfig, restartAppNode);
 				}
-	    		
+
 				if(appSpaceDto.getStatus() != AppSpaceRuntimeStatus.Running) {
-	    			deployer.startAppSpace(domain, appSpace);
-	    		} else {
-	    			getLog().info("AppSpace is Running.");
-	    		}
-	    		getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + selectedFile.getAbsolutePath());
-	    		deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, selectedFile.getAbsolutePath(), redeploy, profile, 
-	    				backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath, skipUploadArchive, startOnly, stopOnly);
-	    		deployer.close();
-            }
-    	} catch(Exception e) {
-    		getLog().error(e);
-    		throw new MojoExecutionException("Failed to deploy BW Application ", e);
-    	}
-    }
+					deployer.startAppSpace(domain, appSpace);
+				} else {
+					getLog().info("AppSpace is Running.");
+				}
+				getLog().info("domain -> " + domain + " earName -> " + earName + " Ear file to be uploaded -> " + selectedFile.getAbsolutePath());
+				deployer.addAndDeployApplication(domain, appSpace, applicationName, earName, selectedFile.getAbsolutePath(), redeploy, profile, 
+						backup, backupLocation,version,externalProfile,externalProfileLoc, appNode, earUploadPath, skipUploadArchive, startOnly, stopOnly);
+				deployer.close();
+			}
+		} catch(Exception e) {
+			getLog().error(e);
+			throw new MojoExecutionException("Failed to deploy BW Application ", e);
+		}
+	}
     
 	private File selectEARversion(File[] files, String version) {
 		for (File f: files) {

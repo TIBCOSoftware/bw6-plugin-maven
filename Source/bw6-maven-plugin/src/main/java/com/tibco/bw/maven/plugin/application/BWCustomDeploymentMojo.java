@@ -8,6 +8,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,13 +22,20 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuilder;
+import org.apache.maven.project.ProjectBuildingException;
+import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
+import org.codehaus.plexus.archiver.Archiver;
+import org.codehaus.plexus.archiver.jar.JarArchiver;
 
 import com.tibco.bw.maven.plugin.admin.client.RemoteDeployer;
 import com.tibco.bw.maven.plugin.admin.dto.Agent;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace;
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
+import com.tibco.bw.maven.plugin.module.BWModulePackageMojo;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.platform.client.PlatformDeployer;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
@@ -242,6 +250,12 @@ public class BWCustomDeploymentMojo extends AbstractMojo {
 	
 	@Component
     ProjectDependenciesResolver resolver;
+	
+	@Component
+    ProjectBuilder projectBuilder;
+	
+	@Component(role = Archiver.class, hint = "jar")
+    private JarArchiver jarArchiver;
 
 	private String earLoc;
 	private String earName;
@@ -254,11 +268,53 @@ public class BWCustomDeploymentMojo extends AbstractMojo {
 				throw new Exception("Please select a BW application project to run this goal.");
 			}
 			getLog().info("EAR generation started ...");
+			MavenProject parent = project.getParent();
+			File parentPom = parent.getFile();
+			ProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(session.getProjectBuildingRequest());
+			MavenProject parentProject = projectBuilder.build(parentPom, buildingRequest).getProject();
+			List<MavenProject> allProjects = new ArrayList<MavenProject>();
+			List<MavenProject> moduleProjects = new ArrayList<MavenProject>();
+			allProjects.add(parentProject);
+			for(String module: parentProject.getModules()) {
+				File modulePom = new File(parentPom.getParent(), module + "/pom.xml");
+				try {
+					MavenProject moduleProject = projectBuilder.build(modulePom, buildingRequest).getProject();
+					allProjects.add(moduleProject);
+					if(moduleProject.getPackaging().equals("bwmodule")) {
+						moduleProjects.add(moduleProject);
+					}
+				}catch(ProjectBuildingException e) {
+					getLog().error("Failed to generate EAR for the project: " + project.getName());
+				}
+			}
+			
+			if(moduleProjects != null && !moduleProjects.isEmpty()) {
+				for(MavenProject project: moduleProjects) {
+					BWModulePackageMojo bwModulePackageMojo = new BWModulePackageMojo();
+					bwModulePackageMojo.setLog(getLog());
+					bwModulePackageMojo.setSession(session);
+					bwModulePackageMojo.setOutputDirectory(new File(project.getBuild().getDirectory()));
+					bwModulePackageMojo.setProject(project);
+					bwModulePackageMojo.setJarArchiver(jarArchiver);
+					if(allProjects != null && !allProjects.isEmpty()) {
+						bwModulePackageMojo.setAllProj(allProjects);
+					}
+					bwModulePackageMojo.setBaseDirectory(project.getBasedir());
+					bwModulePackageMojo.setClassesDirectory(new File(project.getBuild().getOutputDirectory()));
+					bwModulePackageMojo.setProjectDependenciesResolver(resolver);
+					bwModulePackageMojo.setQualifierReplacement(Constants.TIMESTAMP);
+					bwModulePackageMojo.execute();
+				}
+			}
+			
 			BWEARPackagerMojo bwearPackagerMojo = new BWEARPackagerMojo();
 			bwearPackagerMojo.setLog(getLog());
 			bwearPackagerMojo.setSession(session);
 			bwearPackagerMojo.setOutputDirectory(outputDirectory);
 			bwearPackagerMojo.setProject(project);
+			if(allProjects != null && !allProjects.isEmpty()) {
+				bwearPackagerMojo.setAllProj(allProjects);
+			}
 			bwearPackagerMojo.setBaseDirectory(projectBasedir);
 			bwearPackagerMojo.setProjectDependenciesResolver(resolver);
 			bwearPackagerMojo.execute();
@@ -313,7 +369,7 @@ public class BWCustomDeploymentMojo extends AbstractMojo {
 					return;
 				}
 				if(!deployToAdmin) {
-					getLog().info("Deploy To Admin/TCI is set to False. Skipping EAR Deployment.");
+					getLog().info("Deploy To Admin is set to False. Skipping EAR Deployment.");
 					return;
 				}
 

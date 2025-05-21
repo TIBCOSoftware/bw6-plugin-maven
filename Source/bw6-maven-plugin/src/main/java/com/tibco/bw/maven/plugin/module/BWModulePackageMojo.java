@@ -2,6 +2,8 @@ package com.tibco.bw.maven.plugin.module;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,6 +48,7 @@ import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
+import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
 @Mojo(name = "bwmodule", defaultPhase = LifecyclePhase.PACKAGE)
@@ -85,6 +88,7 @@ public class BWModulePackageMojo extends AbstractMojo {
     ProjectDependenciesResolver resolver;
 
     MavenArchiver archiver;
+    private List<MavenProject> allProj;
 
     @Parameter
     protected MavenArchiveConfiguration archiveConfiguration;
@@ -149,6 +153,20 @@ public class BWModulePackageMojo extends AbstractMojo {
 				}
             	session.setAllProjects(amendedProjects);
             }
+            
+            if(allProj != null && !allProj.isEmpty()) {
+    			List<MavenProject> amendedProjects = new ArrayList<>();
+    			for(MavenProject proj: allProj)
+    			{
+    				if(proj.getArtifactId().equals(project.getArtifactId())) {
+    					amendedProjects.add(project);
+    				}
+    				else {
+    					amendedProjects.add(proj);
+    				}
+    			}
+    			session.setAllProjects(amendedProjects);
+    		}
 
             getLog().info("BW Module Packager Mojo finished execution.");
     	} catch (IOException e) {
@@ -169,9 +187,21 @@ public class BWModulePackageMojo extends AbstractMojo {
 		Set<Artifact> artifacts = project.getDependencyArtifacts();
 		HashMap<File,String> artifactFiles = new HashMap<File,String>(); 
 
-		for(Artifact artifact : artifacts) {
-			if(!artifact.getVersion().equals("0.0.0")) {
-				artifactFiles.put(artifact.getFile(),artifact.getScope());
+		if(artifacts == null) {
+			List<org.apache.maven.model.Dependency> dependencies = project.getDependencies();
+			if(dependencies != null && !dependencies.isEmpty()) {
+				for(org.apache.maven.model.Dependency dep: dependencies) {
+					Path path = Paths.get(System.getProperty("user.home"), ".m2");
+					String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
+					List<Path> result = BWFileUtils.findByFileName(path, fileName);
+					artifactFiles.put(result.get(0).toFile(),dep.getScope());
+				}
+			}
+		}else {
+			for(Artifact artifact : artifacts) {
+				if(!artifact.getVersion().equals("0.0.0")) {
+					artifactFiles.put(artifact.getFile(),artifact.getScope());
+				}
 			}
 		}
 
@@ -387,4 +417,40 @@ public class BWModulePackageMojo extends AbstractMojo {
         	manifest.getMainAttributes().putValue(Constants.BUNDLE_CLASSPATH, buffer.toString());
     	}
     }
+    
+    public void setProject(MavenProject project) {
+		this.project = project;
+	}
+
+	public void setSession(MavenSession session) {
+		this.session = session;
+	}
+
+	public void setOutputDirectory(File outputDirectory) {
+		this.outputDirectory = outputDirectory;
+	}
+
+	public void setBaseDirectory(File projectBasedir) {
+		this.projectBasedir = projectBasedir;
+	}
+
+	public void setProjectDependenciesResolver(ProjectDependenciesResolver resolver) {
+		this.resolver = resolver;
+	}
+
+	public void setClassesDirectory(File classesDirectory) {
+		this.classesDirectory = classesDirectory;
+	}
+	
+	public void setAllProj(List<MavenProject> allProj) {
+		this.allProj = allProj;
+	}
+
+	public void setQualifierReplacement(String qualifierReplacement) {
+		this.qualifierReplacement = qualifierReplacement;
+	}
+
+	public void setJarArchiver(JarArchiver jarArchiver) {
+		this.jarArchiver = jarArchiver;
+	}
 }
