@@ -35,8 +35,8 @@
         <phases>
           <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>
           <compile>org.apache.maven.plugins:maven-compiler-plugin:compile</compile>
-          <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
-          <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
+          <!-- process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources -->
+          <!-- test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile-->
           <test>com.tibco.plugins:bw6-maven-plugin:bwtest</test>          
           <package>com.tibco.plugins:bw6-maven-plugin:bwmodule</package>                    
           <install>org.apache.maven.plugins:maven-install-plugin:install</install>
@@ -54,8 +54,8 @@
         <phases>
           <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>
           <compile>org.apache.maven.plugins:maven-compiler-plugin:compile</compile>
-          <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
-          <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
+          <!-- process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources -->
+          <!-- test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile-->
           <test>com.tibco.plugins:bw6-maven-plugin:bwtest</test>          
           <package>com.tibco.plugins:bw6-maven-plugin:bwear</package>                    
           <install>org.apache.maven.plugins:maven-install-plugin:install</install>
