@@ -4,7 +4,10 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.apache.commons.io.FileUtils;
@@ -99,9 +102,16 @@ public class BWProjectLifeCycleListener extends AbstractMavenLifecycleParticipan
 
 			if (module == MODULE.SHAREDMODULE && !project.hasParent()) {
 				{
-					mf.getMainAttributes().remove("TIBCO-BW-SharedModule-METADATA");
+					Attributes attributes = mf.getMainAttributes();
+					Iterator<Map.Entry<Object, Object>> iterator = attributes.entrySet().iterator();
+					while (iterator.hasNext()) {
+					    Map.Entry<Object, Object> entry = iterator.next();
+					    if ("METADATA.xml".equals(entry.getValue())) {
+					        iterator.remove(); 
+					        break;
+					    }
+					}
 					BWMetadataUtils.updateManifest(project.getBasedir(), mf);
-					
 					// Delete Metadata and update Manifest
 					File metadataFile = new File(project.getBasedir() + "/METADATA.xml");
 					try {
