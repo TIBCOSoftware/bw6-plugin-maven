@@ -8,7 +8,6 @@ import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,6 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.media.multipart.Boundary;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
@@ -769,11 +767,15 @@ public class RemoteDeployer {
 			if(response.getStatusInfo().getStatusCode() == 401) {
 				throw new ClientException(response.getStatus(),  response.getStatusInfo().getStatusCode() + ": " + response.getStatusInfo().getReasonPhrase(), null);
 			}
-			com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
-			if (error != null) {
-				throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
+			if (response.getMediaType().getType().equals(MediaType.TEXT_HTML_TYPE.getType()) && response.getMediaType().getSubtype().equals(MediaType.TEXT_HTML_TYPE.getSubtype())) {
+				throw new ClientException(response.getStatus(), response.readEntity(String.class), null);
 			} else {
-				throw new ClientException(response.getStatus(), response.getStatusInfo().getReasonPhrase(), null);
+				com.tibco.bw.maven.plugin.admin.dto.Error error = response.readEntity(com.tibco.bw.maven.plugin.admin.dto.Error.class);
+				if (error != null) {
+					throw new ClientException(response.getStatus(), error.getCode() + ": " + error.getMessage(), null);
+				} else {
+					throw new ClientException(response.getStatus(), response.getStatusInfo().getReasonPhrase(), null);
+				}
 			}
 		}
 	}

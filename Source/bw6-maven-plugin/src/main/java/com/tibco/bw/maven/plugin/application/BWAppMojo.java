@@ -280,9 +280,13 @@ public class BWAppMojo extends AbstractMojo {
 					throw new Exception("Invalid Bundle Version -"+ manifest.getMainAttributes().getValue("Bundle-Version"));
 				}
 				if(start) {
+					getLog().info("Starting the application -> " + applicationName);
 					deployer.startApplication(domain, appSpace, applicationName, version, appNode, true);
+					getLog().info("Application \"" + applicationName + "\" started.");
 				}else if(stop) {
+					getLog().info("Stopping the application -> " + applicationName);
 					deployer.stopApplication(domain, appSpace, applicationName, version, appNode, true);
+					getLog().info("Application \"" + applicationName + "\" stopped.");
 				}
 				deployer.close();
 			}else if(platformDeployment) {
