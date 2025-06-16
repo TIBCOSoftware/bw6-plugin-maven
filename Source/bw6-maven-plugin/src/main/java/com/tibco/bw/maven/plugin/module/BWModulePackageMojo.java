@@ -7,9 +7,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
@@ -49,7 +52,10 @@ import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.osgi.helpers.VersionParser;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
+import com.tibco.bw.maven.plugin.utils.BWMetadataUtils;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
+import com.tibco.bw.maven.plugin.utils.BWProjectUtils.MODULE;
 
 @Mojo(name = "bwmodule", defaultPhase = LifecyclePhase.PACKAGE)
 public class BWModulePackageMojo extends AbstractMojo {
@@ -105,6 +111,23 @@ public class BWModulePackageMojo extends AbstractMojo {
             manifest = ManifestParser.parseManifest(projectBasedir);
             if(manifest == null){
             	throw new Exception("Failed to parse MANIFEST.MF for project -> "+ projectBasedir);
+            }else {
+            	MODULE module = BWProjectUtils.getModuleType(manifest);
+            	if (module == MODULE.SHAREDMODULE && !project.hasParent()) {
+    				{
+    					Attributes attributes = manifest.getMainAttributes();
+    					Iterator<Map.Entry<Object, Object>> iterator = attributes.entrySet().iterator();
+    					while (iterator.hasNext()) {
+    					    Map.Entry<Object, Object> entry = iterator.next();
+    					    if ("METADATA.xml".equals(entry.getValue())) {
+    					        iterator.remove(); 
+    					        break;
+    					    }
+    					}
+    					BWMetadataUtils.updateManifest(project.getBasedir(), manifest);
+  
+    				}
+    			}
             }
             getLog().info("Updated the Manifest version ");
             
