@@ -675,8 +675,8 @@ public class BWTestRunner
         Diff myDiff;
 		try {
 			myDiff = DiffBuilder
-			  .compare(goldInput)
-			  .withTest(inputValue)
+			  .compare(inputValue)
+			  .withTest(goldInput)
 			  .ignoreComments()
 			  .ignoreWhitespace()
 			  .withComparisonController(ComparisonControllers.StopWhenDifferent)
