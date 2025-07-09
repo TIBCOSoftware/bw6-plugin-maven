@@ -42,7 +42,8 @@ public class BWMetadataUtils {
 				File metadataFile = new File(project.getBasedir(), "METADATA.xml");
 				try {
 					String symbName = mf.getMainAttributes().getValue("Bundle-SymbolicName");
-					createMetadatFile(metadataFile, symbName);
+					String version = mf.getMainAttributes().getValue("Bundle-Version");
+					createMetadatFile(metadataFile, symbName,version);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -71,14 +72,14 @@ public class BWMetadataUtils {
 		}
 	}
 
-	public static void createMetadatFile(File file, String symboicName) throws Exception {
+	public static void createMetadatFile(File file, String symboicName, String version) throws Exception {
 		Document doc = null;
-		doc = createMetadataFile(symboicName);
+		doc = createMetadataFile(symboicName,version);
 		saveMetadataXML(doc, file);
 
 	}
 
-	private static Document createMetadataFile(String smName) {
+	private static Document createMetadataFile(String smName, String version) {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = null;
 		try {
@@ -109,7 +110,7 @@ public class BWMetadataUtils {
 		packagingModule.appendChild(techType);
 
 		org.w3c.dom.Element techVersion = doc.createElement("packaging:technologyVersion");
-		techVersion.appendChild(doc.createTextNode("1.0.0.qualifier"));
+		techVersion.appendChild(doc.createTextNode(version));
 		packagingModule.appendChild(techVersion);
 
 		packagingModules.appendChild(packagingModule);
