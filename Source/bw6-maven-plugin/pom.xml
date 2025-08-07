@@ -233,6 +233,16 @@
 			<artifactId>maven-deploy-plugin</artifactId>
 			<version>3.1.3</version>
 		</dependency>
+		<dependency>
+  			<groupId>com.tibco.security</groupId>
+  			<artifactId>com.tibco.security.tibcrypt.eclipse</artifactId>
+  			<version>2.19.400.001</version>
+		</dependency>
+		<dependency>
+    		<groupId>org.twdata.maven</groupId>
+    		<artifactId>mojo-executor</artifactId>
+    		<version>2.3.1</version>
+		</dependency>
 	</dependencies>
 	<distributionManagement>
 		<snapshotRepository>
