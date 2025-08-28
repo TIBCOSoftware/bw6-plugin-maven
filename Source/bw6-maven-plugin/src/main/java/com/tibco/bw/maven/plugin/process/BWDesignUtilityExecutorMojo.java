@@ -51,9 +51,11 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	@Parameter(property="project.type")
 	private String projectType;
 	
+	boolean isErrorPresent = false;
 	
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
+		isErrorPresent = false;
 	try{	
 		if( project.getPackaging().equals("bwear") )
 			{
@@ -76,23 +78,18 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 				binDir = tibcoHome.concat(bwHome).concat(File.separator).concat("bin");
 				executorHome = binDir;
 				if(null != commandName && commandName.equals("validate")){
-					importWorkspace();
 					validateBWProject();
 				}
 				else if(null != commandName && commandName.equals("gen_diagrams"))
 				{
-					importWorkspace();
 					generateProcessDiagram();
 				} else if(null != commandName && commandName.equals("generate_manifest_json")) {
-					importWorkspace();
 					generateManifestJSON();
 					
 				}else if(null != commandName && commandName.trim().length() > 0) {
-					importWorkspace();
 					executeCommand();
 				} 
 				else {
-					importWorkspace();
 					validateBWProject();
 					generateProcessDiagram();
 					if(projectType != null && projectType.equalsIgnoreCase(Constants.TCI)){
@@ -100,6 +97,9 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 					}
 				}
 			}
+		if(isErrorPresent) {
+			throw new MojoFailureException("Failed to execute the Goal!"+commandName + " "+arguments );
+		}
 	}catch(MojoFailureException e){
 		throw e;
 	}
@@ -282,7 +282,16 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 		reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		while ((line = reader.readLine()) != null) {
 			//System.err.println(line);
-			logger.info(line);
+			if(line.startsWith("[ERROR]") || line.startsWith("[error]")) {
+				logger.error(line);
+				isErrorPresent = true;
+			}else if(line.startsWith("[INFO]") || line.startsWith("[info]")) {
+				logger.info(line);
+			}else if(line.startsWith("[WARNING") || line.startsWith("[Warning]")) {
+				logger.warn(line);
+			}else {
+				logger.info(line);
+			}
 		}
 
 		reader.close();
