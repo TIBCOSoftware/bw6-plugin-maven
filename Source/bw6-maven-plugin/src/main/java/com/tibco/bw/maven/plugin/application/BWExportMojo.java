@@ -34,6 +34,8 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
+
 import com.google.common.io.Files;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
@@ -83,6 +85,7 @@ public class BWExportMojo extends AbstractMojo {
 	private String applicationName;
 	private ZipOutputStream outputStream;
 	private Manifest manifest;
+	private File pom;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -181,6 +184,9 @@ public class BWExportMojo extends AbstractMojo {
 			.forEach(path -> {
 				try {
 					String entryName = base.relativize(path).toString().replace("\\", "/");
+					if(entryName != null && entryName.equals("pom.xml")) {
+						pom = path.toFile();
+					}
 					try(InputStream in = java.nio.file.Files.newInputStream(path)) {
 						JarEntry entry = new JarEntry(entryName);
 						jos.putNextEntry(entry);
@@ -199,6 +205,28 @@ public class BWExportMojo extends AbstractMojo {
 	}
 
 	private void installJar(File jarFile) throws MojoExecutionException {
+		Xpp3Dom configuration;
+		if(pom != null && pom.exists()) {
+			configuration = configuration(
+					element(name("file"), jarFile.getAbsolutePath()),
+					element(name("pomFile"), pom.getAbsolutePath()),
+					element(name("groupId"), project.getGroupId()),
+					element(name("artifactId"), project.getArtifactId()),
+					element(name("version"), project.getVersion()),
+					element(name("packaging"), "jar"),
+					element(name("generatePom"), "false")
+					);
+		}else {
+			configuration = configuration(
+					element(name("file"), jarFile.getAbsolutePath()),
+					element(name("groupId"), project.getGroupId()),
+					element(name("artifactId"), project.getArtifactId()),
+					element(name("version"), project.getVersion()),
+					element(name("packaging"), "jar"),
+					element(name("generatePom"), "true")
+					);
+		}
+		
 		executeMojo(
 				plugin(
 						groupId("org.apache.maven.plugins"),
@@ -206,14 +234,7 @@ public class BWExportMojo extends AbstractMojo {
 						version("3.1.1")
 						),
 				goal("install-file"),
-				configuration(
-						element(name("file"), jarFile.getAbsolutePath()),
-						element(name("groupId"), project.getGroupId()),
-						element(name("artifactId"), project.getArtifactId()),
-						element(name("version"), project.getVersion()),
-						element(name("packaging"), "jar"),
-						element(name("generatePom"), "true")
-						),
+				configuration,
 				executionEnvironment(
 						project,
 						session,
