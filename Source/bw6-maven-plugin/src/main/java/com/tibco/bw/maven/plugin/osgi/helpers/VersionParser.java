@@ -6,7 +6,7 @@ import java.util.Date;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
 public class VersionParser {
-    protected static SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmm");
+    protected static SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
     public static final String QUALIFIER = "qualifier";
 
 	public static Version parseVersion(String version) {
