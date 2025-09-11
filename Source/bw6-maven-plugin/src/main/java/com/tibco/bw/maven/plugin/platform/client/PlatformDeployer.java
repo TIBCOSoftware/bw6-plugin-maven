@@ -300,7 +300,7 @@ public class PlatformDeployer {
 		}
 	}
 	
-	public void deployAppUsingHelmCharts(String dpUrl, String authToken, String namespace, File valuesYaml, String buildId) throws ClientException, IOException, InterruptedException {		
+	public void deployAppUsingHelmCharts(String dpUrl, String authToken, String namespace, File valuesYaml, String buildId, boolean eula) throws ClientException, IOException, InterruptedException {		
 		try {
 			if(dpUrl == null || dpUrl.isEmpty()) {
 				throw new ClientException("Unable to deploy the application. Please provide the data plane URL.");
@@ -310,6 +310,9 @@ public class PlatformDeployer {
 			}
 			if(namespace == null || namespace.isEmpty()) {
 				throw new ClientException("Unable to deploy the application. Please provide namespace.");
+			}
+			if(!eula) {
+				throw new ClientException("Unable to deploy the application. Please accept the EULA.");
 			}
 			
 			Client client = ClientBuilder.newClient();
@@ -325,7 +328,7 @@ public class PlatformDeployer {
 
 			Response response = webTarget
 					.queryParam("namespace", namespace)
-					.queryParam("eula", true)
+					.queryParam("eula", eula)
 					.path("public/v2/dp/deploy/release")
 					.request(MediaType.MULTIPART_FORM_DATA)
 					.accept(MediaType.APPLICATION_JSON)

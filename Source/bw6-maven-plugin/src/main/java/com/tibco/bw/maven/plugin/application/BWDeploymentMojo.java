@@ -285,11 +285,11 @@ public class BWDeploymentMojo extends AbstractMojo {
 				}else if(platformDeployViaHelm) {
 					if(BWFileUtils.fileExists(project, "values.yaml")) {
 						File valuesYaml = BWFileUtils.getFile(project, "values.yaml");
-						deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml, buildId);
+						deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml, buildId, eula);
 					}else if(valuesYamlPath != null && !valuesYamlPath.isEmpty()) {
 						File valuesYaml = new File(valuesYamlPath);
 						if(valuesYaml.exists()) {
-							deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml, buildId);
+							deployer.deployAppUsingHelmCharts(dpUrl, authToken, namespace, valuesYaml, buildId, eula);
 						}else {
 							throw new Exception("values.yaml file does not exist at the specified path.");
 						}
