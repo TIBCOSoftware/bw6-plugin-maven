@@ -86,6 +86,7 @@ public class PlatformDeployer {
 				String readEntity = bwceVersionsResponse.readEntity(String.class);
 				ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				BuildTypeCatalog buildTypeCatalog = mapper.readValue(readEntity, BuildTypeCatalog.class);
 				for(BuildType buildType: buildTypeCatalog.getBuildtypeCatalog()) {
 					if(buildType.getBuildtypeTag().equals(baseVersion)) {
@@ -147,6 +148,7 @@ public class PlatformDeployer {
 					String readEntity = response.readEntity(String.class);
 					ObjectMapper mapper = new ObjectMapper();
 					mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+					mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 					Map<?, ?> responseMap;
 					responseMap = mapper.readValue(readEntity, Map.class);
 					String buildId = (String) responseMap.get("buildId");
@@ -268,6 +270,7 @@ public class PlatformDeployer {
 				String readEntity = response.readEntity(String.class);
 				ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				Map<?, ?> responseMap;
 				responseMap = mapper.readValue(readEntity, Map.class);
 				scaleApp((String) responseMap.get("appId"), replicas, authToken, namespace);
@@ -432,6 +435,7 @@ public class PlatformDeployer {
 			try {
 				ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				Map<?, ?> responseMap;
 				responseMap = mapper.readValue(error, Map.class);
 				errCode = (String) responseMap.get("errCode");
