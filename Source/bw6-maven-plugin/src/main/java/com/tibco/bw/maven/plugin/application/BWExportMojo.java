@@ -116,6 +116,8 @@ public class BWExportMojo extends AbstractMojo {
 				File destDir = Files.createTempDir();
 				destDir.deleteOnExit();
 				unzip(zipPath, destDir);
+				// Update Manifest.MF and pom.xml before creating JAR
+				updateManifestAndPom(destDir, project.getVersion());
 				File jarDir = Files.createTempDir();
 				File jarFile = new File(jarDir, project.getArtifactId() + "-" + project.getVersion() + ".jar");
 				createJar(destDir, jarFile);
@@ -126,6 +128,70 @@ public class BWExportMojo extends AbstractMojo {
 		}catch(Exception e) {
 			getLog().error(e);
 			throw new MojoExecutionException("Failed to export the shared module as BSM: ", e);
+		}
+	}
+
+	// Update Bundle-Version in Manifest.MF and version in pom.xml in destDir
+	private void updateManifestAndPom(File destDir, String newVersion) {
+		// Preventive checks
+		if (destDir == null || newVersion == null || newVersion.isEmpty()) {
+			getLog().warn("updateManifestAndPom: destDir or newVersion is null/empty. Skipping update.");
+			return;
+		}
+		// Update Manifest.MF
+		File manifestFile = new File(destDir, "META-INF/MANIFEST.MF");
+		if (manifestFile.exists() && manifestFile.isFile()) {
+			try (FileInputStream fis = new FileInputStream(manifestFile)) {
+				Manifest mf = new Manifest(fis);
+				mf.getMainAttributes().putValue("Bundle-Version", newVersion);
+				try (FileOutputStream fos = new FileOutputStream(manifestFile)) {
+					mf.write(fos);
+				}
+			} catch (Exception e) {
+				getLog().warn("Failed to update Bundle-Version in Manifest.MF: " + e.getMessage());
+			}
+		} else {
+			getLog().warn("Manifest.MF not found at " + manifestFile.getAbsolutePath());
+		}
+		// Update only the main <version> in pom.xml
+		File pomFile = new File(destDir, "pom.xml");
+		if (pomFile.exists() && pomFile.isFile()) {
+			try {
+				javax.xml.parsers.DocumentBuilderFactory dbFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+				dbFactory.setNamespaceAware(true);
+				javax.xml.parsers.DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+				org.w3c.dom.Document doc = dBuilder.parse(pomFile);
+				org.w3c.dom.Element projectElement = doc.getDocumentElement();
+				if (projectElement != null && "project".equals(projectElement.getNodeName())) {
+					org.w3c.dom.NodeList versionNodes = projectElement.getElementsByTagName("version");
+					boolean updated = false;
+					for (int i = 0; i < versionNodes.getLength(); i++) {
+						org.w3c.dom.Node versionNode = versionNodes.item(i);
+						if (versionNode.getParentNode() == projectElement) {
+							versionNode.setTextContent(newVersion);
+							updated = true;
+							break;
+						}
+					}
+					if (updated) {
+						javax.xml.transform.TransformerFactory tf = javax.xml.transform.TransformerFactory.newInstance();
+						javax.xml.transform.Transformer transformer = tf.newTransformer();
+						transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+						transformer.setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, "UTF-8");
+						javax.xml.transform.dom.DOMSource domSource = new javax.xml.transform.dom.DOMSource(doc);
+						javax.xml.transform.stream.StreamResult sr = new javax.xml.transform.stream.StreamResult(pomFile);
+						transformer.transform(domSource, sr);
+					} else {
+						getLog().warn("No <version> element found directly under <project> in pom.xml");
+					}
+				} else {
+					getLog().warn("pom.xml root element is not <project>");
+				}
+			} catch (Exception e) {
+				getLog().warn("Failed to update main version in pom.xml: " + e.getMessage());
+			}
+		} else {
+			getLog().warn("pom.xml not found at " + pomFile.getAbsolutePath());
 		}
 	}
 
