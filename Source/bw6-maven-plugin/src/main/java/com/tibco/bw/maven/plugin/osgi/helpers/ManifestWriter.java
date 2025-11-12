@@ -58,15 +58,17 @@ public class ManifestWriter {
         	}
         }
         
-//        if(BWProjectUtils.getModuleType(mf) == MODULE.APPMODULE) {
+        if(BWProjectUtils.getModuleType(mf) == MODULE.APPMODULE || BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE) {
         	List<Dependency> list=project.getDependencies();
-        	String updatedRequire=ManifestParser.getRequiredCapabilities(mf.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY), list);
-        	System.out.print(updatedRequire);
-        	if(updatedRequire != null  &&  !updatedRequire.isEmpty()) {
-        		attributes.putValue(Constants.BUNDLE_REQUIRE_CAPABILITY, updatedRequire);
-        	}
+        	if(list != null && !list.isEmpty()) {
+	        	String updatedRequire=ManifestParser.getRequiredCapabilities(mf.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY), list);
+	        	
+	        	if(updatedRequire != null  &&  !updatedRequire.isEmpty()) {
+	        		attributes.putValue(Constants.BUNDLE_REQUIRE_CAPABILITY, updatedRequire);
+	        	}
         	
-//        }
+        	}
+        }
         
 
     }
