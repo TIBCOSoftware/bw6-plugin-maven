@@ -100,6 +100,7 @@ public class BWModulePackageMojo extends AbstractMojo {
             }
             getLog().info("Updated the Manifest version ");
             
+            session.getLocalRepository();
             ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement);
             updateManifestVersion();
             

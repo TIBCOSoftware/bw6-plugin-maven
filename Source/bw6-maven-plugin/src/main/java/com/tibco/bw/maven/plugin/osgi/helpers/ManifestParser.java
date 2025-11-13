@@ -9,10 +9,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
@@ -105,32 +109,45 @@ public class ManifestParser {
 		return updatedProvidesCapabilities;
 	}
 
-public static String getRequiredCapabilities(String reqCapbilitySource, List<Dependency> listDep) {
-		
+	public static String getRequiredCapabilities(String reqCapbilitySource, Set<Artifact> dependencies) {
+
 		String processedText = "";
-		String listModulesBw="";
-		for (Iterator<Dependency> iter = listDep.iterator(); iter.hasNext();) {
-			Dependency dep = iter.next();
-			
-			Path path = Paths.get(System.getProperty("user.home"), ".m2");
-			String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
-			List<Path> result = null;
-			try {
-				result = BWFileUtils.findByFileName(path, fileName);
+		String listModulesBw = "";
+		for (Iterator<Artifact> iter = dependencies.iterator(); iter.hasNext();) {
+			Artifact dep = iter.next();
+			Path path = null;
+			// Ensure the artifact is resolved
+			File artifactFile = null;
+			if (dep.getFile() != null) {
+				System.out.println("searching for " + dep.getGroupId() + ":" + dep.getArtifactId() + ":"
+						+ dep.getVersion() + " --> " + artifactFile.getAbsolutePath());
+				artifactFile = dep.getFile();
+//	                    getLog().info(dep.getGroupId() + ":" + dep.getArtifactId() + ":" + dep.getVersion()
+//	                            + " --> " + artifactFile.getAbsolutePath());
+			} else {
+				System.out.println("Could not resolve: " + dep);
+//	                    getLog().warn("Could not resolve: " + dep);
+			}
+
+//			String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
+			System.out.println("Searching for jar --" + artifactFile);
+//			List<Path> result = null;
+//			try {
+//				session.getLocalRepository().find(dep);
+//				result = BWFileUtils.findByFileName(path, fileName);
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			File file = result.get(0).toFile();
+			Manifest mf = null;
+			try (JarFile jar = new JarFile(artifactFile)) {
+				mf = jar.getManifest();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			File file = result.get(0).toFile();
-			Manifest mf = null;
-			try (JarFile jar = new JarFile(file)) {
-	             mf = jar.getManifest();
-	        } catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
+
 //			String newVersion = dep.getVersion();
 			String newVersion = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
 			if (newVersion != null && newVersion.contains(".qualifier")) {
@@ -144,38 +161,39 @@ public static String getRequiredCapabilities(String reqCapbilitySource, List<Dep
 
 			String[] entries = reqCapbilitySource.split(",");
 			for (int i = 0; i < entries.length; i++) {
-				
+
 				String entry = entries[i];
 				String[] filters = entry.split(";");
 
 				if (filters[0].trim().equals("com.tibco.bw.module")) {
 					System.out.println("com.tibco.bw.module detected");
-					if (filters[1].trim().startsWith("filter:=\"(&(name="+ dep.getArtifactId() +")")) {
+					if (filters[1].trim().startsWith("filter:=\"(&(name=" + dep.getArtifactId() + ")")) {
 
-						listModulesBw += filters[0] + ";" + "filter:=\"(&(name="+dep.getArtifactId()+")(version="+newVersion+"))\"" + ",";
-						
+						listModulesBw += filters[0] + ";" + "filter:=\"(&(name=" + dep.getArtifactId() + ")(version="
+								+ newVersion + "))\"" + ",";
+
 					}
-				} 
+				}
 			}
 
 		}
-		if(reqCapbilitySource != null && !reqCapbilitySource.isEmpty() && reqCapbilitySource.contains(",")) {
+		if (reqCapbilitySource != null && !reqCapbilitySource.isEmpty() && reqCapbilitySource.contains(",")) {
 			String[] entriesOthers = reqCapbilitySource.split(",");
 			for (int i = 0; i < entriesOthers.length; i++) {
-				
+
 				String entry = entriesOthers[i];
 				String[] filters = entry.split(";");
 				String str = String.join(",", filters);
-	
+
 				if (!filters[0].trim().equals("com.tibco.bw.module")) {
-					processedText+= entry+",";
-				} 
+					processedText += entry + ",";
+				}
 			}
 		}
-		processedText= listModulesBw+processedText;
-		processedText=processedText.replaceAll(",,",",");
-		if(processedText.endsWith(","))
-			processedText=processedText.substring(0, processedText.length() - 1);
+		processedText = listModulesBw + processedText;
+		processedText = processedText.replaceAll(",,", ",");
+		if (processedText.endsWith(","))
+			processedText = processedText.substring(0, processedText.length() - 1);
 		return processedText;
 	}
 }

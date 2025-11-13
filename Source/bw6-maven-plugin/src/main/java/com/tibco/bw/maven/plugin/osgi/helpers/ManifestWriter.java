@@ -6,10 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.project.MavenProject;
 
@@ -59,9 +62,11 @@ public class ManifestWriter {
         }
         
         if(BWProjectUtils.getModuleType(mf) == MODULE.APPMODULE || BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE) {
-        	List<Dependency> list=project.getDependencies();
-        	if(list != null && !list.isEmpty()) {
-	        	String updatedRequire=ManifestParser.getRequiredCapabilities(mf.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY), list);
+        	  Set<Artifact> dependencies = project.getArtifacts();
+
+//        	List<Dependency> list=project.getDependencies();
+        	if(dependencies != null && !dependencies.isEmpty()) {
+	        	String updatedRequire=ManifestParser.getRequiredCapabilities(mf.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY), dependencies);
 	        	
 	        	if(updatedRequire != null  &&  !updatedRequire.isEmpty()) {
 	        		attributes.putValue(Constants.BUNDLE_REQUIRE_CAPABILITY, updatedRequire);
