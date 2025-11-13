@@ -13,6 +13,7 @@ import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
@@ -105,15 +106,21 @@ public class ManifestParser {
 		return updatedProvidesCapabilities;
 	}
 
-public static String getRequiredCapabilities(String reqCapbilitySource, List<Dependency> listDep) {
+public static String getRequiredCapabilities(String reqCapbilitySource, List<Dependency> listDep, MavenSession session) {
 		
 		String processedText = "";
 		String listModulesBw="";
 		for (Iterator<Dependency> iter = listDep.iterator(); iter.hasNext();) {
 			Dependency dep = iter.next();
+			Path path = null;
+			if(session.getLocalRepository()!= null ) {
+				path = Paths.get(session.getLocalRepository().getBasedir());
+			}else {
+				path = Paths.get(System.getProperty("user.home"), ".m2");
+			}
 			
-			Path path = Paths.get(System.getProperty("user.home"), ".m2");
 			String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
+			System.out.println("Searching for jar "+fileName +" at local repo "+path.toString());
 			List<Path> result = null;
 			try {
 				result = BWFileUtils.findByFileName(path, fileName);

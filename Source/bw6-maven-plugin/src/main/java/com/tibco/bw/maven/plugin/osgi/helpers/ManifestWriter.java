@@ -10,6 +10,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
 
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.project.MavenProject;
 
@@ -36,7 +37,7 @@ public class ManifestWriter {
     }
     
     
-    public static void updateManifestVersion(MavenProject project , Manifest mf, String qualifierReplacement)
+    public static void updateManifestVersion(MavenProject project , Manifest mf, String qualifierReplacement, MavenSession session)
     {
         Attributes attributes = mf.getMainAttributes();
         
@@ -61,7 +62,7 @@ public class ManifestWriter {
         if(BWProjectUtils.getModuleType(mf) == MODULE.APPMODULE || BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE) {
         	List<Dependency> list=project.getDependencies();
         	if(list != null && !list.isEmpty()) {
-	        	String updatedRequire=ManifestParser.getRequiredCapabilities(mf.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY), list);
+	        	String updatedRequire=ManifestParser.getRequiredCapabilities(mf.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY), list,session);
 	        	
 	        	if(updatedRequire != null  &&  !updatedRequire.isEmpty()) {
 	        		attributes.putValue(Constants.BUNDLE_REQUIRE_CAPABILITY, updatedRequire);
