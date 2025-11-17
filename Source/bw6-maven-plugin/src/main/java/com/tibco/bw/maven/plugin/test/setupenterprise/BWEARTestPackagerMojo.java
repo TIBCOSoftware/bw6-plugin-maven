@@ -103,7 +103,7 @@ public class BWEARTestPackagerMojo extends AbstractMojo {
     	    archiveConfiguration = new MavenArchiveConfiguration();
     	    moduleVersionMap = new HashMap<String, String>();
             manifest = ManifestParser.parseManifest(projectBasedir);
-            ManifestWriter.updateManifestVersion(project, manifest, Constants.TIMESTAMP);
+            ManifestWriter.updateManifestVersion(project, manifest, Constants.TIMESTAMP,session);
             getLog().info("Updated the Manifest version ");
             updateManifestVersion();
     	    getLog().info("Adding Modules to the EAR file");

@@ -98,7 +98,7 @@ public class BWModuleTestPackageMojo extends AbstractMojo {
 
             getLog().info("Updated the Manifest version ");
             
-            ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement);
+            ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement,session);
             updateManifestVersion();
             
             getLog().info("Removing the externals entries if any. ");
