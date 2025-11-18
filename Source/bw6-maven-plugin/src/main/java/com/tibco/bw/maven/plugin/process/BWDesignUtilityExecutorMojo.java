@@ -4,7 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.maven.execution.MavenSession;
@@ -48,6 +51,8 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	String bwHome = null;
 	
 	String binDir = null;
+	
+	private String workSpaceLocation;
 	
 	@Parameter(property="project.type")
 	private String projectType;
@@ -109,6 +114,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	private void executeCommand() throws MojoExecutionException {
 		List<String> params = new ArrayList<>();
 		params = createUtilityArgument(params);
+		params = createWorkspaceArgument(params);
 		params.add(commandName);
 		if(arguments != null && !arguments.isEmpty())
 			params.add(arguments);
@@ -138,6 +144,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	private void generateProcessDiagram() throws MojoExecutionException {
 		List<String> params = new ArrayList<>();
 		params = createUtilityArgument(params);
+		params = createWorkspaceArgument(params);
 		params.add("diagram:gen_diagrams");
 		params.add(project.getName());
 		if(null != diagramLoc && !diagramLoc.isEmpty()){
@@ -168,6 +175,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	private void generateManifestJSON() throws MojoExecutionException {
 		List<String> params = new ArrayList<>();
 		params = createUtilityArgument(params);
+		params = createWorkspaceArgument(params);
 		params.add("generate_manifest_json");
 		params.add("-project");
 		params.add(project.getName());
@@ -196,22 +204,71 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	}
 
 	private List<String> createUtilityArgument(List<String> params) {
-
 		String utilityName = executorHome.concat(File.separator).concat("bwdesign.exe");
 		if(BWProjectUtils.OS.UNIX.equals(BWProjectUtils.getOS())) {
 			utilityName = executorHome.concat(File.separator).concat("bwdesign");
 		}
-		String workSpaceLocation = project.getBasedir().getParent();
 		params.add(utilityName);
+		return params;
+	}
+	
+	private List<String> createWorkspaceArgument(List<String> params) {
+		if(workSpaceLocation != null) {
+			params.add("-data");
+			params.add(workSpaceLocation);
+			return params;
+		}
+		File tempWorkspace = getTempWorkspace();
+		if(tempWorkspace != null) {
+			workSpaceLocation = tempWorkspace.getAbsolutePath();
+		}else {
+			workSpaceLocation = project.getBasedir().getParent();
+		}
 		params.add("-data");
 		params.add(workSpaceLocation);
 		return params;
 	}
 
+	private File getTempWorkspace() {
+		try {
+			Path tempDir = Files.createTempDirectory("bw-mvn-bwdesign-ws");
+			Runtime.getRuntime().addShutdownHook(createCleanupHook(tempDir));
+			return tempDir.toFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+			logger.error("Failed to create a temporary directory for BW Design Utility workspace: ", e );
+		}
+		return null;
+	}
+	
+	private Thread createCleanupHook(Path tempDir) {
+		return new Thread(() -> {
+			deleteTempDirectory(tempDir);
+		});
+	}
+	
+	private void deleteTempDirectory(Path tempDir) {
+		try {
+			if(tempDir != null && Files.exists(tempDir)) {
+				Files.walk(tempDir).sorted(Comparator.reverseOrder()).forEach(p -> {
+					try {
+						Files.delete(p);
+					}catch(IOException e) {
+						e.printStackTrace();
+						logger.error("Failed to delete the temporary directory created for BW Design Utility workspace: " + tempDir.toString(), e );
+					}
+				});
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			logger.error("Failed to delete the temporary directory created for BW Design Utility workspace: " + tempDir.toString(), e );
+		}
+	}
 	
 	private void validateBWProject() throws MojoExecutionException{
 		List<String> params = new ArrayList<>();
 		params = createUtilityArgument(params);
+		params = createWorkspaceArgument(params);
 		params.add("validate");
 		params.add(projectList());
 
@@ -241,6 +298,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 	private void importWorkspace() throws MojoExecutionException {
 		List<String> params = new ArrayList<>();
 		params = createUtilityArgument(params);
+		params = createWorkspaceArgument(params);
 		params.add("import");
 		params.add(project.getBasedir().getParent());
 
@@ -285,6 +343,12 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 			}
 		}
 		reader.close();
+		try {
+			process.waitFor();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			logger.error("Error occurred while priting the output: ", e);
+		}
 	}
 	
 	
