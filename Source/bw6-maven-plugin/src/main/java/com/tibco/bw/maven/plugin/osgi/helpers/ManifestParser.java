@@ -70,7 +70,10 @@ public class ManifestParser {
 		String updatedProvidesCapabilities = ""; //$NON-NLS-1$
 		
 		Version versionObject = VersionParser.parseVersion(oldVersion);
-		String newVersion = versionObject.getMajor() + "." + versionObject.getMinor() + "." + versionObject.getMicro()+"."+versionObject.getQualifier();
+		String newVersion = versionObject.getMajor() + "." + versionObject.getMinor() + "." + versionObject.getMicro();
+		if(versionObject.getQualifier()!= null && !versionObject.getQualifier().isEmpty()) {
+				newVersion = newVersion+"."+versionObject.getQualifier();
+		}
 		
 		if(manifest != null){
 			String capabilities = manifest.getMainAttributes().getValue(Constants.BUNDLE_PROVIDE_CAPABILITY);
