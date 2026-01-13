@@ -236,7 +236,7 @@
 		<dependency>
   			<groupId>com.tibco.security</groupId>
   			<artifactId>com.tibco.security.tibcrypt.eclipse</artifactId>
-  			<version>2.19.400.001</version>
+  			<version>2.19.500.024</version>
 		</dependency>
 		<dependency>
     		<groupId>org.twdata.maven</groupId>
