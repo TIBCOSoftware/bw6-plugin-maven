@@ -14,6 +14,7 @@ import java.util.jar.Manifest;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.artifact.resolver.filter.TypeArtifactFilter;
 import org.apache.maven.execution.MavenSession;
@@ -28,6 +29,7 @@ import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
+import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
@@ -38,7 +40,10 @@ import org.codehaus.plexus.archiver.FileSet;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.archiver.jar.ManifestException;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.eclipse.aether.graph.Dependency;
+
 
 import com.tibco.bw.maven.plugin.build.BuildProperties;
 import com.tibco.bw.maven.plugin.build.BuildPropertiesParser;
@@ -67,6 +72,9 @@ public class BWModulePackageMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project.build.outputDirectory}", required = true)
     private File classesDirectory;
+    
+    @Parameter(defaultValue = "${settings}", readonly = true)
+    private Settings settings;
     
     @Parameter(defaultValue = Constants.TIMESTAMP)
     private String qualifierReplacement;
@@ -104,7 +112,7 @@ public class BWModulePackageMojo extends AbstractMojo {
     		}
     		getLog().info("Updated the Manifest version ");
 
-    		ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement);
+    		ManifestWriter.updateManifestVersion(project, manifest, qualifierReplacement,session);
     		updateManifestVersion();
 
     		getLog().info("Removing the externals entries if any. ");
@@ -187,8 +195,15 @@ public class BWModulePackageMojo extends AbstractMojo {
 			if(dependencies != null && !dependencies.isEmpty()) {
 				for(org.apache.maven.model.Dependency dep: dependencies) {
 					Path path = Paths.get(System.getProperty("user.home"), ".m2");
-					String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
-					List<Path> result = BWFileUtils.findByFileName(path, fileName);
+					List<Path> result = new ArrayList<Path>();
+					if(isVersionRange(dep.getVersion())) {
+						File localRepo = new File(settings.getLocalRepository());
+						isAnyJarPresent(localRepo, dep.getGroupId(), dep.getArtifactId(), dep.getVersion());
+					}else {
+						String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
+						result = BWFileUtils.findByFileName(path, fileName);
+					}
+					
 					artifactFiles.put(result.get(0).toFile(),dep.getScope());
 				}
 			}
@@ -248,6 +263,55 @@ public class BWModulePackageMojo extends AbstractMojo {
 		getLog().debug("Final Bundle-Classpath is " + bundleClasspath);
 		manifest.getMainAttributes().putValue(Constants.BUNDLE_CLASSPATH, bundleClasspath);
 	}
+	
+	private boolean isVersionRange(String version) {
+        return version != null &&
+                (version.contains("[") || version.contains("("));
+    }
+	
+	public boolean isAnyJarPresent(
+            File localRepo,
+            String groupId,
+            String artifactId,
+            String versionRange) throws Exception {
+
+        VersionRange range = VersionRange.createFromVersionSpec(versionRange);
+
+        File artifactDir = new File(
+                localRepo,
+                groupId.replace('.', File.separatorChar)
+                        + File.separator + artifactId
+        );
+
+        if (!artifactDir.exists() || !artifactDir.isDirectory()) {
+            return false;
+        }
+
+        File[] versionDirs = artifactDir.listFiles(File::isDirectory);
+        if (versionDirs == null) {
+            return false;
+        }
+
+        for (File versionDir : versionDirs) {
+            String version = versionDir.getName();
+
+            if (!range.containsVersion(new DefaultArtifactVersion(version))) {
+                continue;
+            }
+
+            // Check if at least one jar exists
+            File[] jars = versionDir.listFiles(f ->
+                    f.getName().endsWith(".jar")
+                            && f.getName().startsWith(artifactId + "-" + version)
+            );
+
+            if (jars != null && jars.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 	private DependencyResolutionResult getDependencies() {
 		DependencyResolutionResult resolutionResult = null;

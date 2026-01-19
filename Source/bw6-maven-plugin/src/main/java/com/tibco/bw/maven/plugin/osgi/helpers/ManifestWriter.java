@@ -7,6 +7,13 @@ import java.io.IOException;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Dependency;
 
 import org.apache.maven.project.MavenProject;
 
@@ -32,7 +39,7 @@ public class ManifestWriter {
     }
     
     
-    public static void updateManifestVersion(MavenProject project , Manifest mf, String qualifierReplacement)
+    public static void updateManifestVersion(MavenProject project , Manifest mf, String qualifierReplacement,  MavenSession session)
     {
         Attributes attributes = mf.getMainAttributes();
         
@@ -49,9 +56,20 @@ public class ManifestWriter {
         //Updating provide capability for Shared Modules
         if(BWProjectUtils.getModuleType(mf) == MODULE.SHAREDMODULE){
         	String updatedProvide = ManifestParser.getUpdatedProvideCapabilities(mf, projectVersion);
-        	attributes.putValue(Constants.BUNDLE_PROVIDE_CAPABILITY, updatedProvide);
+        	if(updatedProvide!= null && !updatedProvide.isEmpty()) {
+        		attributes.putValue(Constants.BUNDLE_PROVIDE_CAPABILITY, updatedProvide);
+           }
         }
-
+        
+        Set<Artifact> list=project.getDependencyArtifacts();
+    	String reqCapability = mf.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY);
+    	if(reqCapability !=  null && !reqCapability.isEmpty()) {
+			String updatedRequire=ManifestParser.getRequiredCapabilities(reqCapability, list,session);
+	    	System.out.print(updatedRequire);
+	    	if(updatedRequire != null  &&  !updatedRequire.isEmpty()) {
+	    		attributes.putValue(Constants.BUNDLE_REQUIRE_CAPABILITY, updatedRequire);
+	    	}
+    	}
     }
     
     private static String getManifestVersion( Manifest manifest , String version, String qualifierReplacement) 
