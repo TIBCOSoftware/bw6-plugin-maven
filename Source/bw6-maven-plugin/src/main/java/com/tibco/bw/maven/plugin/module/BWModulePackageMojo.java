@@ -31,6 +31,7 @@ import org.apache.maven.project.DefaultDependencyResolutionRequest;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
@@ -306,7 +307,8 @@ public class BWModulePackageMojo extends AbstractMojo {
 		TypeArtifactFilter filter = new TypeArtifactFilter("jar");
 		filter.include(artifact);
 		try {
-			DependencyNode node = builder.buildDependencyGraph(project, filter);
+			ProjectBuildingRequest request = session.getProjectBuildingRequest();
+			DependencyNode node =builder.buildDependencyGraph(request, filter);
 			node.getArtifact();
 			node.accept(new DependencyNodeVisitor() {
 				public boolean visit(DependencyNode node) {

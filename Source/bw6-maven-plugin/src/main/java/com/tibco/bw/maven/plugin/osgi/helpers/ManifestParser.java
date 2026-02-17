@@ -9,10 +9,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 
@@ -109,29 +111,13 @@ public class ManifestParser {
 		return updatedProvidesCapabilities;
 	}
 
-public static String getRequiredCapabilities(String reqCapbilitySource, List<Dependency> listDep, MavenSession session) {
+public static String getRequiredCapabilities(String reqCapbilitySource, Set<Artifact> listDep, MavenSession session) {
 		
 		String processedText = "";
 		String listModulesBw="";
-		for (Iterator<Dependency> iter = listDep.iterator(); iter.hasNext();) {
-			Dependency dep = iter.next();
-			Path path = null;
-			if(session.getLocalRepository()!= null ) {
-				path = Paths.get(session.getLocalRepository().getBasedir());
-			}else {
-				path = Paths.get(System.getProperty("user.home"), ".m2");
-			}
-			
-			String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
-			System.out.println("Searching for jar "+fileName +" at local repo "+path.toString());
-			List<Path> result = null;
-			try {
-				result = BWFileUtils.findByFileName(path, fileName);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			File file = result.get(0).toFile();
+		for (Iterator iterator = listDep.iterator(); iterator.hasNext();) {
+			Artifact artifact = (Artifact) iterator.next();
+			File file = artifact.getFile();
 			Manifest mf = null;
 			try (JarFile jar = new JarFile(file)) {
 	             mf = jar.getManifest();
@@ -160,9 +146,9 @@ public static String getRequiredCapabilities(String reqCapbilitySource, List<Dep
 
 				if (filters[0].trim().equals("com.tibco.bw.module")) {
 					System.out.println("com.tibco.bw.module detected");
-					if (filters[1].trim().startsWith("filter:=\"(&(name="+ dep.getArtifactId() +")")) {
+					if (filters[1].trim().startsWith("filter:=\"(&(name="+ artifact.getArtifactId() +")")) {
 
-						listModulesBw += filters[0] + ";" + "filter:=\"(&(name="+dep.getArtifactId()+")(version="+newVersion+"))\"" + ",";
+						listModulesBw += filters[0] + ";" + "filter:=\"(&(name="+artifact.getArtifactId()+")(version="+newVersion+"))\"" + ",";
 						
 					}
 				} 
