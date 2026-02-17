@@ -65,13 +65,13 @@ public class BWTestsReport extends AbstractMavenReport
 
 	
 	
-	
-	@Override
-	public void execute() throws MojoExecutionException {
-		
-		super.execute();
-	}
-	
+	//TODO
+//	@Override
+//	public void execute() throws MojoExecutionException {
+//		
+//		super.execute();
+//	}
+//	
 	
 	private void generateCodeCoverageReport( CompleteReportDTO result ) throws Exception
 	{
