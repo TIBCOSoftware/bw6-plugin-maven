@@ -54,6 +54,8 @@ public class TestCaseDTO implements Serializable{
 	
 	@SuppressWarnings("rawtypes")
 	private List mockActivityList = new ArrayList();
+	
+	private List skipActivityList = new ArrayList();
 
 	@XmlElement
 	public String getXmlInput() 
@@ -110,6 +112,15 @@ public class TestCaseDTO implements Serializable{
 	@SuppressWarnings("rawtypes")
 	public void setMockActivityList(List mockActivityList) {
 		this.mockActivityList = mockActivityList;
+	}
+	
+	@XmlElement(name="skipActivityList")
+	public List getSkipActivityList() {
+		return skipActivityList;
+	}
+
+	public void setSkipActivityList(List skipActivityList) {
+		this.skipActivityList = skipActivityList;
 	}
 
 	public String getServiceName() {
