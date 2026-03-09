@@ -5,20 +5,20 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.model.Dependency;
 
-import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
 public class ManifestParser {
@@ -110,68 +110,61 @@ public class ManifestParser {
 		
 		return updatedProvidesCapabilities;
 	}
-
-public static String getRequiredCapabilities(String reqCapbilitySource, Set<Artifact> listDep, MavenSession session) {
-		
-		String processedText = "";
-		String listModulesBw="";
-		for (Iterator iterator = listDep.iterator(); iterator.hasNext();) {
-			Artifact artifact = (Artifact) iterator.next();
-			File file = artifact.getFile();
-			Manifest mf = null;
-			try (JarFile jar = new JarFile(file)) {
-	             mf = jar.getManifest();
-	        } catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
-//			String newVersion = dep.getVersion();
-			String newVersion = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-			if (newVersion != null && newVersion.contains(".qualifier")) {
-				String vers[] = newVersion.split(".qualifier");
-				newVersion = vers[0];
-			}
-			if (newVersion != null && newVersion.contains("-SNAPSHOT")) {
-				String vers[] = newVersion.split("-SNAPSHOT");
-				newVersion = vers[0];
-			}
-
-			String[] entries = reqCapbilitySource.split(",");
-			for (int i = 0; i < entries.length; i++) {
-				
-				String entry = entries[i];
-				String[] filters = entry.split(";");
-
-				if (filters[0].trim().equals("com.tibco.bw.module")) {
-					System.out.println("com.tibco.bw.module detected");
-					if (filters[1].trim().startsWith("filter:=\"(&(name="+ artifact.getArtifactId() +")")) {
-
-						listModulesBw += filters[0] + ";" + "filter:=\"(&(name="+artifact.getArtifactId()+")(version="+newVersion+"))\"" + ",";
-						
-					}
-				} 
-			}
-
-		}
-		if(reqCapbilitySource != null && !reqCapbilitySource.isEmpty() && reqCapbilitySource.contains(",")) {
-			String[] entriesOthers = reqCapbilitySource.split(",");
-			for (int i = 0; i < entriesOthers.length; i++) {
-				
-				String entry = entriesOthers[i];
-				String[] filters = entry.split(";");
-				String str = String.join(",", filters);
 	
-				if (!filters[0].trim().equals("com.tibco.bw.module")) {
-					processedText+= entry+",";
-				} 
-			}
-		}
-		processedText= listModulesBw+processedText;
-		processedText=processedText.replaceAll(",,",",");
-		if(processedText.endsWith(","))
-			processedText=processedText.substring(0, processedText.length() - 1);
-		return processedText;
+	
+
+	public static String getRequiredCapabilities(String reqCapbilitySource, Set<Artifact> listDep, MavenSession session) {
+
+	    StringBuilder processedText = new StringBuilder();
+
+	    if (reqCapbilitySource != null && !reqCapbilitySource.isEmpty()) {
+	        processedText.append(reqCapbilitySource.trim());
+	    }
+
+	    for (Artifact artifact : listDep) {
+
+	        String artifactId = artifact.getArtifactId();
+
+	        if(artifactId.equals("com.tibco.bw.palette.shared")) {
+	        	continue;
+	        }
+	        // Check if dependency already exists
+	        if (reqCapbilitySource != null && reqCapbilitySource.contains("(name=" + artifactId + ")")) {
+	            continue;
+	        }
+
+	        File file = artifact.getFile();
+	        String newVersion = null;
+
+	        try (JarFile jar = new JarFile(file)) {
+	            Manifest mf = jar.getManifest();
+	            newVersion = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+
+	        if (newVersion == null)
+	            continue;
+
+	        // Remove qualifier and snapshot
+	        if (newVersion.contains(".qualifier")) {
+	            newVersion = newVersion.split("\\.qualifier")[0];
+	        }
+
+	        if (newVersion.contains("-SNAPSHOT")) {
+	            newVersion = newVersion.split("-SNAPSHOT")[0];
+	        }
+
+	        String newCapability = "com.tibco.bw.module; filter:=\"(&(name=" 
+	                + artifactId + ")(version=" + newVersion + "))\"";
+
+	        if (processedText.length() > 0 && processedText.charAt(processedText.length() - 1) != ',') {
+	            processedText.append(",");
+	        }
+
+	        processedText.append(newCapability);
+	    }
+
+	    return processedText.toString();
 	}
 }
