@@ -231,9 +231,11 @@ public class BWModulesParser {
 			}
 			
 			if (moduleProjectForCXFDpepe != null) {
-				for(Artifact depArtifact : moduleProjectForCXFDpepe.getDependencyArtifacts()) {
-					if(depArtifact.getArtifactId().equals(module)) {
-						return depArtifact;
+				if(moduleProjectForCXFDpepe.getDependencyArtifacts() != null) {
+					for(Artifact depArtifact : moduleProjectForCXFDpepe.getDependencyArtifacts()) {
+						if(depArtifact.getArtifactId().equals(module)) {
+							return depArtifact;
+						}
 					}
 				}
 			}
