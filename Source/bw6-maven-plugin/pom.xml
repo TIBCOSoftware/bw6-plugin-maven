@@ -42,7 +42,7 @@
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
-			<version>3.9.12</version>
+			<version>3.9.14</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -237,7 +237,7 @@
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-utils</artifactId>
-			<version>4.0.1</version>
+			<version>4.0.3</version>
 		</dependency>
 
 		<dependency>
