@@ -33,7 +33,7 @@ import com.tibco.bw.maven.plugin.tci.client.TCIDeployer;
 import com.tibco.bw.maven.plugin.utils.BWFileUtils;
 import com.tibco.bw.maven.plugin.utils.Constants;
 
-@Mojo(name = "bwdeployold")
+@Mojo(name = "bwdeployold", defaultPhase = LifecyclePhase.DEPLOY)
 public class BWDeploymentMojo extends AbstractMojo {
 	@Parameter(defaultValue="${session}", readonly=true)
 	private MavenSession session;
