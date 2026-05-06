@@ -2,17 +2,25 @@ package com.tibco.bw.maven.plugin.application;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -112,6 +120,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
             updateManifestVersion();
     	    getLog().info("Adding Modules to the EAR file");
     		addModules();
+    		updateManifestRequireCapability();
     		getLog().info("Adding EAR Information to the EAR File");
     		addApplication();
 
@@ -189,6 +198,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
         		artifacts = parser.getModulesSet(allProj);
         	}
         	
+        	List<Artifact> appModuleArtifacts = new ArrayList<>();
         	if(artifacts != null && !artifacts.isEmpty()) {
         		for(Artifact artifact : artifacts) {
         			//Find the Module JAR file
@@ -198,14 +208,12 @@ public class BWEARPackagerMojo extends AbstractMojo {
         			if( mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
         			{
         				jarchiver.addFile(moduleJar, artifact.getArtifactId()+ "_" + artifact.getBaseVersion()+ ".jar");
-
         			}
         			else
         			{
-        				jarchiver.addFile(moduleJar, moduleJar.getName());
+        				// Defer app module JARs so moduleVersionMap is fully populated before manifest update
+        				appModuleArtifacts.add(artifact);
         			}
-
-
 
         			//Add the JAR file to the EAR file
         			String version = BWProjectUtils.getModuleVersion(moduleJar);
@@ -214,6 +222,15 @@ public class BWEARPackagerMojo extends AbstractMojo {
         			//Save the module version in the Version Map.
         			moduleVersionMap.put(artifact.getArtifactId(), version);
         		}
+        	}
+        	// Re-package each app module JAR with Require-Capability updated from moduleVersionMap
+        	for (Artifact artifact : appModuleArtifacts) {
+        		File moduleJar = artifact.getFile();
+        		Manifest mf = ManifestParser.parseManifestFromJAR(moduleJar);
+        		updateModuleRequireCapability(mf);
+        		File updatedJar = repackageJarWithUpdatedManifest(moduleJar, mf);
+        		getLog().info("Adding App Module JAR with updated manifest: " + moduleJar.getName());
+        		jarchiver.addFile(updatedJar, moduleJar.getName());
         	}
             
             
@@ -677,6 +694,114 @@ public class BWEARPackagerMojo extends AbstractMojo {
 		}
 		getLog().debug("cleaned up the temporary files.");
     }
+    
+
+    /**
+     * Updates the Require-Capability entries in the given module manifest in-place,
+     * replacing each module version with the value from moduleVersionMap.
+     */
+    private void updateModuleRequireCapability(Manifest mf) {
+        String reqCapability = mf.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY);
+        if (reqCapability == null || reqCapability.isEmpty() || moduleVersionMap.isEmpty()) {
+            return;
+        }
+        Pattern namePattern = Pattern.compile("\\(name=([^)]+)\\)");
+        Pattern versionPattern = Pattern.compile("\\(version=[^)]*\\)");
+        String[] entries = reqCapability.split(",");
+        boolean updated = false;
+        for (int i = 0; i < entries.length; i++) {
+            Matcher nameMatcher = namePattern.matcher(entries[i]);
+            if (nameMatcher.find()) {
+                String moduleName = nameMatcher.group(1).trim();
+                String moduleVersion = moduleVersionMap.get(moduleName);
+                if (!StringUtils.isEmpty(moduleVersion)) {
+                    entries[i] = versionPattern.matcher(entries[i]).replaceFirst("(version=" + moduleVersion + ")");
+                    getLog().info("Updated Require-Capability in module manifest for " + moduleName + " to " + moduleVersion);
+                    updated = true;
+                }
+            }
+        }
+        if (updated) {
+            StringBuilder updatedReqCap = new StringBuilder();
+            for (int i = 0; i < entries.length; i++) {
+                updatedReqCap.append(entries[i]);
+                if (i < entries.length - 1) {
+                    updatedReqCap.append(",");
+                }
+            }
+            mf.getMainAttributes().putValue(Constants.BUNDLE_REQUIRE_CAPABILITY, updatedReqCap.toString());
+        }
+    }
+
+    /**
+     * Copies all entries from originalJar into a new temp JAR, replacing its
+     * MANIFEST.MF with updatedManifest. The temp file is registered for cleanup.
+     */
+    private File repackageJarWithUpdatedManifest(File originalJar, Manifest updatedManifest) throws Exception {
+        File tempJar = File.createTempFile("bwear_appmod_", ".jar");
+        tempFiles.add(tempJar);
+        byte[] buffer = new byte[8192];
+        try (JarFile jarFile = new JarFile(originalJar);
+             JarOutputStream jos = new JarOutputStream(new FileOutputStream(tempJar), updatedManifest)) {
+            Enumeration<JarEntry> entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String name = entry.getName();
+                // JarOutputStream constructor already wrote META-INF/MANIFEST.MF
+                if ("META-INF/".equalsIgnoreCase(name) || "META-INF/MANIFEST.MF".equalsIgnoreCase(name)) {
+                    continue;
+                }
+                jos.putNextEntry(new JarEntry(name));
+                try (InputStream is = jarFile.getInputStream(entry)) {
+                    int len;
+                    while ((len = is.read(buffer)) > 0) {
+                        jos.write(buffer, 0, len);
+                    }
+                }
+                jos.closeEntry();
+            }
+        }
+        return tempJar;
+    }
+
+    /**
+     * Updates the Require-Capability entries in the application manifest using the
+     * same moduleVersionMap that is written into the TIBCO.xml technologyVersion elements,
+     * so both files carry exactly the same module versions.
+     */
+    private void updateManifestRequireCapability() {
+        String reqCapability = manifest.getMainAttributes().getValue(Constants.BUNDLE_REQUIRE_CAPABILITY);
+        if (reqCapability == null || reqCapability.isEmpty() || moduleVersionMap.isEmpty()) {
+            return;
+        }
+        Pattern namePattern = Pattern.compile("\\(name=([^)]+)\\)");
+        Pattern versionPattern = Pattern.compile("\\(version=[^)]*\\)");
+        String[] entries = reqCapability.split(",");
+        boolean updated = false;
+        for (int i = 0; i < entries.length; i++) {
+            Matcher nameMatcher = namePattern.matcher(entries[i]);
+            if (nameMatcher.find()) {
+                String moduleName = nameMatcher.group(1).trim();
+                String moduleVersion = moduleVersionMap.get(moduleName);
+                if (!StringUtils.isEmpty(moduleVersion)) {
+                    entries[i] = versionPattern.matcher(entries[i]).replaceFirst("(version=" + moduleVersion + ")");
+                    getLog().info("Updated Require-Capability for module " + moduleName + " with version " + moduleVersion);
+                    updated = true;
+                }
+            }
+        }
+        if (updated) {
+            StringBuilder updatedReqCap = new StringBuilder();
+            for (int i = 0; i < entries.length; i++) {
+                updatedReqCap.append(entries[i]);
+                if (i < entries.length - 1) {
+                    updatedReqCap.append(",");
+                }
+            }
+            manifest.getMainAttributes().putValue(Constants.BUNDLE_REQUIRE_CAPABILITY, updatedReqCap.toString());
+        }
+    }
+
     /**
      *  Updated the Application manifest just like the module one
      */
