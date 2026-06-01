@@ -364,7 +364,7 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 		}
 		if (hasErrors) {
 			throw new MojoExecutionException(
-					"Error occurred while executing bwdesign utility command. Please check the logs for more details.");
+					"Error occurred while executing bwdesign utility command - "+commandName+". Please check the logs for more details.");
 		}
 	}
 	
