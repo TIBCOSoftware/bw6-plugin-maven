@@ -353,6 +353,9 @@ public class TestFileParser {
 								
 						    	 }
 								
+						       	}else if("SkipActivity".equals(cEl.getNodeName())) {
+						       		String activityName = cEl.getAttributes().getNamedItem("Name").getNodeValue();
+						       		testcase.getSkipActivityList().add(activityName);
 						       	}
 						   }
 						}

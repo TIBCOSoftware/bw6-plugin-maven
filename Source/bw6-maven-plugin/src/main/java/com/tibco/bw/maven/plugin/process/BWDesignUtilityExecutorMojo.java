@@ -333,13 +333,26 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 		return String.join(",", projectList);
 	}
 
-	private void printProcessOutput(Process process, List<String> params) throws IOException {
+	private void printProcessOutput(Process process, List<String> params) throws IOException, MojoExecutionException {
 		BufferedReader reader = null;
 		String line = null;
+		boolean hasErrors = false;
 		reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		while ((line = reader.readLine()) != null) {
 			if (!params.contains(line)) {
-				logger.info(line);
+				if (line.trim().isEmpty()) {
+					continue;
+				}
+				if(line.contains("[ERROR]") ||line.contains("[error]")) {
+					logger.error(line);
+					hasErrors = true;
+				}else if(line.contains("[INFO") ||line.contains("[info]")) {
+					logger.info(line);
+				}else if(line.contains("[WARNING]") ||line.contains("[warning]")) {
+					logger.info(line);
+				} else {
+					logger.info(line);
+				}
 			}
 		}
 		reader.close();
@@ -348,6 +361,10 @@ public class BWDesignUtilityExecutorMojo extends AbstractMojo{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			logger.error("Error occurred while priting the output: ", e);
+		}
+		if (hasErrors) {
+			throw new MojoExecutionException(
+					"Error occurred while executing bwdesign utility command. Please check the logs for more details.");
 		}
 	}
 	
