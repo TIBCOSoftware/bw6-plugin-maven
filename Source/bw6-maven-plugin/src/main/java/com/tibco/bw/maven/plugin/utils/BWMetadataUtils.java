@@ -1,8 +1,6 @@
 package com.tibco.bw.maven.plugin.utils;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
@@ -26,6 +24,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils.MODULE;
 
 public class BWMetadataUtils {
@@ -55,20 +54,10 @@ public class BWMetadataUtils {
 
 	public static void updateManifest(File basedir, Manifest mf) {
 		File manifest = new File(basedir, "META-INF/MANIFEST.MF");
-		BufferedOutputStream os = null;
 		try {
-			os = new BufferedOutputStream(new FileOutputStream(manifest));
-			mf.write(os);
+			ManifestWriter.writeManifest(manifest, mf);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
-			try {
-				os.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 	}
 

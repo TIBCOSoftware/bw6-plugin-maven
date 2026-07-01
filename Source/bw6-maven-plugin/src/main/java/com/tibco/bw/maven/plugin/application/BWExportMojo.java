@@ -144,9 +144,7 @@ public class BWExportMojo extends AbstractMojo {
 			try (FileInputStream fis = new FileInputStream(manifestFile)) {
 				Manifest mf = new Manifest(fis);
 				mf.getMainAttributes().putValue("Bundle-Version", newVersion);
-				try (FileOutputStream fos = new FileOutputStream(manifestFile)) {
-					mf.write(fos);
-				}
+				ManifestWriter.writeManifest(manifestFile, mf);
 			} catch (Exception e) {
 				getLog().warn("Failed to update Bundle-Version in Manifest.MF: " + e.getMessage());
 			}
@@ -448,9 +446,7 @@ public class BWExportMojo extends AbstractMojo {
 		try(InputStream is = new FileInputStream(member)) {
 			Manifest manifest = new Manifest(is);
 			manifest.getMainAttributes().put(new Attributes.Name("TIBCO-BW-SharedModuleType"), "binary");
-			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			manifest.write(os);
-			return os.toByteArray();
+			return ManifestWriter.toBytes(manifest);
 		}
 	}
 
