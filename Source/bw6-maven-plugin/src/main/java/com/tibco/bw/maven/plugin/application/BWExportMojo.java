@@ -1,5 +1,16 @@
 package com.tibco.bw.maven.plugin.application;
 
+import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
+
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -38,11 +49,10 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import com.google.common.io.Files;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import com.tibco.security.AXSecurityException;
 import com.tibco.security.ObfuscationEngine;
-
-import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 @Mojo(name = "bwexport")
 public class BWExportMojo extends AbstractMojo {

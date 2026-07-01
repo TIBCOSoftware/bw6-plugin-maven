@@ -46,23 +46,12 @@ public class ManifestWriter {
         }
     }
 
-    /**
-     * Writes a MANIFEST.MF directly from the Manifest object without going through
-     * java.util.jar.Manifest.write(), which hard-wraps every line at 72 bytes
-     * regardless of OSGi token boundaries. That wrapping can split attribute-type
-     * annotations like "version:Version" across a continuation line, making the
-     * header unreadable by OSGi runtimes and Eclipse PDE.
-     *
-     * Instead, each header is written on a single line; lines longer than 72
-     * characters are wrapped only at semicolon boundaries so that no OSGi token
-     * is ever split mid-word.
-     */
     private static void writeManifestWithSmartWrapping(Manifest mf, OutputStream out) throws IOException {
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
         for (Map.Entry<Object, Object> entry : mf.getMainAttributes().entrySet()) {
             String name = entry.getKey().toString();
             String value = entry.getValue() != null ? entry.getValue().toString() : "";
-            writer.print(rewrapAtSemicolon(name + ": " + value));
+            writer.print(name + ": " + value);
             writer.print("\r\n");
         }
         writer.print("\r\n");
@@ -80,29 +69,6 @@ public class ManifestWriter {
         return baos.toByteArray();
     }
 
-    private static String rewrapAtSemicolon(String line) {
-        if (line.length() <= 72) {
-            return line;
-        }
-        // Break after the last semicolon that fits within 72 characters so that
-        // OSGi attribute type annotations (e.g. "version:Version") always stay
-        // on the same continuation line and are never read as separate tokens.
-        int breakAt = 72;
-        for (int i = 71; i > 0; i--) {
-            if (line.charAt(i) == ';') {
-                breakAt = i + 1;
-                break;
-            }
-        }
-        String first = line.substring(0, Math.min(breakAt, line.length()));
-        String remainder = line.substring(Math.min(breakAt, line.length())).trim();
-        if (remainder.isEmpty()) {
-            return first;
-        }
-        return first + "\r\n" + rewrapAtSemicolon(" " + remainder);
-    }
-    
-    
     public static void updateManifestVersion(MavenProject project , Manifest mf, String qualifierReplacement, MavenSession session)
     {
         Attributes attributes = mf.getMainAttributes();
