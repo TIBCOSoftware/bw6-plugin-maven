@@ -1,11 +1,16 @@
 package com.tibco.bw.maven.plugin.module;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -13,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
@@ -160,6 +168,8 @@ public class BWModulePackageMojo extends AbstractMojo {
             getLog().info("Creating the Plugin JAR file");
             archiver.createArchive(session, project, archiveConfiguration);
 
+            repackageJarWithUpdatedManifest(pluginFile, manifest);
+
             project.getArtifact().setFile(pluginFile);
 
          // Code for BWCE
@@ -270,8 +280,18 @@ public class BWModulePackageMojo extends AbstractMojo {
 		}
 
 		String bundleClasspath = manifest.getMainAttributes().getValue(Constants.BUNDLE_CLASSPATH);
-		if(bundleClasspath == null || bundleClasspath.isEmpty()) {
+		if(bundleClasspath == null || bundleClasspath.trim().isEmpty()) {
 			bundleClasspath = ".";
+		} else {
+			StringBuilder normalized = new StringBuilder();
+			for (String part : bundleClasspath.split(",")) {
+				String trimmed = part.trim();
+				if (!trimmed.isEmpty()) {
+					if (normalized.length() > 0) normalized.append(",");
+					normalized.append(trimmed);
+				}
+			}
+			bundleClasspath = normalized.length() > 0 ? normalized.toString() : ".";
 		}
 		bundleClasspath = bundleClasspath + buffer.toString();
 		getLog().debug("Final Bundle-Classpath is " + bundleClasspath);
@@ -432,11 +452,12 @@ public class BWModulePackageMojo extends AbstractMojo {
         	String[] entries = bundlePath.split(",");
         	StringBuffer buffer = new StringBuffer();
         	for(String entry : entries) {
-        		if(entry.indexOf("external") == -1) {
+        		String trimmedEntry = entry.trim();
+        		if(!trimmedEntry.isEmpty() && trimmedEntry.indexOf("external") == -1) {
             		if (buffer.length()!= 0) {
             			buffer.append(",");
             		}
-        			buffer.append(entry);
+        			buffer.append(trimmedEntry);
         		}
         	}
         	getLog().debug("Bundle Classpath after removing externals is " + buffer.toString());
@@ -478,5 +499,36 @@ public class BWModulePackageMojo extends AbstractMojo {
 
 	public void setJarArchiver(JarArchiver jarArchiver) {
 		this.jarArchiver = jarArchiver;
+	}
+
+	private void repackageJarWithUpdatedManifest(File jarFile, Manifest updatedManifest) throws Exception {
+		File tempJar = File.createTempFile("bwmod_", ".jar");
+		byte[] buffer = new byte[8192];
+		byte[] manifestBytes = ManifestWriter.toBytes(updatedManifest);
+		try (JarFile jf = new JarFile(jarFile);
+			 JarOutputStream jos = new JarOutputStream(new FileOutputStream(tempJar))) {
+			jos.putNextEntry(new JarEntry("META-INF/"));
+			jos.closeEntry();
+			jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"));
+			jos.write(manifestBytes);
+			jos.closeEntry();
+			Enumeration<JarEntry> entries = jf.entries();
+			while (entries.hasMoreElements()) {
+				JarEntry entry = entries.nextElement();
+				String name = entry.getName();
+				if ("META-INF/".equalsIgnoreCase(name) || "META-INF/MANIFEST.MF".equalsIgnoreCase(name)) {
+					continue;
+				}
+				jos.putNextEntry(new JarEntry(name));
+				try (InputStream is = jf.getInputStream(entry)) {
+					int len;
+					while ((len = is.read(buffer)) > 0) {
+						jos.write(buffer, 0, len);
+					}
+				}
+				jos.closeEntry();
+			}
+		}
+		Files.move(tempJar.toPath(), jarFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 	}
 }

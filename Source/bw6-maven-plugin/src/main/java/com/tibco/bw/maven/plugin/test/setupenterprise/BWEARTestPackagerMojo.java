@@ -3,7 +3,7 @@ package com.tibco.bw.maven.plugin.test.setupenterprise;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -408,9 +408,7 @@ public class BWEARTestPackagerMojo extends AbstractMojo {
 		getLog().info("Manifest updated with Version " + version);
 
 		//Write the updated file and return the same.
-		FileOutputStream os = new FileOutputStream(tempManifest);
-		manifest.write(os);
-		os.close();
+		ManifestWriter.writeManifest(tempManifest, manifest);
 
 		tempFiles.add(tempManifest);
 		getLog().debug("Manifest added to temp location at " + tempManifest.toString());

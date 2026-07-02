@@ -1,11 +1,17 @@
 package com.tibco.bw.maven.plugin.osgi.helpers;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
@@ -24,21 +30,49 @@ import com.tibco.bw.maven.plugin.utils.Constants;
 public class ManifestWriter {
 
     public static File updateManifest(MavenProject project , Manifest mf) throws IOException {
-        
+
         File mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
         mfile.getParentFile().mkdirs();
-        BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
-        try {
-            mf.write(os);
-        } finally {
-        	if(os != null) {
-        		os.close();	
-        	}
+        try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile))) {
+            writeManifestWithSmartWrapping(mf, os);
         }
         return mfile;
     }
-    
-    
+
+    public static void writeManifest(File targetFile, Manifest mf) throws IOException {
+        targetFile.getParentFile().mkdirs();
+        try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(targetFile))) {
+            writeManifestWithSmartWrapping(mf, os);
+        }
+    }
+
+    private static void writeManifestWithSmartWrapping(Manifest mf, OutputStream out) throws IOException {
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
+        Attributes mainAttrs = mf.getMainAttributes();
+        // JAR spec requires Manifest-Version to be the first attribute; HashMap iteration order is not guaranteed
+        String mfVersion = mainAttrs.getValue(Name.MANIFEST_VERSION);
+        writer.print("Manifest-Version: " + (mfVersion != null ? mfVersion : "1.0") + "\r\n");
+        for (Map.Entry<Object, Object> entry : mainAttrs.entrySet()) {
+            if (Name.MANIFEST_VERSION.equals(entry.getKey())) continue;
+            String name = entry.getKey().toString();
+            String value = entry.getValue() != null ? entry.getValue().toString() : "";
+            writer.print(name + ": " + value + "\r\n");
+        }
+        writer.print("\r\n");
+        writer.flush();
+    }
+
+    /**
+     * Returns the manifest serialized as UTF-8 bytes using the same safe wrapping
+     * as {@link #writeManifest(File, Manifest)}.  Useful when the caller needs a
+     * byte array rather than a file (e.g. for embedding in a ZIP entry).
+     */
+    public static byte[] toBytes(Manifest mf) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        writeManifestWithSmartWrapping(mf, baos);
+        return baos.toByteArray();
+    }
+
     public static void updateManifestVersion(MavenProject project , Manifest mf, String qualifierReplacement, MavenSession session)
     {
         Attributes attributes = mf.getMainAttributes();
