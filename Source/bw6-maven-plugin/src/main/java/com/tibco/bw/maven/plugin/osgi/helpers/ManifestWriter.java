@@ -48,11 +48,15 @@ public class ManifestWriter {
 
     private static void writeManifestWithSmartWrapping(Manifest mf, OutputStream out) throws IOException {
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
-        for (Map.Entry<Object, Object> entry : mf.getMainAttributes().entrySet()) {
+        Attributes mainAttrs = mf.getMainAttributes();
+        // JAR spec requires Manifest-Version to be the first attribute; HashMap iteration order is not guaranteed
+        String mfVersion = mainAttrs.getValue(Name.MANIFEST_VERSION);
+        writer.print("Manifest-Version: " + (mfVersion != null ? mfVersion : "1.0") + "\r\n");
+        for (Map.Entry<Object, Object> entry : mainAttrs.entrySet()) {
+            if (Name.MANIFEST_VERSION.equals(entry.getKey())) continue;
             String name = entry.getKey().toString();
             String value = entry.getValue() != null ? entry.getValue().toString() : "";
-            writer.print(name + ": " + value);
-            writer.print("\r\n");
+            writer.print(name + ": " + value + "\r\n");
         }
         writer.print("\r\n");
         writer.flush();

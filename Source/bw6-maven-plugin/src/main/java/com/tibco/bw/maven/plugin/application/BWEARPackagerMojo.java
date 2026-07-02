@@ -739,13 +739,20 @@ public class BWEARPackagerMojo extends AbstractMojo {
         File tempJar = File.createTempFile("bwear_appmod_", ".jar");
         tempFiles.add(tempJar);
         byte[] buffer = new byte[8192];
+        // Use ManifestWriter.toBytes() so the embedded MANIFEST.MF is written without
+        // Java's 72-byte line wrapping, consistent with how source manifests are written.
+        byte[] manifestBytes = ManifestWriter.toBytes(updatedManifest);
         try (JarFile jarFile = new JarFile(originalJar);
-             JarOutputStream jos = new JarOutputStream(new FileOutputStream(tempJar), updatedManifest)) {
+             JarOutputStream jos = new JarOutputStream(new FileOutputStream(tempJar))) {
+            jos.putNextEntry(new JarEntry("META-INF/"));
+            jos.closeEntry();
+            jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"));
+            jos.write(manifestBytes);
+            jos.closeEntry();
             Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 String name = entry.getName();
-                // JarOutputStream constructor already wrote META-INF/MANIFEST.MF
                 if ("META-INF/".equalsIgnoreCase(name) || "META-INF/MANIFEST.MF".equalsIgnoreCase(name)) {
                     continue;
                 }
