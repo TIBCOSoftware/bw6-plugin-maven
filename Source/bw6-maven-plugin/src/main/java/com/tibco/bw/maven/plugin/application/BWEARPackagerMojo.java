@@ -207,7 +207,7 @@ public class BWEARPackagerMojo extends AbstractMojo {
         			Manifest mf = ManifestParser.parseManifestFromJAR( moduleJar );
         			if( mf.getMainAttributes().containsKey("TIBCO-BW-SharedModule") )
         			{
-        				jarchiver.addFile(moduleJar, artifact.getArtifactId()+ "_" + artifact.getBaseVersion()+ ".jar");
+        				jarchiver.addFile(moduleJar, moduleJar.getName());
         			}
         			else
         			{
@@ -248,6 +248,10 @@ public class BWEARPackagerMojo extends AbstractMojo {
     					Path path = Paths.get(System.getProperty("user.home"), ".m2");
     					String fileName = dep.getArtifactId().concat("-" + dep.getVersion() + ".jar");
     					List<Path> result = BWFileUtils.findByFileName(path, fileName);
+    					if (result.isEmpty()) {
+    						getLog().debug("Dependency JAR not found in local repo, skipping: " + fileName);
+    						continue;
+    					}
     					File file = result.get(0).toFile();
     					getLog().debug("Dependency file is " + file.getAbsolutePath() );
 

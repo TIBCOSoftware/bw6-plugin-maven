@@ -3,8 +3,10 @@ package com.tibco.bw.maven.plugin.utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.Manifest;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,6 +19,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.tibco.bw.maven.plugin.osgi.helpers.ManifestParser;
 
 public class BWModulesParser {
 	private MavenSession session;
@@ -94,11 +98,17 @@ public class BWModulesParser {
 		if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
 			projects = session.getAllProjects();
 		} else {
-			projects = session.getProjects();
+			// Use getAllProjects() so that in bwdeploy (where session.getProjects()
+			// only contains the app project), we still find module projects that
+			// BWModulePackageMojo registered via session.setAllProjects().
+			projects = session.getAllProjects();
 		}
 
 		
 		Set<Artifact> depArtifacts = project.getDependencyArtifacts();
+		if (depArtifacts == null) {
+			depArtifacts = Collections.emptySet();
+		}
 		for( Artifact depArtifact : depArtifacts )
 		{
 			if( depArtifact.getArtifactId().equals(module))
@@ -106,30 +116,30 @@ public class BWModulesParser {
 				return depArtifact;
 			}
 		}
-		
+
 		for(MavenProject project : projects) {
 			if(project.getArtifactId().contains(".module") ||  // from create a new business application path
 			   project.getArtifactId().contains("Module")	   // from create a new Business works application module path
 					){
 				moduleProject = project;
 			}
-			
+
 			if(project.getArtifact().getType().equals("bwmodule")) {
 				moduleProjectForCXFDpepe = project;
 			}
-			
-			if(project.getArtifactId().equals(module)) { 
+
+			if(project.getArtifactId().equals(module) || matchesBySymbolicName(project, module)) {
 				Artifact artifact = project.getArtifact();
 				return artifact;
 			}
 		}
-		
+
 		/*
 		 * check dependency on .module project
-		 * if parent does not have cxf dependency then 
-		 * we have to check cxf dep. in .module project to 
-		 * ensure it's entry in ear without adding redundant dependency in parent pom.xml 
-		 * 
+		 * if parent does not have cxf dependency then
+		 * we have to check cxf dep. in .module project to
+		 * ensure it's entry in ear without adding redundant dependency in parent pom.xml
+		 *
 		 */
 		if(depArtifacts.isEmpty()) {
 			if(moduleProject != null) {
@@ -144,29 +154,34 @@ public class BWModulesParser {
 
 				});
 			}
-			
+
 			if (moduleProjectForCXFDpepe != null) {
-				for(Artifact depArtifact : moduleProjectForCXFDpepe.getDependencyArtifacts()) {
-					if(depArtifact.getArtifactId().equals(module)) {
-						return depArtifact;
+				Set<Artifact> cxfDeps = moduleProjectForCXFDpepe.getDependencyArtifacts();
+				if (cxfDeps != null) {
+					for(Artifact depArtifact : cxfDeps) {
+						if(depArtifact.getArtifactId().equals(module)) {
+							return depArtifact;
+						}
 					}
 				}
 			}
 		}
 		return null;
 	}
-	
+
 	private Artifact getArtifactForModule(String module, List<MavenProject> allProj) {
 
 		List<MavenProject> projects = new ArrayList<MavenProject>();
 		if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
 			projects = session.getAllProjects();
 		} else {
-			projects = session.getProjects();
+			projects = session.getAllProjects();
 		}
 
-		
 		Set<Artifact> depArtifacts = project.getDependencyArtifacts();
+		if (depArtifacts == null) {
+			depArtifacts = Collections.emptySet();
+		}
 		for( Artifact depArtifact : depArtifacts )
 		{
 			if( depArtifact.getArtifactId().equals(module))
@@ -181,29 +196,29 @@ public class BWModulesParser {
 					){
 				moduleProject = project;
 			}
-			
+
 			if(project.getArtifact().getType().equals("bwmodule")) {
 				moduleProjectForCXFDpepe = project;
 			}
-			
-			if(project.getArtifactId().equals(module)) { 
+
+			if(project.getArtifactId().equals(module) || matchesBySymbolicName(project, module)) {
 				Artifact artifact = project.getArtifact();
 				return artifact;
 			}
 		}
-		
+
 		for(MavenProject project : allProj) {
 			if(project.getArtifactId().contains(".module") ||  // from create a new business application path
 			   project.getArtifactId().contains("Module")	   // from create a new Business works application module path
 					){
 				moduleProject = project;
 			}
-			
+
 			if(project.getArtifact().getType().equals("bwmodule")) {
 				moduleProjectForCXFDpepe = project;
 			}
-			
-			if(project.getArtifactId().equals(module)) { 
+
+			if(project.getArtifactId().equals(module) || matchesBySymbolicName(project, module)) {
 				Artifact artifact = project.getArtifact();
 				return artifact;
 			}
@@ -229,32 +244,50 @@ public class BWModulesParser {
 
 				});
 			}
-			
+
 			if (moduleProjectForCXFDpepe != null) {
-				for(Artifact depArtifact : moduleProjectForCXFDpepe.getDependencyArtifacts()) {
-					if(depArtifact.getArtifactId().equals(module)) {
-						return depArtifact;
+				Set<Artifact> cxfDeps = moduleProjectForCXFDpepe.getDependencyArtifacts();
+				if (cxfDeps != null) {
+					for(Artifact depArtifact : cxfDeps) {
+						if(depArtifact.getArtifactId().equals(module)) {
+							return depArtifact;
+						}
 					}
 				}
 			}
 		}
 		return null;
 	}
-	
+
 	private MavenProject getProjectForModule(String module){
 		List<MavenProject> projects = new ArrayList<MavenProject>();
 		if(bwEdition != null && bwEdition.equals(Constants.BWCF)) {
 			projects = session.getAllProjects();
 		} else {
-			projects = session.getProjects();
+			// Use getAllProjects() so that in bwdeploy, module projects registered
+			// by BWModulePackageMojo via session.setAllProjects() are searchable here,
+			// enabling the per-module Aether resolution that finds transitive shared modules.
+			projects = session.getAllProjects();
 		}
 
 		for(MavenProject project : projects) {
-			if(project.getArtifactId().equals(module)) {
+			if(project.getArtifactId().equals(module) || matchesBySymbolicName(project, module)) {
 				return project;
 			}
 		}
 		return null;
+	}
+
+	private boolean matchesBySymbolicName(MavenProject proj, String module) {
+		Manifest projManifest = ManifestParser.parseManifest(proj.getBasedir());
+		if(projManifest != null) {
+			String bsn = projManifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME);
+			if(bsn != null) {
+				if(bsn.contains(";")) bsn = bsn.substring(0, bsn.indexOf(";")).trim();
+				return bsn.equals(module);
+			}
+		}
+		return false;
 	}
 
 	private NodeList getModuleList(File tibcoXML) throws ParserConfigurationException, SAXException, IOException {
