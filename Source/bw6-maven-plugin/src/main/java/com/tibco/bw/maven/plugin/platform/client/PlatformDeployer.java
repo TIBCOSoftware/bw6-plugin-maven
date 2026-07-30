@@ -445,6 +445,9 @@ public class PlatformDeployer {
 				e.printStackTrace();
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			throw new ClientException(response.getStatus(), "Error code: " + errCode + "\nError message: " + errMsg + "\nError details: " + errDetail, null);
 		} else {
