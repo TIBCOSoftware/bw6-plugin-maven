@@ -135,13 +135,24 @@ public class ManifestParser {
 
 	        File file = artifact.getFile();
 	        String newVersion = null;
+	        boolean isSharedModule = false;
 
 	        try (JarFile jar = new JarFile(file)) {
 	            Manifest mf = jar.getManifest();
-	            newVersion = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+	            if (mf != null) {
+	                newVersion = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+	                isSharedModule = mf.getMainAttributes().getValue(Constants.TIBCO_SHARED_MODULE) != null;
+	            }
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        }
+
+	        // Only TIBCO BW Shared Modules contribute a "com.tibco.bw.module" Require-Capability.
+	        // Plain library jars (e.g. zip4j) are placed on the Bundle-ClassPath and are not BW
+	        // modules, so they must not be added as a module capability even though they carry a
+	        // valid OSGi Bundle-Version.
+	        if (!isSharedModule)
+	            continue;
 
 	        if (newVersion == null)
 	            continue;
