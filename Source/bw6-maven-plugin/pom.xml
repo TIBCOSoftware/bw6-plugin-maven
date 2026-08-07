@@ -72,6 +72,14 @@
 			<artifactId>commons-io</artifactId>
 			<version>2.21.0</version>
 		</dependency>
+		<!-- Override transitive commons-beanutils (via maven-reporting-impl ->
+			doxia-site-renderer -> velocity-tools-generic) to fix CVE-2025-48734
+			(AMBW-58028). -->
+		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+			<version>1.11.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-dependency-tree</artifactId>
