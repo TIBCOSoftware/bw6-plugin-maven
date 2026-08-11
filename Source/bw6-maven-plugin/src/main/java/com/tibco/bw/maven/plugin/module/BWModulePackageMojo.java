@@ -27,7 +27,7 @@ import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
+import org.apache.maven.artifact.resolver.filter.TypeArtifactFilter;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -324,7 +324,7 @@ public class BWModulePackageMojo extends AbstractMojo {
 
 	@SuppressWarnings("unused")
 	private void calculateDependencies(Artifact artifact) {
-		ArtifactFilter filter = a -> "jar".equals(a.getType());
+		TypeArtifactFilter filter = new TypeArtifactFilter("jar");
 		filter.include(artifact);
 		try {
 			ProjectBuildingRequest request = session.getProjectBuildingRequest();
