@@ -38,6 +38,10 @@ import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibco.bw.maven.plugin.admin.dto.Agent;
 import com.tibco.bw.maven.plugin.admin.dto.AppInstance;
 import com.tibco.bw.maven.plugin.admin.dto.AppNode;
@@ -70,6 +74,16 @@ public class RemoteDeployer {
 	private Log log;
 	private int SLEEP_INTERVAL = 10000;
 	private final boolean startOndeploy;
+	
+	private static final ObjectMapper OBJECT_MAPPER;
+
+	static {
+		OBJECT_MAPPER = new ObjectMapper();
+		OBJECT_MAPPER.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+		// Disable globally so unknown fields in any response model are silently ignored,
+		// consistent with @JsonIgnoreProperties(ignoreUnknown=true) on model classes.
+		OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	}
 
 	public RemoteDeployer(final String host, final int port, final String agentAuthType, final String username, final String password, final boolean agentSSL, final String trustFilePath, final String trustPassword, final String keyFilePath, final String keyPassword, final boolean createAdminCompo, final int connectTimeout, final int readTimeout, final int retryCount, final boolean startOndeploy) {
 		this.host = host;
@@ -616,7 +630,18 @@ public class RemoteDeployer {
 		while(!isState && count < retryCount ){
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
-			Application app = response.readEntity(Application.class);
+			String tempResponse = response.readEntity(String.class);
+			Application app = null;
+			try {
+				app = OBJECT_MAPPER.readValue(tempResponse, Application.class);
+			} catch (JsonMappingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+//			Application app = response.readEntity(Application.class);
 			log.info("AppName -> "+ appName + ", State -> "+ app.getState());
 			if(app.getState().equals(state)){
 				isState = true;
@@ -634,7 +659,18 @@ public class RemoteDeployer {
 		while(!isState && count < retryCount ){
 			Response response = r.path("/domains").path(domainName).path("appspaces").path(appSpaceName).path("applications").path(appName).path(version).request(MediaType.APPLICATION_JSON_TYPE).get();
 			processErrorResponse(response);
-			Application app = response.readEntity(Application.class);
+			String tempResponse = response.readEntity(String.class);
+			Application app = null;
+			try {
+				app = OBJECT_MAPPER.readValue(tempResponse, Application.class);
+			} catch (JsonMappingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+//			Application app = response.readEntity(Application.class);
 			AppInstance appInst = null;
 			for(AppInstance appInstance : app.getInstances()){
 				if(appInstance.getAppNodeName().equalsIgnoreCase(appNode))
