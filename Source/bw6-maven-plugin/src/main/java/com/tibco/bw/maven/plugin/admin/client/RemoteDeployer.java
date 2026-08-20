@@ -24,6 +24,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ContextResolver;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
@@ -109,6 +110,16 @@ public class RemoteDeployer {
 			clientConfig = clientConfig.property(ClientProperties.CONNECT_TIMEOUT, connectTimeout);
 			clientConfig = clientConfig.property(ClientProperties.READ_TIMEOUT, readTimeout);
 			clientConfig.register(JacksonFeature.class).register(MultiPartFeature.class);
+			// Wire the configured ObjectMapper into the Jersey/Jackson JAX-RS provider so that
+			// response.readEntity(...) calls also ignore unknown properties (e.g. lastDeployedDate).
+			// Without this ContextResolver, readEntity() uses Jackson's default mapper which fails
+			// on unrecognized fields; only the manual OBJECT_MAPPER.readValue(...) calls were covered.
+			clientConfig.register(new ContextResolver<ObjectMapper>() {
+				@Override
+				public ObjectMapper getContext(Class<?> type) {
+					return OBJECT_MAPPER;
+				}
+			});
 			// Configuration for SSL enabled BWAgent
 			if(agentSSL) {
 				scheme = "https";
