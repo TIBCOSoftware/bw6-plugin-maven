@@ -25,10 +25,11 @@ import org.junit.jupiter.api.io.TempDir;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 
 /**
- * Tests covering the two manifest-related fixes in BWModulePackageMojo (AMBW-55624):
+ * Tests covering the two manifest-related concerns in BWModulePackageMojo:
  *
- * 1. repackageJarWithUpdatedManifest — writes MANIFEST.MF using ManifestWriter.toBytes()
- *    so the embedded manifest carries no 72-byte continuation lines.
+ * 1. repackageJarWithUpdatedManifest — writes MANIFEST.MF using ManifestWriter.toBytes(),
+ *    which folds at 72 bytes as the JAR File Specification requires, while forcing
+ *    Manifest-Version to be written first.
  *
  * 2. Bundle-ClassPath normalization — trims whitespace and drops blank entries that
  *    appear when a previously line-wrapped manifest value (e.g. ". ,") is re-read.
@@ -40,6 +41,9 @@ public class BWModulePackageMojoManifestTest {
 
     @TempDir
     Path tempDir;
+
+    /** Longest permitted manifest line, per the JAR File Specification. */
+    private static final int MAX_LINE_BYTES = 72;
 
     // ---------------------------------------------------------------------------
     // Helpers
@@ -169,19 +173,21 @@ public class BWModulePackageMojoManifestTest {
     // ---------------------------------------------------------------------------
 
     /**
-     * TC-01: Provide-Capability stays on a single line in the module JAR.
+     * TC-01: Provide-Capability in the module JAR stays within the 72-byte line limit
+     * and is still recoverable in full.
      *
-     * Scenario: source module JAR was built with the old path (JarOutputStream + Manifest),
-     * so its MANIFEST.MF has continuation lines. After repackaging with ManifestWriter the
-     * embedded manifest must not contain any continuation lines.
+     * A module JAR's manifest is read by maven-archiver and by the OSGi runtime, both of
+     * which reject an over-long line: that is the "Error assembling JAR: Unable to read
+     * manifest file (line too long)" failure. Folding is therefore required, and must be
+     * lossless.
      */
     @Test
-    void provideCapabilityNotWrappedInModuleJar() throws Exception {
+    void provideCapabilityFoldedWithinLineLimitInModuleJar() throws Exception {
         String provide =
                 "com.tibco.bw.module; name=\"com.example.module\"; " +
                 "version:Version=\"1.0.0.202607021200\"";
-        assertTrue(("Provide-Capability: " + provide).getBytes(StandardCharsets.UTF_8).length > 72,
-                "Pre-condition: attribute line must exceed 72 bytes to trigger the bug");
+        assertTrue(("Provide-Capability: " + provide).getBytes(StandardCharsets.UTF_8).length > MAX_LINE_BYTES,
+                "Pre-condition: attribute line must exceed 72 bytes to trigger folding");
 
         Manifest mf = buildModuleManifest("Provide-Capability", provide);
         File moduleJar = createOldStyleJar(mf, "module.jar");
@@ -191,11 +197,13 @@ public class BWModulePackageMojoManifestTest {
         byte[] raw = readManifestBytesFromJar(moduleJar);
         String content = new String(raw, StandardCharsets.UTF_8);
         for (String line : content.split("\r\n", -1)) {
-            assertFalse(line.startsWith(" "),
-                    "No continuation lines expected after repack: [" + line + "]");
+            assertTrue(line.getBytes(StandardCharsets.UTF_8).length <= MAX_LINE_BYTES,
+                    "Line exceeds " + MAX_LINE_BYTES + " bytes after repack: [" + line + "]");
         }
-        assertTrue(content.contains("Provide-Capability: " + provide),
-                "Provide-Capability must appear verbatim on a single line");
+        try (JarInputStream jis = new JarInputStream(new FileInputStream(moduleJar))) {
+            assertEquals(provide, jis.getManifest().getMainAttributes().getValue("Provide-Capability"),
+                    "Provide-Capability must be recovered in full from the module JAR");
+        }
     }
 
     /**
@@ -373,17 +381,16 @@ public class BWModulePackageMojoManifestTest {
     }
 
     /**
-     * TC-15: Regression — source JAR had a long Require-Capability that was
-     * wrapped by the old JarOutputStream path; after repackaging the full value
-     * is present and correct.
+     * TC-15: Regression — a Require-Capability long enough to need folding must come back
+     * from the repacked module JAR intact, with no line over the 72-byte limit.
      */
     @Test
-    void longRequireCapabilityNotWrappedInModuleJar() throws Exception {
+    void longRequireCapabilityFoldedWithinLineLimitInModuleJar() throws Exception {
         String require =
                 "com.tibco.bw.model; filter:=\"(name=bwext)\"," +
                 "com.tibco.bw.module; filter:=\"(&(name=com.example.sharedmod)" +
                 "(version=2.5.3.qualifier20260702_093000))\"";
-        assertTrue(("Require-Capability: " + require).getBytes(StandardCharsets.UTF_8).length > 72,
+        assertTrue(("Require-Capability: " + require).getBytes(StandardCharsets.UTF_8).length > MAX_LINE_BYTES,
                 "Pre-condition: Require-Capability line must exceed 72 bytes");
 
         Manifest mf = buildModuleManifest("Require-Capability", require);
@@ -394,8 +401,8 @@ public class BWModulePackageMojoManifestTest {
         byte[] raw = readManifestBytesFromJar(moduleJar);
         String content = new String(raw, StandardCharsets.UTF_8);
         for (String line : content.split("\r\n", -1)) {
-            assertFalse(line.startsWith(" "),
-                    "No continuation lines in repacked module JAR: [" + line + "]");
+            assertTrue(line.getBytes(StandardCharsets.UTF_8).length <= MAX_LINE_BYTES,
+                    "Line exceeds " + MAX_LINE_BYTES + " bytes in repacked module JAR: [" + line + "]");
         }
         try (JarInputStream jis = new JarInputStream(new FileInputStream(moduleJar))) {
             Manifest parsed = jis.getManifest();

@@ -151,8 +151,8 @@ public class BWExportMojo extends AbstractMojo {
 		// Update Manifest.MF
 		File manifestFile = new File(destDir, "META-INF/MANIFEST.MF");
 		if (manifestFile.exists() && manifestFile.isFile()) {
-			try (FileInputStream fis = new FileInputStream(manifestFile)) {
-				Manifest mf = new Manifest(fis);
+			try {
+				Manifest mf = ManifestParser.readManifest(manifestFile);
 				mf.getMainAttributes().putValue("Bundle-Version", newVersion);
 				ManifestWriter.writeManifest(manifestFile, mf);
 			} catch (Exception e) {
@@ -453,11 +453,9 @@ public class BWExportMojo extends AbstractMojo {
 	}
 
 	private byte[] morphManifestFile(File member) throws FileNotFoundException, IOException {
-		try(InputStream is = new FileInputStream(member)) {
-			Manifest manifest = new Manifest(is);
-			manifest.getMainAttributes().put(new Attributes.Name("TIBCO-BW-SharedModuleType"), "binary");
-			return ManifestWriter.toBytes(manifest);
-		}
+		Manifest manifest = ManifestParser.readManifest(member);
+		manifest.getMainAttributes().put(new Attributes.Name("TIBCO-BW-SharedModuleType"), "binary");
+		return ManifestWriter.toBytes(manifest);
 	}
 
 	private String tibcoEncrypt(String input) throws AXSecurityException {

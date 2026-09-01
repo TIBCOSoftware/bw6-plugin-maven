@@ -23,17 +23,23 @@ import org.junit.jupiter.api.io.TempDir;
 import com.tibco.bw.maven.plugin.osgi.helpers.ManifestWriter;
 
 /**
- * Tests for the fixed repackageJarWithUpdatedManifest logic in BWEARPackagerMojo
- * (AMBW-55624).
+ * Tests for the repackageJarWithUpdatedManifest logic in BWEARPackagerMojo.
  *
- * The method is private; these tests reproduce the identical logic so the
- * critical behaviour — no 72-byte wrapping in the embedded MANIFEST.MF — can
- * be verified independently of the full Mojo wiring.
+ * The method is private; these tests reproduce the identical logic so the critical
+ * behaviour can be verified independently of the full Mojo wiring: the MANIFEST.MF
+ * embedded in the EAR's application-module JAR must obey the JAR File Specification's
+ * 72-byte line limit, and the updated Require-Capability must be recoverable in full.
+ *
+ * Note this is a JAR-bound manifest. The unfolded form kept for the workspace manifest
+ * under AMBW-55624 does not apply here; see ManifestWriterTest for that split.
  */
 public class ManifestRepackageTest {
 
     @TempDir
     Path tempDir;
+
+    /** Longest permitted manifest line, per the JAR File Specification. */
+    private static final int MAX_LINE_BYTES = 72;
 
     // ---------------------------------------------------------------------------
     // Helpers
@@ -124,13 +130,15 @@ public class ManifestRepackageTest {
     }
 
     // ---------------------------------------------------------------------------
-    // TC-01  Regression anchor: old JarOutputStream approach DOES wrap lines
+    // TC-01  Baseline: JarOutputStream(out, manifest) folds long headers
     // ---------------------------------------------------------------------------
 
     /**
-     * Confirms that the old approach (JarOutputStream(out, manifest)) still produces
-     * 72-byte continuation lines when the attribute value is long.
-     * If this test fails, the pre-condition for the bug no longer holds.
+     * Documents the JDK baseline that ManifestWriter has to match for JAR-bound
+     * manifests: JarOutputStream(out, manifest) folds anything over 72 bytes onto
+     * continuation lines. ManifestWriter differs from it only in forcing
+     * Manifest-Version to be written first, which HashMap iteration order does not
+     * guarantee.
      */
     @Test
     void oldJarOutputStreamConstructorProducesContinuationLines() throws Exception {
@@ -161,11 +169,16 @@ public class ManifestRepackageTest {
     }
 
     // ---------------------------------------------------------------------------
-    // TC-02  Fixed repack produces no continuation lines
+    // TC-02  Repacked JAR manifest respects the 72-byte line limit
     // ---------------------------------------------------------------------------
 
+    /**
+     * A manifest inside a JAR must obey the JAR File Specification, so a long
+     * Require-Capability is expected to fold. What must not happen is a line over
+     * 72 bytes, which readers reject outright.
+     */
     @Test
-    void repackedJarManifestHasNoContinuationLines() throws Exception {
+    void repackedJarManifestRespectsLineLengthLimit() throws Exception {
         String longRequire =
                 "com.tibco.bw.module; filter:=\"(&(name=com.example.depmod)" +
                 "(version=2.0.0.qualifier20260701_120000))\"";
@@ -178,8 +191,8 @@ public class ManifestRepackageTest {
         byte[] rawBytes = readManifestBytesFromJar(repackedJar);
         String content = new String(rawBytes, StandardCharsets.UTF_8);
         for (String line : content.split("\r\n", -1)) {
-            assertFalse(line.startsWith(" "),
-                    "Continuation line found in repacked JAR manifest: [" + line + "]");
+            assertTrue(line.getBytes(StandardCharsets.UTF_8).length <= MAX_LINE_BYTES,
+                    "Line exceeds " + MAX_LINE_BYTES + " bytes in repacked JAR manifest: [" + line + "]");
         }
     }
 
@@ -271,15 +284,18 @@ public class ManifestRepackageTest {
 
         File repackedJar = repackWithManifestWriter(sourceJar, updated, "repacked_fixed.jar");
 
-        // Verify embedded manifest has no continuation lines
+        // Embedded manifest must stay within the spec's line limit
         byte[] rawBytes = readManifestBytesFromJar(repackedJar);
         String content = new String(rawBytes, StandardCharsets.UTF_8);
         for (String line : content.split("\r\n", -1)) {
-            assertFalse(line.startsWith(" "),
-                    "No continuation lines expected after fixed repack: [" + line + "]");
+            assertTrue(line.getBytes(StandardCharsets.UTF_8).length <= MAX_LINE_BYTES,
+                    "Line exceeds " + MAX_LINE_BYTES + " bytes after fixed repack: [" + line + "]");
         }
-        // Verify updated value is fully present
-        assertTrue(content.contains("Require-Capability: " + updatedRequire),
-                "Updated Require-Capability must appear verbatim in repacked manifest");
+        // and the updated value must be recovered in full, not the stale one
+        try (JarInputStream jis = new JarInputStream(new FileInputStream(repackedJar))) {
+            assertEquals(updatedRequire,
+                    jis.getManifest().getMainAttributes().getValue("Require-Capability"),
+                    "Updated Require-Capability must be recovered in full from the repacked manifest");
+        }
     }
 }

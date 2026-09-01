@@ -55,7 +55,10 @@ public class BWMetadataUtils {
 	public static void updateManifest(File basedir, Manifest mf) {
 		File manifest = new File(basedir, "META-INF/MANIFEST.MF");
 		try {
-			ManifestWriter.writeManifest(manifest, mf);
+			// This is the manifest in the project directory, the one BW Studio keeps open,
+			// not a manifest bound for a JAR. It must stay unfolded so a rename refactoring
+			// in PDE does not splice its edits into the middle of a header (AMBW-55624).
+			ManifestWriter.writeManifestUnfolded(manifest, mf);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

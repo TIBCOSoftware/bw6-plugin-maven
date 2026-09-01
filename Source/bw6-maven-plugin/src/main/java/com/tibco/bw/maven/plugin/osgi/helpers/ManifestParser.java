@@ -1,5 +1,7 @@
 package com.tibco.bw.maven.plugin.osgi.helpers;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -23,32 +25,111 @@ import com.tibco.bw.maven.plugin.utils.Constants;
 
 public class ManifestParser {
 
+	/** Longest line a manifest may have, per the JAR File Specification. */
+	private static final int MAX_LINE_BYTES = 72;
+
 	public static Manifest parseManifest(File baseDir) {
 		Manifest mf = null;
         File mfile = new File(baseDir , "META-INF/MANIFEST.MF");
         if(mfile.exists())
         {
-	        InputStream is = null;
 	        try {
-	            is = new FileInputStream(mfile);
-	            mf = new Manifest(is);
+	            mf = readManifest(mfile);
 	        } catch(FileNotFoundException f) {
 	        	f.printStackTrace();
 	        } catch(IOException e) {
 	        	e.printStackTrace();
-	        } finally {
-	            try {
-	            	if(is != null) {
-	            		is.close();	
-	            	}
-				} catch(IOException e) {
-					e.printStackTrace();
-				}
 	        }
         }
         return mf;
 	}
-	
+
+	/**
+	 * Reads a manifest from a file, tolerating physical lines longer than the
+	 * {@value #MAX_LINE_BYTES}-byte limit the JAR File Specification imposes.
+	 *
+	 * java.util.jar.Attributes.read parses a header into a fixed 512-byte buffer and
+	 * throws "line too long (line N)" past that. The manifest kept in the project
+	 * directory is deliberately written with one physical line per header, so a rename
+	 * refactoring in BW Studio does not splice its edits into the middle of a header
+	 * (AMBW-55624, see ManifestWriter#writeManifestUnfolded), and a shared module that
+	 * exports a couple of dozen schemas runs well past 512 bytes. Without this, the
+	 * first build would write such a manifest and the next one would fail to read it
+	 * back - "Failed to parse MANIFEST.MF for project". The same applies to manifests
+	 * already left unfolded on disk by an earlier 2.11.4 build.
+	 */
+	public static Manifest readManifest(File mfile) throws IOException {
+		byte[] raw = readAllBytes(mfile);
+		try {
+			return new Manifest(new ByteArrayInputStream(raw));
+		} catch(IOException tooLong) {
+			// Folding is transparent to the reader - it strips the single leading space of
+			// each continuation line and re-joins - so the parsed values are unchanged.
+			return new Manifest(new ByteArrayInputStream(refold(raw)));
+		}
+	}
+
+	private static byte[] readAllBytes(File file) throws IOException {
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		try(InputStream is = new FileInputStream(file)) {
+			byte[] chunk = new byte[8192];
+			int n;
+			while((n = is.read(chunk)) > 0) {
+				buffer.write(chunk, 0, n);
+			}
+		}
+		return buffer.toByteArray();
+	}
+
+	/**
+	 * Re-folds every physical line onto continuation lines of at most
+	 * {@value #MAX_LINE_BYTES} bytes, leaving lines already within the limit untouched.
+	 * This works on physical lines only, so a manifest that is already partly folded is
+	 * handled the same way: a continuation line keeps the leading space it arrived with,
+	 * and any extra chunk it is split into gets a leading space of its own.
+	 */
+	private static byte[] refold(byte[] raw) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream(raw.length + (raw.length / MAX_LINE_BYTES) + 16);
+		int i = 0;
+		while(i < raw.length) {
+			int end = i;
+			while(end < raw.length && raw[end] != '\n' && raw[end] != '\r') {
+				end++;
+			}
+			writeFolded(out, raw, i, end - i);
+			if(end < raw.length && raw[end] == '\r') {
+				end++;
+			}
+			if(end < raw.length && raw[end] == '\n') {
+				end++;
+			}
+			i = end;
+		}
+		return out.toByteArray();
+	}
+
+	private static void writeFolded(ByteArrayOutputStream out, byte[] raw, int off, int len) {
+		if(len > 0) {
+			// The first line carries no leading space, so it holds one byte more than the
+			// continuation lines that follow it.
+			int chunk = Math.min(len, MAX_LINE_BYTES);
+			out.write(raw, off, chunk);
+			int pos = off + chunk;
+			int remaining = len - chunk;
+			while(remaining > 0) {
+				out.write('\r');
+				out.write('\n');
+				out.write(' ');
+				int n = Math.min(remaining, MAX_LINE_BYTES - 1);
+				out.write(raw, pos, n);
+				pos += n;
+				remaining -= n;
+			}
+		}
+		out.write('\r');
+		out.write('\n');
+	}
+
 
 	public static Manifest parseManifestFromJAR(File jarFile) 
 	{

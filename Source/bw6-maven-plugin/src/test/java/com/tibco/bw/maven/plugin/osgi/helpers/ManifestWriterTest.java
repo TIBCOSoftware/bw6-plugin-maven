@@ -5,6 +5,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,15 +16,28 @@ import java.util.jar.Manifest;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for ManifestWriter (AMBW-55624).
+ * Tests for ManifestWriter (AMBW-55624, and the line-too-long regression it caused).
  *
- * Verifies that the custom writer bypasses Java's 72-byte line wrapping and
- * keeps OSGi headers (Provide-Capability, Require-Capability) on single lines.
+ * The writer has two modes, and which one a caller gets is the whole point:
+ *
+ *   writeManifest / toBytes    - fold at 72 bytes. Everything that ends up inside a
+ *                                JAR or EAR goes through here. java.util.jar.Manifest
+ *                                reads a header into a 512-byte buffer and throws
+ *                                "line too long (line N)" past that, which the jar goal
+ *                                reports as "Unable to read manifest file".
+ *   writeManifestUnfolded      - one physical line per header. Only for the manifest in
+ *                                the project directory that BW Studio reads back;
+ *                                continuation lines there desynchronise Eclipse PDE's
+ *                                rename refactoring and corrupt Bundle-Version
+ *                                into "le-Version" (AMBW-55624).
  */
 public class ManifestWriterTest {
 
     @TempDir
     Path tempDir;
+
+    /** Longest permitted manifest line, per the JAR File Specification. */
+    private static final int MAX_LINE_BYTES = 72;
 
     // ---------------------------------------------------------------------------
     // Helpers
@@ -83,68 +97,172 @@ public class ManifestWriterTest {
     }
 
     // ---------------------------------------------------------------------------
-    // TC-02  No continuation lines (no 72-byte wrapping)
+    // TC-02  JAR-bound output never exceeds 72 bytes on any line
     // ---------------------------------------------------------------------------
 
     /**
-     * No line in the output should start with a space.
-     * A leading space is the JAR-spec continuation-line marker, injected by
-     * Manifest.write() when a value exceeds 72 bytes.
+     * The limit the JAR File Specification actually imposes. Exceeding it is what
+     * produced "Error assembling JAR: Unable to read manifest file (line too long
+     * (line 9))" on a shared module whose Provide-Capability ran to several hundred
+     * bytes.
      */
     @Test
-    void noContinuationLinesInOutput() throws Exception {
+    void noLineExceedsSeventyTwoBytesInOutput() throws Exception {
         String longCapability =
                 "com.tibco.bw.module; name=\"com.example.sharedmodule.very.long.name\"; " +
                 "version:Version=\"1.2.3.qualifier20260701_123456\"";
         Manifest mf = buildManifest("Provide-Capability", longCapability);
         byte[] bytes = ManifestWriter.toBytes(mf);
         for (String line : lines(bytes)) {
-            assertFalse(line.startsWith(" "),
-                    "Continuation line found (starts with space): [" + line + "]");
+            assertTrue(line.getBytes(StandardCharsets.UTF_8).length <= MAX_LINE_BYTES,
+                    "Line exceeds " + MAX_LINE_BYTES + " bytes: [" + line + "]");
         }
     }
 
+    /**
+     * Folding must be the only thing that changed: a continuation line carries exactly
+     * one leading space and the reader strips it, so the value is recovered intact.
+     */
+    @Test
+    void continuationLinesCarryExactlyOneLeadingSpace() throws Exception {
+        String longCapability =
+                "com.tibco.bw.module; name=\"com.example.sharedmodule.very.long.name\"; " +
+                "version:Version=\"1.2.3.qualifier20260701_123456\"";
+        Manifest mf = buildManifest("Provide-Capability", longCapability);
+        String[] lines = lines(ManifestWriter.toBytes(mf));
+
+        boolean sawContinuation = false;
+        for (String line : lines) {
+            if (line.startsWith(" ")) {
+                sawContinuation = true;
+                assertFalse(line.startsWith("  "),
+                        "Continuation line must carry exactly one leading space: [" + line + "]");
+            }
+        }
+        assertTrue(sawContinuation, "Pre-condition: the long header must have been folded");
+    }
+
     // ---------------------------------------------------------------------------
-    // TC-03  Provide-Capability stays on one line
+    // TC-03  Provide-Capability is folded but recovered in full
     // ---------------------------------------------------------------------------
 
     /**
-     * The original bug: Provide-Capability values > 72 bytes were split by
-     * Manifest.write(), which Eclipse PDE silently truncated at the first physical
-     * line, dropping the version:Version attribute.
+     * Folding is transparent to a spec-compliant reader: the header may span several
+     * physical lines, but re-parsing must return the original value byte for byte.
      */
     @Test
-    void longProvideCapabilityNotSplit() throws Exception {
+    void longProvideCapabilityFoldedAndRecoveredInFull() throws Exception {
         String longCapability =
                 "com.tibco.bw.module; name=\"com.example.sharedmodule\"; " +
                 "version:Version=\"1.0.0.qualifier\"";
         assertTrue(("Provide-Capability: " + longCapability)
-                .getBytes(StandardCharsets.UTF_8).length > 72,
+                .getBytes(StandardCharsets.UTF_8).length > MAX_LINE_BYTES,
                 "Pre-condition: attribute line must exceed 72 bytes");
         Manifest mf = buildManifest("Provide-Capability", longCapability);
         byte[] bytes = ManifestWriter.toBytes(mf);
-        String content = new String(bytes, StandardCharsets.UTF_8);
-        assertTrue(content.contains("Provide-Capability: " + longCapability),
-                "Provide-Capability must appear on a single unbroken line");
+
+        Manifest parsed = new Manifest(new ByteArrayInputStream(bytes));
+        assertEquals(longCapability,
+                parsed.getMainAttributes().getValue("Provide-Capability"),
+                "Provide-Capability must be recovered in full after folding");
     }
 
     // ---------------------------------------------------------------------------
-    // TC-04  Require-Capability stays on one line
+    // TC-04  Require-Capability is folded but recovered in full
     // ---------------------------------------------------------------------------
 
     @Test
-    void longRequireCapabilityNotSplit() throws Exception {
+    void longRequireCapabilityFoldedAndRecoveredInFull() throws Exception {
         String longRequire =
                 "com.tibco.bw.module; filter:=\"(&(name=com.example.depmodule)" +
                 "(version=2.0.0.qualifier20260701))\"";
         assertTrue(("Require-Capability: " + longRequire)
-                .getBytes(StandardCharsets.UTF_8).length > 72,
+                .getBytes(StandardCharsets.UTF_8).length > MAX_LINE_BYTES,
                 "Pre-condition: attribute line must exceed 72 bytes");
         Manifest mf = buildManifest("Require-Capability", longRequire);
         byte[] bytes = ManifestWriter.toBytes(mf);
-        String content = new String(bytes, StandardCharsets.UTF_8);
-        assertTrue(content.contains("Require-Capability: " + longRequire),
-                "Require-Capability must appear on a single unbroken line");
+
+        Manifest parsed = new Manifest(new ByteArrayInputStream(bytes));
+        assertEquals(longRequire,
+                parsed.getMainAttributes().getValue("Require-Capability"),
+                "Require-Capability must be recovered in full after folding");
+    }
+
+    // ---------------------------------------------------------------------------
+    // TC-04b  The reported failure, reproduced end to end
+    // ---------------------------------------------------------------------------
+
+    /**
+     * A shared module's Provide-Capability lists one entry per exported schema, so a
+     * real one runs to several hundred bytes - past the 512-byte buffer that
+     * java.util.jar.Manifest reads a header into. Unfolded, that is the exact
+     * "line too long (line N)" the jar goal failed on; folded, it must read back clean.
+     */
+    @Test
+    void realisticSharedModuleManifestIsReadableAfterFolding() throws Exception {
+        StringBuilder provide = new StringBuilder();
+        for (int i = 0; i < 12; i++) {
+            if (i > 0) provide.append(",");
+            provide.append("com.tibco.bw.schemas; ns=\"http://www.example.org/schema/Namespace")
+                   .append(i).append("\"");
+        }
+        String value = provide.toString();
+        assertTrue(("Provide-Capability: " + value).getBytes(StandardCharsets.UTF_8).length > 512,
+                "Pre-condition: header must exceed the 512-byte read buffer");
+
+        Manifest mf = buildManifest("Provide-Capability", value);
+
+        // Unfolded: this is the failure. Assert it still reproduces, so the test below means something.
+        File unfolded = tempDir.resolve("UNFOLDED.MF").toFile();
+        ManifestWriter.writeManifestUnfolded(unfolded, mf);
+        IOException tooLong = assertThrows(IOException.class, () -> {
+            try (java.io.InputStream is = Files.newInputStream(unfolded.toPath())) {
+                new Manifest(is);
+            }
+        }, "Regression anchor: an unfolded manifest of this size must still be unreadable");
+        assertTrue(tooLong.getMessage().contains("line too long"),
+                "Expected the 'line too long' failure, got: " + tooLong.getMessage());
+
+        // Folded: readable, and the value survives.
+        File folded = tempDir.resolve("FOLDED.MF").toFile();
+        ManifestWriter.writeManifest(folded, mf);
+        try (java.io.InputStream is = Files.newInputStream(folded.toPath())) {
+            Manifest parsed = new Manifest(is);
+            assertEquals(value, parsed.getMainAttributes().getValue("Provide-Capability"),
+                    "Folded manifest must be readable and preserve the full value");
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // TC-04c  Unfolded mode keeps AMBW-55624 fixed for the workspace manifest
+    // ---------------------------------------------------------------------------
+
+    /**
+     * The project-directory manifest that BW Studio reads must keep every header on one
+     * physical line. Continuation lines there invalidate the text-edit offsets PDE holds
+     * during a rename, splicing Bundle-Version into "le-Version" (AMBW-55624).
+     */
+    @Test
+    void unfoldedWriterKeepsLongHeaderOnASingleLine() throws Exception {
+        String longCapability =
+                "com.tibco.bw.module; name=\"com.example.sharedmodule\"; " +
+                "version:Version=\"1.0.0.qualifier20260701_123456\"";
+        assertTrue(("Provide-Capability: " + longCapability)
+                .getBytes(StandardCharsets.UTF_8).length > MAX_LINE_BYTES,
+                "Pre-condition: attribute line must exceed 72 bytes");
+
+        File target = tempDir.resolve("MANIFEST.MF").toFile();
+        ManifestWriter.writeManifestUnfolded(target, buildManifest("Provide-Capability", longCapability));
+
+        String content = new String(Files.readAllBytes(target.toPath()), StandardCharsets.UTF_8);
+        for (String line : content.split("\r\n", -1)) {
+            assertFalse(line.startsWith(" "),
+                    "Workspace manifest must have no continuation lines: [" + line + "]");
+        }
+        assertTrue(content.contains("Provide-Capability: " + longCapability),
+                "Provide-Capability must appear verbatim on one line");
+        assertTrue(content.contains("Bundle-Version: 1.0.0\r\n"),
+                "Bundle-Version must be intact and unspliced");
     }
 
     // ---------------------------------------------------------------------------
@@ -210,8 +328,15 @@ public class ManifestWriterTest {
         String content = new String(Files.readAllBytes(target.toPath()), StandardCharsets.UTF_8);
         assertTrue(content.startsWith("Manifest-Version:"),
                 "File must start with Manifest-Version");
-        assertTrue(content.contains("Provide-Capability: " + longCapability),
-                "File must contain the full Provide-Capability value");
+        for (String line : content.split("\r\n", -1)) {
+            assertTrue(line.getBytes(StandardCharsets.UTF_8).length <= MAX_LINE_BYTES,
+                    "Line exceeds " + MAX_LINE_BYTES + " bytes: [" + line + "]");
+        }
+        try (java.io.InputStream is = Files.newInputStream(target.toPath())) {
+            assertEquals(longCapability,
+                    new Manifest(is).getMainAttributes().getValue("Provide-Capability"),
+                    "File must yield the full Provide-Capability value when re-read");
+        }
     }
 
     // ---------------------------------------------------------------------------
