@@ -571,7 +571,6 @@ public class RemoteDeployer {
 			
 			if(externalProfile){
 				r = r.queryParam("startondeploy", "false").queryParam("replace", String.valueOf(replace));
-				addQueryParam("profile", "default.substvar");
 			}
 			else{
 				r = r.queryParam("startondeploy", String.valueOf(startOnDeploy)).queryParam("replace", String.valueOf(replace));
