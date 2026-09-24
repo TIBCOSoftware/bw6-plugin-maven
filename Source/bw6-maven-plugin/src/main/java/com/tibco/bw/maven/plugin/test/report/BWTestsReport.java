@@ -1,17 +1,11 @@
 package com.tibco.bw.maven.plugin.test.report;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Locale;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 import org.apache.maven.doxia.sink.Sink;
 import org.apache.maven.doxia.sink.SinkFactory;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Execute;
@@ -25,6 +19,10 @@ import org.apache.maven.reporting.MavenReportException;
 import com.tibco.bw.maven.plugin.test.dto.CompleteReportDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
+
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
 
 @Mojo( name = "bwreport", inheritByDefault = false )
 @Execute( lifecycle = "bwtestreport", phase = LifecyclePhase.TEST )

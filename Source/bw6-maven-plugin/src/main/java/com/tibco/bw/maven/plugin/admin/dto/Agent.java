@@ -10,7 +10,7 @@ package com.tibco.bw.maven.plugin.admin.dto;
 
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 /**
  * DTO for Agent information.

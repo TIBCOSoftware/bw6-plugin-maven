@@ -8,17 +8,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.ws.rs.ProcessingException;
 
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+
+import jakarta.ws.rs.ProcessingException;
 
 public class EngineLaunchConfigurator 
 {

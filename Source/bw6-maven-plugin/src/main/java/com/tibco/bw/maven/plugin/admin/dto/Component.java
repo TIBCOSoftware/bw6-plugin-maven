@@ -11,7 +11,7 @@ package com.tibco.bw.maven.plugin.admin.dto;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 /**
  * Model object for a BW Component

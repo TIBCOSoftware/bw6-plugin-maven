@@ -7,24 +7,11 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status.Family;
-import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
@@ -32,8 +19,8 @@ import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
@@ -49,6 +36,17 @@ import com.tibco.bw.maven.plugin.tci.dto.TCIProperty;
 import com.tibco.bw.maven.plugin.tci.dto.TCIUserInfo;
 import com.tibco.bw.maven.plugin.tci.dto.TCIVariables;
 import com.tibco.bw.maven.plugin.utils.Constants;
+
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Feature;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status.Family;
+import jakarta.ws.rs.core.UriBuilder;
 
 public class TCIDeployer {
 
@@ -129,7 +127,7 @@ public class TCIDeployer {
 
 		if (log.isDebugEnabled()) {
 			Logger logger = Logger.getLogger(getClass().getName());
-			clientConfig.register(new LoggingFilter(logger, true));
+			clientConfig.register(new LoggingFeature(logger));
 		}
 
 		SslConfigurator sslConfig = SslConfigurator.newInstance();

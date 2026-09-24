@@ -2,7 +2,7 @@ package com.tibco.bw.maven.plugin.admin.dto;
 
 import java.util.Objects;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 /**
  * @author rduntulu

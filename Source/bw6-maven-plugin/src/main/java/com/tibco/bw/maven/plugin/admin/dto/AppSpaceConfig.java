@@ -6,7 +6,7 @@
 
 package com.tibco.bw.maven.plugin.admin.dto;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.tibco.bw.maven.plugin.admin.dto.AppSpace.AppSpaceRuntimeStatus;
 

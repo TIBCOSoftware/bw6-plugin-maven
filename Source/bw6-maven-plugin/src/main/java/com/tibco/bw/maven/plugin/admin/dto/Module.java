@@ -10,7 +10,7 @@ package com.tibco.bw.maven.plugin.admin.dto;
 
 import java.util.Collection;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 /**
  * Model class representing a Thor module, e.g. BW Application Module or BW Shared Module, or Adapter Module. Also supported is Bundle

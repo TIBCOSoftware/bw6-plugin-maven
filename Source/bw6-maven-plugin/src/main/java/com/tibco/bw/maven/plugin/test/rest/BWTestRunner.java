@@ -14,15 +14,9 @@ import java.util.Map;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,8 +24,8 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.ComparisonControllers;
@@ -52,9 +46,16 @@ import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
-import com.tibco.bw.maven.plugin.test.setuplocal.BWTestExecutor;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils.MODULE;
+
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
 
 public class BWTestRunner 
 {
@@ -83,7 +84,7 @@ public class BWTestRunner
 			
 			if(BWTestConfig.INSTANCE.getLogger().isDebugEnabled()){
 				Logger logger = Logger.getLogger(getClass().getName());
-				clientConfig.register(new LoggingFilter(logger, true));
+				clientConfig.register(new LoggingFeature(logger));
 			}
 			this.jerseyClient = ClientBuilder.newClient(clientConfig);
 		}
@@ -96,7 +97,12 @@ public class BWTestRunner
 	{
 		init();
 		removePidFolder();
-		r.path("tests").path("enabledebug").request().get();
+		WebTarget enableDebugTarget = r.path("tests").path("enabledebug");
+		Response debugResponse = enableDebugTarget.request().get();
+		if( debugResponse.getStatus() >= 400 )
+		{
+			BWTestConfig.INSTANCE.getLogger().warn("Enable-debug call returned HTTP " + debugResponse.getStatus() + " from " + enableDebugTarget.getUri());
+		}
 		
 		List<MavenProject> projects = BWTestConfig.INSTANCE.getSession().getProjects();
 		

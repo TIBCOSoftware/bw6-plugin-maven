@@ -11,7 +11,7 @@ package com.tibco.bw.maven.plugin.admin.dto;
 import java.util.Collections;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 /**
  * @author <a href="mailto:tdiekman@tibco.com">Tim Diekmann</a>
