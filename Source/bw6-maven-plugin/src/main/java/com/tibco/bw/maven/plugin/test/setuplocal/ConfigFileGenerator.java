@@ -93,8 +93,14 @@ public class ConfigFileGenerator
 										!(aetherArtifact.getFile().getName().contains("com.tibco.bw.palette.shared")) && 
 										!(aetherArtifact.getFile().getName().contains("com.tibco.xml.cxf.common")) && 
 										 !aetherArtifact.getGroupId().equalsIgnoreCase("tempbw")) {
-									builder.append( "," );
-									addReference(builder, aetherArtifact.getFile(), aetherArtifact.getArtifactId());
+									if(isNonBundleJar(aetherArtifact.getFile())) {
+										BWTestConfig.INSTANCE.getLogger().warn("Skipping non-OSGi dependency " + aetherArtifact
+												+ " - it is reachable over the module's Bundle-ClassPath, not as a bundle.");
+									}
+									else {
+										builder.append( "," );
+										addReference(builder, aetherArtifact.getFile(), aetherArtifact.getArtifactId());
+									}
 								}
 								if(aetherArtifact.getFile().getName().contains("com.tibco.xml.cxf.common")){
 									isCXF = true;
@@ -156,6 +162,26 @@ public class ConfigFileGenerator
 		return resolutionResult;
 	}
 	
+	/**
+	 * A dependency can only be listed in osgi.bundles when it carries a Bundle-SymbolicName.
+	 * Equinox validates the required headers only for Bundle-ManifestVersion >= 2
+	 * (OSGiManifestBuilderFactory.createBuilder), so a plain library jar - guava's failureaccess
+	 * or listenablefuture, jsr305, and the rest of the closure a CXF dependency drags in -
+	 * installs as a legacy R3 bundle whose getSymbolicName() returns null. At start level 3
+	 * com.tibco.neo.eclipse.support.osgi walks every resolved bundle in
+	 * OSGiEMFPackageRegistryManager.init and builds new ComponentID(bundle.getSymbolicName()),
+	 * which rejects null with TIBCO-AMX-INFRA-002000, failing its activator and aborting engine
+	 * startup. Such jars already reach the module over its Bundle-ClassPath via dev.properties.
+	 * Directories and reactor outputs are left alone so existing behaviour is unchanged.
+	 */
+	private boolean isNonBundleJar(File file) {
+		if(file == null || !file.isFile() || !file.getName().endsWith(".jar")) {
+			return false;
+		}
+		Manifest mf = ManifestParser.parseManifestFromJAR(file);
+		return mf == null || mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLIC_NAME) == null;
+	}
+
 	private boolean isJavaProject(MavenProject project) {
 		File projectFile = new File(project.getBasedir(), Constants.DOT_PROJECT_FILE);
 		NodeList nList = getNatureList(projectFile);  
