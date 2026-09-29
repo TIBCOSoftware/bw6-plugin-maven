@@ -96,8 +96,8 @@ public class ProcessCoverageParser
 					if(processMap.get( dto.getProcessName())!=null){
 						ProcessCoverage pc = processMap.get( dto.getProcessName());
 						pc.setProcessExecuted(true);
-						pc.getActivitiesExec().addAll( dto.getActivityCoverage() );
-						pc.getTransitionExec().addAll( dto.getTransitionCoverage()  );
+						addDistinct( pc.getActivitiesExec(), dto.getActivityCoverage() );
+						addDistinct( pc.getTransitionExec(), dto.getTransitionCoverage() );
 					}
 				}
 			}
@@ -124,7 +124,7 @@ public class ProcessCoverageParser
 			pc.setProcessExecuted(true);
 			// always put starter activity as executed
 		 	String startActivityName = pc.getActivities().get(0);
- 	 	 	pc.getActivitiesExec().add(startActivityName);
+ 	 	 	addDistinct(pc.getActivitiesExec(), startActivityName);
 
 			Set<String> transitionsExecuted =  new HashSet<String>();
 			for( int j = 0 ; j < testset.getTestCaseResult().size() ; j++ )
@@ -137,7 +137,7 @@ public class ProcessCoverageParser
 					String activityName = aresult.getActivityName();
 					// keep it simple
 					if (!activityName.equals("N/A")) {
-						pc.getActivitiesExec().add(aresult.getActivityName());
+						addDistinct(pc.getActivitiesExec(), activityName);
 					}
 					for (String transition: pc.getTransitions()) {
 					 	if (transition.indexOf(aresult.getActivityName()) >= 0 || 
@@ -166,7 +166,7 @@ public class ProcessCoverageParser
 			for (String activity: pc.getActivities() ) {
 
 				if (ALWAYS_EXECUTED_ACTIVITIES.containsKey(activity)) {
-					pc.getActivitiesExec().add(activity);
+					addDistinct(pc.getActivitiesExec(), activity);
 				}
 
 			}
@@ -175,6 +175,26 @@ public class ProcessCoverageParser
 
 	}
 
+	/**
+	 * Coverage is counted as {@code getActivitiesExec().size()}, so the same activity must
+	 * never be recorded twice. BWCE-11850 makes this easy to hit: one parameterized .bwt now
+	 * yields N results for the same process, and N separate .bwt files for one process
+	 * already did.
+	 */
+	private void addDistinct(List<String> target, String value) {
+		if (value != null && !target.contains(value)) {
+			target.add(value);
+		}
+	}
+
+	private void addDistinct(List<String> target, List<String> values) {
+		if (values == null) {
+			return;
+		}
+		for (String value : values) {
+			addDistinct(target, value);
+		}
+	}
 
 	private String[] convertTransition(String transition) {
 		String[] activities = new String[2];

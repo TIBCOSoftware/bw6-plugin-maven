@@ -480,12 +480,13 @@ public class BWTestRunner
 					for (int j = 0; j < testset.getTestCaseResult().size(); j++) {
 						testcase = (TestCaseResultDTO) testset
 								.getTestCaseResult().get(j);
+						// BWCE-11850 : a parameterized .bwt contributes one result per input
+						// row, so match on the file and collect every row - not just the first.
+						String resultFile = TestFileParser.stripRowLabel(testcase.getTestCaseFile());
 						if (file.getName().equals(
-								testcase.getTestCaseFile().substring(
-										testcase.getTestCaseFile().lastIndexOf(
-												"/") + 1))) {
+								resultFile.substring(
+										resultFile.lastIndexOf("/") + 1))) {
 							testCaseList.add(testcase);
-							break;
 						}
 					}
 				}
@@ -520,7 +521,7 @@ public class BWTestRunner
 					if (TestFileParser.INSTANCE.getshowFailureDetails()) {
 						printFailureDetails(testCase,
 								testCase.getTestCaseFile(),
-								BWTestConfig.INSTANCE.getTestCaseWithProcessNameMap().get(testCase.getTestCaseFile()),bwTestSuiteData.getTestSuiteName());
+								BWTestConfig.INSTANCE.getTestCaseWithProcessNameMap().get(TestFileParser.stripRowLabel(testCase.getTestCaseFile())),bwTestSuiteData.getTestSuiteName());
 					}
 				} 
 				
