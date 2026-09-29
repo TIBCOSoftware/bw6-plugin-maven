@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
 
@@ -51,6 +52,7 @@ import com.tibco.bw.maven.plugin.test.dto.TestSetResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+import com.tibco.bw.maven.plugin.test.helpers.GoldFileOmitFilter;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 import com.tibco.bw.maven.plugin.test.setuplocal.BWTestExecutor;
 import com.tibco.bw.maven.plugin.utils.BWProjectUtils;
@@ -478,12 +480,13 @@ public class BWTestRunner
 					for (int j = 0; j < testset.getTestCaseResult().size(); j++) {
 						testcase = (TestCaseResultDTO) testset
 								.getTestCaseResult().get(j);
+						// BWCE-11850 : a parameterized .bwt contributes one result per input
+						// row, so match on the file and collect every row - not just the first.
+						String resultFile = TestFileParser.stripRowLabel(testcase.getTestCaseFile());
 						if (file.getName().equals(
-								testcase.getTestCaseFile().substring(
-										testcase.getTestCaseFile().lastIndexOf(
-												"/") + 1))) {
+								resultFile.substring(
+										resultFile.lastIndexOf("/") + 1))) {
 							testCaseList.add(testcase);
-							break;
 						}
 					}
 				}
@@ -518,7 +521,7 @@ public class BWTestRunner
 					if (TestFileParser.INSTANCE.getshowFailureDetails()) {
 						printFailureDetails(testCase,
 								testCase.getTestCaseFile(),
-								BWTestConfig.INSTANCE.getTestCaseWithProcessNameMap().get(testCase.getTestCaseFile()),bwTestSuiteData.getTestSuiteName());
+								BWTestConfig.INSTANCE.getTestCaseWithProcessNameMap().get(TestFileParser.stripRowLabel(testCase.getTestCaseFile())),bwTestSuiteData.getTestSuiteName());
 					}
 				} 
 				
@@ -679,20 +682,32 @@ public class BWTestRunner
 
 
 	private String doXmlDiff(String inputValue, String goldInput) {
-        
+
         Diff myDiff;
 		try {
-			myDiff = DiffBuilder
+			DiffBuilder diffBuilder = DiffBuilder
 			  .compare(goldInput)
 			  .withTest(inputValue)
 			  .ignoreComments()
 			  .ignoreWhitespace()
-			  .withComparisonController(ComparisonControllers.StopWhenDifferent)
-			   .build();
+			  .withComparisonController(ComparisonControllers.StopWhenDifferent);
+
+			// BWCE-9093 : keep the reported diff in step with the engine-side assertion,
+			// which skips the fields the user marked as omitted in the Gold Input file.
+			Set<String> omittedPaths = GoldFileOmitFilter.collectOmittedPaths(goldInput);
+			if (!omittedPaths.isEmpty()) {
+				BWTestConfig.INSTANCE.getLogger().debug("Omitting " + omittedPaths.size()
+						+ " field(s) from the Gold file comparison : " + omittedPaths);
+				diffBuilder = diffBuilder
+						.withNodeFilter(GoldFileOmitFilter.nodeFilter(omittedPaths))
+						.withAttributeFilter(GoldFileOmitFilter.attributeFilter());
+			}
+
+			myDiff = diffBuilder.build();
 		} catch (Exception e) {
 			return null;
 		}
-        
+
         Iterator<Difference> iter = myDiff.getDifferences().iterator();
         int size = 0;
         StringBuilder result = new StringBuilder();
@@ -701,7 +716,13 @@ public class BWTestRunner
             result.append(System.lineSeparator() );
             size++;
         }
-        
+
+        if (size == 0) {
+        	// Nothing left to report once the omitted fields are discarded - let the
+        	// caller fall back to printing the raw Activity and Gold output.
+        	return null;
+        }
+
         return result.toString();
 	}
 

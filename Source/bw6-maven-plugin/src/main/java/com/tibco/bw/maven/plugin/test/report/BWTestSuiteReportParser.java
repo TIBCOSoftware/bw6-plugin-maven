@@ -250,7 +250,7 @@ public class BWTestSuiteReportParser
 							StringBuilder assertionFailureDataBuilder = new StringBuilder();
 							fileDetails.addAssertionFailure(aresult.getActivityName() );
 							assertionFailureDataBuilder.append(" Assertion Failed For Activity with name "+"["+aresult.getActivityName()+"]");
-							assertionFailureDataBuilder.append(" in Sub-Process ["+ testsuite.getTestCaseWithProcessNameMap().get(testCase.getTestCaseFile()) + "]");
+							assertionFailureDataBuilder.append(" in Sub-Process ["+ testsuite.getTestCaseWithProcessNameMap().get(TestFileParser.stripRowLabel(testCase.getTestCaseFile())) + "]");
 							assertionFailureDataBuilder.append(" in Test Suite ["+ testsuite.getTestSuiteName() + "]");
 							assertionFailureDataBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
 							assertionFailureDataBuilder.append(" [Activity Output:  "+aresult.getActivityOutput()+"]");
