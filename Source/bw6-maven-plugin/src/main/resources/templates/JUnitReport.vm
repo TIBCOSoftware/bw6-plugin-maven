@@ -16,18 +16,29 @@
 	<testsuite name="$ts.getChild("processName").getTextTrim()" tests="$testCount" failure="$failureCount" errors="$errorCount" timestamp="" time="">
             #foreach ($tc in $ts.getChildren())
                 #if($tc.getName() == "testCaseResult")
+                    ## BWCE-11850 : a .bwt with several input rows reports one testCaseResult per
+                    ## row, all for the same activities. Suffix the test case name with the row
+                    ## label so each input shows up as its own result. Single-input test files
+                    ## carry no label and keep their previous names.
+                    #set($tcFile = $tc.getChild("testCaseFile").getTextTrim())
+                    #set($rowIdx = $tcFile.lastIndexOf("#"))
+                    #set($rowSuffix = "")
+                    #if($rowIdx > 0)
+                        #set($rowLabel = $tcFile.substring($rowIdx + 1))
+                        #set($rowSuffix = "[${rowLabel}]")
+                    #end
                     #foreach ($ar in $tc.getChildren())
                         #if($ar.getName() == "assertionResult")
                             #if($ar.getChild("assertionStatus").getTextTrim() == "passed")
-		<testcase name="$ar.getChild("activityName").getTextTrim()" classname="$ts.getChild("processName").getTextTrim()" time=""/>
+		<testcase name="$ar.getChild("activityName").getTextTrim()$rowSuffix" classname="$ts.getChild("processName").getTextTrim()" time=""/>
                             #elseif($ar.getChild("assertionStatus").getTextTrim() == "failed")
                             	 #if($ar.getChild("activityName").getTextTrim() != "N/A")
-		<testcase name="$ar.getChild("activityName").getTextTrim()" classname="$ts.getChild("processName").getTextTrim()" time="">
+		<testcase name="$ar.getChild("activityName").getTextTrim()$rowSuffix" classname="$ts.getChild("processName").getTextTrim()" time="">
 			<failure message="$String.valueOf($ar.getChild("message").getTextTrim()).replace("<","").replace(">","")" type="$ar.getChild("assertionMode").getTextTrim()">
 			</failure>
 		</testcase>
     							 #else
-		<testcase name="$ar.getChild("activityName").getTextTrim()" classname="$ts.getChild("processName").getTextTrim()" time="">
+		<testcase name="$ar.getChild("activityName").getTextTrim()$rowSuffix" classname="$ts.getChild("processName").getTextTrim()" time="">
 			<error message="$String.valueOf($ar.getChild("message").getTextTrim()).replace("<","").replace(">","")" type="processFailures">
 			</error>
 		</testcase>
