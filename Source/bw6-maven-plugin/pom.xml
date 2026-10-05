@@ -38,6 +38,16 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> 
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<!-- AMBW-58801: zstd-jni CVEs, transitive via maven-archiver -> plexus-archiver -->
+			<dependency>
+				<groupId>com.github.luben</groupId>
+				<artifactId>zstd-jni</artifactId>
+				<version>1.5.7-15</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
