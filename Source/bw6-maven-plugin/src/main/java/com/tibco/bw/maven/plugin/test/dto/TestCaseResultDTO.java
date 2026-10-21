@@ -26,6 +26,9 @@ public class TestCaseResultDTO implements Serializable
 	private int assertionFailure;
 	
 	private int processFailures;
+	
+	// AMBW-55154 : number of activity assertions; assertions/assertionsRun/assertionFailure count checks. 0 from older runtimes
+	private int activityAssertions;
 
 	@XmlElement
 	public String getTestCaseFile() 
@@ -96,4 +99,15 @@ public class TestCaseResultDTO implements Serializable
 	}
 	
 	
+	@XmlElement
+	public int getActivityAssertions() 
+	{
+		return activityAssertions;
+	}
+
+	public void setActivityAssertions(int activityAssertions) 
+	{
+		this.activityAssertions = activityAssertions;
+	}
+
 }
