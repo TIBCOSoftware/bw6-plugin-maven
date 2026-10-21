@@ -51,6 +51,7 @@ import com.tibco.bw.maven.plugin.test.dto.TestSetDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
+import com.tibco.bw.maven.plugin.test.helpers.AssertionCheckFormatter;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
 import com.tibco.bw.maven.plugin.test.helpers.GoldFileOmitFilter;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
@@ -344,6 +345,8 @@ public class BWTestRunner
 		int totalNoOfAssertions = 0;
 		int totalSuccessAssertions =0;
 		int totalAssertionFailure=0;
+		// AMBW-55154 : -1 once a test case does not report its activity assertions (older runtime)
+		int totalActivityAssertions = 0;
 		int finalResult = 0;
 		TestCaseResultDTO testcase = null;
 		
@@ -400,6 +403,7 @@ public class BWTestRunner
 					totalAssertionFailure = totalAssertionFailure+testcase.getAssertionFailure();
 				}
 				totalNoOfAssertions = totalNoOfAssertions+testcase.getAssertions();
+				totalActivityAssertions = AssertionCheckFormatter.sumActivityAssertions(totalActivityAssertions, testcase.getActivityAssertions());
 				totaltests++;
 
 				// AMBW-46991 BEGINS
@@ -414,7 +418,7 @@ public class BWTestRunner
 				
 				processFileBuilder.append("\n" +"Test case run: "+testcase.getTestCaseFile()+"\t");
 				processFileBuilder.append("\nTest Case: "+(isFailed ? "Failed":"Passed"));
-				processFileBuilder.append("\nTotal Assertion: "+testcase.getAssertions());
+				processFileBuilder.append("\nTotal Assertion: "+testcase.getAssertions()+AssertionCheckFormatter.assertionCountSuffix(testcase.getAssertions(), testcase.getActivityAssertions()));
 				processFileBuilder.append("\tAssertion Success: "+testcase.getAssertionsRun());
 				processFileBuilder.append("\tAssertion Failure: "+testcase.getAssertionFailure());
 				processFileBuilder.append("\tTest Errors: "+testcase.getProcessFailures());
@@ -436,7 +440,7 @@ public class BWTestRunner
        
 		int totSkipped = totalNoOfAssertions-totalSuccessAssertions-totalAssertionFailure;
 		builder.append( "\n\nTest Assertion Summary: \n");
-		builder.append("Total: "+totalNoOfAssertions +"\tSuccess: "+totalSuccessAssertions+"\tFailure: "+totalAssertionFailure+ "\tSkipped: " + totSkipped);
+		builder.append("Total: "+totalNoOfAssertions+AssertionCheckFormatter.assertionCountSuffix(totalNoOfAssertions, totalActivityAssertions) +"\tSuccess: "+totalSuccessAssertions+"\tFailure: "+totalAssertionFailure+ "\tSkipped: " + totSkipped);
 		
 		BWTestConfig.INSTANCE.getLogger().info( builder.toString() );
 //		
@@ -464,6 +468,8 @@ public class BWTestRunner
 		int totalNoOfAssertions = 0;
 		int totalSuccessAssertions =0;
 		int totalAssertionFailure=0;
+		// AMBW-55154 : -1 once a test case does not report its activity assertions (older runtime)
+		int totalActivityAssertions = 0;
 		int finalResult = 0;
 		int totalSkipped = 0;
 		int totaltests = 0;
@@ -544,6 +550,7 @@ public class BWTestRunner
 				}
 				
 				totalNoOfAssertions = totalNoOfAssertions+testCase.getAssertions();
+				totalActivityAssertions = AssertionCheckFormatter.sumActivityAssertions(totalActivityAssertions, testCase.getActivityAssertions());
 				totaltests++;
 				
 				int currSkipped = testCase.getAssertions() - (testCase.getAssertionsRun() + testCase.getAssertionFailure());
@@ -556,7 +563,7 @@ public class BWTestRunner
 				
 				processFileBuilder.append("\n" +"Test case run: "+testCase.getTestCaseFile()+"\t");
 				processFileBuilder.append("\nTest Case: "+(isFailed ? "Failed":"Passed"));
-				processFileBuilder.append("\nTotal Assertion: "+testCase.getAssertions());
+				processFileBuilder.append("\nTotal Assertion: "+testCase.getAssertions()+AssertionCheckFormatter.assertionCountSuffix(testCase.getAssertions(), testCase.getActivityAssertions()));
 				processFileBuilder.append("\tAssertion Success: "+testCase.getAssertionsRun()+"\t");
 				processFileBuilder.append("Assertion Failure: "+testCase.getAssertionFailure()+"\t");
 				processFileBuilder.append("Test Errors: "+testCase.getProcessFailures()+"\t");
@@ -581,7 +588,7 @@ public class BWTestRunner
 
 		int totSkipped = totalNoOfAssertions-totalSuccessAssertions-totalAssertionFailure;
 		builder.append( "\n\nTest Assertion Summary: \n");
-		builder.append("Total: "+totalNoOfAssertions +"\tSuccess: "+totalSuccessAssertions+"\tFailure: "+totalAssertionFailure+ "\tSkipped: " + totSkipped);
+		builder.append("Total: "+totalNoOfAssertions+AssertionCheckFormatter.assertionCountSuffix(totalNoOfAssertions, totalActivityAssertions) +"\tSuccess: "+totalSuccessAssertions+"\tFailure: "+totalAssertionFailure+ "\tSkipped: " + totSkipped);
 		
 		builder.append("\n");
 		BWTestConfig.INSTANCE.getLogger().info(builder.toString());
@@ -601,7 +608,12 @@ public class BWTestRunner
 			AssertionResultDTO assertion =  (AssertionResultDTO) testcase.getAssertionResult().get(k);
 			if(!"passed".equals(assertion.getAssertionStatus())) {
 				String inputValue = assertion.getActivityOutput();
-				if(assertion.getAssertionMode().equals("Primitive") ){
+				boolean isCheckRow = AssertionCheckFormatter.isCheckRow(assertion);
+				if(isCheckRow) {
+					// AMBW-55154 : a check row already carries the plain actual and expected values
+					inputValue = String.valueOf(assertion.getActivityOutput());
+				}
+				else if("Primitive".equals(assertion.getAssertionMode()) ){
 					if (assertion.getStartElementNameTag() != null && inputValue.startsWith(assertion.getStartElementNameTag())) {
 						inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
 						inputValue = inputValue!=null? inputValue:assertion.getActivityOutput();
@@ -631,18 +643,18 @@ public class BWTestRunner
 
 				StringBuilder assertionFileBuilder = new StringBuilder();
 				assertionFileBuilder.append("-----------------------------------------------------Fault Data---------------------------------------------------------------------\n");
-				assertionFileBuilder.append(" Assertion Failed For Activity with name "+"["+assertion.getActivityName()+"]");
+				assertionFileBuilder.append(" Assertion Failed For Activity with name "+AssertionCheckFormatter.activityLabel(assertion));
 				assertionFileBuilder.append(" in Process/Sub-Process ["+subProcessName+"]");
 				if(null != testSuiteName && !testSuiteName.isEmpty()){
 					assertionFileBuilder.append(" in TestSuite ["
 							+ testSuiteName + "]");	
 				}
 				assertionFileBuilder.append(" for TestCase File ["+testCaseFile+"]");
-				assertionFileBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
+				assertionFileBuilder.append(" [Reason] - "+AssertionCheckFormatter.failureReason(assertion));
 				assertionFileBuilder.append("\n");
 
 				String cause = null;
-				if (isXmlContent(inputValue)) {
+				if (!isCheckRow && isXmlContent(inputValue)) {
 					cause = doXmlDiff(inputValue, assertion.getGoldInput());
 				}
 				if (cause != null) {
@@ -651,7 +663,7 @@ public class BWTestRunner
 					assertionFileBuilder.append("\n");
 				}
 				else {
-					if (inputValue.equals(assertion.getGoldInput())) {
+					if (!isCheckRow && inputValue.equals(assertion.getGoldInput())) {
 						assertionFileBuilder.append(" [Activity Output does not match ");
 						if (assertion.getGoldInput() != null)
 							assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");

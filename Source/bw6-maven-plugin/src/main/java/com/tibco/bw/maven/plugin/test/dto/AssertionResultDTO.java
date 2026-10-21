@@ -19,6 +19,8 @@ public class AssertionResultDTO implements Serializable
 	private String startElementNameTag;
 	private String endElementNameTag;
 	private String activityOutput;
+	// AMBW-55154 : 0 = one result for the whole activity assertion (older runtimes), N > 0 = check N of it
+	private int checkIndex;
 	
 	@XmlElement
 	public String getInstanceId() 
@@ -103,6 +105,15 @@ public class AssertionResultDTO implements Serializable
 
 	public void setActivityOutput(String activityOutput) {
 		this.activityOutput = activityOutput;
+	}
+
+	@XmlElement
+	public int getCheckIndex() {
+		return checkIndex;
+	}
+
+	public void setCheckIndex(int checkIndex) {
+		this.checkIndex = checkIndex;
 	}
 
 }

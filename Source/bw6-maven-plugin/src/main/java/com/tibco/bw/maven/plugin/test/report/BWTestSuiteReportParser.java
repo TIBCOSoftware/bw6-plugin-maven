@@ -13,6 +13,7 @@ import com.tibco.bw.maven.plugin.test.dto.TestCaseResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSetResultDTO;
 import com.tibco.bw.maven.plugin.test.dto.TestSuiteResultDTO;
 import com.tibco.bw.maven.plugin.test.helpers.BWTestConfig;
+import com.tibco.bw.maven.plugin.test.helpers.AssertionCheckFormatter;
 import com.tibco.bw.maven.plugin.test.helpers.TestFileParser;
 
 public class BWTestSuiteReportParser 
@@ -139,10 +140,10 @@ public class BWTestSuiteReportParser
 						{
 							StringBuilder assertionFailureDataBuilder = new StringBuilder();
 							String activityName = aresult.getActivityName();
-							fileDetails.addAssertionFailure(activityName);
+							fileDetails.addAssertionFailure(AssertionCheckFormatter.activityDisplayName(aresult));
 							if (!activityName.equals("N/A")) {
-								assertionFailureDataBuilder.append(" Assertion Failed For Activity with name "+"["+activityName+"]");
-								assertionFailureDataBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
+								assertionFailureDataBuilder.append(" Assertion Failed For Activity with name "+AssertionCheckFormatter.activityLabel(aresult));
+								assertionFailureDataBuilder.append(" [Reason] - "+AssertionCheckFormatter.failureReason(aresult));
 								assertionFailureDataBuilder.append(" [Activity Output:  "+aresult.getActivityOutput()+"]");
 								assertionFailureDataBuilder.append(" [Gold Output:  "+aresult.getGoldInput()+"]");
 							}
@@ -248,11 +249,11 @@ public class BWTestSuiteReportParser
 						if( aresult.getAssertionStatus().equals("failed"))
 						{
 							StringBuilder assertionFailureDataBuilder = new StringBuilder();
-							fileDetails.addAssertionFailure(aresult.getActivityName() );
-							assertionFailureDataBuilder.append(" Assertion Failed For Activity with name "+"["+aresult.getActivityName()+"]");
+							fileDetails.addAssertionFailure(AssertionCheckFormatter.activityDisplayName(aresult));
+							assertionFailureDataBuilder.append(" Assertion Failed For Activity with name "+AssertionCheckFormatter.activityLabel(aresult));
 							assertionFailureDataBuilder.append(" in Sub-Process ["+ testsuite.getTestCaseWithProcessNameMap().get(TestFileParser.stripRowLabel(testCase.getTestCaseFile())) + "]");
 							assertionFailureDataBuilder.append(" in Test Suite ["+ testsuite.getTestSuiteName() + "]");
-							assertionFailureDataBuilder.append(" [Reason] - Validation failed against Gold file. Please compare Activity output against Gold output values");
+							assertionFailureDataBuilder.append(" [Reason] - "+AssertionCheckFormatter.failureReason(aresult));
 							assertionFailureDataBuilder.append(" [Activity Output:  "+aresult.getActivityOutput()+"]");
 							assertionFailureDataBuilder.append(" [Gold Output:  "+aresult.getGoldInput()+"]");
 							fileDetails.addFailureData(assertionFailureDataBuilder.toString());

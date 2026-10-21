@@ -29,11 +29,22 @@
                     #end
                     #foreach ($ar in $tc.getChildren())
                         #if($ar.getName() == "assertionResult")
+                            ## AMBW-55154 : an activity assertion with several checks reports one
+                            ## assertionResult per check (checkIndex > 0). Suffix the name with the
+                            ## check number so each check is its own test case. Results without a
+                            ## checkIndex (older runtimes) or with 0 keep their previous names.
+                            #set($checkSuffix = "")
+                            #if($ar.getChild("checkIndex"))
+                                #set($checkIdx = $ar.getChild("checkIndex").getTextTrim())
+                                #if($checkIdx != "" && $checkIdx != "0")
+                                    #set($checkSuffix = " [check ${checkIdx}]")
+                                #end
+                            #end
                             #if($ar.getChild("assertionStatus").getTextTrim() == "passed")
-		<testcase name="$ar.getChild("activityName").getTextTrim()$rowSuffix" classname="$ts.getChild("processName").getTextTrim()" time=""/>
+		<testcase name="$ar.getChild("activityName").getTextTrim()$checkSuffix$rowSuffix" classname="$ts.getChild("processName").getTextTrim()" time=""/>
                             #elseif($ar.getChild("assertionStatus").getTextTrim() == "failed")
                             	 #if($ar.getChild("activityName").getTextTrim() != "N/A")
-		<testcase name="$ar.getChild("activityName").getTextTrim()$rowSuffix" classname="$ts.getChild("processName").getTextTrim()" time="">
+		<testcase name="$ar.getChild("activityName").getTextTrim()$checkSuffix$rowSuffix" classname="$ts.getChild("processName").getTextTrim()" time="">
 			<failure message="$String.valueOf($ar.getChild("message").getTextTrim()).replace("<","").replace(">","")" type="$ar.getChild("assertionMode").getTextTrim()">
 			</failure>
 		</testcase>
