@@ -46,6 +46,18 @@
 				<artifactId>zstd-jni</artifactId>
 				<version>1.5.7-15</version>
 			</dependency>
+			<!-- AMBW-59307: CVE-2026-102554, transitive via maven-core / maven-embedder -->
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>33.7.2-jre</version>
+			</dependency>
+			<!-- AMBW-59318: CVE-2026-94114, transitive via maven-project-info-reports-plugin -> maven-shared-jar -->
+			<dependency>
+				<groupId>org.apache.bcel</groupId>
+				<artifactId>bcel</artifactId>
+				<version>6.13.0</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
