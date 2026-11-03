@@ -87,7 +87,7 @@ public class BWExportMojo extends AbstractMojo {
 	@Component
 	private BuildPluginManager pluginManager;
 
-	@Component
+	@Parameter(defaultValue="${plugin}", readonly=true)
 	private PluginDescriptor pluginDescriptor;
 
 	private String earLoc;
