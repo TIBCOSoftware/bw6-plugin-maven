@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -604,29 +606,23 @@ public class BWTestRunner
 			AssertionResultDTO assertion =  (AssertionResultDTO) testcase.getAssertionResult().get(k);
 			if(!"passed".equals(assertion.getAssertionStatus())) {
 				String inputValue = assertion.getActivityOutput();
-				if(assertion.getAssertionMode().equals("Primitive") ){
-					if (assertion.getStartElementNameTag() != null && inputValue.startsWith(assertion.getStartElementNameTag())) {
-						inputValue = StringUtils.substringBetween(inputValue, assertion.getStartElementNameTag(), assertion.getEndElementNameTag());
-						inputValue = inputValue!=null? inputValue:assertion.getActivityOutput();
-						if(inputValue!= null && inputValue.contains(assertion.getStartElementNameTag())){
-							inputValue = StringUtils.substringAfter(inputValue, assertion.getStartElementNameTag());
-						}
-					    if(null != assertion.getStartElementNameTag() && null != assertion.getEndElementNameTag()) {
-					    	inputValue = assertion.getStartElementNameTag().concat(inputValue!= null ? inputValue : "").concat(assertion.getEndElementNameTag());
-					    	assertion.setActivityOutput(inputValue);
-					    }
+				if("Primitive".equals(assertion.getAssertionMode()) ){
+					// A primitive assertion compares one element of the activity data (e.g. $Log-input/message = 'XYZ').
+					// Report the value of that element on both sides, not the element name.
+					String startTag = assertion.getStartElementNameTag();
+					String endTag = assertion.getEndElementNameTag();
+					String goldInput = assertion.getGoldInput();
+					if (startTag != null && endTag != null && goldInput != null
+							&& goldInput.startsWith(startTag) && goldInput.endsWith(endTag)) {
+						goldInput = goldInput.substring(startTag.length(), goldInput.length() - endTag.length());
+						assertion.setGoldInput(goldInput);
 					}
-				    else {
-						String goldinput = assertion.getGoldInput();
-						if (goldinput != null) {
-							if (goldinput.startsWith("<")) {
-								inputValue = StringUtils.substringBetween(goldinput, "<", ">");
-								String goldInput = StringUtils.substringBetween(goldinput, ">", "<");
-								assertion.setGoldInput(goldInput);
-							}
-						}
+					String elementName = startTag != null ? StringUtils.substringBetween(startTag, "<", ">") : null;
+					String actualValue = extractElementValue(inputValue, elementName);
+					if (actualValue != null) {
+						inputValue = actualValue;
 						assertion.setActivityOutput(inputValue);
-				    }
+					}
 				}
 				else{
 					inputValue = assertion.getActivityOutput();
@@ -654,19 +650,13 @@ public class BWTestRunner
 					assertionFileBuilder.append("\n");
 				}
 				else {
-					if (inputValue.equals(assertion.getGoldInput())) {
-						assertionFileBuilder.append(" [Activity Output does not match ");
-						if (assertion.getGoldInput() != null)
-							assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
-						else
-							assertionFileBuilder.append(" Gold Output ]");
-							assertionFileBuilder.append("\n");						
+					assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
+					assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
+					if (inputValue != null && inputValue.equals(assertion.getGoldInput())) {
+						// the values read the same as text, the assertion expression compared them differently
+						assertionFileBuilder.append(" [Note: the values are equal as text; check the assertion expression for type, namespace or whitespace differences]");
 					}
-					else {
-						assertionFileBuilder.append(" [Activity Output:  "+inputValue+"]");
-						assertionFileBuilder.append(" [Gold Output:  "+assertion.getGoldInput()+"]");
-						assertionFileBuilder.append("\n");		
-					}
+					assertionFileBuilder.append("\n");
 				}
 
 				BWTestConfig.INSTANCE.getLogger().error(assertionFileBuilder.toString());
@@ -676,6 +666,50 @@ public class BWTestRunner
 		
 	
 
+
+	/**
+	 * Returns the text of the first element named {@code elementName} found anywhere in the serialized
+	 * activity data, whatever its namespace prefix or attributes. An empty element gives "".
+	 *
+	 * @param xml the serialized activity data reported by the engine
+	 * @param elementName the local name of the element the primitive assertion tests
+	 * @return the element text, or null if the data is not XML or the element is not in it
+	 */
+	static String extractElementValue(String xml, String elementName) {
+		if (xml == null || elementName == null || elementName.isEmpty() || !xml.trim().startsWith("<")) {
+			return null;
+		}
+		String localName = elementName.contains(":") ? StringUtils.substringAfterLast(elementName, ":") : elementName;
+		// start tag of the element, with or without a prefix: the name must be followed by whitespace, '/' or '>'
+		// so that <messageId> is not taken for <message>
+		Matcher start = Pattern.compile("<((?:[\\w.-]+:)?" + Pattern.quote(localName) + ")(?=[\\s/>])").matcher(xml);
+		if (!start.find()) {
+			return null;
+		}
+		int tagEnd = xml.indexOf('>', start.end());
+		if (tagEnd < 0) {
+			return null;
+		}
+		if (xml.charAt(tagEnd - 1) == '/') {
+			return "";
+		}
+		// single forward scan for the matching end tag (same qualified name), so a large or malformed
+		// output cannot make the search quadratic
+		String endTag = "</" + start.group(1);
+		int from = tagEnd + 1;
+		int close = xml.indexOf(endTag, from);
+		while (close >= 0) {
+			int after = close + endTag.length();
+			while (after < xml.length() && Character.isWhitespace(xml.charAt(after))) {
+				after++;
+			}
+			if (after < xml.length() && xml.charAt(after) == '>') {
+				return xml.substring(from, close);
+			}
+			close = xml.indexOf(endTag, close + 1);
+		}
+		return null;
+	}
 
 	private boolean isXmlContent(String inputValue) {
 		if (inputValue != null && inputValue.startsWith("<"))
