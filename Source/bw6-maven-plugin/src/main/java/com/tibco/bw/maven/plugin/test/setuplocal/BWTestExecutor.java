@@ -284,8 +284,22 @@ public class BWTestExecutor
 		return mockActivity;
 	}
 
+	/**
+	 * Adds the given mock / skip-init engine arguments, ignoring entries that are already present.
+	 * <p>
+	 * Callers pass their <em>cumulative</em> list after every .bwt / .bwm file they parse, so a plain
+	 * {@code addAll} re-added every earlier entry each time. The list grew quadratically with the number
+	 * of test files and, because each entry becomes a {@code -D} argument of the engine command line,
+	 * projects with a few dozen tests failed on Windows with
+	 * {@code CreateProcess error=206, The filename or extension is too long}.
+	 * Iterating over a copy also keeps this safe when the argument is this instance's own list.
+	 */
 	public void setMockActivityList(List<String> mockActivity) {
-		this.mockActivity.addAll(mockActivity);
+		for (String activity : new ArrayList<String>(mockActivity)) {
+			if (!this.mockActivity.contains(activity)) {
+				this.mockActivity.add(activity);
+			}
+		}
 	}
 	
 	public int getEngineStartupWaitTime() {
